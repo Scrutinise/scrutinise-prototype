@@ -23,7 +23,8 @@ import { RELATION_WORD } from '@/lib/lex/law-panel-words'
 import { RECORD_SECTIONS, bandFits, type RecordSection } from '@/lib/lex/record-layout-pure'
 import { draftPrice, DRAFT_CONFIRM_ABOVE_PENCE, EMPTY_INSTRUCTION } from '@/lib/lex/action-draft-pure'
 import { explainFailure } from '@/lib/api-rejection'
-import DocumentView from './DocumentView'
+import DocumentView, { noteAskWords } from './DocumentView'
+import { notePrice } from '@/lib/lex/explanatory-note-pure'
 import { AddDialog } from './DocumentsTree'
 import { Editor } from './ActionDraftSection'
 
@@ -105,6 +106,8 @@ export function DocumentsSection({ ideaId, a, facts, disabled, onChanged }: {
       setSaid(ok(body?.result ?? body?.data ?? null)); await changed(); return true
     } finally { setBusy(false) }
   }
+  const [askingNote, setAskingNote] = useState(false)
+  const draftNote = () => { setAskingNote(false); void post('action-documents', { op: 'draftNote', actionId: a.id }, `Drafting #${a.number ?? '?'}’s explanatory note`, (r) => `Saved: Lex’s explanatory note for #${a.number ?? '?'} is waiting as a proposal — open ${String(r?.d ?? 'the note')} to use it or set it aside${r?.pence != null ? ` (it cost ${Number(r.pence).toFixed(1)}p)` : ''}.`) }
   const draftWithLex = () => { setAsking(false); void post('action-structure', { op: 'draftAction', actionId: a.id }, `Drafting #${a.number ?? '?'}`, (r) => `Saved: Lex’s proposal for #${a.number ?? '?'} is waiting — open the drafting instruction to compare it${r?.pence != null ? ` (it cost ${Number(r.pence).toFixed(1)}p)` : ''}.`) }
 
   if (docsError) return <p className="text-xs" role="alert">Not read: {docsError}</p>
@@ -136,7 +139,13 @@ export function DocumentsSection({ ideaId, a, facts, disabled, onChanged }: {
                     {' · '}{asking
                       ? <span data-draft-confirm>This spends about {price.pence}p ({price.measured ? `measured, n=${price.n}` : 'an estimate'}). <button type="button" onClick={draftWithLex} className="font-semibold underline">Draft it</button> · <button type="button" onClick={() => setAsking(false)} className="underline">Not now</button></span>
                       : <button type="button" disabled={busy} data-draft-button className="underline disabled:opacity-40" onClick={() => (price.pence > DRAFT_CONFIRM_ABOVE_PENCE ? setAsking(true) : draftWithLex())}>draft it with Lex (about {price.pence}p)</button>}</>
-                : <> · <button type="button" disabled={busy} className="underline disabled:opacity-40" onClick={() => setAdding(k)}>write it</button></>)}
+                : k === 'EXPLANATORY_NOTE'
+                  // 26-V1b §5 — the note: write it by hand, or Lex drafts it as a proposal; asks first, always, at the measured price
+                  ? <> · <button type="button" disabled={busy} className="underline disabled:opacity-40" onClick={() => setAdding(k)}>write it</button>
+                      {' · '}{askingNote
+                        ? <span data-note-confirm>{noteAskWords(notePrice())} <button type="button" onClick={draftNote} className="font-semibold underline">Draft it</button> · <button type="button" onClick={() => setAskingNote(false)} className="underline">Not now</button></span>
+                        : <button type="button" disabled={busy} data-note-button className="underline disabled:opacity-40" onClick={() => setAskingNote(true)}>draft it with Lex{notePrice().pence != null ? ` (about ${notePrice().pence}p)` : ''}</button>}</>
+                  : <> · <button type="button" disabled={busy} className="underline disabled:opacity-40" onClick={() => setAdding(k)}>write it</button></>)}
           </li>
         ))}
       </ul>

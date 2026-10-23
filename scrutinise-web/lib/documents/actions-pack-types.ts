@@ -40,8 +40,11 @@ export interface PackAction {
   policyTest: { verdict: string; reason: string | null; conflictNote: string | null } | null
   /** Only slots the owner wrote or accepted. Absent = "not yet answered". */
   slots: Partial<Record<PackSlotKey, PackSlot>>
+  /** Kept for snapshots stored before 26-V1b; not printed (decision 262 retired Now / Next / Later). */
   sequence: string | null
   beforeNumbers: number[]
+  /** 26-V1b §7b — what this action must come after, each with the owner's because line. Absent on an older snapshot: derived from beforeNumbers. */
+  afterLines?: Array<{ number: number; because: string | null }>
   parked: boolean
   parkedReason: string | null
   /** The commentary, with its "Parts of this action, quoted" bullets lifted out (they are printed on their own). */

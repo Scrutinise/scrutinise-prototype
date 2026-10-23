@@ -23,13 +23,15 @@ import { INCENTIVE_WORD } from '@/lib/lex/incentive-map'
 import { CLAUSE_CAVEAT, INSTRUMENT_WORD, provisionLine } from '@/lib/lex/action-draft-pure'
 import { scheduleCounts, scheduleSentence, NEAR_QUESTION, STATE_WORDS as TOUCH_STATE } from '@/lib/lex/action-touches-pure'
 import { KIND_WORD, dNumberWords } from '@/lib/lex/action-documents-pure'
+import { afterWords, derivedOrder } from '@/lib/lex/action-order-pure'
 
 /** Which actions to print. `actionIds` wins; else a heading (`'__none'` = the actions with no heading); else everything. */
 export interface PackSelection { actionIds?: string[]; headingId?: string | null }
 
 export const PACK_SECTIONS = [
   'What it is', 'Parts of this action, quoted', 'Who', 'Incentive now, and what changes it', 'Skill, how it is enforced, what will oppose it, and what tells us it worked',
-  'Causes and conditions', 'Test against the guiding policy', 'Cost', 'Sequence', 'Sources', 'The owner’s notes',
+  // 9 was "Sequence" (Now / Next / Later); decision 262 retired those words and the paragraph keeps its number as "Order".
+  'Causes and conditions', 'Test against the guiding policy', 'Cost', 'Order', 'Sources', 'The owner’s notes',
   // 26-U — appended, never inserted: 1-11 keep their numbers on every printing (a reviewer's "B.3.6" must still mean the same paragraph).
   'Draft text', 'What this touches',
   // 26-V1 §2e/§6 — appended the same way: the action's documents, in number order, each with its D-number and its status.
@@ -43,7 +45,6 @@ export const PACK_KEY_LINE =
 
 const NOT_ANSWERED = 'not yet answered'
 const AVENUE: Record<string, string> = { LEGISLATIVE: 'legislative', ORGANISATIONAL: 'organisational', FINANCIAL: 'financial' }
-const SEQ: Record<string, string> = { NOW: 'now', NEXT: 'next', LATER: 'later' }
 const VERDICT: Record<string, string> = { FITS: 'fits the policy', DOES_NOT_FIT: 'does not fit the policy', CONFLICTS: 'conflicts with the policy', NOT_TESTED: 'not tested against the policy' }
 const refTokens = (refs: number[]): Run[] => (refs.length ? [{ text: ` ${refs.map((n) => `[Ref: ${n}]`).join(' ')}` }] : [])
 
@@ -95,7 +96,7 @@ function costBlocks(label: string, a: PackAction, sa: SnapshotAction | undefined
   return out
 }
 
-function actionBlocks(L: string, n: number, a: PackAction, sa: SnapshotAction | undefined, numberToHeading: Map<number, string>): Block[] {
+function actionBlocks(L: string, n: number, a: PackAction, sa: SnapshotAction | undefined, numberToHeading: Map<number, string>, all: PackAction[]): Block[] {
   const N = (s: number) => `${L}.${n}.${s}`
   const blocks: Block[] = []
   blocks.push({ kind: 'heading', level: 2, runs: [{ text: `${L}.${n}  #${a.number}  ${a.title ?? a.statement.slice(0, 90)}` }] })
@@ -128,8 +129,11 @@ function actionBlocks(L: string, n: number, a: PackAction, sa: SnapshotAction | 
     a.policyTest ? { text: `${VERDICT[a.policyTest.verdict] ?? a.policyTest.verdict}${a.policyTest.reason ? ` - ${a.policyTest.reason}` : ''}${a.policyTest.verdict === 'CONFLICTS' && a.policyTest.conflictNote ? ` (kept, with the owner’s note: ${a.policyTest.conflictNote})` : ''}` } : { text: 'not tested against the policy', italic: true }]))
   // 8 · cost
   blocks.push(...costBlocks(N(8), a, sa))
-  // 9 · sequence
-  blocks.push(numbered(N(9), [{ text: 'Sequence: ', bold: true }, a.sequence ? { text: `${SEQ[a.sequence] ?? a.sequence.toLowerCase()}${a.beforeNumbers.length ? `; comes before ${a.beforeNumbers.map((x) => `#${x}`).join(', ')}` : ''}` } : { text: 'not yet placed', italic: true }]))
+  // 9 · order (262): what it must come after, with the reasons, and what it comes before — never Now / Next / Later
+  const after = afterLinesOf(a, all)
+  blocks.push(numbered(N(9), [{ text: 'Order: ', bold: true },
+    after.length ? { text: afterWords(after.map((x) => ({ id: String(x.number), number: x.number, because: x.because }))) } : { text: 'nothing it must come after', italic: true },
+    ...(a.beforeNumbers.length ? [{ text: `; comes before ${a.beforeNumbers.map((x) => `#${x}`).join(', ')}` }] : [])]))
   // 10 · sources
   blocks.push(numbered(N(10), [{ text: 'Sources: ', bold: true }, a.refs.length ? { text: a.refs.map((r) => `[Ref: ${r}]`).join(' ') } : { text: 'none recorded for this action', italic: true }]))
   // 11 · the owner's notes
@@ -167,6 +171,30 @@ function actionBlocks(L: string, n: number, a: PackAction, sa: SnapshotAction | 
       else blocks.push({ kind: 'paragraph', runs: [{ text: 'No version yet — only a draft from Lex, not yet used.', italic: true }] })
     }
   }
+  return blocks
+}
+
+/** What an action must come after. A snapshot stored before 26-V1b has no afterLines: read them back from the others' beforeNumbers. */
+function afterLinesOf(a: PackAction, all?: PackAction[]): Array<{ number: number; because: string | null }> {
+  if (a.afterLines) return a.afterLines
+  return (all ?? []).filter((o) => o.beforeNumbers.includes(a.number)).map((o) => ({ number: o.number, because: null }))
+}
+
+/**
+ * 26-V1b §7b (262) — THE ORDER SECTION: the derived order over the printed actions, numbered, with the reasons — the same derivation as
+ * step 4's view. Actions caught in a circle are named apart, never printed as if they had a place.
+ */
+function orderBlocks(actions: PackAction[]): Block[] {
+  const blocks: Block[] = [{ kind: 'section', title: 'ORDER' }]
+  if (!actions.length) return blocks
+  const key = (n: number) => String(n)
+  const nodes = actions.map((a) => ({ id: key(a.number), number: a.number, beforeIds: a.beforeNumbers.map(key) }))
+  const because = new Map(actions.map((a) => [key(a.number), new Map(afterLinesOf(a, actions).map((x) => [key(x.number), x.because]))]))
+  const { rows, unplaced } = derivedOrder(nodes, (later, earlier) => because.get(later)?.get(earlier) ?? null)
+  blocks.push({ kind: 'paragraph', runs: [{ text: 'Worked out from what each action must come after; actions with nothing before them keep the list’s order. Within this printing only.', italic: true }] })
+  const title = new Map(actions.map((a) => [key(a.number), a.title ?? a.statement.slice(0, 80)]))
+  blocks.push({ kind: 'bullets', items: rows.map((r): Run[] => [{ text: `${r.place}. #${r.number} `, bold: true }, { text: `${title.get(r.id) ?? ''} — ${afterWords(r.after)}` }]) })
+  if (unplaced.length) blocks.push({ kind: 'note', text: `Not placed — an impossible order: ${unplaced.map((id) => `#${id}`).join(', ')} each have to come after another in the same circle.` })
   return blocks
 }
 
@@ -266,8 +294,11 @@ export function buildActionsPackDocument(snapshot: ProposalSnapshot, opts: { sel
       else blocks.push({ kind: 'paragraph', runs: [{ text: `${L}.D.1  `, bold: true }, { text: 'Digest: none yet.', italic: true }] })
     }
     if (!g.actions.length) blocks.push({ kind: 'paragraph', runs: text('No live actions under this heading.') })
-    g.actions.forEach((a, ai) => blocks.push(...actionBlocks(L, ai + 1, a, saById.get(a.id), numberToHeading)))
+    g.actions.forEach((a, ai) => blocks.push(...actionBlocks(L, ai + 1, a, saById.get(a.id), numberToHeading, data.actions)))
   })
+
+  // ── 26-V1b §7b: the order, derived (262) ──
+  blocks.push(...orderBlocks(actions))
 
   // ── incentives (over the printed actions) ──
   blocks.push({ kind: 'section', title: 'INCENTIVES' })

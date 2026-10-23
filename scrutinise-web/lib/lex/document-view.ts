@@ -16,6 +16,7 @@ import { prisma } from '@/lib/prisma'
 import { openDocument, documentTree, type TreeActionRow } from './action-documents'
 import { parseDraft, type DraftInstruction } from './action-draft-pure'
 import { targetTitle } from './statutory-graph'
+import { heldSectionText } from './action-touches'
 import { versionChange, changeWords, type VersionChange } from './document-view-pure'
 import { provisionWords, instructionVersion, RELATION_WORD } from './law-panel-words'
 import type { LawRelation } from './idea-law-pure'
@@ -49,11 +50,16 @@ export interface DocumentViewData {
   /** Why Lex drafted the CURRENT version this way: the reasoning of the proposal it came from (null for the owner's own version). */
   currentReason: string | null
   proposal: { v: number; at: string; reason: string; pence: number | null; instruction: DraftInstruction } | null
+  /** 26-V1b §5 — Lex's waiting proposal on a document that is NOT the clause (the explanatory note): its text, beside the versions. */
+  textProposal: { v: number; at: string; reason: string; pence: number | null; body: string } | null
   /** Dismissed proposals, named in words in Versions ("set aside on 23 Oct when v2 arrived"). */
   setAside: Array<{ v: number; at: string; answeredAt: string | null; replacedBy: number | null }>
   law: { live: LawRowWords[]; precedents: number }
   /** Act titles for every docUri the view names, so no screen prints a bare id where a title is held. */
   titles: Record<string, string | null>
+  /** 26-V1b §4 — the held text of every section the current instruction amends, repeals or modifies, keyed `docUri|provisionPath`
+   *  (the three views are computed from it on the screen; pure). `text` null with the reason in words when it is not held. */
+  held: Record<string, { text: string | null; reason: string }>
 }
 
 async function titlesFor(uris: string[]): Promise<Record<string, string | null>> {
@@ -106,6 +112,13 @@ export async function documentView(ideaId: string, documentId: string): Promise<
     }
   })
   const current = versions.at(-1) ?? null
+  // §4 — the held text of each amended section, for the three views (free: a read of the corpus).
+  const held: DocumentViewData['held'] = {}
+  for (const p of current?.instruction?.provisions ?? []) {
+    if (!['amends', 'repeals', 'modifies'].includes(p.relation)) continue
+    const k = `${p.docUri}|${p.provisionPath ?? ''}`
+    if (!(k in held)) held[k] = await heldSectionText(p.docUri, p.provisionPath).catch((e) => ({ text: null, reason: `could not be read (${e instanceof Error ? e.message : String(e)})` }))
+  }
   const usedFrom = current?.fromProposal != null ? proposalRows.find((p) => p.v === current.fromProposal) : undefined
   const live = lawRows.filter((l) => !l.supersededById && !l.withdrawnAt)
   return {
@@ -114,9 +127,10 @@ export async function documentView(ideaId: string, documentId: string): Promise<
       doc, actionId, legislative, isInstruction, versions, current,
       currentReason: usedFrom?.reason ?? null,
       proposal: pending && isInstruction ? { v: pending.v, at: pending.createdAt.toISOString(), reason: pending.reason ?? '', pence: pending.pence == null ? null : Number(pending.pence), instruction: instructionOf(pending.payload) } : null,
+      textProposal: pending && !isInstruction ? { v: pending.v, at: pending.createdAt.toISOString(), reason: pending.reason ?? '', pence: pending.pence == null ? null : Number(pending.pence), body: pending.body } : null,
       setAside: proposalRows.filter((p) => p.answer === 'DISMISSED').map((p) => ({ v: p.v, at: p.createdAt.toISOString(), answeredAt: p.answeredAt?.toISOString() ?? null, replacedBy: proposalRows.find((q) => q.v > p.v)?.v ?? null })),
       law: { live: live.filter((l) => l.relation !== 'precedent').map((l) => lawWords(l, titles)), precedents: live.filter((l) => l.relation === 'precedent').length },
-      titles,
+      titles, held,
     },
   }
 }

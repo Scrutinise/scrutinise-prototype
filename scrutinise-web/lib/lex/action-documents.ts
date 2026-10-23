@@ -178,6 +178,45 @@ export async function saveDocumentText(ideaId: string, documentId: string, body:
   return { ok: true, data: { v: row.v } }
 }
 
+// ── 26-V1b §5 — Lex's proposal for a document that is not the clause (the explanatory note): beside the versions, never over them ──────
+
+/** Lex's draft of a text document as a PROPOSAL. An older unanswered proposal is answered DISMISSED (kept), never overwritten. */
+export async function writeTextProposal(ideaId: string, actionId: string, kind: DocumentKind, title: string, p: { body: string; reason: string; pence: number | null; sources: unknown[]; payload?: unknown }): Promise<{ documentId: string; d: string; v: number }> {
+  return prisma.$transaction(async (tx) => {
+    const doc = await documentOfKind(tx, ideaId, actionId, kind, title)
+    await tx.actionDocumentVersion.updateMany({ where: { documentId: doc.id, role: 'PROPOSAL', answer: null }, data: { answer: 'DISMISSED', answeredAt: new Date() } })
+    const top = await tx.actionDocumentVersion.aggregate({ where: { documentId: doc.id, role: 'PROPOSAL' }, _max: { v: true } })
+    const v = (top._max.v ?? 0) + 1
+    await tx.actionDocumentVersion.create({ data: { documentId: doc.id, role: 'PROPOSAL', v, author: 'LEX', body: p.body, payload: (p.payload ?? Prisma.DbNull) as never, sources: p.sources as never, reason: p.reason, pence: p.pence } })
+    const a = await tx.lexCoherentAction.findUnique({ where: { id: actionId }, select: { number: true } })
+    return { documentId: doc.id, d: dNumber(a?.number ?? null, doc.number), v }
+  })
+}
+
+/** Use Lex's waiting proposal on a text document: it becomes the next VERSION (by LEX), and the proposal is answered ACCEPTED and kept. */
+export async function useTextProposal(ideaId: string, documentId: string): Promise<Result<{ v: number }>> {
+  const doc = await prisma.actionDocument.findFirst({ where: { id: documentId, ideaId } })
+  if (!doc) return fail('That document is not on this idea. Nothing was changed.')
+  if (doc.kind === 'DRAFT_CLAUSE') return fail('A draft clause’s proposal is used from its comparison (“Take all”, then Save), so its law rows are written. Nothing was changed.')
+  const p = await prisma.actionDocumentVersion.findFirst({ where: { documentId, role: 'PROPOSAL', answer: null }, orderBy: { v: 'desc' } })
+  if (!p) return fail('Lex has no proposal waiting on this document. Nothing was changed.')
+  const row = await prisma.$transaction(async (tx) => {
+    await tx.actionDocumentVersion.update({ where: { id: p.id }, data: { answer: 'ACCEPTED', answeredAt: new Date() } })
+    return appendVersion(tx, doc.id, { author: 'LEX', body: p.body, payload: p.payload, sources: Array.isArray(p.sources) ? (p.sources as unknown[]) : [] })
+  })
+  return { ok: true, data: { v: row.v } }
+}
+
+/** Set Lex's waiting proposal aside: answered DISMISSED and kept (listed in Versions). */
+export async function setAsideTextProposal(ideaId: string, documentId: string): Promise<Result<{ v: number }>> {
+  const doc = await prisma.actionDocument.findFirst({ where: { id: documentId, ideaId }, select: { id: true } })
+  if (!doc) return fail('That document is not on this idea. Nothing was changed.')
+  const p = await prisma.actionDocumentVersion.findFirst({ where: { documentId, role: 'PROPOSAL', answer: null }, orderBy: { v: 'desc' } })
+  if (!p) return fail('Lex has no proposal waiting on this document. Nothing was changed.')
+  await prisma.actionDocumentVersion.update({ where: { id: p.id }, data: { answer: 'DISMISSED', answeredAt: new Date() } })
+  return { ok: true, data: { v: p.v } }
+}
+
 // ── "needs a document": the override, recorded with its reason ───────────────────────────────────────────────────
 
 export function needsOverrideOf(record: unknown): NeedsOverride | null {
@@ -300,7 +339,8 @@ export async function documentTree(ideaId: string, opts: { recordStale?: boolean
   const staleWrites: Array<{ id: string; reason: string | null }> = []
   const rowOf = (a: (typeof actions)[number]): TreeActionRow => {
     const draftV = currentVersion(drafts.get(a.id))?.v ?? null
-    const needs = needsDocuments({ avenue: a.avenue, instrument: currentVersion(drafts.get(a.id))?.instrument ?? null, override: needsOverrideOf(a.record) })
+    const clauseAccepted = docs.some((d) => d.actionId === a.id && d.kind === 'DRAFT_CLAUSE' && d.status !== 'SUPERSEDED' && d.acceptedV != null)
+    const needs = needsDocuments({ avenue: a.avenue, instrument: currentVersion(drafts.get(a.id))?.instrument ?? null, override: needsOverrideOf(a.record), clauseAccepted })
     const documents: TreeDocument[] = docs.filter((d) => d.actionId === a.id).map((d) => {
       const vs = d.versions.filter((x) => x.role === 'VERSION')
       const last = vs.at(-1)
@@ -348,6 +388,9 @@ export async function packDocuments(ideaId: string): Promise<Map<string, PackDoc
     }
     out.set(d.actionId, [...(out.get(d.actionId) ?? []), row])
   }
+  // 26-V1b §5b — the explanatory note prints straight after its clause; the rest keep their number order.
+  const rank = (k: DocumentKind) => (k === 'DRAFT_CLAUSE' ? 0 : k === 'EXPLANATORY_NOTE' ? 1 : 2)
+  for (const [k, v] of out) out.set(k, [...v].sort((x, y) => rank(x.kind) - rank(y.kind) || x.number - y.number))
   return out
 }
 

@@ -12,12 +12,15 @@
 import type { DraftInstruction } from './action-draft-pure'
 import type { EffectCount, TargetState } from './action-touches-pure'
 
-export const DOCUMENT_KINDS = ['DRAFT_CLAUSE', 'COLLISION_REPORT', 'CONSEQUENTIAL_SCHEDULE', 'CODE_TEXT', 'SPECIFICATION', 'COSTING', 'OPERATING_TEXT', 'BACKGROUND_NOTE'] as const
+// 26-V1b §5 (259): EXPLANATORY_NOTE appended — DDL prisma/lex_26v1b_explanatory_note.sql widens the CHECK in the same push as this code.
+export const DOCUMENT_KINDS = ['DRAFT_CLAUSE', 'COLLISION_REPORT', 'CONSEQUENTIAL_SCHEDULE', 'CODE_TEXT', 'SPECIFICATION', 'COSTING', 'OPERATING_TEXT', 'BACKGROUND_NOTE', 'EXPLANATORY_NOTE'] as const
 export type DocumentKind = (typeof DOCUMENT_KINDS)[number]
 export const KIND_WORD: Record<DocumentKind, string> = {
   DRAFT_CLAUSE: 'draft clause', COLLISION_REPORT: 'collision report', CONSEQUENTIAL_SCHEDULE: 'consequential schedule', CODE_TEXT: 'code text',
-  SPECIFICATION: 'specification', COSTING: 'costing', OPERATING_TEXT: 'operating text', BACKGROUND_NOTE: 'background note',
+  SPECIFICATION: 'specification', COSTING: 'costing', OPERATING_TEXT: 'operating text', BACKGROUND_NOTE: 'background note', EXPLANATORY_NOTE: 'explanatory note',
 }
+/** 26-V1b §5a — the explanatory note's caveat, word for word: its first line, always. */
+export const NOTE_CAVEAT = 'Drafted by Lex from the clause; not settled; not the Explanatory Notes Parliament will receive.'
 /** Built from data with no model call: they cost nothing and are regenerated, never drafted (§4, §5). */
 export const GENERATED_KINDS: ReadonlySet<DocumentKind> = new Set(['COLLISION_REPORT', 'CONSEQUENTIAL_SCHEDULE'])
 
@@ -61,14 +64,21 @@ export function partsOf(kind: DocumentKind, body: string): DocumentPart[] {
 
 // ── "needs a document": derived from avenue and instrument (240, 2d), overridable with a reason ────────────────
 export interface NeedsOverride { mode: 'nothing' | 'set'; kinds?: DocumentKind[]; reason: string; by: string; at: string }
-export interface NeedsInput { avenue: string | null; instrument: DraftInstruction['instrument'] | null; override?: NeedsOverride | null }
+export interface NeedsInput {
+  avenue: string | null; instrument: DraftInstruction['instrument'] | null; override?: NeedsOverride | null
+  /** 26-V1b §5a — the action's clause has been accepted (at some version): it then needs its explanatory note. */
+  clauseAccepted?: boolean
+}
 export interface Needs { kinds: DocumentKind[]; why: string; overridden: boolean }
 
 export function needsDocuments(a: NeedsInput): Needs {
   if (a.override?.mode === 'nothing') return { kinds: [], why: `needs nothing: ${a.override.reason}`, overridden: true }
   if (a.override?.mode === 'set') return { kinds: [...new Set(a.override.kinds ?? [])], why: a.override.reason, overridden: true }
   if (a.instrument === 'STATUTORY_CODE' || a.instrument === 'MANAGEMENT_CODE') return { kinds: ['CODE_TEXT'], why: 'the instrument is a code', overridden: false }
-  if (a.avenue === 'LEGISLATIVE') return { kinds: ['DRAFT_CLAUSE', 'COLLISION_REPORT'], why: 'a legislative action', overridden: false }
+  // 259: an accepted clause needs its explanatory note — one plain-English paragraph per subsection
+  if (a.avenue === 'LEGISLATIVE') return a.clauseAccepted
+    ? { kinds: ['DRAFT_CLAUSE', 'COLLISION_REPORT', 'EXPLANATORY_NOTE'], why: 'a legislative action with an accepted clause', overridden: false }
+    : { kinds: ['DRAFT_CLAUSE', 'COLLISION_REPORT'], why: 'a legislative action', overridden: false }
   if (a.avenue === 'FINANCIAL') return { kinds: ['COSTING'], why: 'a financial action', overridden: false }
   if (a.avenue === 'ORGANISATIONAL') return { kinds: ['OPERATING_TEXT'], why: 'an organisational action', overridden: false }
   // ⚠ No avenue yet: nothing is derived, and the line says so rather than reading "needs nothing".

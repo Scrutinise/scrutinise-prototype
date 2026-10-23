@@ -31,6 +31,8 @@ import { unfold } from './action-fold'
 import { activeConditions } from './action-conditions'
 import { readConditions } from './action-conditions-server'
 import { TEST_SYSTEM, TEST_SCHEMA, placeGroups } from './action-ideas'
+import { parseRecord } from './action-record'
+import { cycleRefusal } from './action-order-pure'
 const TITLE_MAX = LIMITS.actionTitle
 
 export type Result<T = unknown> = { ok: true; data: T } | { ok: false; error: string }
@@ -270,9 +272,16 @@ export async function setFacets(ideaId: string, actionId: string, patch: FacetPa
   }
   if (patch.link !== undefined) { data.link = patch.link === null ? null : clip(patch.link, 160) || null; delete proposal.link }
   if (patch.beforeIds !== undefined) {
-    const live = new Set((await liveRows(ideaId)).map((r) => r.id))
+    const rows = await liveRows(ideaId)
+    const live = new Set(rows.map((r) => r.id))
     const ids = [...new Set(patch.beforeIds)].filter((x) => x !== actionId)
     if (ids.some((x) => !live.has(x))) return fail('One of those actions is not on this idea\'s live list.')
+    // 26-V1b §7b — a circle is refused in words naming both actions (an order cannot go round in a circle).
+    const nodes = rows.map((r) => (r.id === actionId ? { ...r, beforeIds: ids } : r))
+    for (const x of ids) {
+      const why = cycleRefusal(nodes, actionId, x)
+      if (why) return fail(`Not saved: ${why} Nothing was changed.`)
+    }
     data.beforeIds = ids; delete proposal.beforeIds
   }
   data.facetProposal = Object.keys(proposal).length ? proposal : Prisma.DbNull
@@ -284,9 +293,12 @@ export async function setFacets(ideaId: string, actionId: string, patch: FacetPa
 const STEP_PROPOSAL_KEYS: Partial<Record<ActionsStep, Array<keyof FacetPatch>>> = { 1: ['targetCauseIds', 'avenue', 'conditionIds', 'supportOnly'], 4: ['sequence', 'beforeIds'] }
 
 /** Accept proposals. With a `step`, only that step's keys are accepted and the rest of the proposal stays waiting; without one, all of them (Lex's chat tool). */
-export async function acceptFacetProposals(ideaId: string, ids?: string[], step?: ActionsStep): Promise<Result<{ accepted: number }>> {
+export async function acceptFacetProposals(ideaId: string, ids?: string[], step?: ActionsStep): Promise<Result<{ accepted: number; refused: string[] }>> {
   const rows = (await prisma.lexCoherentAction.findMany({ where: { ideaId, status: 'LIVE', ...(ids ? { id: { in: ids } } : {}) }, select: { id: true, facetProposal: true } })).filter((r) => r.facetProposal != null)
   const mine = step ? STEP_PROPOSAL_KEYS[step] ?? [] : null
+  // 26-V1b §7b — the order graph as it stands, updated as each proposal is accepted, so no accepted "comes before" closes a circle.
+  const graph = (await liveRows(ideaId)).map((r) => ({ id: r.id, number: r.number, beforeIds: [...r.beforeIds] }))
+  const refused: string[] = []
   let n = 0
   for (const r of rows) {
     const all = (r.facetProposal ?? {}) as FacetPatch
@@ -296,14 +308,46 @@ export async function acceptFacetProposals(ideaId: string, ids?: string[], step?
     const data: Record<string, unknown> = { facetProposal: Object.keys(rest).length ? rest : Prisma.DbNull }
     if (p.targetCauseIds) data.targetCauseIds = p.targetCauseIds
     if (p.avenue !== undefined) data.avenue = p.avenue
-    // decision 167: the "link" facet is retired from the screen — an old proposal's link is dropped, never written
-    if (p.sequence !== undefined) data.sequence = p.sequence
+    // decision 167: the "link" facet is retired from the screen — an old proposal's link is dropped, never written.
+    // decision 262: so is Now / Next / Later — an old proposal's sequence is dropped, never written (the column keeps what it had).
     // 188: an accepted condition proposal sets the conditions, or marks the action support (which delivers none directly)
     if (p.supportOnly) { data.supportOnly = true; data.conditionIds = [] } else if (p.conditionIds) { data.conditionIds = p.conditionIds; data.supportOnly = false }
-    if (p.beforeIds) data.beforeIds = p.beforeIds.filter((x) => x !== r.id)
+    if (p.beforeIds) {
+      const me = graph.find((g) => g.id === r.id)
+      const keep: string[] = []
+      for (const x of p.beforeIds.filter((y) => y !== r.id)) {
+        const why = me ? cycleRefusal(graph, r.id, x) : null
+        if (why) refused.push(why); else { keep.push(x); me?.beforeIds.push(x) }
+      }
+      data.beforeIds = keep
+    }
     await prisma.lexCoherentAction.update({ where: { id: r.id }, data: data as never }); n++
   }
-  return { ok: true, data: { accepted: n } }
+  return { ok: true, data: { accepted: n, refused } }
+}
+
+/**
+ * 26-V1b §7b (262) — "#later must come after #earlier, because …": the edge is the existing `beforeIds` on the EARLIER action; the because
+ * line is on the LATER action's record (`orderBecause`). `on: false` removes both. A circle is refused in words naming both actions.
+ */
+export async function setAfter(ideaId: string, laterId: string, earlierId: string, on: boolean, because: string | null): Promise<Result<{ later: number | null; earlier: number | null; on: boolean }>> {
+  const rows = await liveRows(ideaId)
+  const later = rows.find((r) => r.id === laterId), earlier = rows.find((r) => r.id === earlierId)
+  if (!later || !earlier) return fail('Not saved: one of those actions is not on this idea’s live list. Nothing was changed.')
+  if (on) {
+    const why = earlier.beforeIds.includes(laterId) ? null : cycleRefusal(rows, earlierId, laterId)
+    if (why) return fail(`Not saved: ${why} Nothing was changed.`)
+  }
+  const rec = parseRecord(later.record) as Record<string, unknown>
+  const becauseMap = { ...((rec.orderBecause as Record<string, string> | undefined) ?? {}) }
+  const text = clip(because ?? '', LIMITS.orderBecause)
+  if (on && text) becauseMap[earlierId] = text; else delete becauseMap[earlierId]
+  if (Object.keys(becauseMap).length) rec.orderBecause = becauseMap; else delete rec.orderBecause
+  await prisma.$transaction([
+    prisma.lexCoherentAction.update({ where: { id: earlierId }, data: { beforeIds: on ? [...new Set([...earlier.beforeIds, laterId])] : earlier.beforeIds.filter((x) => x !== laterId) } }),
+    prisma.lexCoherentAction.update({ where: { id: laterId }, data: { record: (Object.keys(rec).length ? rec : Prisma.DbNull) as never } }),
+  ])
+  return { ok: true, data: { later: later.number, earlier: earlier.number, on } }
 }
 export async function dismissFacetProposals(ideaId: string, ids?: string[], step?: ActionsStep): Promise<Result<{ dismissed: number }>> {
   const rows = (await prisma.lexCoherentAction.findMany({ where: { ideaId, ...(ids ? { id: { in: ids } } : {}) }, select: { id: true, facetProposal: true } })).filter((r) => r.facetProposal != null)
@@ -330,7 +374,8 @@ const FACET_PROPS = {
   conditionNumbers: { type: 'array', items: { type: 'integer' } },
   support: { type: 'boolean' },
 } as const
-const FACET_STEP_KEYS: Record<1 | 4, Array<keyof typeof FACET_PROPS>> = { 1: ['causeNumbers', 'avenue'], 4: ['sequence', 'beforeNumbers'] }
+// 262: step 4 asks only what must come before what — Now / Next / Later is retired and is no longer proposed.
+const FACET_STEP_KEYS: Record<1 | 4, Array<keyof typeof FACET_PROPS>> = { 1: ['causeNumbers', 'avenue'], 4: ['beforeNumbers'] }
 /** Step 1 also classifies against the conditions - but only when the idea HAS some. */
 const stepKeys = (step: 1 | 4, withConditions: boolean): Array<keyof typeof FACET_PROPS> => (step === 1 && withConditions ? [...FACET_STEP_KEYS[1], 'conditionNumbers', 'support'] : FACET_STEP_KEYS[step])
 
@@ -377,7 +422,7 @@ function facetSystem(step: 1 | 4, withConditions = false): string {
 async function facetStep(ideaId: string, asked?: ActionsStep): Promise<Result<1 | 4>> {
   const step = asked ?? clampStep((await prisma.idea.findUnique({ where: { id: ideaId }, select: { actionsStep: true } }))?.actionsStep)
   if (step === 1 || step === 4) return { ok: true, data: step }
-  return fail(`Classifying is a job for step 1 (causes and avenue) or step 4 (sequence and what comes before); you are in step ${step}, which has its own questions. Nothing was proposed.`)
+  return fail(`Classifying is a job for step 1 (causes and avenue) or step 4 (what must come before what); you are in step ${step}, which has its own questions. Nothing was proposed.`)
 }
 
 export async function proposeFacets(ideaId: string, userId: string | null, askedStep?: ActionsStep): Promise<Result<{ proposed: number; links: string[]; pence: number | null }>> {
@@ -430,7 +475,6 @@ export async function proposeFacets(ideaId: string, userId: string | null, asked
           else if (a.support === true) p.supportOnly = true
         }
       } else {
-        if (!row.sequence && (SEQUENCES as readonly string[]).includes(a.sequence ?? '')) p.sequence = a.sequence
         if (!row.beforeIds.length) p.beforeIds = [...new Set((a.beforeNumbers ?? []).filter((n) => n !== row.number).map((n) => numberToId.get(n)).filter((x): x is string => !!x))]
       }
       if (Object.keys(p).length) {

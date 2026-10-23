@@ -38,9 +38,12 @@ import { EMPTY_CONDITIONS, conditionWords, activeConditions, type ConditionsDoc 
 import type { HeadingPlan } from '@/lib/lex/action-resort-pure'
 import { ALL_SLOTS, SLOT_RUNS, SLOT_CONFIRM_ABOVE_PENCE, slotPriceEstimate, answeredCount, proposalCount, slotAnswered, slotProposal, specificTag } from '@/lib/lex/action-record'
 import {
-  AVENUES, AVENUE_LABEL, SEQUENCES, SEQUENCE_LABEL, GROUP_MODE_LABEL,
-  actionLabel, specificEnough, groupActions, coverageGrid, sequenceLayout, provenanceLine, NOT_TESTED_TITLE, type GroupMode,
+  AVENUES, AVENUE_LABEL, GROUP_MODE_LABEL,
+  actionLabel, specificEnough, groupActions, coverageGrid, provenanceLine, NOT_TESTED_TITLE, type GroupMode,
 } from '@/lib/lex/action-facets'
+import { afterOf, afterWords } from '@/lib/lex/action-order-pure'
+import ActionsBoard from './ActionsBoard'
+import { OrderSection, OrderView, becauseFor } from './ActionsOrder'
 import {
   STEPS, DEFAULT_STEP, stepChecklist, otherStepLine, unresolvedConflict, hasCostRange, type ActionsStep,
 } from '@/lib/lex/action-steps'
@@ -95,17 +98,18 @@ function useOps(ideaId: string, onChanged: () => void | Promise<boolean | void>)
 const COST_LINE_LABEL_SHORT = { implementationCost: 'Implement', enforcementCost: 'Enforce', regulatoryFriction: 'Compliance' } as const
 
 // Decision 167: "Link" is retired from the screen (the column stays; nothing is written to it).
-const FACET_WORD = { avenue: 'Avenue', sequence: 'Sequence', causes: 'Causes', before: 'Comes before' }
+const FACET_WORD = { avenue: 'Avenue', causes: 'Causes' }
 
 /** 26-S2 §3b — which list groupings belong to which step. A grouping that belongs to another step is not offered (absent, not greyed). */
-const STEP_GROUP_MODES: Record<ActionsStep, GroupMode[]> = { 1: ['heading', 'cause', 'avenue', 'policy-test'], 2: ['heading'], 3: ['heading'], 4: ['heading', 'sequence'] }
-/** …and which views: the coverage grid is a step-1 tool (causes against actions); the sequence view is step 4's. */
-const STEP_VIEWS: Record<ActionsStep, Array<'list' | 'coverage' | 'conditions' | 'sequence' | 'who'>> = { 1: ['list', 'coverage', 'conditions'], 2: ['list', 'who'], 3: ['list'], 4: ['list', 'sequence'] }
-const VIEW_LABEL = { list: 'List', coverage: 'Coverage grid', conditions: 'Conditions', sequence: 'Sequence', who: 'By who' } as const
+// 262: grouping by Now / Next / Later is retired with the words.
+const STEP_GROUP_MODES: Record<ActionsStep, GroupMode[]> = { 1: ['heading', 'cause', 'avenue', 'policy-test'], 2: ['heading'], 3: ['heading'], 4: ['heading'] }
+/** …and which views: the board and the coverage grid are step-1 tools (255; causes against actions); the derived order is step 4's (262). */
+const STEP_VIEWS: Record<ActionsStep, View[]> = { 1: ['list', 'board', 'coverage', 'conditions'], 2: ['list', 'who'], 3: ['list'], 4: ['list', 'order'] }
+const VIEW_LABEL: Record<View, string> = { list: 'List', board: 'Board', coverage: 'Coverage grid', conditions: 'Conditions', order: 'The order, derived', who: 'By who' }
 
-/** A proposal belongs to a step by what it proposes: causes, avenue and conditions are step 1's; sequence and what comes before, step 4's. */
+/** A proposal belongs to a step by what it proposes: causes, avenue and conditions are step 1's; what comes before what, step 4's. */
 const proposalStep = (p: NonNullable<CanonicalAction['facetProposal']>): ActionsStep[] => [
-  ...(p.targetCauseIds || p.avenue !== undefined || p.conditionIds || p.supportOnly ? [1 as const] : []), ...(p.sequence !== undefined || p.beforeIds ? [4 as const] : []),
+  ...(p.targetCauseIds || p.avenue !== undefined || p.conditionIds || p.supportOnly ? [1 as const] : []), ...(p.beforeIds?.length ? [4 as const] : []),
 ]
 
 /** 26-S §5d / 26-S2 §8 — the list filter. `Unreviewed` is READ NARROWLY (the brief does not define it): a proposal of Lex's is waiting for the user (a title or a classification for this step), or the action was never tested against the policy. `Not yet specific` exists from step 2 on. */
@@ -158,7 +162,7 @@ interface Props {
   structure?: { conditions: ConditionsDoc; headingPlan: HeadingPlan | null; archivedHeadings: Array<{ id: string; name: string }>; resortUndoable: number }
 }
 
-type View = 'list' | 'coverage' | 'conditions' | 'sequence' | 'who'
+type View = 'list' | 'board' | 'coverage' | 'conditions' | 'order' | 'who'
 
 export default function ActionsWorkspace({ ideaId, actions, setAside, headings, causes, busy: parentBusy, onChanged, renderFull, initiallyOpen, step = DEFAULT_STEP, costLineActionIds, structure }: Props) {
   const conditions = structure?.conditions ?? EMPTY_CONDITIONS
@@ -409,13 +413,17 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
                 return a.noCostReason?.trim() ? <span title={a.noCostReason}><span className="font-semibold">No cost</span>, because {a.noCostReason.length > 70 ? `${a.noCostReason.slice(0, 69)}…` : a.noCostReason}</span>
                   : parts.length || costLineIds.has(a.id) ? <span>{parts.join(' · ') || 'cost lines recorded'}</span> : <span className="font-semibold text-zinc-800">Cost: not yet answered</span>
               })()}
-              {step === 4 && (
-                <>
-                  {a.sequence ? <span>{SEQUENCE_LABEL[a.sequence]}</span> : <span className="font-semibold text-zinc-800">Sequence: not placed yet</span>}
-                  {a.beforeIds.length > 0 && <span>comes before {a.beforeIds.map((id) => `#${byId.get(id)?.number ?? '?'}`).join(', ')}</span>}
-                </>
-              )}
-              {a.facetProposal && proposalStep(a.facetProposal).includes(step) && <span className="font-semibold text-zinc-700">Lex has proposed {step === 1 ? 'causes or an avenue' : 'a sequence'}</span>}
+              {step === 4 && (() => {
+                // 262 — dependency only: what it must come after (with the reasons), and what it comes before. No Now / Next / Later.
+                const after = afterOf(live, a.id, becauseFor(live))
+                return (
+                  <>
+                    <span className={after.length ? '' : 'font-semibold text-zinc-800'} data-order-tag>{afterWords(after)}</span>
+                    {a.beforeIds.length > 0 && <span>comes before {a.beforeIds.map((id) => `#${byId.get(id)?.number ?? '?'}`).join(', ')}</span>}
+                  </>
+                )
+              })()}
+              {a.facetProposal && proposalStep(a.facetProposal).includes(step) && <span className="font-semibold text-zinc-700">Lex has proposed {step === 1 ? 'causes or an avenue' : 'what it comes before'}</span>}
             </div>}
             {a.titleProposal && (
               <p className="mt-1 text-[11px] text-zinc-700 bg-zinc-50 border border-zinc-200 rounded px-1.5 py-1">
@@ -438,11 +446,11 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
 
   // ── the toolbar ──
   // 26-S2 §3b — ONLY THIS STEP'S CONTROLS ARE RENDERED. Controls that belong to another step are absent (not greyed).
-  //   step 1: titles, headings, causes and avenue (Classify), the coverage grid, duplicates · step 4: sequence (Classify) and its view.
-  //   Steps 2 and 3 have no toolbar yet: their questions are the opened record's (who; the cost ranges).
+  //   step 1: titles, headings, causes and avenue (Classify), the board, the coverage grid, duplicates · step 4: what comes before what
+  //   (Classify) and the derived order. Steps 2 and 3 have no toolbar yet: their questions are the opened record's (who; the cost ranges).
   const modes = STEP_GROUP_MODES[step]
   const views = STEP_VIEWS[step].filter((v) => v !== 'conditions' || activeConditions(conditions).length > 0)
-  const classifyWords = step === 1 ? 'causes and avenue' : 'sequence and what comes before'
+  const classifyWords = step === 1 ? 'causes and avenue' : 'what each must come before'
   // 26-S2 §5 — step 2's one tool: "Classify with Lex" proposes the seven answers for every action that has none (one pass, chunked; the price measured).
   const [confirmSlots, setConfirmSlots] = useState(false)
   const needAnswers = live.filter((a) => ALL_SLOTS.some((k) => !slotAnswered(a, k) && !slotProposal(a, k))).length
@@ -530,7 +538,8 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
           const r = await ops.run('proposeFacets', {}, 'Lex is classifying')
           if (r.ok && r.result) ops.setNote(`Lex proposed the ${classifyWords} for ${r.result.proposed} action${r.result.proposed === 1 ? '' : 's'}. Open an action to correct it, or accept the lot.`)
         }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Classify with Lex</button>
-        {facetProposals > 0 && <button disabled={disabled} onClick={() => void ops.run('acceptFacets', { step })} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white">Accept all {facetProposals} proposed {step === 1 ? 'classifications' : 'sequences'}</button>}
+        {facetProposals > 0 && <button disabled={disabled} onClick={() => void ops.run('acceptFacets', { step }, undefined,
+          (r: { accepted: number; refused?: string[] }) => `Saved: ${r.accepted} accepted.${r.refused?.length ? ` Not taken, because the order would go round in a circle: ${r.refused.join(' ')}` : ''}`)} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white">Accept all {facetProposals} proposed {step === 1 ? 'classifications' : 'orderings'}</button>}
         {step === 1 && (
           <button disabled={disabled || live.length < 2} onClick={async () => {
             const r = await ops.run('findDuplicates', {}, 'finding duplicates')
@@ -647,8 +656,8 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       {step === 1 && pair && <PairPanel key={`${pair.a}-${pair.b}-${pair.mode}`} ideaId={ideaId} a={pair.a} b={pair.b} mode={pair.mode} ops={ops} onClose={() => { setPair(null); setSelected(new Set()) }} byNumber={(n) => live.find((x) => x.number === n)} />}
       {step === 1 && dupes && <DuplicatesPanel data={dupes} onClose={() => setDupes(null)} onMerge={(a, b) => setPair({ a, b, mode: 'merge' })} causes={causeLite} />}
 
-      {/* 190 (UI B) - the find box: title, statement and commentary; the list filters as you type; "n of m actions match"; one press clears it. */}
-      {view === 'list' && unparked.length > 0 && (
+      {/* 190 (UI B) - the find box: title, statement and commentary; the list (and the board's cards, 255) filter as you type; "n of m actions match"; one press clears it. */}
+      {(view === 'list' || view === 'board') && unparked.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5" data-find-box>
           <input type="search" value={find} onChange={(e) => setFind(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setFind('') }}
             placeholder="Find in the actions — title, statement, Detail" aria-label="Find in the actions"
@@ -711,9 +720,16 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
         </>
       )}
 
+      {/* 26-V1b §7a (255) — the board: the same cards as the list (live, not parked, through the find box); its writes are the list's own */}
+      {view === 'board' && step === 1 && (
+        <ActionsBoard ideaId={ideaId} actions={unparked.filter(found)} headings={headings} conditions={conditions} ops={ops} disabled={disabled} headingName={headingName}
+          pairs={dupes?.pairs ?? null}
+          onFindPairs={async () => { const r = await ops.run('findDuplicates', {}, 'finding duplicates'); if (r.ok) { setDupes(r.result); markDuplicatesChecked() } }}
+          onMerge={(x, y) => { setPair({ a: x, b: y, mode: 'merge' }); setTimeout(() => document.querySelector('[aria-label="Merge two actions"]')?.scrollIntoView?.({ block: 'start', behavior: 'smooth' }), 0) }} />
+      )}
       {view === 'coverage' && <CoverageView actions={unparked} causes={causeLite} headings={headings} />}
       {view === 'conditions' && <ConditionsCoverageView doc={conditions} actions={unparked} headings={headings} />}
-      {view === 'sequence' && <SequenceView actions={unparked} />}
+      {view === 'order' && <OrderView actions={unparked} />}
       {view === 'who' && <IncentiveMap ideaId={ideaId} actions={unparked} onOpenAction={openByNumber} onChanged={onChanged} disabled={disabled} />}
 
       {/* 26-T1 - the whole-set digest, at the foot of step 1 */}
@@ -899,27 +915,13 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
   const section: Record<2 | 3 | 4, ReactNode> = {
     2: <div className="space-y-2"><ActionSlots a={a} others={others} disabled={disabled} run={ops.run as never} /></div>,
     3: <div className="space-y-2">{renderFull(a, 3)}</div>,
+    // 26-V1b §7b (262) — Order by dependency only: "must come after #59, because …". Now / Next / Later is not on the screen.
     4: (
-      <div className="rounded border border-zinc-200 bg-white p-2 space-y-1.5">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Order {a.facetProposal && proposalStep(a.facetProposal).includes(4) && '— Lex has proposed some of it'}</p>
-        {a.facetProposal && proposalStep(a.facetProposal).includes(4) && <FacetProposal a={a} step={4} causes={causeLite} others={others} onAccept={() => void ops.run('acceptFacets', { ids: [a.id], step: 4 })} onDismiss={() => void ops.run('dismissFacets', { ids: [a.id], step: 4 })} />}
-        <div className="flex flex-wrap gap-2 items-center text-[11px]">
-          <label className="flex items-center gap-1">{FACET_WORD.sequence}
-            <select value={a.sequence ?? ''} onChange={(e) => facetSet({ sequence: e.target.value || null })} disabled={disabled} className="border border-zinc-300 rounded px-1 py-0.5">
-              <option value="">not placed</option>{SEQUENCES.map((v) => <option key={v} value={v}>{SEQUENCE_LABEL[v]}</option>)}
-            </select></label>
-        </div>
-        <details className="text-[11px]">
-          <summary className="cursor-pointer text-zinc-600">{FACET_WORD.before}: {a.beforeIds.length ? a.beforeIds.map((id) => `#${byId.get(id)?.number ?? '?'}`).join(', ') : 'nothing'} — change</summary>
-          <ul className="mt-1 space-y-0.5 max-h-40 overflow-y-auto">
-            {others.map((o) => (
-              <li key={o.id}><label className="flex items-start gap-1.5">
-                <input type="checkbox" checked={a.beforeIds.includes(o.id)} disabled={disabled} className="mt-0.5 accent-zinc-900"
-                  onChange={(e) => facetSet({ beforeIds: e.target.checked ? [...a.beforeIds, o.id] : a.beforeIds.filter((x) => x !== o.id) })} />
-                <span><span className="font-medium">#{o.number}</span> {actionLabel(o, 70)}</span></label></li>
-            ))}
-          </ul>
-        </details>
+      <div className="space-y-1.5">
+        {a.facetProposal && proposalStep(a.facetProposal).includes(4) && <FacetProposal a={a} step={4} causes={causeLite} others={others}
+          onAccept={() => void ops.run('acceptFacets', { ids: [a.id], step: 4 }, undefined, (r: { refused?: string[] }) => r.refused?.length ? `Saved, but not all of it: ${r.refused.join(' ')}` : 'Saved: Lex’s proposed order for this action.')}
+          onDismiss={() => void ops.run('dismissFacets', { ids: [a.id], step: 4 })} />}
+        <OrderSection a={a} live={live} ops={ops} disabled={disabled} />
       </div>
     ),
   }
@@ -948,7 +950,7 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
     ? <div data-record-section={key} data-step-section={n} data-step-open="true" className="space-y-2 scroll-mt-10">{section[n]}</div>
     : (
       <details data-record-section={key} data-step-section={n} className="rounded border border-zinc-200 bg-white scroll-mt-10">
-        <summary className="cursor-pointer px-2 py-1 text-[11px] text-zinc-700">{otherStepLine(n, a, hasCostLines, headingName)}</summary>
+        <summary className="cursor-pointer px-2 py-1 text-[11px] text-zinc-700">{otherStepLine(n, a, hasCostLines, headingName, afterOf(live, a.id, becauseFor(live)))}</summary>
         <div className="px-2 pb-2 pt-1">{section[n]}</div>
       </details>
     )
@@ -1059,7 +1061,7 @@ function FacetProposal({ a, step, causes, others, onAccept, onDismiss, condition
   // only THIS step's part of the proposal is shown and accepted here; "link" is retired (decision 167)
   if (step === 1 && p.targetCauseIds?.length) bits.push(`causes ${p.targetCauseIds.map((id) => `#${causes.find((c) => c.id === id)?.number ?? '?'}`).join(', ')}`)
   if (step === 1 && p.avenue) bits.push(`avenue ${AVENUE_LABEL[p.avenue as keyof typeof AVENUE_LABEL] ?? p.avenue}`)
-  if (step === 4 && p.sequence) bits.push(`sequence ${SEQUENCE_LABEL[p.sequence as keyof typeof SEQUENCE_LABEL] ?? p.sequence}`)
+  // 262: an old proposal's Now / Next / Later is not shown (accepting drops it)
   if (step === 4 && p.beforeIds?.length) bits.push(`comes before ${p.beforeIds.map((id) => `#${others.find((o) => o.id === id)?.number ?? '?'}`).join(', ')}`)
   return (
     <p className="text-[11px] bg-zinc-50 border border-zinc-200 rounded px-1.5 py-1">
@@ -1142,7 +1144,7 @@ function PairPanel({ ideaId, a, b, mode, ops, onClose, byNumber }: { ideaId: str
           {mode === 'merge' && (answer.verdict === 'MERGE' || answer.verdict === 'ONE_CONTAINS_THE_OTHER') && !done && (
             <button disabled={!!ops.busy} onClick={apply} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white disabled:opacity-40">{answer.verdict === 'MERGE' ? 'Merge them' : `Join #${answer.subordinateNumber} into #${answer.subordinateNumber === a ? b : a}`}</button>
           )}
-          {mode === 'merge' && answer.verdict === 'SEQUENCE' && answer.subordinateNumber != null && <p className="text-[11px] text-zinc-600">Nothing is merged. Open #{answer.subordinateNumber} and set its sequence to Later, with the other coming before it.</p>}
+          {mode === 'merge' && answer.verdict === 'SEQUENCE' && answer.subordinateNumber != null && <p className="text-[11px] text-zinc-600">Nothing is merged. In step 4, open #{answer.subordinateNumber} and say it must come after #{answer.subordinateNumber === a ? b : a}, and why.</p>}
           {mode === 'merge' && answer.verdict === 'CONTRADICTORY' && <p className="text-[11px] text-zinc-600">Nothing is merged. Rule one of them out, with a reason, or keep both and say why.</p>}
         </div>
       )}
@@ -1211,43 +1213,6 @@ export function CoverageView({ actions, causes, headings }: { actions: Canonical
         </table>
       </div>
       {grid.unlinkedActionIds.length > 0 && <p className="text-[11px] text-zinc-500">{grid.unlinkedActionIds.length} action{grid.unlinkedActionIds.length === 1 ? ' has' : 's have'} no recorded cause, so the grid cannot place {grid.unlinkedActionIds.length === 1 ? 'it' : 'them'}: {grid.unlinkedActionIds.map((id) => `#${actions.find((a) => a.id === id)?.number}`).join(', ')}.</p>}
-    </section>
-  )
-}
-
-export function SequenceView({ actions }: { actions: CanonicalAction[] }) {
-  const L = sequenceLayout(actions)
-  const num = (id: string) => `#${actions.find((a) => a.id === id)?.number ?? '?'}`
-  const cols: Array<[keyof typeof L.columns, string]> = [['NOW', 'Now'], ['NEXT', 'Next'], ['LATER', 'Later'], ['UNPLACED', 'Not placed yet']]
-  return (
-    <section aria-label="Sequence view" className="space-y-1.5">
-      <p className="text-[11px] text-zinc-600">What is achievable first <span className="font-semibold">and unlocks the rest</span> goes first. “Before” links are shown as text beside each action, with how many others it unlocks.</p>
-      {L.startWith.length > 0 && (
-        <div className="rounded border-2 border-zinc-900 bg-white p-2 text-[11px]"><p className="font-semibold">Start with</p>
-          <ul className="list-disc pl-4">{L.startWith.slice(0, 5).map((id) => <li key={id}>{num(id)} {actionLabel(actions.find((a) => a.id === id)!, 80)} — unlocks {L.unlocks[id]} other{L.unlocks[id] === 1 ? '' : 's'}</li>)}</ul></div>
-      )}
-      {L.onCycle.length > 0 && <p className="text-[11px] font-semibold text-amber-800">⚠ An impossible order: {L.onCycle.map(num).join(', ')} each have to come before another that has to come before them.</p>}
-      {L.contradictions.length > 0 && <p className="text-[11px] font-semibold text-amber-800">⚠ Against the columns: {L.contradictions.map((e) => `${num(e.from)} must come before ${num(e.to)}, but sits later`).join('; ')}.</p>}
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-        {cols.map(([k, label]) => (
-          <div key={k} className="rounded-lg border border-zinc-200 p-1.5">
-            <h4 className="text-xs font-semibold text-zinc-800 mb-1">{label} <span className="font-normal text-zinc-500">({L.columns[k].length})</span></h4>
-            <ul className="space-y-1">
-              {L.columns[k].map((a) => {
-                const after = L.edges.filter((e) => e.to === a.id).map((e) => num(e.from))
-                return (
-                  <li key={a.id} className="rounded border border-zinc-200 bg-white px-1.5 py-1 text-[11px]">
-                    <span className="font-semibold tabular-nums">#{a.number}</span> {actionLabel(a, 70)}
-                    <div className="text-zinc-500">
-                      {a.beforeIds.length > 0 && <span>comes before {a.beforeIds.filter((id) => L.edges.some((e) => e.from === a.id && e.to === id)).map(num).join(', ')}</span>}
-                      {after.length > 0 && <span>{a.beforeIds.length > 0 ? ' · ' : ''}after {after.join(', ')}</span>}
-                      {L.unlocks[a.id] > 0 && <span> · unlocks {L.unlocks[a.id]}</span>}
-                    </div>
-                  </li>)
-              })}
-            </ul>
-          </div>))}
-      </div>
     </section>
   )
 }

@@ -153,6 +153,19 @@ export async function judgmentsFor(acts: string[], path: string | null): Promise
   } catch (e) { return { total: 0, cases: 0, rows: [], failed: e instanceof Error ? e.message : String(e) } }
 }
 
+/**
+ * 26-V1b §4 — the held text of one section, for the three views of an amendment. Only a `section/N` path has a corpus row of its own;
+ * anything else says so in words (FAILED ≠ EMPTY ≠ NOT HELD, as read-section).
+ */
+export async function heldSectionText(docUri: string, provisionPath: string | null): Promise<{ text: string | null; reason: string }> {
+  const provision = corpusProvision(provisionPath)
+  if (!provision) return { text: null, reason: provisionPath ? `${provisionPath} has no text of its own in the corpus (only whole sections do)` : 'the instruction names the whole Act, not a section' }
+  const held = await heldRow([docUri], provision)
+  if (!held.exact) return { text: null, reason: held.any ? `we hold ${docUri} but not ${provision} on its own` : `${docUri} is not held` }
+  const r = await readSection(held.exact)
+  return r.status === 'text' ? { text: r.text ?? '', reason: '' } : { text: null, reason: r.reason }
+}
+
 export async function touchOf(line: DraftProvision): Promise<Touch> {
   const base: Touch = { line, state: 'held', stateReason: '', actTitle: null, corpusId: null, heldText: null, heldChars: null, effects: null, near: [], nearNote: null }
   const kind = targetKind(line.docUri, line.provisionPath)

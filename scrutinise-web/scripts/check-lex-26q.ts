@@ -192,7 +192,8 @@ async function partB() {
     ok('a PROPOSED classification does not change the action until accepted', beforeAccept.avenue === null && beforeAccept.facetProposal?.avenue === 'FINANCIAL')
     await S.acceptFacetProposals(id, [a3.id])
     const afterAccept = (await computeCanonicalState(id))!.actions.find((a) => a.id === a3.id)!
-    ok('accepting copies the proposal onto the action and clears it', afterAccept.avenue === 'FINANCIAL' && afterAccept.sequence === 'NEXT' && afterAccept.targetCauseIds.join() === c2.id && afterAccept.facetProposal === null)
+    // 26-V1b decision 262: Now / Next / Later is retired — an old proposal's sequence is DROPPED on accept, never written (the column keeps what it had)
+    ok('accepting copies the proposal onto the action and clears it (its retired Now / Next / Later is dropped, not written)', afterAccept.avenue === 'FINANCIAL' && afterAccept.sequence === null && afterAccept.targetCauseIds.join() === c2.id && afterAccept.facetProposal === null)
 
     const pk = await S.park(id, [a4.id], 'later phase')
     ok('park: the action stays LIVE, flagged, with its reason', pk.ok && (await computeCanonicalState(id))!.actions.find((a) => a.id === a4.id)!.parked === true)

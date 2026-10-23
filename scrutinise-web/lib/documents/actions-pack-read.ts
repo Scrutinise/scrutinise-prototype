@@ -15,6 +15,7 @@ import { readConditions } from '@/lib/lex/action-conditions-server'
 import { listRegistry } from '@/lib/lex/source-registry'
 import { plainFoldHeader } from '@/lib/lex/action-resort-pure'
 import { currentVersion } from '@/lib/lex/action-draft-pure'
+import { becauseOf } from '@/lib/lex/action-order-pure'
 import { draftsFor, packDocuments } from '@/lib/lex/action-documents'
 import { touchesFor } from '@/lib/lex/action-touches'
 import { SET_ASIDE_PREFIX, DISMISSED_PREFIX } from '@/lib/lex/update-pass'
@@ -108,6 +109,8 @@ export async function readActionsPackData(
       support: r.supportOnly,
       policyTest: r.policyTestVerdict ? { verdict: r.policyTestVerdict, reason: r.policyTestReason, conflictNote: r.conflictNote } : null,
       slots, sequence: r.sequence, beforeNumbers: r.beforeIds.map((id) => numById.get(id)).filter((n): n is number => n != null).sort((a, b) => a - b),
+      // 26-V1b §7b — what it must come after, with the because line the owner wrote on THIS (the later) action
+      afterLines: rows.filter((o) => o.id !== r.id && o.beforeIds.includes(r.id) && o.number != null).map((o) => ({ number: o.number!, because: becauseOf(r.record)[o.id] ?? null })).sort((a, b) => a.number - b.number),
       parked: r.parked, parkedReason: r.parkedReason, detail, parts, refs, notes: noteRows,
       // 26-U §3/§4 — the current drafting-instruction version, and (filled below) what it touches, computed, never written.
       draft: currentVersion(drafts.get(r.id)), touches: null,

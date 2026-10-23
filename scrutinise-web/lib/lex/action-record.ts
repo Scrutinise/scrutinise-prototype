@@ -49,6 +49,8 @@ export interface ActionRecord {
   draftBefore26V?: unknown
   /** 26-V1 (2d) — "needs a document" overridden by hand, with its reason (lib/lex/action-documents-pure.ts NeedsOverride). */
   documentNeeds?: unknown
+  /** 26-V1b §7b (262) — on the LATER action: why it must come after each earlier one, keyed by the earlier action's id (lib/lex/action-order-pure.ts). */
+  orderBecause?: Record<string, string>
 }
 
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v)
@@ -86,6 +88,11 @@ export function parseRecord(json: unknown): ActionRecord {
   if (isObj(json.draft)) out.draft = json.draft
   if (isObj(json.draftBefore26V)) out.draftBefore26V = json.draftBefore26V
   if (isObj(json.documentNeeds)) out.documentNeeds = json.documentNeeds
+  // 26-V1b §7b — the "because" lines of the order; carried through like the three above, or a slot save would drop them.
+  if (isObj(json.orderBecause)) {
+    const because = Object.fromEntries(Object.entries(json.orderBecause).map(([k, v]) => [k, str(v, 300)]).filter(([, v]) => v))
+    if (Object.keys(because).length) out.orderBecause = because
+  }
   return out
 }
 

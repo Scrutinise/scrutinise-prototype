@@ -1,6 +1,89 @@
 # LEX 26-V1b — Report
 
-**Status, 2026-10-23: V1b-a LIVE at `009198f`; `check:lex-26v1b` 42/42 with a mutation run.**
+**Status, 2026-10-24: V1b-b BUILT — see "V1b-b" below for the push and live verification.** V1b-a LIVE at `009198f`.
+
+## V1b-b — size first (24 Oct, before building)
+
+- **§6 had nothing left.** 6a, 6b and 6c all went live in V1b-a.
+- **No split needed.** The work is about V1b-a's size, which went in one push. Built in this order: §7 and §4 (no spend, no schema), then §5 (one schema change, a priced scratch run).
+- **Measured before building:**
+  - Only #202 on 452c5ade carries textual amendments: v1 "at the end insert", v2 "after subsection (1) insert". v2(2) is non-textual (*modifies*). No substitute or omit exists yet, so the §4d fixture carries those.
+  - The corpus holds a section's text FLATTENED ("149 1 A public authority … a eliminate …"). The parser reads subsection numbers and paragraph letters in sequence, never as bare numbers.
+  - `action_document.kind` is a CHECK list, so the explanatory note needs one schema change. It ships in the same push as the code.
+  - `parseRecord` drops any key it does not know, so the new `orderBecause` had to be added there or a slot save would wipe it.
+- **Settings:** `.claude/settings.local.json` holds no legacy Railway password lines (no `rlwy`, connection string or password match). Already done; nothing to remove.
+
+## V1b-b — what was built
+
+- **§7a, the card board** (255; `components/lex/ActionsBoard.tsx`).
+  - Step 1's views are List · **Board** · Coverage grid · Conditions.
+  - Columns are the headings in list order, then "Unsorted". Cards show the number, the title, "needs N documents: M drafted" (from the documents tree) and the conditions as chips.
+  - The find box filters the cards. Ruled-out and Later-phase actions are not on the board.
+  - **Drag to a column** re-heads through the existing `assignHeading`. **Drag onto a card** opens the existing merge dialogue with both, and nothing merges until it is confirmed there. Each card also has a "Move to…" menu, so nothing needs a drag.
+  - Beside the board is "Possible merges" (Find duplicates, free). Clicking a pair outlines both cards with a thick border **and the word "pair"**, then scrolls them into view.
+- **§7b, Order by dependency only** (262; `lib/lex/action-order-pure.ts`, `components/lex/ActionsOrder.tsx`).
+  - Now / Next / Later is gone from the screen, the pack, Lex's tools and Lex's step-4 classify. `sequence` keeps its values in the data, unshown. An old proposal's sequence is dropped on accept, never written.
+  - An opened record shows "Must come after #59" with a **because line** (optional, 300 characters, counter), Remove, and Add.
+  - Storage: the edge is the existing `beforeIds`. The because line is `record.orderBecause` on the later action, keyed by the earlier one. No migration.
+  - Step 4's view is **"The order, derived"**: a numbered list with the reasons. Ties keep the list's order, and actions caught in a circle are named apart.
+  - **A circle is refused in words naming both:** "#59 cannot come after #202: #202 already has to come after #59. An order cannot go round in a circle…". The refusal runs on all three paths that write `beforeIds`: the screen's `setAfter`, `setFacets` (Lex's `set_action_facets` too), and accepting Lex's proposals (a refused one is said, not written).
+  - Lex has a new tool, `set_action_order` (the same server function). `list_actions` gives "mustComeAfter" with the reasons.
+  - **Actions Pack:** paragraph 9 keeps its number and reads "Order: must come after #59 (because …)". A new ORDER section prints the derived order.
+  - The step-4 checklist counts actions placed by nothing, and says so if there is a circle.
+- **§4, textual amendments and the three views** (258; `lib/lex/textual-amendment-pure.ts`, `components/lex/AmendmentViews.tsx`).
+  - **The parser** is deterministic, with no model call. It reads "In section N of the X Act YYYY (…)," followed by: for subsection/paragraph … substitute—; omit …; after … insert—; at the end insert—; for “a” substitute “b”; omit “a”; after “a” insert “b”; "is repealed"; a lettered list under one head; and "in subsection (n)," scoping.
+  - **The views** sit on the Text tab: a toggle of three buttons, **As it stands · Marked up · As amended**. Marked up strikes omitted words (`<del>`), underlines inserted ones (`<ins>`), and labels each changed line in words: "substituted", "omitted", "inserted", "repealed".
+  - **Findings, in words:**
+    - "the words ‘X’ were not found in section 149 as held; the marked-up view cannot be drawn for it — check the clause". The view then shows as-it-stands and the clause side by side.
+    - The section is not held.
+    - The instruction does not name the section.
+    - **A new one:** an inserted subsection whose number the section already uses.
+  - **Non-textual** ("has effect as if …") shows "as proposed" with "A non-textual modification: the … Regulations … are not amended; they are read differently for these bodies."
+  - **§4a, the prompt.** Lex is told the Part 6 forms, to quote old words exactly, to number inserted provisions so they do not collide, and that non-textual is for *modifies* only (with the line). On a redraft it now receives the **held text** of each section its instruction amends.
+  - The server returns that held text in the document view (`held`), as a free read.
+- **§5, the explanatory note** (259; `lib/lex/explanatory-note.ts`, `explanatory-note-pure.ts`).
+  - It is a document kind, `EXPLANATORY_NOTE`, derived as **needed for every legislative action whose clause has been accepted**.
+  - Lex drafts it from the instruction, the clause and the Detail, as a **proposal** beside the note's versions. The owner chooses "Use it as version N" or "Set aside" (kept).
+  - **The note's shape:** the caveat first ("Drafted by Lex from the clause; not settled; not the Explanatory Notes Parliament will receive."), then Purpose, one part per subsection, and Commencement and extent.
+  - **What is said:** a `[Ref: n]` the Detail does not cite is taken out and said. A subsection Lex skipped is said in the note.
+  - **Pack:** printed straight after its clause.
+  - **Asks first, always**, at the measured price, from the record's Documents section ("draft it with Lex (about 1.9p)") and from the note's own view ("Ask Lex to redraft").
+  - **Schema:** `prisma/lex_26v1b_explanatory_note.sql` widens `action_document_kind_check` by one value. It is applied with this push, not before.
+  - **Not built:** the Introductory Summary quoting the note's opening paragraph (§5b says "may"). `noteOpening()` exists for it.
+
+### §4c — the parser's coverage on 452c5ade (read, nothing written)
+
+| | |
+|---|---|
+| Clause texts on the idea | 4 (#38 v1 and its proposal; #202 proposals 1 and 2) |
+| Textual amendments | **2, both parse** (one operation each); **0 unread** |
+| Non-textual | 1 (#202 v2(2), the 2011 Specific Duties Regulations) |
+| **A real finding** | #202's **proposal 1** inserts "(8)" "at the end" of s.149, but s.149 as held already has (8) and (9). The view says so. (Proposal 2, which inserts (1A), is clean.) |
+
+### §5 — the price, measured on a scratch copy (spent: 5.65p)
+
+| Run | Pence | Seconds |
+|---|---|---|
+| #38 version 1 (16 subsections) | 2.56 | 16.5 |
+| #202 proposal 2 | 1.57 | 9.9 |
+| #202 proposal 1 | 1.52 | 10.2 |
+
+The mean is **1.9p** (n=3). That is under the 5p threshold, but the button still asks first, as §5a says.
+- **The method:** a scratch copy carries no documents, so each clause was read from 452c5ade read-only and composed with `composeNote`, which writes nothing.
+- **The spend:** ledgered to the copy, which was deleted after.
+- `scripts/measure-26v1b-note.ts` re-measures. **Nothing was spent on Charlie's idea.**
+
+### Choices made, not asked
+- **The board's chips** show the conditions an action delivers, "condition 2" or "support". The cards' document counts come from one read of the documents tree.
+- **Where the because line is stored:** on the later action (it answers "why must THIS come after that").
+- **Old snapshots in the pack:** one with no because lines reads the order back from `beforeNumbers`, without reasons.
+- **The explanatory note** drafts from the clause's CURRENT version and says which version in its reason.
+
+### Only Charlie can confirm (§9)
+- The board on Primary legislation (drag, merge pair).
+- Step 4 with a because line.
+- #202's Text tab: the three views on proposal 2 once used; proposal 1's "(8)" finding.
+- An explanatory note read cold (a few pence on his own idea; **not run, asks first**).
 - The schema pair `befa05c` (263: a document keeps its last accepted version) was pushed first.
 - **Verified live:** `/api/health` reports `009198fd…` (production). "Parts of this action, quoted" is in a live chunk, and the control string is in none. build-worker deployed itself as `bf60a5ee`, which went SUCCESS with `meta.commitHash` `009198fd61d6`. Its container printed "retrieval configuration OK" at 19:21:37 UTC.
 - The full regression and the clean build pass. The one exception is GRAPH's `check:idea-law` E1, which compares line count with merged rows and is not caused by this code; see CHANGE_LOG.

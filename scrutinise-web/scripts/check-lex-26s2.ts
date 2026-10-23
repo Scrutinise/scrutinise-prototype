@@ -282,10 +282,11 @@ function partC() {
   ok('…and STEP 2 offers its one tool, “Classify with Lex” (for the seven answers), and the row names the missing slots (“not yet specific — Who and Against unanswered”; “draft text missing” for a legislative one)', /Classify with Lex/.test(s2) && /not yet specific — draft text missing/.test(s2) && /not yet specific — Who and Against unanswered/.test(s2) && /1 of 7 answered/.test(s2) && /0 of 7 answered/.test(s2), s2.slice(0, 500))
   ok('STEP 3 row carries the cost ("Implement £1,000–£2,000", else "Cost: not yet answered") and no Who', s3.includes('Implement £1,000–£2,000') && s3.includes('Cost: not yet answered') && !/Who:/.test(s3))
   ok('…a cost LINE counts as a cost (step 3 reads it as recorded)', textOf(renderWs(3, [mkAction(7)], [], ['a7'])).includes('cost lines recorded'))
-  ok('STEP 4 offers Classify with Lex (sequence), the Sequence view and its rows say where each sits; no step-1 tools', s4.includes('Classify with Lex') && /Sequence/.test(s4) && s4.includes('Sequence: not placed yet') && s4.includes('Now') && !/Title these for me|Find duplicates|Add heading|Coverage grid/.test(s4))
+  // 26-V1b decision 262: step 4 is Order by dependency only — no Now / Next / Later, no "Sequence" (the column keeps its value, unshown)
+  ok('STEP 4 offers Classify with Lex, the derived order, and its rows say what each must come after; no Now / Next / Later; no step-1 tools', s4.includes('Classify with Lex') && s4.includes('The order, derived') && s4.includes('nothing it must come after') && !/\bSequence\b|\bNow\b/.test(s4) && !/Title these for me|Find duplicates|Add heading|Coverage grid/.test(s4))
   ok('the list is checklist-ended in EVERY step: each step prints its own advisory checklist', ST.STEP_NUMBERS.every((n) => new RegExp(`Step ${n} checklist`).test(textOf(renderWs(n, rows)))))
   ok('…step 1\'s says what is unfinished, in words with counts, and that it never blocks', /2 actions have no heading/.test(s1) && /2 actions have no cause/.test(s1) && /Advisory: it never stops you moving on/.test(s1))
-  ok('…step 4\'s counts the actions with no sequence slot', /2 actions have no sequence slot/.test(s4))
+  ok('…step 4\'s counts the actions placed by nothing — nothing they must come after or before (262)', /\d+ actions? ha(?:s|ve) nothing (?:it|they) must come after or before/.test(s4), (/Step 4 checklist.{0,200}/.exec(s4) ?? [''])[0])
 
   // an OPENED record: this step's section first and open, every other under ONE line each
   const o2 = renderWs(2, rows, ['a1'])
@@ -367,7 +368,8 @@ async function partD() {
     ok('accepting STEP 1 copies the causes and avenue only; the step-4 sequence stays waiting as a proposal', a1.status === 200 && mid!.targetCauseIds.includes(cause!.id) && mid!.avenue === 'LEGISLATIVE' && mid!.sequence == null && (mid!.facetProposal as any)?.sequence === 'NOW' && (mid!.facetProposal as any)?.targetCauseIds === undefined, JSON.stringify(mid!.facetProposal))
     const a4 = await post({ op: 'acceptFacets', ids: [x.id], step: 4 })
     const after = await prisma.lexCoherentAction.findUnique({ where: { id: x.id } })
-    ok('…then accepting STEP 4 copies the sequence', a4.status === 200 && after!.sequence === 'NOW')
+    // 262: the old proposal's Now / Next / Later is consumed by the step-4 accept and DROPPED — never written to the column
+    ok('…then accepting STEP 4 clears the proposal and does NOT write its retired Now / Next / Later', a4.status === 200 && after!.sequence == null && (after!.facetProposal as any)?.sequence === undefined, JSON.stringify({ seq: after!.sequence, p: after!.facetProposal }))
     ok('decision 167: the retired "link" in a proposal is dropped — never written to the column', after!.link === before!.link, `${before!.link} → ${after!.link}`)
     control('a step-1 accept that also copied the sequence (must be FALSE)', mid!.sequence === 'NOW')
     await prisma.lexCoherentAction.update({ where: { id: x.id }, data: { facetProposal: { targetCauseIds: [cause!.id], sequence: 'LATER' } as never } })

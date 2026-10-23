@@ -201,7 +201,7 @@ const listCandidates: ToolDefinition = {
 
 const listActionsTool: ToolDefinition = {
   name: 'list_actions', category: 'see', tier: 'free',
-  description: 'List every live coherent action in full — its number (what the user calls it), title, heading, facets (avenue, sequence, the binding link, the numbered causes it attacks, what it must come before), whether it is parked for a later phase, and any title or classification Lex has proposed that the user has not yet accepted. Ruled-out and merged-away actions are not listed.',
+  description: 'List every live coherent action in full — its number (what the user calls it), title, heading, facets (avenue, the binding link, the numbered causes it attacks), its order (what it must come after, with the owner’s reasons, and what it must come before), whether it is parked for a later phase, and any title or classification Lex has proposed that the user has not yet accepted. Ruled-out and merged-away actions are not listed.',
   schema: z.object({}),
   async run(ctx) {
     const [rows, heads, causes] = await Promise.all([
@@ -213,7 +213,9 @@ const listActionsTool: ToolDefinition = {
     return { ok: true, data: rows.map((a) => ({
       number: a.number, id: short(a.id), title: a.title, titleProposed: a.titleProposal, heading: a.headingId ? hn.get(a.headingId) ?? null : null,
       practicalStep: a.practicalStep, whoImplements: a.whoImplements, targetOrganisation: a.targetOrganisation, wording: a.wording, source: a.source,
-      avenue: a.avenue, sequence: a.sequence, link: a.link, causesAttacked: a.targetCauseIds.map((c) => cn.get(c)).filter(Boolean),
+      // 262: Now / Next / Later is retired from the screen, so it is not offered here either (the column keeps its old values, unshown).
+      avenue: a.avenue, link: a.link, causesAttacked: a.targetCauseIds.map((c) => cn.get(c)).filter(Boolean),
+      mustComeAfter: afterOf(rows, a.id, (later, earlier) => becauseOf(later === a.id ? a.record : null)[earlier] ?? null).map((x) => (x.because ? `#${x.number} (because ${x.because})` : `#${x.number}`)),
       mustComeBefore: a.beforeIds.map((b) => an.get(b)).filter(Boolean), parkedForLaterPhase: a.parked, classificationProposed: a.facetProposal != null,
     })) }
   },
@@ -907,6 +909,7 @@ const restoreSource: ToolDefinition = {
 
 import * as AS from '@/lib/lex/action-structure'
 import { groupActions, type GroupMode, GROUP_MODES } from '@/lib/lex/action-facets'
+import { afterOf, becauseOf } from '@/lib/lex/action-order-pure'
 
 const numbers = z.array(z.number().int()).min(1).max(60).describe('action numbers, as the user sees them (#7 is 7)')
 
@@ -936,7 +939,7 @@ const titleActionsTool: ToolDefinition = {
 
 const classifyActionsTool: ToolDefinition = {
   name: 'classify_actions', category: 'draft', tier: 'free',
-  description: 'Propose, for every coherent action, the causes it attacks, its avenue (legislative / organisational / financial), which of the guiding policy’s binding links it protects, and where it sits in the sequence (now / next / later, and what it must come before). All PROPOSALS the user accepts or corrects; a field the user has already set is left alone. A few pence.',
+  description: 'Propose, for every coherent action, the causes it attacks, its avenue (legislative / organisational / financial), which of the guiding policy’s binding links it protects — or, in step 4, what each must come before. All PROPOSALS the user accepts or corrects; a field the user has already set is left alone. A few pence.',
   schema: z.object({}),
   async run(ctx) {
     const r = unwrap(await AS.proposeFacets(ctx.ideaId, ctx.userId))
@@ -993,11 +996,10 @@ const assignHeadingTool: ToolDefinition = {
 
 const setFacetsTool: ToolDefinition = {
   name: 'set_action_facets', category: 'draft', tier: 'free',
-  description: 'Set one action’s classification: avenue (LEGISLATIVE / ORGANISATIONAL / FINANCIAL), sequence (NOW / NEXT / LATER), the binding link it protects (free text, the policy’s own wording), the numbered causes it attacks, and the action numbers it must come before. Only what you pass is changed; pass null to clear a single value.',
+  description: 'Set one action’s classification: avenue (LEGISLATIVE / ORGANISATIONAL / FINANCIAL), the binding link it protects (free text, the policy’s own wording), the numbered causes it attacks, and the action numbers it must come before. Only what you pass is changed; pass null to clear a single value. An order that would go round in a circle is refused. To record WHY one action must come after another, use set_action_order.',
   schema: z.object({
     action: z.number().int(),
     avenue: z.enum(['LEGISLATIVE', 'ORGANISATIONAL', 'FINANCIAL']).nullable().optional(),
-    sequence: z.enum(['NOW', 'NEXT', 'LATER']).nullable().optional(),
     link: z.string().max(160).nullable().optional(),
     causes: z.array(z.number().int()).max(20).optional().describe('cause numbers, as the user sees them'),
     before: z.array(z.number().int()).max(40).optional().describe('action numbers this one must come before'),
@@ -1007,7 +1009,6 @@ const setFacetsTool: ToolDefinition = {
     if (!rows.length) return fail(`there is no live action #${input.action} on this idea.`)
     const patch: AS.FacetPatch = {}
     if (input.avenue !== undefined) patch.avenue = input.avenue
-    if (input.sequence !== undefined) patch.sequence = input.sequence
     if (input.link !== undefined) patch.link = input.link
     if (input.causes) {
       const ids = await Promise.all(input.causes.map((n) => causeIdByNumber(ctx, n)))
@@ -1023,6 +1024,21 @@ const setFacetsTool: ToolDefinition = {
     const r = unwrap(await AS.setFacets(ctx.ideaId, rows[0].id, patch))
     if (isBad(r)) return fail(r.error)
     return { ok: true, data: { action: input.action, set: Object.keys(patch) }, ui: [{ type: 'open_panel', panel: 'actions' }] }
+  },
+}
+
+/** 26-V1b §7b (262) — step 4's one question: "#n must come after #m, because …". The same server function as the screen's. */
+const setOrderTool: ToolDefinition = {
+  name: 'set_action_order', category: 'draft', tier: 'free',
+  description: 'Record that one action must come after another (“#60 must come after #59, because the Code must exist before the duty bites”), with an optional reason of up to 300 characters; or, with on false, that it no longer must. The order of the whole list is derived from these. An order that would go round in a circle is refused, naming both actions.',
+  schema: z.object({ action: z.number().int().describe('the action that comes LATER'), after: z.number().int().describe('the action it must come after'), on: z.boolean().default(true), because: z.string().max(300).nullable().optional() }),
+  async run(ctx, input) {
+    const { rows, missing } = await actionsByNumbers(ctx, [input.action, input.after])
+    if (missing.length || rows.length < 2) return fail(`there is no live action ${missing.map((m) => `#${m}`).join(', ') || `#${input.after}`} on this idea.`)
+    const later = rows.find((r) => r.number === input.action)!, earlier = rows.find((r) => r.number === input.after)!
+    const r = unwrap(await AS.setAfter(ctx.ideaId, later.id, earlier.id, input.on, input.because ?? null))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: r.data, ui: [{ type: 'open_panel', panel: 'actions' }] }
   },
 }
 
@@ -1180,8 +1196,9 @@ const proposeConditionTool: ToolDefinition = {
 
 const groupActionsTool: ToolDefinition = {
   name: 'group_actions', category: 'see', tier: 'free',
-  description: 'Show the coherent actions grouped by heading, cause, link, avenue or sequence (“group these by cause”). READ ONLY — it re-sorts the answer, not the user’s list, and moves nothing between headings.',
-  schema: z.object({ by: z.enum(GROUP_MODES as unknown as [string, ...string[]]) }),
+  description: 'Show the coherent actions grouped by heading, cause, link or avenue (“group these by cause”). READ ONLY — it re-sorts the answer, not the user’s list, and moves nothing between headings.',
+  // 262: grouping by Now / Next / Later is retired with the words themselves
+  schema: z.object({ by: z.enum(GROUP_MODES.filter((m) => m !== 'sequence') as unknown as [string, ...string[]]) }),
   async run(ctx, { by }) {
     const [rows, heads, causes] = await Promise.all([
       AS.liveRows(ctx.ideaId).then((r) => r.filter((x) => !x.parked)),
@@ -1662,7 +1679,7 @@ export const MODEL_TOOLS: ToolDefinition[] = [
   dismissProposalTool, skipFieldTool, reopenFieldTool, archiveSource,
   runComparison, runGap, runConsolidation, rerunBuild, importActionsTool,
   // 26-Q — the coherent-actions workspace
-  titleActionsTool, classifyActionsTool, suggestHeadingsTool, createHeadingTool, assignHeadingTool, setFacetsTool, groupActionsTool,
+  titleActionsTool, classifyActionsTool, suggestHeadingsTool, createHeadingTool, assignHeadingTool, setFacetsTool, setOrderTool, groupActionsTool,
   findDuplicatesTool, withoutActionTool, compareActionsTool, parkActionsTool, restoreActionsTool, ruleOutActionsTool, mergeActionsTool,
   // 26-S2 — a record, step 2's answers, the policy test
   getActionTool, setActionSlotTool, proposeSlotsTool, testPolicyTool, conditionsCoverageTool, proposeConditionTool,

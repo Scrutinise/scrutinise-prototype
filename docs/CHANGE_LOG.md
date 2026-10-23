@@ -1,5 +1,34 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-23 23:57 UTC - LEX 26-V1b-b: textual amendments and their three views, the explanatory note, the card board, Order by dependency
+
+- **Sized first, no split needed** (`docs/LEX_26V1b_REPORT.md`, "V1b-b — size first"). §6 had nothing left after V1b-a.
+- **§7a, the board** (255, `ActionsBoard.tsx`): step 1's List · Board. Columns are the headings plus Unsorted.
+  - Drag to a column re-heads (`assignHeading`). Drag onto a card opens the existing merge dialogue.
+  - "Possible merges" outlines both cards and adds the word "pair".
+- **§7b, Order by dependency only** (262, `action-order-pure.ts`, `ActionsOrder.tsx`):
+  - Now / Next / Later is gone from the screen, the pack and Lex's tools. `sequence` is kept, unshown.
+  - "Must come after #59 (because …)": the because line is `record.orderBecause` on the later action, 300 characters. No migration.
+  - The derived order is a numbered list.
+  - A circle is refused in words naming both, on `setAfter`, `setFacets` and the proposal accept.
+  - New Lex tool `set_action_order`. Pack paragraph 9 is now "Order", plus an ORDER section.
+- **§4, textual amendments** (258, `textual-amendment-pure.ts`, `AmendmentViews.tsx`):
+  - A deterministic reader of the OPC Part 6 forms. The Text tab toggles As it stands · Marked up · As amended, with each change labelled in words.
+  - Findings in words: words not found, section not held, section not named, an inserted number that collides.
+  - Non-textual clauses get their line.
+  - Coverage on 452c5ade: 2 of 2 amendments parse, 0 unread, 1 non-textual. ⚠ It found that #202's proposal 1 inserts "(8)", which s.149 already has.
+  - The drafting prompt now gives the forms, and the held text of each amended section.
+- **§5, the explanatory note** (259, `explanatory-note.ts`):
+  - A new kind, needed once a clause is accepted.
+  - Lex drafts it as a proposal; the owner uses it or sets it aside.
+  - The caveat comes first. One paragraph per subsection. It prints after its clause.
+  - **Price measured on a scratch copy:** 2.56p, 1.57p, 1.52p (n=3, mean 1.9p, 5.65p spent, on the copy). The button asks first. Nothing was spent on 452c5ade.
+- **Schema with the code:** `prisma/lex_26v1b_explanatory_note.sql` widens `action_document_kind_check` by `EXPLANATORY_NOTE`. Applied to Neon in this push (whichdb first), not before.
+- **Checks:**
+  - `check:lex-26v1b` covers all 12 items (V1b-b in parts D and E, with the browser).
+  - Updated for 262: `check:lex-26q`, `check:lex-26s2` and `verify:lex-26q-ui`. Their old assertions said accepting a proposal writes Now / Next / Later.
+- **Left out of this commit:** another stream's uncommitted work in the same tree, `lib/lex/statutory-graph.ts` (three exports) and `lib/lex/onward*.ts` and `agent/onward-tool.ts`. Nothing here imports it.
+
 ## 2026-10-23 19:14 UTC - LEX 26-V1b-a: the action record restructured, the document view, the Law panel's words
 
 - **Schema first** (`befa05c`, pushed before this code; 263): `action_document_accepted_check` now runs one way. ACCEPTED needs `accepted_v`; a DRAFTED document keeps its last accepted version. DDL `prisma/lex_26v1b_accepted_kept.sql`, applied to Neon after whichdb and read back.

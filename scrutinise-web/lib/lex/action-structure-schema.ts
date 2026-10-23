@@ -102,6 +102,8 @@ export const ActionStructureBody = z.discriminatedUnion('op', [
   z.object({ op: z.literal('acceptDraft'), actionId: z.string() }),
   z.object({ op: z.literal('dismissDraft'), actionId: z.string() }),
   z.object({ op: z.literal('touches'), actionId: z.string() }),
+  // 26-V1b §7b (262) — step 4, Order by dependency only: `actionId` must come after `afterId` (on), or no longer (off); `because` optional.
+  z.object({ op: z.literal('setAfter'), actionId: z.string(), afterId: z.string(), on: z.boolean(), because: z.string().max(LIMITS.orderBecause).nullable().optional() }),
 ])
 
 /** What the UI must send — the schema's INPUT type, so an optional/defaulted key stays optional. */
@@ -125,6 +127,7 @@ export const OP_WORDS: Record<ActionStructureOp, string> = {
   resortPlan: '“Re-sort into headings”', resortBatch: '“Re-sort into headings”', resortFinish: '“Re-sort into headings”', undoResort: '“Undo the re-sort”',
   consolidatePlan: '“Consolidate this heading”', consolidate: '“Consolidate this heading”', restoreHeading: '“Bring the heading back”', setHeadingsHidden: '“Hide all / Show all headings”',
   saveDraft: 'Saving the drafting instruction', draftAction: '“Draft this clause”', acceptDraft: 'Using Lex’s draft', dismissDraft: 'Dismissing Lex’s draft', touches: '“What this touches”',
+  setAfter: 'Saving what this action must come after',
 }
 
 /** And the words for the inputs those controls send. */
@@ -135,4 +138,5 @@ export const INPUT_WORDS: Record<string, string> = {
   conditionId: 'the condition', proposalId: 'the proposed condition', conditionIds: 'the conditions', support: 'the support mark', dir: 'the direction (up or down)', retired: 'retired or not',
   instruction: 'the drafting instruction', provisions: 'the provisions it amends, repeals or relies on', docUri: 'the Act’s id (for example ukpga/2010/25)', provisionPath: 'the provision (for example section/5)', clause: 'the clause', extent: 'the extent', instrument: 'the instrument', precedents: 'the precedents',
   op: 'the control', step: 'the step (1 to 4)', note: 'the note', slot: 'the question being answered', text: 'the answer', direction: 'the direction (with, against, indifferent)', linkActionId: 'the linked action', replace: 'the choice to replace your answer',
+  afterId: 'the action it must come after', on: 'whether it must come after', because: 'the reason (“because …”)',
 }

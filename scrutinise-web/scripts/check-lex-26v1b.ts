@@ -1,5 +1,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// check:lex-26v1b — BRIEF_26V1b §8 for V1b-a (items 1–5, 7, 9; 6, 8, 10, 11 come with V1b-b). Counts what RAN (§23.2).
+// check:lex-26v1b — BRIEF_26V1b §8, all twelve items: V1b-a (1–5, 7, 9) in A–C, V1b-b (6, 8, 10, 11) in D–E. Counts what RAN (§23.2).
+//   D · the three views on the real held text of s.149 (6), the parser's coverage on 452c5ade (cold, §4c), Order by dependency with a
+//       circle refused (11), the explanatory note (8; its document write is NOT RUN until the widened CHECK is applied — it ships with the code).
+//   E · the browser: the board's drag to re-head, drag to merge and the "pair" outline (10); the three views' toggle (6).
 //
 //   A · the cold read (§26): 452c5ade as it stands, through readers with no side effect — the Law panel rendered from ideaLawSet (9), D.38.1's
 //       header strip against the database (3, after Charlie's use), and "Commentary" nowhere on the record or in a prompt (2).
@@ -34,6 +37,19 @@ import IdeaLawPanel from '../components/lex/IdeaLawPanel'
 import ActionsWorkspace from '../components/lex/ActionsWorkspace'
 import * as FP from '../components/lex/FieldsPanel'
 import { scratchCopy } from './lib/scratch-copy'
+// V1b-b
+import * as TA from '../lib/lex/textual-amendment-pure'
+import * as TO from '../lib/lex/action-touches'
+import * as AV from '../components/lex/AmendmentViews'
+import * as OV from '../components/lex/ActionsOrder'
+import * as S from '../lib/lex/action-structure'
+import { becauseOf } from '../lib/lex/action-order-pure'
+import { computeCanonicalState } from '../lib/lex/state'
+import { buildProposalSnapshot } from '../lib/documents/proposal-snapshot'
+import { buildActionsPackDocument } from '../lib/documents/build-actions-pack'
+import { NOTE_CAVEAT } from '../lib/lex/action-documents-pure'
+import { NOTE_RUNS, notePrice, noteBody } from '../lib/lex/explanatory-note-pure'
+import { noteAskWords } from '../components/lex/DocumentView'
 
 let pass = 0, fail = 0, ran = 0, controls = 0, dead = 0, notRun = 0
 function ok(name: string, cond: boolean, detail = '') { ran++; if (cond) { pass++; console.log(`  ✓ ${name}`) } else { fail++; console.log(`  ✗ ${name}${detail ? `\n      ${detail}` : ''}`) } }
@@ -161,7 +177,8 @@ async function partB(): Promise<{ copyId: string; userId: string; docId: string 
   const facts = await actionDocuments(copy.id, a59.id)
   const docsRow = facts.ok ? facts.data : null
   const st = bandStates({ detail: act.commentary, documents: docsRow ? { needed: docsRow.needs.kinds.length, drafted: docsRow.documents.filter((d) => docsRow.needs.kinds.includes(d.kind) && d.current).length, accepted: 0, total: docsRow.documents.length } : null, lawRows: docsRow?.lawRows ?? null, whoAnswered: 0, whoOf: 7, costs: 'not answered', after: [], comments: 0 })
-  ok('the band’s states are the data’s: Documents "2 needed, 1 drafted", Law "2 rows", Detail "1 part"', st.documents === '2 needed, 1 drafted' && st.law === '2 rows' && st.detail === '1 part', JSON.stringify(st))
+  // 26-V1b §5 (259): the clause was accepted at version 1 (B1), so it now needs its explanatory note too — three needed, not two.
+  ok('the band’s states are the data’s: Documents "3 needed, 1 drafted" (an accepted clause needs its explanatory note, 259), Law "2 rows", Detail "1 part"', st.documents === '3 needed, 1 drafted' && st.law === '2 rows' && st.detail === '1 part' && !!docsRow?.needs.kinds.includes('EXPLANATORY_NOTE'), JSON.stringify(st))
 
   section('B4 · item 5 — what it touches: SIs made under it, judgments interpreting it, "none held" where there are none')
   const t149 = await touchOf({ docUri: EQUALITY, provisionPath: 'section/149', relation: 'amends', note: '' })
@@ -283,12 +300,201 @@ async function partC(copyId: string, userId: string, docId: string) {
   } finally { await browser.close() }
 }
 
+// ── D · V1b-b: items 6, 8, 11 — real functions on the scratch copy, and the parser's coverage on 452c5ade (cold) ─────────────────────
+const FIX_SUBST = '(1) In section 149 of the Equality Act 2010 (public sector equality duty)—\n(a) for subsection (2) substitute—\n“(2) A fixture person exercising public functions must have regard to the fixture matters.”;\n(b) omit subsection (4);\n(c) after subsection (6) insert—\n“(6A) A fixture subsection inserted by the check.”'
+const FIX_MISS = '(1) In section 149 of the Equality Act 2010, for “a fixture phrase the Act does not contain” substitute “anything at all”.'
+const FIX_MOD = '(1) The Fixture Regulations 2011 (S.I. 2011/9999) have effect as if they did not apply to a fixture body.'
+const S149 = { docUri: EQUALITY, provisionPath: 'section/149', relation: 'amends' as const, note: 'fixture' }
+
+async function partD(copyId: string, userId: string): Promise<{ a202: string; a38: string; a59: string; heading: string; doc202: string } | null> {
+  section('D1 · item 6 — the three views, on the REAL held text of Equality Act 2010 s.149 (the §4d fixture)')
+  const held = await TO.heldSectionText(EQUALITY, 'section/149')
+  if (!held.text) { skip('the three views', `s.149 is not held: ${held.reason}`); return null }
+  const lines = TA.heldLines(held.text, '149')
+  ok('the held text reads back into numbered lines: (1)…(9), with (1)’s paragraphs (a)–(c)', lines.filter((l) => l.at.para == null).map((l) => l.at.sub).join(',') === '1,2,3,4,5,6,7,8,9' && lines.filter((l) => l.at.sub === '1' && l.at.para).map((l) => l.at.para).join('') === 'abc', lines.map((l) => l.label).join(''))
+  const p = TA.parseAmendments(FIX_SUBST)
+  ok('the fixture parses: one amendment to s.149 of the Equality Act 2010, three operations (substitute, omit, insert)', p.amendments.length === 1 && p.amendments[0].section === '149' && p.amendments[0].ops.map((o) => o.kind).join(',') === 'substitute-unit,omit-unit,insert-after' && !p.unparsed.length, JSON.stringify(p))
+  const m = TA.applyAmendments(lines, p.amendments[0].ops, 'section 149')
+  ok('marked up: (2) substituted (old struck, new underlined), (4) omitted, (6A) inserted — each changed line labelled in words', m.findings.length === 0 && m.applied === 3
+    && m.lines.some((l) => l.label === '(2)' && l.change === 'substituted' && l.segs.every((s) => s.k === 'omitted')) && m.lines.some((l) => l.label === '(2)' && l.insertedLine && l.change === 'substituted')
+    && m.lines.some((l) => l.label === '(4)' && l.change === 'omitted') && m.lines.some((l) => l.label === '(6A)' && l.change === 'inserted'), JSON.stringify(m.findings))
+  const stands = TA.asItStands(lines).join('\n'), amended = TA.asAmended(m).join('\n')
+  ok('as it stands is the held text: the old (2) and (4) are there; no (6A)', /\(2\) A person who is not a public authority/.test(stands) && /\(4\) The steps involved/.test(stands) && !/\(6A\)/.test(stands))
+  ok('as amended: the new (2) and (6A) are in; the old (2) and (4) are gone; (6) is followed by (6A)', /\(2\) A fixture person/.test(amended) && /\(6\)[^\n]*\n\(6A\) A fixture subsection/.test(amended) && !/A person who is not a public authority/.test(amended) && !/\(4\) The steps involved/.test(amended))
+  const titles = { [EQUALITY]: 'Equality Act 2010' }, heldMap = { [`${EQUALITY}|section/149`]: held }
+  const html = renderToStaticMarkup(React.createElement(AV.default, { clause: FIX_SUBST, provisions: [S149], titles, held: heldMap }))
+  const words = [...html.matchAll(/data-change-word="?[^>]*>([a-z]+)</g)].map((x) => x[1])
+  ok('rendered: the toggle of three buttons, and the change words on the screen — substituted, omitted, inserted — with <del> and <ins>', /As it stands[\s\S]*Marked up[\s\S]*As amended/.test(textOf(html)) && ['substituted', 'omitted', 'inserted'].every((w) => words.includes(w)) && /<del/.test(html) && /<ins/.test(html), words.join(','))
+  control('a changed line drawn with no change word beside it (colour or style alone) (must be FALSE)', m.lines.filter((l) => l.segs.some((s) => s.k !== 'same')).length > words.length)
+  const miss = TA.applyAmendments(lines, TA.parseAmendments(FIX_MISS).amendments[0]?.ops ?? [], 'section 149')
+  const missHtml = textOf(renderToStaticMarkup(React.createElement(AV.default, { clause: FIX_MISS, provisions: [S149], titles, held: heldMap })))
+  ok('an unmatched substitute: "the words ‘…’ were not found in section 149 as held; the marked-up view cannot be drawn — check the clause", and the side-by-side', /^the words ‘a fixture phrase the Act does not contain’ were not found in section 149 as held; the marked-up view cannot be drawn for it — check the clause\.$/.test(miss.findings[0] ?? '') && /were not found in section 149 as held/.test(missHtml) && /As it stands[\s\S]*The clause/.test(missHtml), miss.findings.join(' | '))
+  const mod = TA.parseAmendments(FIX_MOD)
+  const modHtml = textOf(renderToStaticMarkup(React.createElement(AV.default, { clause: FIX_MOD, provisions: [{ docUri: 'uksi/2011/9999', provisionPath: null, relation: 'modifies', note: '' }], titles: {}, held: {} })))
+  ok('a modifies clause: "as proposed", with the non-textual line', !mod.amendments.length && mod.nonTextual.length === 1 && AV.proposedLine(false, true) === 'As proposed — a non-textual modification; nothing to mark up.' && /A non-textual modification: the Fixture Regulations 2011 \(S\.I\. 2011\/9999\) are not amended; they are read differently for these bodies\./.test(modHtml), modHtml.slice(0, 300))
+  control('the views drawn for a modifies clause (must be FALSE)', /data-amendment-toggle/.test(renderToStaticMarkup(React.createElement(AV.default, { clause: FIX_MOD, provisions: [], titles: {}, held: {} }))))
+
+  section('D2 · §4c — the parser’s coverage on the real clauses of 452c5ade (cold: a plain read, nothing written)')
+  const real = await prisma.$queryRawUnsafe<Array<{ n: number; role: string; v: number; clause: string | null }>>(`SELECT a.number AS n, v.role, v.v, v.payload->>'clause' AS clause FROM action_document d JOIN "LexCoherentAction" a ON a.id = d.action_id JOIN action_document_version v ON v.document_id = d.id WHERE d.idea_id LIKE '452c5ade%' AND d.kind = 'DRAFT_CLAUSE' ORDER BY a.number, v.role, v.v`)
+  const cov = TA.coverage(real.map((r) => r.clause ?? ''))
+  console.log(`    coverage: ${real.length} clause texts · ${cov.amendments} amendments parse (${cov.ops} operations) · ${cov.unparsed.length} do not · ${cov.nonTextual} non-textual${cov.unparsed.map((u) => `\n      not read: (${u.part}) ${u.why}`).join('')}`)
+  ok('every textual amendment Lex has drafted on 452c5ade parses (none unread), and #202 v2’s regulations line is read as non-textual', real.length > 0 && cov.amendments >= 2 && cov.unparsed.length === 0 && cov.nonTextual >= 1, JSON.stringify(cov))
+  const v1 = real.find((r) => r.n === 202 && r.role === 'PROPOSAL' && r.v === 1)
+  const v1m = v1 ? TA.applyAmendments(lines, TA.parseAmendments(v1.clause ?? '').amendments[0]?.ops ?? [], 'section 149') : null
+  ok('a real finding: #202’s proposal 1 inserts a subsection (8) at the end, but s.149 as held already has a (8) — said in words', !!v1m && v1m.findings.some((f) => /inserts a subsection \(8\), but section 149 as held already has a subsection \(8\)/.test(f)), v1m?.findings.join(' | '))
+
+  section('D3 · item 11 — Order by dependency only: "must come after", a because line, a circle refused in words (262)')
+  const num = async (n: number) => (await prisma.lexCoherentAction.findFirstOrThrow({ where: { ideaId: copyId, number: n, status: 'LIVE' }, select: { id: true } })).id
+  const [a59, a202, a38] = [await num(59), await num(202), await num(38)]
+  const BECAUSE = 'the Code must exist before the duty bites'
+  const r1 = await S.setAfter(copyId, a202, a59, true, BECAUSE)
+  const live1 = await S.liveRows(copyId)
+  ok('"#202 must come after #59, because …": #59 comes before #202 (beforeIds), the because is on #202’s record', r1.ok && live1.find((r) => r.id === a59)!.beforeIds.includes(a202) && becauseOf(live1.find((r) => r.id === a202)!.record)[a59] === BECAUSE)
+  const r2 = await S.setAfter(copyId, a59, a202, true, null)
+  ok('the reverse is refused, naming both: "#59 cannot come after #202: #202 already has to come after #59 … cannot go round in a circle"', !r2.ok && /#59 cannot come after #202: #202 already has to come after #59\./.test((r2 as { error: string }).error) && /circle/.test((r2 as { error: string }).error), (r2 as { error?: string }).error)
+  control('the refused link written anyway (must be FALSE)', (await S.liveRows(copyId)).find((r) => r.id === a202)!.beforeIds.includes(a59))
+  await S.setAfter(copyId, a38, a202, true, null)
+  const r3 = await S.setFacets(copyId, a38, { beforeIds: [a59] })
+  ok('a longer circle through Lex’s path too (setFacets): "#59 cannot come after #38 … (through #202)"', !r3.ok && /#59 cannot come after #38: #38 already has to come after #59 \(through #202\)/.test((r3 as { error: string }).error), (r3 as { error?: string }).error)
+  // the old column is kept, unshown (262): set it, and assert the screen never says it
+  await prisma.lexCoherentAction.update({ where: { id: a202 }, data: { sequence: 'LATER' } })
+  const st = await computeCanonicalState(copyId)
+  const step4 = (open: string[]) => renderToStaticMarkup(React.createElement(ActionsWorkspace, {
+    ideaId: copyId, actions: st!.actions as never, setAside: [] as never, headings: st!.actionHeadings as never, causes: [] as never, busy: false, onChanged: () => {}, initiallyOpen: open, step: 4 as never, costLineActionIds: [],
+    renderFull: (_x: unknown, _s: number, between?: React.ReactNode) => React.createElement('div', null, between),
+  }))
+  const closed = textOf(step4([]))
+  const html4 = step4([a202])
+  const t4 = `${closed} ${textOf(html4)}`
+  ok('step 4, the list: #202’s row reads "must come after #59 (the Code must exist before the duty bites)"', closed.includes(`must come after #59 (${BECAUSE})`))
+  ok('step 4, #202 opened: "Must come after #59" with its because line in an editable box (300, counted), Remove, and Add', /data-order-after="59"/.test(html4) && html4.includes(`value="${BECAUSE}"`) && /Must come after #59/.test(textOf(html4)) && /Remove/.test(textOf(html4)) && /data-order-add/.test(html4))
+  ok('…and no Now / Next / Later, no "Sequence", anywhere on step 4 — although #202’s column still says LATER', !/\b(Now|Next|Later)\b/.test(t4.replace(/Later phase/g, '')) && !/Sequence/.test(t4) && (await prisma.lexCoherentAction.findUniqueOrThrow({ where: { id: a202 } })).sequence === 'LATER', (/.{30}\b(Now|Next|Later|Sequence)\b.{30}/.exec(t4) ?? [''])[0])
+  const order = renderToStaticMarkup(React.createElement(OV.OrderView, { actions: st!.actions as never }))
+  const ot = textOf(order)
+  ok('the derived order, numbered, with the reasons: #59 before #202 before #38', ot.indexOf('#59') < ot.indexOf('#202') && ot.indexOf('#202') < ot.indexOf('#38') && ot.includes(`must come after #59 (${BECAUSE})`))
+  const snap = await buildProposalSnapshot(copyId)
+  const pack = buildActionsPackDocument(snap, { selection: { actionIds: [a59, a202, a38] } })
+  const packText = JSON.stringify(pack.model.blocks)
+  ok('the Actions Pack: each action’s 9 reads "Order: must come after …", and an ORDER section prints the derived order with the reasons', /"Order: "/.test(packText) && /must come after #59 \(the Code must exist before the duty bites\)/.test(packText) && /"title":"ORDER"/.test(packText) && /1\. #59 /.test(packText))
+  control('the pack printing the old "Sequence:" line (Now / Next / Later) (must be FALSE)', /Sequence: /.test(packText))
+
+  // fixtures for the browser and D4
+  const h = await S.createHeading(copyId, 'Fixture heading for the board')
+  await prisma.lexCoherentAction.updateMany({ where: { id: { in: [a59, a202, a38] } }, data: { avenue: 'LEGISLATIVE' } })
+  const sv = await DR.saveVersion(copyId, a202, { ...EMPTY_INSTRUCTION, instrument: 'AMENDING_ACT', provisions: [S149], clause: FIX_SUBST }, { userId, author: 'OWNER' })
+  const doc202 = sv.ok ? (await prisma.actionDocument.findFirstOrThrow({ where: { actionId: a202, kind: 'DRAFT_CLAUSE' } })).id : ''
+  return h.ok ? { a202, a38, a59, heading: h.data.id, doc202 } : null
+}
+
+/** D4 · item 8 — the explanatory note. Writes a note document, so it needs the widened CHECK (it ships with this code; NOT RUN before). */
+async function partD4(copyId: string, a59: string) {
+  section('D4 · item 8 — the explanatory note: price measured, caveat first, needed for an accepted clause, printed after its clause')
+  ok('the price is MEASURED (n≥3 runs on a scratch copy) and the ask says so', NOTE_RUNS.length >= 3 && notePrice().n === NOTE_RUNS.length && /measured on a copy of a real idea, n=3/.test(noteAskWords(notePrice())), noteAskWords(notePrice()))
+  const nb = noteBody({ purpose: 'Why. [Ref: 4] [Ref: 99]', subsections: [{ n: 1, text: 'One.' }, { n: 3, text: 'Three.' }], commencementAndExtent: 'When and where.' }, [1, 2], new Set([4]))
+  ok('noteBody: the caveat is the first line; one part per subsection; a missing one is said; an invented [Ref: n] is taken out and said', nb.body.split('\n')[0] === NOTE_CAVEAT && /## Subsection \(2\)\nLex wrote no paragraph for this subsection\./.test(nb.body) && nb.missing.join() === '2' && nb.extra.join() === '3' && nb.dropped.join() === '99' && /\[Ref: 4\]/.test(nb.body) && !/\[Ref: 99\]/.test(nb.body))
+  const widened = (await prisma.$queryRawUnsafe<Array<{ def: string }>>(`SELECT pg_get_constraintdef(oid) AS def FROM pg_constraint WHERE conname = 'action_document_kind_check'`))[0]?.def ?? ''
+  if (!/EXPLANATORY_NOTE/.test(widened)) { skip('writing and printing a note document', 'action_document_kind_check is not yet widened (prisma/lex_26v1b_explanatory_note.sql ships with this push)'); return }
+  const w = await D.writeTextProposal(copyId, a59, 'EXPLANATORY_NOTE', 'Explanatory note', { body: nb.body, reason: 'fixture', pence: 0, sources: [] })
+  const used = await D.useTextProposal(copyId, w.documentId)
+  const v = await documentView(copyId, w.documentId)
+  ok('the proposal is used as version 1 (by Lex), kept as answered; the view’s text starts with the caveat', used.ok && !!v.ok && v.data.current?.author === 'LEX' && v.data.doc.current?.body.startsWith(NOTE_CAVEAT) === true && !v.data.textProposal)
+  const snap = await buildProposalSnapshot(copyId)
+  const packText = JSON.stringify(buildActionsPackDocument(snap, { selection: { actionIds: [a59] } }).model.blocks)
+  const iClause = packText.indexOf('Drafting instruction and clause'), iNote = packText.indexOf('Explanatory note (explanatory note'), iColl = packText.indexOf('(collision report')
+  ok('printed in the Actions Pack straight after its clause, before the collision report, caveat first', iClause >= 0 && iNote > iClause && (iColl < 0 || iNote < iColl) && packText.indexOf(NOTE_CAVEAT) > iNote, `${iClause} ${iNote} ${iColl}`)
+}
+
+// ── E · V1b-b in the browser: the board (item 10) and the three views (item 6) ──────────────────────────────────
+async function partE(copyId: string, userId: string, f: { a202: string; a38: string; a59: string; heading: string; doc202: string }) {
+  section('E · the browser — the board and the three views, the real routes on the scratch copy')
+  let chromium: typeof import('playwright').chromium
+  try { chromium = (await import('playwright')).chromium } catch (e) { skip('the browser section E', `playwright is not loadable: ${(e as Error).message}`); return }
+  const bundle = (await build({ entryPoints: [join(ROOT, 'scripts/fixtures/doc-view-harness-entry.tsx')], bundle: true, write: false, format: 'iife', jsx: 'automatic', platform: 'browser', define: { 'process.env.NODE_ENV': '"production"' }, logLevel: 'silent', tsconfig: join(ROOT, 'tsconfig.json') })).outputFiles[0].text
+  ;(globalThis as { __STUB_AUTH_USER?: unknown }).__STUB_AUTH_USER = await prisma.user.findUniqueOrThrow({ where: { id: userId } })
+  const docsRoute = await import('../app/api/ideas/[id]/action-documents/route')
+  const structRoute = await import('../app/api/ideas/[id]/action-structure/route')
+  const browser = await chromium.launch()
+  try {
+    // ⚠ The harness page carries no Tailwind CSS, so the board's columns STACK here (in the app they sit side by side). A drag needs its
+    // source and its target both under the pointer, so the viewport is made tall enough to hold every column at once.
+    const page = await browser.newPage({ viewport: { width: 1400, height: 16000 } })
+    const errors: string[] = []
+    page.on('pageerror', (e) => errors.push(e.message))
+    await page.route('http://harness.test/', (r) => r.fulfill({ contentType: 'text/html', body: '<!doctype html><html><body><div id="root"></div></body></html>' }))
+    const params = { params: Promise.resolve({ id: copyId }) }
+    for (const [glob, handler] of [['**/api/ideas/*/action-documents', docsRoute], ['**/api/ideas/*/action-structure', structRoute]] as const) {
+      await page.route(glob, async (r) => {
+        const h = handler as { POST: (req: Request, p: typeof params) => Promise<Response>; GET?: (req: Request, p: typeof params) => Promise<Response> }
+        const res = r.request().method() === 'GET' && h.GET ? await h.GET(new Request('http://internal.invalid/'), params)
+          : await h.POST(new Request('http://internal.invalid/', { method: 'POST', headers: { 'content-type': 'application/json' }, body: r.request().postData() ?? '' }), params)
+        await r.fulfill({ status: res.status, contentType: 'application/json', body: await res.text() })
+      })
+    }
+    await page.route('**/api/ideas/*/canonical-for-check', async (r) => { const s = await computeCanonicalState(copyId); await r.fulfill({ contentType: 'application/json', body: JSON.stringify({ actions: s!.actions, setAsideActions: s!.setAsideActions, actionHeadings: s!.actionHeadings, conditions: s!.conditions }) }) })
+    await page.route('**/api/ideas/*/{action-ideas,action-digest,action-thread}**', (r) => r.fulfill({ contentType: 'application/json', body: '{"held":0,"digests":[],"notes":[]}' }))
+    const load = async (dv: Record<string, unknown>) => { await page.goto('http://harness.test/'); await page.evaluate((x) => { (window as unknown as { __dv: unknown }).__dv = x }, dv); await page.addScriptTag({ content: bundle }) }
+
+    // item 10 — the board
+    await load({ mode: 'workspace', ideaId: copyId, step: 1 })
+    await page.waitForSelector('[role="tab"]', { timeout: 30_000 })
+    await page.getByRole('tab', { name: /Board/ }).click()
+    await page.waitForSelector('[data-board]')
+    const col = page.locator(`[data-board-column="${f.heading}"]`)
+    ok('the board: a column per heading (in list order) and "Unsorted", cards with "needs N documents"', (await col.count()) === 1 && (await page.locator('[data-board-column="__unsorted"]').count()) === 1 && (await page.locator(`[data-board-card="${f.a59}"] [data-board-needs]`).innerText().catch(() => '')).length > 0)
+    const drag = async (from: string, to: import('playwright').Locator) => {
+      const hb = await page.locator(`[data-board-card="${from}"] button[aria-label^="Drag action"]`).boundingBox(), tb = await to.boundingBox()
+      if (!hb || !tb) return false
+      await page.mouse.move(hb.x + hb.width / 2, hb.y + hb.height / 2); await page.mouse.down()
+      await page.mouse.move(tb.x + tb.width / 2, tb.y + Math.min(30, tb.height / 2), { steps: 8 }); await page.mouse.up()
+      return true
+    }
+    const boxes = JSON.stringify([await page.locator(`[data-board-card="${f.a59}"] button[aria-label^="Drag action"]`).boundingBox(), await col.locator('h4').boundingBox()])
+    await drag(f.a59, col.locator('h4'))
+    await page.waitForFunction((id) => !!document.querySelector(`[data-board-column="${id}"] [data-board-card]`), f.heading, { timeout: 20_000 }).catch(() => {})
+    ok('drag a card to another column = re-head, through assignHeading: #59 is under the heading in the database and in its column', (await prisma.lexCoherentAction.findUniqueOrThrow({ where: { id: f.a59 } })).headingId === f.heading && (await col.locator(`[data-board-card="${f.a59}"]`).count()) === 1,
+      `boxes ${boxes}; strip: ${(await page.locator('[data-status-strip]').innerText().catch(() => 'none')).slice(0, 300)}`)
+    const before = await prisma.lexCoherentAction.count({ where: { ideaId: copyId, status: 'LIVE' } })
+    await drag(f.a202, page.locator(`[data-board-card="${f.a38}"]`))
+    await page.waitForSelector('[aria-label="Merge two actions"]', { timeout: 10_000 }).catch(() => {})
+    ok('drag a card onto another = the existing merge dialogue opens with both (#202 and #38), and nothing is merged yet', /#202 and #38/.test(await page.locator('[aria-label="Merge two actions"] h4').innerText().catch(() => '')) && (await prisma.lexCoherentAction.count({ where: { ideaId: copyId, status: 'LIVE' } })) === before)
+    await page.locator('[data-board-merges] button', { hasText: 'Find duplicates' }).click()
+    await page.waitForSelector('[data-board-merge-pair]', { timeout: 30_000 }).catch(() => {})
+    const pairBtn = page.locator('[data-board-merge-pair]').first()
+    if (!(await pairBtn.count())) skip('a merge-pair click outlines both', 'Find duplicates found no pair on the copy')
+    else {
+      await pairBtn.click()
+      const outlined = await page.locator('[data-board-pair="true"]').count()
+      const words = await page.locator('[data-board-pair-word]').allInnerTexts()
+      ok('a possible merge clicked: BOTH cards outlined (thick border) and each says "pair" (shape + word, not colour)', outlined === 2 && words.length === 2 && words.every((w) => /pair/i.test(w)))
+    }
+
+    // item 6 — the three views in the browser, on #202's fixture version
+    await load({ mode: 'view', ideaId: copyId, documentId: f.doc202 })
+    await page.waitForSelector('[data-amendment-toggle]', { timeout: 60_000 })
+    const marked = await page.locator('[data-amendment-marked]').innerText()
+    ok('the Text tab shows "Marked up" first, with the change words beside the lines', /SUBSTITUTED|substituted/.test(marked) && /OMITTED|omitted/.test(marked) && /INSERTED|inserted/.test(marked))
+    await page.locator('[data-amendment-mode="stands"]').click()
+    const stands = await page.locator('[data-amendment-lines]').innerText()
+    await page.locator('[data-amendment-mode="amended"]').click()
+    const amended = await page.locator('[data-amendment-lines]').innerText()
+    ok('the toggle: as it stands has the old (2) and (4); as amended has the new (2) and (6A) and not the old', /A person who is not a public authority/.test(stands) && /\(4\) The steps involved/.test(stands) && /A fixture person/.test(amended) && /\(6A\)/.test(amended) && !/\(4\) The steps involved/.test(amended))
+    ok('no uncaught page error (E)', errors.length === 0, errors.join(' | ').slice(0, 300))
+  } finally { await browser.close() }
+}
+
 async function main() {
   await partA().catch((e) => { fail++; ran++; console.log(`  ✗ part A threw: ${(e as Error).stack?.slice(0, 800)}`) })
   let copyId: string | null = null
   try {
     const b = await partB().catch((e) => { fail++; ran++; console.log(`  ✗ part B threw: ${(e as Error).stack?.slice(0, 800)}`); return null })
     if (b) { copyId = b.copyId; await partC(b.copyId, b.userId, b.docId) }
+    if (b) {
+      const f = await partD(b.copyId, b.userId).catch((e) => { fail++; ran++; console.log(`  ✗ part D threw: ${(e as Error).stack?.slice(0, 800)}`); return null })
+      if (f) {
+        await partD4(b.copyId, f.a59).catch((e) => { fail++; ran++; console.log(`  ✗ part D4 threw: ${(e as Error).stack?.slice(0, 800)}`) })
+        await partE(b.copyId, b.userId, f).catch((e) => { fail++; ran++; console.log(`  ✗ part E threw: ${(e as Error).stack?.slice(0, 800)}`) })
+      }
+    }
   } finally {
     if (copyId) {
       // the hand row this check wrote, then the copy (deleteScratch takes its documents and law rows)

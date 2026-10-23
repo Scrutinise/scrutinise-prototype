@@ -379,7 +379,7 @@ function partF() {
   control('199 the ban missing the old words when they are put back (must be FALSE)', !banned.test('Folded 2 components into their mechanism'))
   ok('199 the ruled-out row says “part of #n” and its button is plain “Restore”', /`part of #\$\{byIdAll\.get\(a\.foldedIntoId\)\?\.number \?\? '\?'\}`/.test(w) && !/'Unfold'/.test(w))
   ok('199 Lex\'s controls list names “Consolidate this heading” in the same plain words', /label: 'Consolidate this heading', file: 'components\/lex\/ActionsWorkspace.tsx'[^\n]*tucked into that action’s Commentary[^\n]*joined into one/.test(read('lib/lex/agent/controls.ts')))
-  ok('the conditions view is a step-1 view and the conditions panel is step 1\'s', /1: \['list', 'coverage', 'conditions'\]/.test(w) && /step === 1 && <ConditionsPanel/.test(w))
+  ok('the conditions view is a step-1 view and the conditions panel is step 1\'s', /1: \['list', 'board', 'coverage', 'conditions'\]/.test(w) /* 26-V1b 255: the board joined step 1's views */ && /step === 1 && <ConditionsPanel/.test(w))
   control('the find box also offered in step 3 (must be FALSE: it is a list tool, in every step the list is; this asserts it is not step-gated by mistake)', /step === 3 && .*data-find-box/.test(w))
 }
 

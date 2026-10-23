@@ -32,6 +32,8 @@ export const LIMITS = {
   /** 26-V1: a document's title, and the text of one version of a hand-written document. */
   documentTitle: 160,
   documentText: 200000,
+  /** 26-V1b §7b (262): why an action must come after another — "the Code must exist before the duty bites". Optional. */
+  orderBecause: 300,
 } as const
 
 export type LimitKey = keyof typeof LIMITS

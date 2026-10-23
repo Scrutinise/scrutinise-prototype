@@ -11,7 +11,8 @@
 
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import ActionsWorkspace, { CoverageView, SequenceView } from '../components/lex/ActionsWorkspace'
+import ActionsWorkspace, { CoverageView } from '../components/lex/ActionsWorkspace'
+import { OrderView } from '../components/lex/ActionsOrder'
 import type { CanonicalAction, CanonicalActionHeading, CanonicalCause } from '../lib/lex/page1-config'
 import { HEADING_PALETTE } from '../lib/lex/action-headings'
 
@@ -60,9 +61,9 @@ ok('a Lex-proposed title is offered with Use it / Edit / No — it is a proposal
 const mount = (step: 1 | 2 | 3 | 4) => renderToStaticMarkup(<ActionsWorkspace ideaId="idea-1" actions={actions} setAside={setAside} headings={heads} causes={causes} busy={false} onChanged={() => {}} renderFull={(a) => <div>FULL CARD {a.number}</div>} step={step} />)
 const h2 = mount(2), h4 = mount(4)
 ok('a proposed classification is announced on the line (step 1: the causes or an avenue)', html.includes('Lex has proposed causes or an avenue'))
-ok('the facets show as words, each in ITS step: avenue in step 1; who in step 2; sequence and "comes before" in step 4 — and no "link" or "specific enough" tag at all', html.includes('Legislative') && !html.includes('Now') && h2.includes('Who: Cabinet Office') && h4.includes('Now') && h4.includes('comes before #3') && !html.includes('link: duty and means') && !html.includes('specific enough') && !html.includes('not yet specific'))
-ok('the group control offers step 1’s facets (heading, cause, avenue, policy test) — not the retired link, and not sequence (that is step 4’s)', ['By heading', 'By cause', 'By avenue', 'By policy test'].every((l) => html.includes(l)) && !html.includes('By link') && !html.includes('By sequence') && h4.includes('By sequence'))
-ok('the views are offered per step, the current one marked with a glyph AND aria-selected: List and Coverage grid in step 1; List and Sequence in step 4', html.includes('Coverage grid') && !html.includes('○ Sequence') && h4.includes('○ Sequence') && !h4.includes('Coverage grid') && html.includes('aria-selected="true"') && html.includes('● List'))
+ok('the facets show as words, each in ITS step: avenue in step 1; who in step 2; "must come after" and "comes before" in step 4 (262: never Now / Next / Later) — and no "link" or "specific enough" tag at all', html.includes('Legislative') && !html.includes('Now') && h2.includes('Who: Cabinet Office') && !h4.includes('Now') && h4.includes('must come after #1') && h4.includes('comes before #3') && !html.includes('link: duty and means') && !html.includes('specific enough') && !html.includes('not yet specific'))
+ok('the group control offers step 1’s facets (heading, cause, avenue, policy test) — not the retired link, and not sequence (that is step 4’s)', ['By heading', 'By cause', 'By avenue', 'By policy test'].every((l) => html.includes(l)) && !html.includes('By link') && !html.includes('By sequence') && !h4.includes('By sequence'))
+ok('the views are offered per step, the current one marked with a glyph AND aria-selected: List, Board and Coverage grid in step 1; List and the derived order in step 4 (262)', html.includes('Coverage grid') && html.includes('○ Board') && !html.includes('Sequence') && h4.includes('○ The order, derived') && !h4.includes('Sequence') && !h4.includes('Coverage grid') && html.includes('aria-selected="true"') && html.includes('● List'))
 ok('Find duplicates and Classify with Lex are offered', html.includes('Find duplicates') && html.includes('Classify with Lex'))
 ok('the Later phase section is COLLAPSED (its parked action is not in the markup) but counted', html.includes('Later phase') && !html.includes('needs the Bill first') && html.includes('aria-expanded="false"'))
 ok('the ruled-out section is COLLAPSED but counted, and says nothing is deleted', html.includes('Ruled out and merged away') && html.includes('Nothing here is deleted') && !html.includes('Overtaken by the audit unit'))
@@ -73,9 +74,9 @@ ok('coverage grid: an EMPTY ROW is labelled in words — "NO ACTION" — not onl
 ok('coverage grid: the mark is a glyph with a label', cov.includes('aria-label="attacks this cause"'))
 ok('coverage grid: says how many actions carry a recorded cause', cov.includes('1 of 3 actions have a recorded cause'))
 ok('coverage grid: columns carry the heading name and shape', cov.includes('Legislation') && cov.includes(navy.glyph))
-const seq = renderToStaticMarkup(<SequenceView actions={actions.filter((a) => !a.parked)} />)
-ok('sequence view: "Start with" names the action that unlocks the most', seq.includes('Start with') && seq.includes('unlocks 1 other'))
-ok('sequence view: columns and the before-links are TEXT', ['Now', 'Next', 'Later', 'Not placed yet'].every((l) => seq.includes(l)) && seq.includes('comes before #3') && seq.includes('after #1'))
+const seq = renderToStaticMarkup(<OrderView actions={actions.filter((a) => !a.parked)} />)
+ok('the derived order (262): numbered, #1 before #3, and #3 says what it must come after — in words', /1\.<\/span> <span[^>]*>#1</.test(seq) && seq.indexOf('#1') < seq.indexOf('#3') && seq.includes('must come after #1'))
+ok('the derived order shows no Now / Next / Later columns', !['Now', 'Next', 'Later', 'Not placed yet'].some((l) => seq.includes(l)))
 ok('the olive heading (the lightest) is still drawn with its name', olive.hex.length === 7 && html.includes('Practical steps'))
 
 console.log(`\n${pass} passed, ${fail} failed`)

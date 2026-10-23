@@ -28,6 +28,8 @@ import { draftFor, writeDraftVersion, writeDraftProposal, dismissDraftProposal }
 import type { Result } from './action-structure'
 import { writeInstructionRows, type LawRowsReport } from './action-law-rows'
 import { effectsLoadDate } from './statutory-graph'
+import { heldSectionText } from './action-touches'
+import { nonTextualLine } from './textual-amendment-pure'
 
 export const DRAFT_MODEL = 'claude-sonnet-5-5'
 const fail = (error: string): { ok: false; error: string } => ({ ok: false, error })
@@ -165,6 +167,9 @@ const SYSTEM = [
   `- Its FIRST LINE is exactly: ${CLAUSE_CAVEAT}`,
   '- Where the supplied objection precedent applies (an earlier statute that tried to fix responsibility on senior management and did not bite on large organisations), say so in a second caveat line after the first, citing it — it is the objection, never a model.',
   '- Then the clause in Parliamentary Counsel’s style, as the supplied guidance sets out: numbered subsections, short; defined terms defined once; the shape duty → on whom → consequence; amendments in the guidance’s operative words (“omit”, “for … substitute …”, “after … insert …”, “is repealed”), citing Acts by short title.',
+  '- AMENDMENTS ARE TEXTUAL, in the guidance’s Part 6 forms (decision 258). Where a provision line’s relation is amends or repeals, the subsection that does it begins “In section [n] of the [short title] ([its heading]),” and then uses ONE operative form: “for subsection ([n]) substitute—” with the new text in quotation marks; “omit subsection ([n])” or “omit paragraph ([x])”; “after subsection ([n]) insert—” with the new text in quotation marks; “at the end insert—”; or, for words, for “[the old words]” substitute “[the new words]”, omit “[the words]”, after “[the words]” insert “[the words]”. Several changes to one section go under one “In section [n] …—” as a lettered list. A whole section repealed: “Section [n] of the [short title] is repealed.”',
+  '- Quote old words EXACTLY as the held text of the section has them (it is supplied where held); a word that is not there cannot be substituted. An inserted subsection takes a number the section does not already use (after (1) comes (1A); a section that ends at (9) is extended with (10)).',
+  `- A NON-TEXTUAL modification (“has effect as if …”, “is to be read as if …”) is allowed only where the relation is modifies. Put it in a subsection of its own, and follow that subsection with the line: ${nonTextualLine('[the instrument]')}`,
   '- Where a supplied precedent holds the mechanism, cite its provision beside the clause and you may adapt its wording; say that you did.',
   '- Where the action removes, disapplies or replaces a duty and says what standard or rule remains in its place, the clause STATES that standard in a subsection of its own, citing the provision of existing law that already provides it — removing a duty without saying what stands is half a clause.',
   '- Never invent a section number of an existing Act. If you need a provision you cannot name, write the instruction line as the whole Act and say what is needed in its note.',
@@ -207,11 +212,15 @@ export async function draftWithLex(ideaId: string, actionId: string, userId: str
   const rec = parseRecord(row.record)
   const slots = SLOT_KEYS.map((k) => (rec[k]?.text ? `${SLOT_UI[k].label}: ${clip(rec[k]!.text, 500)}` : '')).filter(Boolean)
   const current = (await draftFor(row.id))?.versions.at(-1)
+  // §4a — the held text of each section the owner's current instruction amends, so quoted old words can be quoted exactly (free).
+  const amended = legislative ? await Promise.all((current?.provisions ?? []).filter((p) => (p.relation === 'amends' || p.relation === 'repeals') && p.provisionPath)
+    .slice(0, 4).map(async (p) => ({ p, held: await heldSectionText(p.docUri, p.provisionPath).catch(() => ({ text: null, reason: 'could not be read' })) }))) : []
 
   const user = [
     `THE GUIDING POLICY:\n${clip(idea?.chosenApproach ?? '(not settled)', 3000)}`,
     conditions.length ? `CONDITIONS FOR SUCCESS:\n${conditions.map((c, i) => `${i + 1}. ${clip((c as { text?: string }).text ?? '', 300)}`).join('\n')}` : '',
     `<action>\nAction #${row.number ?? '?'}${row.title ? ` — ${row.title}` : ''} (avenue: ${row.avenue ?? 'not set'})\nSTATEMENT:\n${row.practicalStep}\n${row.commentary?.trim() ? `DETAIL:\n${clip(row.commentary, 6000)}\n` : ''}${row.whoImplements ? `Who: ${clip(row.whoImplements, 300)}\n` : ''}${slots.join('\n')}${current ? `\nTHE OWNER'S CURRENT INSTRUCTION (version ${current.v}) — keep what it settles:\n${JSON.stringify({ ...current, clause: clip(current.clause, 3000) })}` : ''}\n</action>`,
+    ...amended.map(({ p, held }) => held.text ? `THE TEXT AS HELD of ${p.docUri} ${p.provisionPath} (the section the instruction amends; quote old words from it exactly):\n${clip(held.text, 5000)}` : `${p.docUri} ${p.provisionPath}: its text is not held (${held.reason}); quote no old words from it.`),
     ...opc.parts.map((p) => `GUIDANCE — ${p.label} — id ${OPC_ID} (${p.label}):\n${p.text}`),
     ...prec.map(({ p, held }) => held ? `PRECEDENT (${p.role === 'objection' ? 'THE OBJECTION — cite in the caveat, not as a model' : 'a model'}) — ${p.name}, ${p.mechanism} — id ${held.id}:\n${held.text}` : `PRECEDENT ${p.name} (${p.docUri}) — ${p.mechanism}: its text is not held; you may name the Act but not quote it.`),
   ].filter(Boolean).join('\n\n')

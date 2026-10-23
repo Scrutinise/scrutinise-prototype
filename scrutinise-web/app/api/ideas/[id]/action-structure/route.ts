@@ -110,6 +110,7 @@ export async function POST(req: Request, { params }: Params) {
         result = !row ? { ok: false, error: 'That action is not on this idea.' } : !cur ? { ok: false, error: 'There is no drafting instruction to compute from yet: save one, or use Lex’s draft, first.' } : { ok: true, data: await TO.touchesFor(cur) }
         break
       }
+      case 'setAfter': result = await S.setAfter(id, b.actionId, b.afterId, b.on, b.because ?? null); break
     }
   } catch (err) {
     console.error('[action-structure] failed', b.op, err)

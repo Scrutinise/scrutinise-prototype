@@ -10,6 +10,8 @@
 //   POST { op: 'saveText' }   a new version of a hand-written document
 //   POST { op: 'setNeeds' }   "needs a document" derived / overridden to nothing / set by hand — with a reason
 //   POST { op: 'generate' }   the action's collision report, or the idea's consequential schedule (free: no model call)
+//   POST { op: 'draftNote' }  26-V1b §5: Lex drafts the explanatory note as a proposal (spends; the screen asks first, at the measured price)
+//   POST { op: 'useProposal' | 'setAsideProposal' }  Lex's proposal on a text document: used as the next version, or set aside (kept)
 
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -18,6 +20,7 @@ import { describeIssues } from '@/lib/api-rejection'
 import { LIMITS } from '@/lib/lex/input-limits'
 import * as D from '@/lib/lex/action-documents'
 import { documentView, actionDocuments } from '@/lib/lex/document-view'
+import { draftExplanatoryNote } from '@/lib/lex/explanatory-note'
 
 export const maxDuration = 300
 type Params = { params: Promise<{ id: string }> }
@@ -32,10 +35,15 @@ const Body = z.discriminatedUnion('op', [
   z.object({ op: z.literal('saveText'), documentId: z.string().min(1), body: z.string().max(LIMITS.documentText) }),
   z.object({ op: z.literal('setNeeds'), actionId: z.string().min(1), mode: z.enum(['derived', 'nothing', 'set']), kinds: z.array(KIND).max(8).optional(), reason: z.string().max(LIMITS.ruleOutReason).optional() }),
   z.object({ op: z.literal('generate'), what: z.enum(['collision', 'schedule']), actionId: z.string().min(1).optional() }),
+  // 26-V1b §5 — the explanatory note: Lex drafts it as a proposal (asks first on the screen); a text proposal is used or set aside.
+  z.object({ op: z.literal('draftNote'), actionId: z.string().min(1) }),
+  z.object({ op: z.literal('useProposal'), documentId: z.string().min(1) }),
+  z.object({ op: z.literal('setAsideProposal'), documentId: z.string().min(1) }),
 ])
 const OP_WORDS: Record<string, string> = {
   open: 'Opening that document', view: 'Opening that document', forAction: 'Reading that action’s documents', accept: 'Accepting that document', addByHand: 'Adding that document', saveText: 'Saving that document',
   setNeeds: 'Changing what that action needs', generate: 'Generating that document',
+  draftNote: '“Draft the explanatory note”', useProposal: 'Using Lex’s proposal', setAsideProposal: 'Setting Lex’s proposal aside',
 }
 const INPUT_WORDS = { documentId: 'the document', actionId: 'the action', kind: 'the kind of document', title: 'the title', body: 'the text', mode: 'the choice', kinds: 'the kinds of document', reason: 'the reason', what: 'what to generate' }
 
@@ -84,6 +92,9 @@ export async function POST(req: Request, { params }: Params) {
         } else result = await D.generateSchedule(id)
         break
       }
+      case 'draftNote': result = await draftExplanatoryNote(id, b.actionId, uid); break
+      case 'useProposal': result = await D.useTextProposal(id, b.documentId); break
+      case 'setAsideProposal': result = await D.setAsideTextProposal(id, b.documentId); break
     }
   } catch (err) {
     console.error('[action-documents] failed', b.op, err)

@@ -5640,7 +5640,8 @@ model ActionDocument {
   ideaId       String    @map("idea_id")
   actionId     String    @map("action_id")
   number       Int
-  /// DRAFT_CLAUSE · COLLISION_REPORT · CONSEQUENTIAL_SCHEDULE · CODE_TEXT · SPECIFICATION · COSTING · OPERATING_TEXT · BACKGROUND_NOTE (CHECK)
+  /// DRAFT_CLAUSE · COLLISION_REPORT · CONSEQUENTIAL_SCHEDULE · CODE_TEXT · SPECIFICATION · COSTING · OPERATING_TEXT · BACKGROUND_NOTE ·
+  /// EXPLANATORY_NOTE (CHECK; the last widened by prisma/lex_26v1b_explanatory_note.sql, 26-V1b §5)
   kind         String
   title        String
   /// DRAFTED · ACCEPTED (the owner accepted version `acceptedV`) · SUPERSEDED (CHECK). "No document yet" is a needed kind with no row.

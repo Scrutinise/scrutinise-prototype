@@ -15,7 +15,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { GENERATED_KINDS, partNumber } from '@/lib/lex/action-documents-pure'
+import { GENERATED_KINDS, partNumber, partsOf } from '@/lib/lex/action-documents-pure'
+import { notePrice } from '@/lib/lex/explanatory-note-pure'
 import { INSTRUMENT_WORD, RELATION_WORD as INSTRUCTION_RELATION_WORD, draftPrice, type DraftInstruction } from '@/lib/lex/action-draft-pure'
 import { STATE_WORDS, NONE_HELD, type Touch, type TouchesResult } from '@/lib/lex/action-touches-pure'
 import { headerStrip, wantsAccept, versionWords, cutClause, joinClause, takePart, partNumbers, versionChange, type ClauseCut } from '@/lib/lex/document-view-pure'
@@ -25,6 +26,8 @@ import { explainFailure } from '@/lib/api-rejection'
 import { LIMITS } from '@/lib/lex/input-limits'
 import { Editor } from './ActionDraftSection'
 import BoundedInput from './BoundedInput'
+import AmendmentViews, { proposedLine } from './AmendmentViews'
+import { parseAmendments } from '@/lib/lex/textual-amendment-pure'
 
 type Tab = 'text' | 'instruction' | 'touches' | 'versions' | 'issues'
 const TAB_WORD: Record<Tab, string> = { text: 'Text', instruction: 'Instruction', touches: 'What it touches', versions: 'Versions', issues: 'Issues' }
@@ -71,8 +74,11 @@ export default function DocumentView({ ideaId, documentId, readOnly = false, onC
     d: doc.d, title: doc.title, status: doc.status, acceptedV: doc.acceptedV,
     current: data.current ? { v: data.current.v, author: data.current.author, fromProposal: data.current.fromProposal, previousAuthor: data.current.previousAuthor } : null,
     law: data.isInstruction ? { live: data.law.live.length + data.law.precedents, targets: data.law.live.map((l) => l.target), precedents: data.law.precedents } : null,
-    proposalWaiting: data.proposal?.v ?? null,
+    proposalWaiting: data.proposal?.v ?? data.textProposal?.v ?? null,
   })
+  const isNote = doc.kind === 'EXPLANATORY_NOTE'
+  const nPrice = notePrice()
+  const draftNote = () => { setAskRedraft(false); void write('action-documents', { op: 'draftNote', actionId: data.actionId }, `Drafting ${doc.d}`, (r) => `Saved: Lex’s proposal is waiting below${r?.pence != null ? ` — it cost ${Number(r.pence).toFixed(1)}p` : ''}. Nothing of yours was changed.`) }
   const tabs: Tab[] = data.isInstruction ? ['text', 'instruction', 'touches', 'versions', 'issues'] : ['text', 'versions', 'issues']
   const price = draftPrice()
   const accept = () => void write('action-documents', { op: 'accept', documentId }, `Accepting ${doc.d}`, () => `Saved: ${doc.d} accepted at version ${data.current?.v}. A later edit takes it back to “accepted, then changed”.`)
@@ -102,6 +108,13 @@ export default function DocumentView({ ideaId, documentId, readOnly = false, onC
                   className="px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Draft it</button>{' '}
                 <button type="button" onClick={() => setAskRedraft(false)} className="underline">Not now</button></span>
             )}
+            {/* 26-V1b §5 — the explanatory note: asks first, at the price measured on a scratch copy */}
+            {isNote && !askRedraft && <button type="button" disabled={busy} onClick={() => setAskRedraft(true)} data-note-redraft className="px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Ask Lex to redraft</button>}
+            {isNote && askRedraft && (
+              <span data-note-ask>{noteAskWords(nPrice)}{' '}
+                <button type="button" disabled={busy} onClick={draftNote} className="px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Draft it</button>{' '}
+                <button type="button" onClick={() => setAskRedraft(false)} className="underline">Not now</button></span>
+            )}
             <button type="button" onClick={() => setTab('versions')} className="underline">Versions ({data.versions.length})</button>
           </div>
         )}
@@ -110,6 +123,7 @@ export default function DocumentView({ ideaId, documentId, readOnly = false, onC
 
       {/* 3g — LEX'S PROPOSAL BESIDE THE CURRENT VERSION */}
       {data.proposal && !readOnly && <Comparison key={`${data.current?.v ?? 0}-${data.proposal.v}`} data={data} busy={busy} write={write} />}
+      {data.textProposal && !readOnly && <TextProposal data={data} busy={busy} write={write} />}
 
       {/* THE TABS — shape and weight mark the open one, not colour */}
       <div role="tablist" aria-label={`${doc.d} — its tabs`} className="flex flex-wrap gap-1 border-b border-zinc-200 pb-1">
@@ -152,7 +166,9 @@ function TextTab({ data, editing, busy, onSave, onCancel }: { data: DocumentView
     if (!ins) return <p>No version yet{data.proposal ? ' — Lex’s proposal is above, to use or set aside' : ''}.</p>
     if (!data.legislative) return <div className="space-y-1"><p className="text-zinc-600">The wording, in plain English:</p><p className="whitespace-pre-wrap" data-document-text>{ins.plainWording || 'not yet written'}</p></div>
     const cut = cutClause(ins.clause)
-    const amending = ins.provisions.some((p) => p.relation === 'amends' || p.relation === 'repeals')
+    // §4 — the three views where the clause amends textually; "as proposed" with its line where it does not
+    const parsed = parseAmendments(ins.clause)
+    const line = proposedLine(parsed.amendments.length > 0, parsed.nonTextual.length > 0)
     return (
       <div className="space-y-1.5" data-document-text>
         {/* the caveat is the first line, always */}
@@ -163,16 +179,18 @@ function TextTab({ data, editing, busy, onSave, onCancel }: { data: DocumentView
             <pre className="whitespace-pre-wrap font-serif">{p.text}</pre>
           </div>
         ))}
-        <p className="text-zinc-600" data-text-view-line>{amending
-          ? 'Shown as proposed. The marked-up and as-amended views of an amendment are the next part of this work.'
-          : 'As proposed — a new section; nothing to mark up.'}</p>
+        {line && <p className="text-zinc-600" data-text-view-line>{line}</p>}
+        <AmendmentViews clause={ins.clause} provisions={ins.provisions} titles={data.titles} held={data.held} />
         <p className="text-zinc-600">Comments on a single part are not built yet; comment on the action, below the record.</p>
       </div>
     )
   }
   if (!doc.current) return <p>No version yet.</p>
+  const above = headOf(doc.current.body)
   return (
     <div className="space-y-1" data-document-text>
+      {/* the text above the first part — the explanatory note's caveat is there, and is always the first line */}
+      {above && <p className="whitespace-pre-wrap font-semibold" data-document-head>{above}</p>}
       {doc.current.parts.map((p) => (
         <div key={p.n} data-document-part={partNumber(doc.actionNumber, doc.number, p.n)}>
           <p className="font-semibold"><span aria-hidden>▸</span> {partNumber(doc.actionNumber, doc.number, p.n)} {p.title}</p>
@@ -296,7 +314,7 @@ function Block({ n, title, data, children }: { n: number; title: string; data?: 
 function VersionsTab({ data }: { data: DocumentViewData }) {
   return (
     <ol className="space-y-1.5" data-versions-tab>
-      {data.proposal && <li data-version-row="proposal"><span aria-hidden>◇</span> Lex’s proposal {data.proposal.v} — waiting, {when(data.proposal.at)}{data.proposal.pence != null ? ` · ${data.proposal.pence.toFixed(1)}p` : ''}</li>}
+      {(data.proposal ?? data.textProposal) && (() => { const p = (data.proposal ?? data.textProposal)!; return <li data-version-row="proposal"><span aria-hidden>◇</span> Lex’s proposal {p.v} — waiting, {when(p.at)}{p.pence != null ? ` · ${p.pence.toFixed(1)}p` : ''}</li> })()}
       {[...data.versions].reverse().map((v) => (
         <li key={v.v} data-version-row={v.v}>
           <p><span aria-hidden>●</span> <span className="font-semibold">{versionWords(v)}</span> · {when(v.at)}{data.doc.acceptedV === v.v ? <span className="font-semibold"> · accepted</span> : ''}</p>
@@ -310,6 +328,39 @@ function VersionsTab({ data }: { data: DocumentViewData }) {
       ))}
       {!data.versions.length && !data.proposal && !data.setAside.length && <li>No versions yet.</li>}
     </ol>
+  )
+}
+
+/** The text above a document's first "## " part (a heading-less body is all parts, so nothing). */
+const headOf = (body: string): string => { const i = body.search(/^## /m); return i > 0 ? body.slice(0, i).trim() : '' }
+
+/** The ask before Lex drafts a note: the measured price, or — until it is measured — that it is not, in words. */
+export function noteAskWords(p: { pence: number | null; n: number }): string {
+  return p.pence != null
+    ? `This costs about ${p.pence}p (measured on a copy of a real idea, n=${p.n}); Lex’s note arrives as a proposal beside the current version, never over it.`
+    : 'The price of this is not yet measured; it is a single call, a few pence. Lex’s note arrives as a proposal beside the current version, never over it.'
+}
+
+// ── 26-V1b §5: Lex's proposal on a text document (the explanatory note), beside the current version ──────────────────
+function TextProposal({ data, busy, write }: { data: DocumentViewData; busy: boolean; write: (url: 'action-documents' | 'action-structure', p: Record<string, unknown>, label: string, ok: (r: Record<string, unknown> | null) => string) => Promise<boolean> }) {
+  const p = data.textProposal!
+  const nextV = (data.current?.v ?? 0) + 1
+  return (
+    <section className="rounded border-2 border-zinc-900 p-2 space-y-1.5" aria-label={`Lex’s proposal ${p.v} beside the current version`} data-text-proposal>
+      <p className="font-semibold"><span aria-hidden>◇</span> Lex’s proposal {p.v} — beside {data.current ? `version ${data.current.v}` : 'no version yet'}, not over it{p.pence != null ? ` (it cost ${p.pence.toFixed(1)}p)` : ''}</p>
+      {p.reason && <details><summary className="cursor-pointer">What Lex says about it</summary><p className="mt-1 whitespace-pre-wrap">{p.reason}</p></details>}
+      <div className="flex flex-wrap gap-2 items-center">
+        <button type="button" disabled={busy} data-use-proposal onClick={() => void write('action-documents', { op: 'useProposal', documentId: data.doc.id }, `Using Lex’s proposal for ${data.doc.d}`, () => `Saved: Lex’s proposal is now version ${nextV}. Not yet accepted — Accept when you are content.`)}
+          className="px-2 py-0.5 rounded bg-zinc-900 text-white font-semibold disabled:opacity-40">Use it as version {nextV}</button>
+        <button type="button" disabled={busy} data-set-aside onClick={() => void write('action-documents', { op: 'setAsideProposal', documentId: data.doc.id }, `Setting aside Lex’s proposal ${p.v}`, () => `Set aside: Lex’s proposal ${p.v} is kept, listed in Versions. Nothing else changed.`)}
+          className="px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Set aside</button>
+        <span className="text-zinc-600">To change it, use it first and then Edit — the proposal itself cannot be edited.</span>
+      </div>
+      <div className="border border-zinc-200 rounded p-1.5 space-y-1" data-text-proposal-body>
+        {headOf(p.body) && <p className="whitespace-pre-wrap font-semibold">{headOf(p.body)}</p>}
+        {partsOf(data.doc.kind, p.body).map((x) => <div key={x.n}><p className="font-semibold">{x.title}</p><pre className="whitespace-pre-wrap font-sans">{x.text.replace(/^## .*\n?/, '')}</pre></div>)}
+      </div>
+    </section>
   )
 }
 

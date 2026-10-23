@@ -14,6 +14,7 @@ import type { CanonicalAction } from './page1-config'
 import { answeredCount, proposalCount, specificEnough } from './action-record'
 import { conditionChecklist, type ConditionsDoc } from './action-conditions'
 import { incentiveChecklistLine } from './incentive-map'
+import { afterWords, cycleIn, type AfterLine } from './action-order-pure'
 
 export type ActionsStep = 1 | 2 | 3 | 4
 export const STEP_NUMBERS: ActionsStep[] = [1, 2, 3, 4]
@@ -60,7 +61,7 @@ export interface ChecklistContext {
   conditions?: ConditionsDoc
 }
 
-type A = Partial<Pick<CanonicalAction, 'conditionIds' | 'supportOnly' | 'number' | 'title' | 'practicalStep'>> & Pick<CanonicalAction, 'id' | 'headingId' | 'targetCauseIds' | 'avenue' | 'policyTest' | 'conflictNote' | 'whoImplements' | 'wording' | 'record' | 'sequence' | 'implementationCost' | 'enforcementCost' | 'regulatoryFriction' | 'noCostReason'>
+type A = Partial<Pick<CanonicalAction, 'conditionIds' | 'supportOnly' | 'number' | 'title' | 'practicalStep' | 'beforeIds'>> & Pick<CanonicalAction, 'id' | 'headingId' | 'targetCauseIds' | 'avenue' | 'policyTest' | 'conflictNote' | 'whoImplements' | 'wording' | 'record' | 'implementationCost' | 'enforcementCost' | 'regulatoryFriction' | 'noCostReason'>
 
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many)
 const line = (key: string, count: number, missing: (n: number) => string, ok: string): ChecklistLine => ({ key, done: count === 0, text: count === 0 ? ok : missing(count) })
@@ -119,14 +120,20 @@ export function stepChecklist(step: ActionsStep, actions: A[], ctx: ChecklistCon
       return [line('cost', none, (c) => `${c} ${plural(c, 'action has', 'actions have')} no cost range`, 'Every action has a cost range')]
     }
     case 4: {
-      const noSeq = actions.filter((a) => !a.sequence).length
-      return [line('sequence', noSeq, (c) => `${c} ${plural(c, 'action has', 'actions have')} no sequence slot`, 'Every action has a sequence slot')]
+      // 262 — Now / Next / Later is retired: the step asks only what must come after what, and the order is derived from that.
+      const nodes = actions.map((a) => ({ id: a.id, number: a.number ?? null, beforeIds: a.beforeIds ?? [] }))
+      const loose = nodes.filter((n) => !n.beforeIds.length && !nodes.some((o) => o.beforeIds.includes(n.id))).length
+      const circle = cycleIn(nodes)
+      return [
+        line('order', loose, (c) => `${c} ${plural(c, 'action has', 'actions have')} nothing ${plural(c, 'it', 'they')} must come after or before — check ${plural(c, 'it really stands', 'each really stands')} alone`, 'Every action is placed by what it comes after or before'),
+        { key: 'circle', done: circle.length === 0, text: circle.length ? `An impossible order: ${circle.map((id) => `#${nodes.find((n) => n.id === id)?.number ?? '?'}`).join(', ')} each have to come after another in the same circle — remove one link` : 'The order goes round in no circle' },
+      ]
     }
   }
 }
 
 /** What the opened record's collapsed sections say, one line each ("Who, how and against — not yet answered · from step 2"). */
-export function otherStepLine(step: ActionsStep, a: Pick<CanonicalAction, 'whoImplements' | 'wording' | 'record' | 'sequence' | 'implementationCost' | 'enforcementCost' | 'regulatoryFriction' | 'avenue' | 'targetCauseIds' | 'policyTest' | 'noCostReason'>, hasLines: boolean, headingName?: string | null): string {
+export function otherStepLine(step: ActionsStep, a: Pick<CanonicalAction, 'whoImplements' | 'wording' | 'record' | 'implementationCost' | 'enforcementCost' | 'regulatoryFriction' | 'avenue' | 'targetCauseIds' | 'policyTest' | 'noCostReason'>, hasLines: boolean, headingName?: string | null, after?: readonly AfterLine[]): string {
   switch (step) {
     case 1: {
       const verdict = a.policyTest && a.policyTest.verdict !== 'NOT_TESTED' ? { FITS: 'fits the policy', DOES_NOT_FIT: 'does not fit the policy', CONFLICTS: 'conflicts with the policy', NOT_TESTED: '' }[a.policyTest.verdict] : 'not tested against the policy'
@@ -138,6 +145,6 @@ export function otherStepLine(step: ActionsStep, a: Pick<CanonicalAction, 'whoIm
       return `${STEPS[2].label} — ${done === 0 ? 'not yet answered' : `${done} of 7 answered${a.whoImplements?.trim() ? ` · Who: ${a.whoImplements.trim().length > 50 ? `${a.whoImplements.trim().slice(0, 49)}…` : a.whoImplements.trim()}` : ''}`} · from step 2`
     }
     case 3: return `${STEPS[3].label} — ${a.noCostReason?.trim() ? 'no cost, because ' + (a.noCostReason.trim().length > 50 ? a.noCostReason.trim().slice(0, 49) + '…' : a.noCostReason.trim()) : hasCostRange(a) || hasLines ? 'a cost range is recorded' : 'not yet answered'} · from step 3`
-    case 4: return `${STEPS[4].label} — ${a.sequence ? `sequence: ${a.sequence.toLowerCase()}` : 'not yet answered'} · from step 4`
+    case 4: return `${STEPS[4].label} — ${afterWords(after ?? [])} · from step 4`
   }
 }

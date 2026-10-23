@@ -964,6 +964,16 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-10-23 23:57 UTC: 26-V1b-b built and committed with its schema (`lex_26v1b_explanatory_note.sql`, applied to Neon at push). Live verification is in `docs/LEX_26V1b_REPORT.md`.** See CHANGE_LOG 23:57.
+- **§7:**
+  - The card board is step 1's List · Board.
+  - Order is by dependency only: "must come after #59 (because …)", a derived order, and a circle refused in words. **Now / Next / Later is retired from screen, pack and Lex.**
+- **§4:** The Text tab shows the three views (As it stands · Marked up · As amended). Coverage on 452c5ade is 2 of 2. ⚠ #202 proposal 1's "(8)" collides with s.149(8).
+- **§5:** The explanatory note is a kind, needed once a clause is accepted. It is a Lex proposal that asks first, at 1.9p measured (n=3, scratch). **Not drafted on Charlie's idea.**
+- **Checks:** `check:lex-26v1b` 69/69 plus the note part after the schema. The mutation run went red as it should (5 failures, 2 controls).
+- ⚠ **Not ours, left uncommitted:** `lib/lex/statutory-graph.ts` (3 exports) and `lib/lex/onward*.ts`, `agent/onward-tool.ts`. Another stream's.
+- **Next:** Charlie's §9 look, then 26-V2.
+
 **▶ 2026-10-23 19:14 UTC: 26-V1b-a is LIVE at `009198f`** (schema `befa05c` went first). Verified by `/api/health`, a live chunk ("Parts of this action, quoted") and build-worker (see the report). See CHANGE_LOG 19:14 and `docs/LEX_26V1b_REPORT.md`.
 - **The record now runs in one order with a sticky jump band. "Commentary" is now "Detail".** Lex's tool is now `set_action_detail`; the column name is unchanged.
 - **DocumentView** is the single view of a document, and it keeps an accepted version through later edits (263).
