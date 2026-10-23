@@ -5630,3 +5630,61 @@ model ResearchNoteReply {
 
   @@index([noteId])
 }
+
+/// LEX 26-V1 (decisions 240, 241, 245, 251) — a document owned by one coherent action: a draft clause, a collision report, a code's text,
+/// a specification... Numbered within its action (38.2 = action 38, document 2); its D-number "D.38.2" is DERIVED, never stored, and never in
+/// the [Ref: n] series. DDL of record: prisma/lex_26v_action_documents.sql (CHECKs on kind / status; FKs RESTRICT; nothing deleted).
+/// ⚠ No Prisma relation to Idea / LexCoherentAction on purpose (as `headingId`): the foreign keys live in the SQL.
+model ActionDocument {
+  id           String    @id @default(uuid())
+  ideaId       String    @map("idea_id")
+  actionId     String    @map("action_id")
+  number       Int
+  /// DRAFT_CLAUSE · COLLISION_REPORT · CONSEQUENTIAL_SCHEDULE · CODE_TEXT · SPECIFICATION · COSTING · OPERATING_TEXT · BACKGROUND_NOTE (CHECK)
+  kind         String
+  title        String
+  /// DRAFTED · ACCEPTED (the owner accepted version `acceptedV`) · SUPERSEDED (CHECK). "No document yet" is a needed kind with no row.
+  status       String    @default("DRAFTED")
+  acceptedV    Int?      @map("accepted_v")
+  /// 251 — a generated document whose data has moved on (the effects load date). Set together with staleReason (CHECK).
+  staleAt      DateTime? @map("stale_at") @db.Timestamptz()
+  staleReason  String?   @map("stale_reason")
+  supersededBy String?   @map("superseded_by")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+  versions     ActionDocumentVersion[]
+
+  @@unique([actionId, number], map: "action_document_number_unique")
+  @@index([ideaId], map: "action_document_idea_idx")
+  @@index([actionId], map: "action_document_action_idx")
+  @@map("action_document")
+}
+
+/// LEX 26-V1 — one version of a document (role VERSION, numbered 1, 2, …) or one Lex PROPOSAL beside it (role PROPOSAL, its own series).
+/// Appended, never edited; a proposal is answered (ACCEPTED / DISMISSED) and kept. `payload` holds the kind's structure (a drafting
+/// instruction's fields; a collision report's rows with their depth); `body` is the text shown and printed, whose sections are the parts.
+model ActionDocumentVersion {
+  id              String         @id @default(uuid())
+  documentId      String         @map("document_id")
+  document        ActionDocument @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  role            String
+  v               Int
+  /// LEX · OWNER · COLLABORATOR · GENERATED (built from data, no model call)
+  author          String
+  authorUserId    String?        @map("author_user_id")
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+  body            String         @default("")
+  fileKey         String?        @map("file_key")
+  payload         Json?
+  /// [Ref: n] numbers and corpus ids — evidence only, never a D-number (241).
+  sources         Json           @default("[]")
+  reason          String?
+  pence           Decimal?       @db.Decimal
+  answeredAt      DateTime?      @map("answered_at") @db.Timestamptz()
+  answer          String?
+  effectsLoadDate DateTime?      @map("effects_load_date") @db.Date
+
+  @@unique([documentId, role, v], map: "action_document_version_unique")
+  @@index([documentId], map: "action_document_version_document_idx")
+  @@map("action_document_version")
+}
