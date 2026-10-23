@@ -1,6 +1,10 @@
 # LEX 26-V1b — Report
 
-**Status, 2026-10-23: V1b-a BUILT; `check:lex-26v1b` 42/42 with a mutation run.** The schema pair `befa05c` (263: a document keeps its last accepted version) is pushed. The V1b-a code is not yet pushed. V1b-b is not started.
+**Status, 2026-10-23: V1b-a LIVE at `009198f`; `check:lex-26v1b` 42/42 with a mutation run.**
+- The schema pair `befa05c` (263: a document keeps its last accepted version) was pushed first.
+- **Verified live:** `/api/health` reports `009198fd…` (production). "Parts of this action, quoted" is in a live chunk, and the control string is in none. build-worker deployed itself as `bf60a5ee`, which went SUCCESS with `meta.commitHash` `009198fd61d6`. Its container printed "retrieval configuration OK" at 19:21:37 UTC.
+- The full regression and the clean build pass. The one exception is GRAPH's `check:idea-law` E1, which compares line count with merged rows and is not caused by this code; see CHANGE_LOG.
+- V1b-b is not started.
 
 ## V1b-a — what was built
 

@@ -964,7 +964,17 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
-**▶ 2026-10-23 10:40 UTC — 23 Oct (9) done: 233–237 live (`b05bfa8`); 249 live (`3f7f20c`); 26-V1 PUSHED AND VERIFIED LIVE at `39bebee` (health, live chunk, build-worker sha + config line).** See CHANGE_LOG 10:32 and `docs/LEX_26V_REPORT.md` §5.
+**▶ 2026-10-23 19:14 UTC: 26-V1b-a is LIVE at `009198f`** (schema `befa05c` went first). Verified by `/api/health`, a live chunk ("Parts of this action, quoted") and build-worker (see the report). See CHANGE_LOG 19:14 and `docs/LEX_26V1b_REPORT.md`.
+- **The record now runs in one order with a sticky jump band. "Commentary" is now "Detail".** Lex's tool is now `set_action_detail`; the column name is unchanged.
+- **DocumentView** is the single view of a document, and it keeps an accepted version through later edits (263).
+- **Law panel:** shows words and never an id.
+- **Open:**
+  - GRAPH's `check:idea-law` E1. It compares line count with merged rows (27 rows on 24 lines on 452c5ade), and is GRAPH's to fix.
+  - V1b-b: §4 OPC-form parser plus three views, §5 explanatory note (priced first), §7 board and Order.
+  - Charlie's screen look (§9).
+  - 26-V2 is held until V1b-b.
+
+**2026-10-23 10:40 UTC — 23 Oct (9) done: 233–237 live (`b05bfa8`); 249 live (`3f7f20c`); 26-V1 PUSHED AND VERIFIED LIVE at `39bebee` (health, live chunk, build-worker sha + config line).** See CHANGE_LOG 10:32 and `docs/LEX_26V_REPORT.md` §5.
 - **The documents store is the ONE home of 26-U's drafts** (`lib/lex/action-documents.ts`). Never write `record.draft`; read through `draftsFor` / `withDrafts`.
 - **#38 and #202:** their drafts are Lex PROPOSALS awaiting Charlie's accept. The #202 redraft to reflect 238 is OFFERED (asks first, about 10p) and NOT run.
 - **Red checks fixed:** 26s-browser, 26s2-structure, check:scripts.
