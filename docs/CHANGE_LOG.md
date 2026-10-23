@@ -2,7 +2,7 @@
 
 ## 2026-10-23 00:35 UTC - LEX 26-U §5: a dropped target is WITHDRAWN (GRAPH confirmed its reader is live)
 
-- GRAPH confirmed at 00:3x that its reader is live on origin/Main (b5f9496). `writeInstructionRows` no longer holds a version that drops a target. It **withdraws** the vanished target's live row: `withdrawnAt` and `withdrawnDetail` "<action> instruction v<N>: target absent", set together in one transaction.
+- GRAPH confirmed after the 00:29 push that its reader is live on origin/Main (b5f9496). `writeInstructionRows` no longer holds a version that drops a target. It **withdraws** the vanished target's live row: `withdrawnAt` and `withdrawnDetail` "<action> instruction v<N>: target absent", set together in one transaction.
 - GRAPH's rules:
   - Only a live row is withdrawn, never a superseded one; the CHECK refuses those.
   - A target that comes back gets a NEW row. The withdrawn one is never un-withdrawn.
