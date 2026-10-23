@@ -140,7 +140,16 @@ GRAPH 7 landed locally (`09e8939`: `withdrawn_at`/`withdrawn_detail` + CHECKs, a
   - Control: the earlier chunk `d1d792a25d5a645d.js` has "Not saved: " but not that string.
 - ⚠ **build-worker: NOT verified.** `RAILWAY_API_TOKEN` answered "Not Authorized" (10:44 UTC re-test). Under CCh's instruction, that is unproven while incident QH8L8B3E affects Railway's API.
 
-**§5: committed, NOT pushed.** Five local commits wait for the incident to clear: `09e8939`, `279f5e5`, `e2b60d2`, `9aa989f`, `6bc36ca`, plus the docs commit for this update. The order then, per CCh's 22 Oct (7):
+**✅ 23 Oct 00:29 UTC: §5 is pushed and verified live at `c79eb84`.**
+- `/api/health` reports `c79eb84`, production.
+- The merged line "Named N times — shown once, with each source:" reads back from live chunk `526a6cf30743fb97.js`.
+- build-worker `ff2ae2d9`: SUCCESS, `meta.commitHash` `c79eb84cca2c`, triggered by the push.
+- The old Railway token was dead ("Project Token not found"); a new one is in `.env`.
+- ⚠ Before this push, build-worker had stayed on `7d7b75b` (19 Oct), so the 22 Oct pushes never reached it.
+
+The paragraph below is kept as it was written.
+
+**§5 (as of 22:58, superseded): committed, NOT pushed.** Five local commits wait for the incident to clear: `09e8939`, `279f5e5`, `e2b60d2`, `9aa989f`, `6bc36ca`, plus the docs commit for this update. The order then, per CCh's 22 Oct (7):
 1. Re-test the original Railway token.
 2. Push.
 3. Read back the merged line and `/api/health`, and the build-worker's `meta.commitHash`.

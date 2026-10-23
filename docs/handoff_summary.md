@@ -964,6 +964,12 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**✅ 2026-10-23 00:29 UTC — everything outstanding is PUSHED and verified live at `c79eb84`. This supersedes the "HELD" lines below.**
+- **Vercel:** `/api/health` reports `c79eb84`, production. The merged-line string is in live chunk `526a6cf30743fb97.js`.
+- **build-worker:** `ff2ae2d9` was triggered by the push itself, went SUCCESS with `meta.commitHash` `c79eb84cca2c`, and printed "retrieval configuration OK".
+- **Railway token:** the old one was dead ("Project Token not found"). Charlie's new token in `.env` works.
+- ⚠ Before this push, build-worker was still on `7d7b75b` (19 Oct); the 22 Oct pushes produced no deployment record. See CHANGE_LOG 2026-10-23 00:29.
+
 **⚠ 2026-10-22 22:58 UTC — LEX 26-U: §2–§4 live, §5 committed and held; see `docs/LEX_26U_REPORT.md` (status, §5, §20).**
 - **Live at `64d30c2`:** §2–§4 and 22 Oct (6) (231, 232, 187, 234). Verified by `/api/health` and by "Move the extra into Commentary or shorten." in the live chunk. build-worker is NOT verified, because the Railway token answers "Not Authorized".
 - **Local, not pushed:** GRAPH `09e8939` → LEX `279f5e5` (§5 join writer) → GRAPH `e2b60d2` → GRAPH `9aa989f` → LEX `6bc36ca` (as_at = effectsLoadDate) → this docs commit.

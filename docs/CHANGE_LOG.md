@@ -1,5 +1,13 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-23 00:29 UTC - LEX 26-U §5 + GRAPH 7 follow-ups pushed and verified live (c79eb84)
+
+- **Token:** the original `RAILWAY_API_TOKEN` was dead, not outage-blocked. At 00:18 `projectToken` answered "Project Token not found". Charlie put a new token in `.env`, and it authenticates (project 68707c61, env 991f733c).
+- **Pushed:** `64d30c2..c79eb84` (GRAPH 09e8939, LEX 279f5e5, GRAPH e2b60d2, GRAPH 9aa989f, LEX 6bc36ca, docs c79eb84). Clean build A and B passed first.
+- **Vercel:** `/api/health` reports commit `c79eb84`, env production, at 00:25. The merged line "Named N times — shown once, with each source:" (`e2b60d2` only) reads back from live chunk `526a6cf30743fb97.js`. In the same pass, the 64d30c2 string still reads back from `4f1e709a1e1ce26e.js`.
+- **build-worker:** deployment `ff2ae2d9` appeared unprompted at 00:22:17, the push's second. It went SUCCESS at 00:27:57 with `meta.commitHash` `c79eb84cca2c`, and the container printed "retrieval configuration OK" at 00:27:49.
+  - ⚠ **Before this, build-worker had no deployment record after 20 Oct**: none for `2237f57` or `64d30c2`, though both touched `scrutinise-web/lib/**`. It was still running `7d7b75b` (19 Oct), i.e. **no 26-U code ran on the worker on 22 Oct**. Most likely the Railway incident dropped the triggers. Not proven.
+
 ## 2026-10-22 22:57 UTC - LEX 26-U: report and handoff brought up to date (docs only)
 
 - `docs/LEX_26U_REPORT.md`: the status, §4's Primary legislation note, **§5 now BUILT** (it read STOPPED), §6 at 49/49 with the clean build, the 22 Oct (6) items, and §20 for what is live (`64d30c2`) and what is held.
