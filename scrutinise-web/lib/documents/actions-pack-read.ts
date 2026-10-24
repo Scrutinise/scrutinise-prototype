@@ -16,7 +16,7 @@ import { listRegistry } from '@/lib/lex/source-registry'
 import { plainFoldHeader } from '@/lib/lex/action-resort-pure'
 import { currentVersion } from '@/lib/lex/action-draft-pure'
 import { becauseOf } from '@/lib/lex/action-order-pure'
-import { draftsFor, packDocuments } from '@/lib/lex/action-documents'
+import { draftsFor, packDocuments, acceptedInstructions, scheduleRows } from '@/lib/lex/action-documents'
 import { touchesFor } from '@/lib/lex/action-touches'
 import { SET_ASIDE_PREFIX, DISMISSED_PREFIX } from '@/lib/lex/update-pass'
 import { staleness, staleSentence, type StoredJudge, type StoredModelOutput } from '@/lib/lex/action-digest-pure'
@@ -121,6 +121,9 @@ export async function readActionsPackData(
   // 26-U §4 — what each drafted action touches, computed now from its current instruction (the documents print it; nothing is stored).
   // The held provision text is for the screen, not the stored snapshot: the documents print the line, its state and its counts.
   for (const a of actions) if (a.draft?.provisions.some((p) => p.relation !== 'precedent')) a.touches = (await touchesFor(a.draft)).touches.map((t) => ({ ...t, heldText: null }))
+  // 267 — the annexe's rows: drafted amendments in ACCEPTED instruction versions only (never the touches above, never the onward reader)
+  const accepted = await acceptedInstructions(ideaId)
+  for (const a of actions) { const rs = scheduleRows(accepted.filter((x) => x.actionId === a.id)); if (rs.length) a.scheduleRows = rs }
 
   const ruledOut = ruled.flatMap((r) => (r.number == null ? [] : [{ number: r.number, title: r.title, statement: r.practicalStep, headingId: r.headingId, reason: r.ruleOutReason, lastChanged: r.updatedAt.toISOString() }]))
 

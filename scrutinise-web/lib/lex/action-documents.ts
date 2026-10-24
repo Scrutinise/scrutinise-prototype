@@ -4,9 +4,10 @@
 //
 //   draftsFor            — 26-U's ActionDraft shape, rebuilt from the documents, so every reader of a draft reads this store.
 //   writeDraftVersion / writeDraftProposal / answerDraftProposal — the writers lib/lex/action-draft.ts calls.
-//   generateCollisionReport — 245/251/252: rows with a depth (depth 1 from the clause's own lines; GRAPH supplies 2–3 later), stored as a
-//                          GENERATED version; marked stale when the effects data or the clause has moved on.
-//   generateSchedule     — 233/245: the idea's flattened list, on the schedule action's own document.
+//   generateCollisionReport — 245/251/267: the clause's own lines, then two parts under each provision it changes (what depends on it;
+//                          provisions that refer to it, for review), walked over GRAPH 8's onwardFrom() by strength; a GENERATED version,
+//                          marked stale when the effects data or the clause has moved on.
+//   generateSchedule     — 233/267: the drafted amendments in ACCEPTED drafting instructions only, on the schedule action's own document.
 //   documentTree         — heading → action → document → part, with "needs N: M drafted" and the counts (§3).
 //
 // ⚠ NOTHING DELETES: versions append; a proposal is answered (ACCEPTED / DISMISSED) and kept; a document is superseded, never removed.
@@ -18,10 +19,11 @@ import { prisma } from '@/lib/prisma'
 import { parseRecord } from './action-record'
 import { parseDraft, currentVersion, type ActionDraft, type DraftInstruction, type DraftVersion, type DraftProposal } from './action-draft-pure'
 import { touchesFor } from './action-touches'
+import { onwardRows, type Walker } from './collision-walk'
 import { effectsLoadDate } from './statutory-graph'
 import {
-  GENERATED_KINDS, KIND_WORD, collisionBody, dNumber, needsDocuments, partsOf, scheduleBody,
-  type DocumentKind, type DocumentStatus, type EffectRow, type Needs, type NeedsOverride,
+  GENERATED_KINDS, KIND_WORD, collisionBody, dNumber, needsDocuments, partsOf, scheduleBody, scheduleRows,
+  type DocumentKind, type DocumentStatus, type EffectRow, type Needs, type NeedsOverride, type ScheduleRow,
 } from './action-documents-pure'
 
 export * from './action-documents-pure'
@@ -32,8 +34,6 @@ type Author = 'LEX' | 'OWNER' | 'COLLABORATOR' | 'GENERATED'
 type Tx = Prisma.TransactionClient
 
 const DRAFT_TITLE = (legislative: boolean) => (legislative ? 'Drafting instruction and clause' : 'Drafting instruction and wording')
-/** 252 — said on every collision report until GRAPH supplies the onward steps. */
-export const DEPTH_NOTE = 'Depth 1 only: what the clause itself does. What each change knocks on to (depths 2 and 3) is not yet supplied by the graph reader.'
 
 // ── reading 26-U's shape out of the store ───────────────────────────────────────────────────────────────────────
 
@@ -256,15 +256,18 @@ const sameRows = (a: unknown, b: unknown[]) => stable(((a as { rows?: unknown } 
  * The action's collision report (document N.2 beside the clause), generated from the CURRENT draft-clause version. A new GENERATED version
  * is written only when the rows or the effects load date changed; otherwise "unchanged". Free: no model call.
  */
-export async function generateCollisionReport(ideaId: string, actionId: string, opts: { rows?: EffectRow[] } = {}): Promise<Result<{ d: string; v: number | null; rows: number; unchanged: boolean }>> {
+export async function generateCollisionReport(ideaId: string, actionId: string, opts: { rows?: EffectRow[]; walk?: Walker } = {}): Promise<Result<{ d: string; v: number | null; rows: number; unchanged: boolean }>> {
   const a = await prisma.lexCoherentAction.findFirst({ where: { id: actionId, ideaId, status: 'LIVE' }, select: { id: true, number: true } })
   if (!a) return fail('That action is not on this idea’s live list. Nothing was generated.')
   const draft = await draftFor(a.id)
   const cur = currentVersion(draft)
   if (!cur) return fail(`#${a.number ?? '?'} has no drafting instruction yet, so there is nothing for a collision report to read. Nothing was generated.`)
-  const rows = opts.rows ?? (await depthOneRows(cur))
+  const clause = opts.rows ?? (await depthOneRows(cur))
+  // 267: the two parts, walked by strength over onwardFrom() (free: no model call)
+  const onward = await onwardRows(clause.filter((r) => (r.part ?? 'clause') === 'clause'), opts.walk)
+  const rows = [...clause, ...onward.rows]
   const loadDate = await effectsLoadDate().catch(() => null)
-  const payload = { rows, fromDraftVersion: cur.v, depthSupplied: 1 }
+  const payload = { rows, notes: onward.notes, fromDraftVersion: cur.v, walk: 'onward-267' }
   const out = await prisma.$transaction(async (tx) => {
     const doc = await documentOfKind(tx, ideaId, a.id, 'COLLISION_REPORT', 'Collision report')
     const last = await tx.actionDocumentVersion.findFirst({ where: { documentId: doc.id, role: 'VERSION' }, orderBy: { v: 'desc' } })
@@ -273,7 +276,7 @@ export async function generateCollisionReport(ideaId: string, actionId: string, 
       if (doc.staleAt) await tx.actionDocument.update({ where: { id: doc.id }, data: { staleAt: null, staleReason: null } })
       return { doc, v: null as number | null, unchanged: true }
     }
-    const row = await appendVersion(tx, doc.id, { author: 'GENERATED', body: collisionBody(rows, { loadDate, depthNote: DEPTH_NOTE }), payload, effectsLoadDate: loadDate })
+    const row = await appendVersion(tx, doc.id, { author: 'GENERATED', body: collisionBody(rows, { loadDate, caveat: onward.caveat, notes: onward.notes }), payload, effectsLoadDate: loadDate })
     return { doc, v: row.v as number | null, unchanged: false }
   })
   return { ok: true, data: { d: dNumber(a.number, out.doc.number), v: out.v, rows: rows.length, unchanged: out.unchanged } }
@@ -285,37 +288,54 @@ async function scheduleActions(ideaId: string) {
   return rows.filter((r) => needsOverrideOf(r.record)?.kinds?.includes('CONSEQUENTIAL_SCHEDULE'))
 }
 
-/** 233/245: the schedule action's document — every row of every collision report on the idea, flattened, counted per Act. */
+/** 267: every accepted drafting-instruction version on the idea, with its action number and D-number. Read by the schedule and the pack. */
+export async function acceptedInstructions(ideaId: string): Promise<Array<{ actionId: string; action: number | null; d: string; v: number; ins: DraftInstruction }>> {
+  const docs = await prisma.actionDocument.findMany({
+    where: { ideaId, kind: 'DRAFT_CLAUSE', status: { not: 'SUPERSEDED' }, acceptedV: { not: null } },
+    include: { versions: { where: { role: 'VERSION' } } }, orderBy: [{ number: 'asc' }],
+  })
+  const nums = new Map((await prisma.lexCoherentAction.findMany({ where: { id: { in: docs.map((d) => d.actionId) }, status: 'LIVE' }, select: { id: true, number: true } })).map((x) => [x.id, x.number]))
+  return docs.flatMap((d) => {
+    const v = d.versions.find((x) => x.v === d.acceptedV)
+    if (!v || !nums.has(d.actionId)) return []
+    const action = nums.get(d.actionId) ?? null
+    return [{ actionId: d.actionId, action, d: dNumber(action, d.number), v: v.v, ins: instructionOf(v.payload) }]
+  })
+}
+
+/** 233/267: the schedule action's document — the DRAFTED amendments in accepted instructions, counted and listed per Act. Never a collision row. */
 export async function generateSchedule(ideaId: string): Promise<Result<{ d: string | null; v: number | null; rows: number; unchanged: boolean }>> {
   const holders = await scheduleActions(ideaId)
   if (!holders.length) return fail('No action on this idea is set to hold the consequential schedule. Set one (its documents: "needs a consequential schedule") first. Nothing was generated.')
-  const reports = await prisma.actionDocument.findMany({
-    where: { ideaId, kind: 'COLLISION_REPORT', status: { not: 'SUPERSEDED' } },
-    include: { versions: { where: { role: 'VERSION' }, orderBy: { v: 'desc' }, take: 1 } }, orderBy: [{ createdAt: 'asc' }],
-  })
-  const nums = new Map((await prisma.lexCoherentAction.findMany({ where: { id: { in: reports.map((r) => r.actionId) } }, select: { id: true, number: true } })).map((x) => [x.id, x.number]))
-  const rows = reports.flatMap((r) => (((r.versions[0]?.payload as { rows?: EffectRow[] } | null)?.rows) ?? []).map((x) => ({ ...x, from: dNumber(nums.get(r.actionId) ?? null, r.number) })))
-  const loadDate = await effectsLoadDate().catch(() => null)
+  const rows: ScheduleRow[] = scheduleRows(await acceptedInstructions(ideaId))
   const h = holders[0]
   const out = await prisma.$transaction(async (tx) => {
     const doc = await documentOfKind(tx, ideaId, h.id, 'CONSEQUENTIAL_SCHEDULE', 'Consequential amendments and repeals — the schedule')
     const last = await tx.actionDocumentVersion.findFirst({ where: { documentId: doc.id, role: 'VERSION' }, orderBy: { v: 'desc' } })
-    if (last && sameRows(last.payload, rows) && (last.effectsLoadDate?.toISOString().slice(0, 10) ?? null) === loadDate) return { doc, v: null as number | null, unchanged: true }
-    const row = await appendVersion(tx, doc.id, { author: 'GENERATED', body: scheduleBody(rows, { loadDate }), payload: { rows }, effectsLoadDate: loadDate })
+    if (last && sameRows(last.payload, rows) && (last.payload as { from?: string } | null)?.from === SCHEDULE_FROM) return { doc, v: null as number | null, unchanged: true }
+    const row = await appendVersion(tx, doc.id, { author: 'GENERATED', body: scheduleBody(rows), payload: { rows, from: SCHEDULE_FROM }, effectsLoadDate: null })
     return { doc, v: row.v as number | null, unchanged: false }
   })
   return { ok: true, data: { d: dNumber(h.number, out.doc.number), v: out.v, rows: rows.length, unchanged: out.unchanged } }
 }
+/** Marks a schedule version written from accepted instructions (267); an older one, written from collision rows, is out of date. */
+export const SCHEDULE_FROM = 'accepted-instructions'
 
 // ── staleness (251): said, and recorded ──────────────────────────────────────────────────────────────────────────
 
 /** Why a generated document's latest version no longer matches its data, in words; null when it still does. Pure on its inputs. */
-export function staleWhy(kind: string, last: { effectsLoadDate: Date | null; payload: unknown } | undefined, now: { loadDate: string | null; draftV: number | null }): string | null {
+export function staleWhy(kind: string, last: { effectsLoadDate: Date | null; payload: unknown } | undefined, now: { loadDate: string | null; draftV: number | null; schedule?: ScheduleRow[] }): string | null {
   if (!last || !GENERATED_KINDS.has(kind as DocumentKind)) return null
+  const p = last.payload as { fromDraftVersion?: number; walk?: string; from?: string; rows?: unknown } | null
+  // 267 — the schedule reads accepted instructions, never the effects data: it is out of date when what was accepted has changed
+  if (kind === 'CONSEQUENTIAL_SCHEDULE') {
+    if (p?.from !== SCHEDULE_FROM) return 'this was generated from the collision reports, before the schedule became the drafted amendments in accepted instructions only (267)'
+    return now.schedule && !sameRows(p, now.schedule) ? 'an accepted drafting instruction has changed since this was generated' : null
+  }
   const was = last.effectsLoadDate?.toISOString().slice(0, 10) ?? null
   if (now.loadDate && was !== now.loadDate) return `the effects data was reloaded on ${now.loadDate}; this was generated from the load of ${was ?? 'an unknown date'}`
-  const from = (last.payload as { fromDraftVersion?: number } | null)?.fromDraftVersion
-  if (kind === 'COLLISION_REPORT' && now.draftV != null && from != null && from !== now.draftV) return `the clause now has version ${now.draftV}; this was generated from version ${from}`
+  if (kind === 'COLLISION_REPORT' && now.draftV != null && p?.fromDraftVersion != null && p.fromDraftVersion !== now.draftV) return `the clause now has version ${now.draftV}; this was generated from version ${p.fromDraftVersion}`
+  if (kind === 'COLLISION_REPORT' && p?.walk !== 'onward-267') return 'this was generated before the report had its two parts — what depends on each provision, and what refers to it (267)'
   return null
 }
 
@@ -336,15 +356,17 @@ export async function documentTree(ideaId: string, opts: { recordStale?: boolean
     effectsLoadDate().catch(() => null),
   ])
   const drafts = await draftsFor(actions.map((a) => a.id))
+  const schedule = docs.some((d) => d.kind === 'CONSEQUENTIAL_SCHEDULE') ? scheduleRows(await acceptedInstructions(ideaId)) : undefined
+  const headingName = new Map(headings.map((h) => [h.id, h.name]))
   const staleWrites: Array<{ id: string; reason: string | null }> = []
   const rowOf = (a: (typeof actions)[number]): TreeActionRow => {
     const draftV = currentVersion(drafts.get(a.id))?.v ?? null
     const clauseAccepted = docs.some((d) => d.actionId === a.id && d.kind === 'DRAFT_CLAUSE' && d.status !== 'SUPERSEDED' && d.acceptedV != null)
-    const needs = needsDocuments({ avenue: a.avenue, instrument: currentVersion(drafts.get(a.id))?.instrument ?? null, override: needsOverrideOf(a.record), clauseAccepted })
+    const needs = needsDocuments({ avenue: a.avenue, instrument: currentVersion(drafts.get(a.id))?.instrument ?? null, override: needsOverrideOf(a.record), clauseAccepted, headingName: headingName.get(a.headingId ?? '') ?? null })
     const documents: TreeDocument[] = docs.filter((d) => d.actionId === a.id).map((d) => {
       const vs = d.versions.filter((x) => x.role === 'VERSION')
       const last = vs.at(-1)
-      const stale = staleWhy(d.kind, last, { loadDate, draftV })
+      const stale = staleWhy(d.kind, last, { loadDate, draftV, schedule })
       if (opts.recordStale && (stale ?? null) !== (d.staleReason ?? null)) staleWrites.push({ id: d.id, reason: stale })
       return {
         id: d.id, number: d.number, d: dNumber(a.number, d.number), kind: d.kind as DocumentKind, title: d.title, status: d.status as DocumentStatus, acceptedV: d.acceptedV,

@@ -21,7 +21,7 @@ import { text, numbered, letterFor, incentiveBlocks, notTakenBlocks, dateWords }
 import { DIGEST_QUESTIONS } from '@/lib/lex/action-digest-pure'
 import { INCENTIVE_WORD } from '@/lib/lex/incentive-map'
 import { CLAUSE_CAVEAT, INSTRUMENT_WORD, provisionLine } from '@/lib/lex/action-draft-pure'
-import { scheduleCounts, scheduleSentence, NEAR_QUESTION, STATE_WORDS as TOUCH_STATE } from '@/lib/lex/action-touches-pure'
+import { NEAR_QUESTION, STATE_WORDS as TOUCH_STATE } from '@/lib/lex/action-touches-pure'
 import { KIND_WORD, dNumberWords } from '@/lib/lex/action-documents-pure'
 import { afterWords, derivedOrder } from '@/lib/lex/action-order-pure'
 
@@ -209,13 +209,19 @@ function documentListBlocks(actions: PackAction[]): Block[] {
 }
 
 
-/** 229 — the consequential schedule across the printed actions: counted in the body, listed in full. Generated; never retyped. */
+/**
+ * 229/267 — the consequential schedule across the printed actions: the DRAFTED amendments in ACCEPTED drafting instructions, counted and
+ * listed. ⚠ Never a figure from the record of effects or from a reference (GRAPH 8 rule 4): those are candidates, and this annexe records
+ * what has been drafted and accepted. A draft not yet accepted is not here.
+ */
 function scheduleBlocks(actions: PackAction[]): Block[] {
-  const all = actions.flatMap((a) => (a.touches ?? []).map((t) => ({ a, t }))).filter(({ t }) => ['amends', 'repeals', 'modifies'].includes(t.line.relation))
+  const all = actions.flatMap((a) => (a.scheduleRows ?? []).map((r) => ({ a, r })))
   const blocks: Block[] = [{ kind: 'section', title: 'ANNEXE — CONSEQUENTIAL AMENDMENTS AND REPEALS' }]
-  if (!all.length) { blocks.push({ kind: 'paragraph', runs: [{ text: 'No printed action’s drafting instruction amends, repeals or modifies an existing provision yet.', italic: true }] }); return blocks }
-  blocks.push({ kind: 'paragraph', runs: [{ text: scheduleSentence(scheduleCounts(all.map((x) => x.t))) }] })
-  blocks.push({ kind: 'bullets', items: all.map(({ a, t }): Run[] => [{ text: `#${a.number}: ${provisionLine(t.line)} — ${TOUCH_STATE[t.state]}${t.effects ? `; ${t.effects.perType.map((c) => `${c.type} ${c.total} (${c.doNotChangeTheWords} do not change the words, ${c.unclassified} unclassified)`).join(', ')}` : ''}` }]) })
+  if (!all.length) { blocks.push({ kind: 'paragraph', runs: [{ text: 'No printed action has an accepted drafting instruction that amends, repeals or modifies an existing provision yet. A draft that is not accepted is not listed here.', italic: true }] }); return blocks }
+  const n = (rel: string) => all.filter(({ r }) => r.relation === rel).length
+  const acts = new Set(all.map(({ r }) => r.docUri)).size
+  blocks.push({ kind: 'paragraph', runs: [{ text: `Drafted and accepted: ${n('amends')} amended, ${n('repeals')} repealed, ${n('modifies')} modified, across ${acts} Act${acts === 1 ? '' : 's'}. Only accepted drafting instructions are listed; nothing here is taken from the record of effects or of references.` }] })
+  blocks.push({ kind: 'bullets', items: all.map(({ a, r }): Run[] => [{ text: `#${a.number}: ${provisionLine({ docUri: r.docUri, provisionPath: r.provisionPath, relation: r.relation as never, note: r.note })} — version ${r.v}, accepted (${r.d})` }]) })
   return blocks
 }
 

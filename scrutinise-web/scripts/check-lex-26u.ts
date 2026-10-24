@@ -254,7 +254,11 @@ async function part3and4() {
     const W = xml.replace(/<\/w:p>/g, '\n').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/\s+/g, ' ')
     ok('the printed pack carries section 12 "Draft text" with the caveat as the clause’s first line', /12 Draft text|\.12 .{0,6}Draft text/.test(W) && W.includes(CLAUSE_CAVEAT), W.slice(W.indexOf('Draft text') - 40, W.indexOf('Draft text') + 300))
     ok('…section 13 "What this touches" with the honest states in words', /What this touches/.test(W) && W.includes('before Parliament — not yet law'))
-    ok('…and the generated annexe with the counted sentence', /CONSEQUENTIAL AMENDMENTS AND REPEALS/i.test(W) && /Primary legislation: \d+ provisions? amended/.test(W))
+    // 267: the annexe lists drafted amendments in ACCEPTED instructions only; this draft is not accepted, so it is not there — and no figure
+    // from the record of effects is printed in the annexe (GRAPH 8 rule 4)
+    // (the section title is also a running header, so read from the annexe's own sentence)
+    const annexe = W.slice(Math.max(0, W.indexOf('No printed action has an accepted drafting instruction')))
+    ok('…and the annexe: an unaccepted draft is not listed, said in words, with no figure from the record of effects (267)', /CONSEQUENTIAL AMENDMENTS AND REPEALS/i.test(W) && annexe.includes('A draft that is not accepted is not listed here.') && !/onward effect/i.test(annexe.slice(0, 600)), annexe.slice(0, 300))
     const bg = await renderDocx(buildFor('BACKGROUND_REPORT', snap, null, {}).model)
     const BX = (await allText(bg)).replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ')
     ok('the Background Report prints the schedule counts and the precedent citations', /WHAT THE DRAFTED CLAUSES TOUCH/i.test(BX) && /Primary legislation: \d+ provision/.test(BX) && /Precedents drawn on: .*ukpga\/1972\/70/.test(BX))

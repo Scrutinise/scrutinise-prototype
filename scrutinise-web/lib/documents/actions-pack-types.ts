@@ -60,6 +60,8 @@ export interface PackAction {
   touches: Touch[] | null
   /** 26-V1 — the action's documents, in number order (current version). Absent on a snapshot stored before 26-V: reads as none. */
   documents?: import('@/lib/lex/action-documents').PackDocument[]
+  /** 267 — the drafted amendments of this action's ACCEPTED drafting-instruction version: the only rows the annexe prints. Absent = none accepted. */
+  scheduleRows?: import('@/lib/lex/action-documents-pure').ScheduleRow[]
 }
 
 export interface PackRuledOut {

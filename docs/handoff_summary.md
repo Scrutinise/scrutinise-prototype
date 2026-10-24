@@ -987,6 +987,12 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-10-24 08:47 UTC: 26-V2a (267 plus the §4 Specification rule) is built and checked; committed and pushed with this line.** See CHANGE_LOG 08:47.
+- The collision report has two parts, walked by strength over `onwardFrom()`.
+- The schedule and the pack annexe hold accepted drafted amendments only.
+- ⚠ For Charlie: official effects stop at step 2 (GRAPH 8's measurement), not "until it ends".
+- **Split:** V2b = §5 drafting on the worker (prices to measure: ask first); V2c = §7 passes, plus an issue→action/document schema (re-attachment cost measured on scratch: ask before 452c5ade).
+
 **▶ 2026-10-24 08:16 UTC: 24 Oct (2) items 264–266 and the E1 answer are built and checked. Committed with their schema (`lex_264_scratch.sql`, applied 07:47).** See CHANGE_LOG 08:16.
 - Scratch copies are flagged (`Idea.isScratch`) and in no list; a leftover is swept by the next `scratchCopy()`. The two ZZ ideas are removed.
 - Record sections open closed; "Detail" is now "Explanation" (action box only).

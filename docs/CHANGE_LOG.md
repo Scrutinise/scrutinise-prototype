@@ -1,5 +1,36 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-24 08:47 UTC - LEX 26-V2a: the collision report in two parts on onwardFrom() (267), the schedule from accepted drafts only, Specification derived
+
+- **Sized and split** (24 Oct (3)):
+  - **V2a** (no spend, no schema) is this entry.
+  - **V2b** is §5 "Draft what this heading needs", on the worker. It spends; each kind's price is to be measured on a scratch copy.
+  - **V2c** is §7: the passes re-pointed at documents and the 176 issues re-attached. It spends, and it needs a schema change: `DeepeningIssue` has no action or document column, so today every issue sits on the idea, none on an action.
+- **267, the collision report** (`lib/lex/collision-walk.ts`, `collisionBody`):
+  - Under each provision the clause amends, repeals or modifies, there are two parts, never merged: "What depends on this" and "Provisions that refer to this — for review".
+  - It walks GRAPH 8's `onwardFrom()`, now live, so the report needs no "waiting" line.
+  - The stop is by strength:
+    - made-under is walked until it ends;
+    - the official record goes to step 2, never 3 (GRAPH's `withheldAt`);
+    - references go to step 1 with their marked words, plus step 2 labelled weak, never 3.
+  - "Relies on" and precedent lines are not walked. Every cap and stop is counted in words.
+  - 246's "stops at depth three, see the schedule" is withdrawn.
+  - ⚠ **Not as Charlie wrote it:** 267 says official effects are "walked until it ends". GRAPH 8 measured 673–2,388 instruments at step 2, and its tool withholds step 3, so the report stops there and says why. This is for Charlie to confirm.
+  - Real reads, free:
+    - Equality Act s.149: 133 rows (33 depend, 100 refer, 62 of them weak), 45 reads, 5.2 s.
+    - CRaG s.20 reproduces GRAPH 8 §5: 11 made under it (3 naming s.20, 8 only the Act), 5 official rows, 6 references, none naming s.20.
+  - On 452c5ade nothing is walked yet: #38's lines are all "relies on", and #202 has no current version.
+- **267, the schedule (#203) and the pack annexe:**
+  - Both now list drafted amendments (amends / repeals / modifies) in **accepted** drafting-instruction versions only (`acceptedInstructions`, `scheduleRows`), never a collision row or a reader figure.
+  - The annexe's "onward effects" counts are gone.
+  - A schedule or report generated before this says it is out of date, and why.
+- **§4:** a Specification is derived under "The accountability platform" (`SPECIFICATION_HEADING`); elsewhere it is added by hand. The explanatory note was already a derived kind (V1b-b).
+- **Checks:**
+  - `check:lex-26v` 57/57, 7 controls. A fixture walker proves the stop by strength, the nesting, no step-3 read, and the accepted-only schedule.
+  - Mutations (weak label at step 3; references filed under "depends") each turned 3 cases red. Both reverted.
+  - `check:lex-26u` 57/57 (annexe assertion moved to 267), `check:lex-26v1b` 74/74, `check:lex-26t1` 98/98, `check:lex-26t2` 72/72, `check:lex-26s2` 221/221, `check:lex-26q` 74/74.
+  - `check:client-boundary` clean, `check:prompt-examples` 0, `tsc` clean.
+
 ## 2026-10-24 08:16 UTC - LEX 24 Oct (2): 264 scratch copies flagged and hidden, 265 record sections closed, 266 "Explanation"; E1 answered
 
 - **264:**

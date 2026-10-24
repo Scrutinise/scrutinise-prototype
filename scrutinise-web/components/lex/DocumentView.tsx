@@ -272,7 +272,7 @@ function TouchesTab({ data, ideaId }: { data: DocumentViewData; ideaId: string }
       {res && (res.touches.length
         ? <ul className="space-y-1.5">{res.touches.map((t, i) => <TouchBlocks key={i} t={t} title={data.titles[t.line.docUri] ?? t.actTitle} />)}</ul>
         : <p className="font-semibold">The instruction names no provision it amends, repeals, modifies, relies on or is constrained by.</p>)}
-      <p className="text-zinc-600" data-collision-line>The collision rows are in this action’s collision report, at depth 1 (what the clause itself does); depths 2–3 wait on the graph.</p>
+      <p className="text-zinc-600" data-collision-line>This action’s collision report has two parts under each provision the clause changes: what depends on it (made under it, and the official record of what operates on it), and provisions that refer to it, for review.</p>
     </div>
   )
 }
