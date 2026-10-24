@@ -1,5 +1,13 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-24 22:47 UTC - LEX + GRAPH: 4d3479c verified live; 452c5ade's 176 issues placed (275, 16.98p)
+
+- **Live:** health `4d3479c7d191…`. build-worker `550eca1b` SUCCESS on `4d3479c7d191`, appeared unprompted at 22:40:22, and printed its retrieval-OK and "queue on" lines at 22:47:09. Clean build of HEAD at C:/cb2 (npm ci 0, tsc 0) passed before the push.
+  - ⚠ **§20 read-back of "appears to confer none" not done.** The words are server-only: they are written into a collision report when one is generated, so no public chunk carries them. 452c5ade has 0 accepted instructions, so it has no collision report to show them in. The first read-back is a collision check on an action whose instruction touches a provision with unresolved instruments.
+- **275, 452c5ade:** 176 open issues. Before: 176 on the proposal. After: 57 on an action, 0 on a document (no accepted document), 119 on the proposal. 8 calls, 0 failed batches, 0 falls, 16.98p. Most on one action: 38, "Legislate a single named-owner duty" (14). Undo: `undoLexAttachments`.
+- **Scratch sweep at session start:** 0 live copies, for Lex and Graphs alike.
+- **Handoff:** Graphs' GRAPH 9 block marked shipped in `4d3479c` (Graphs' edit, carried here).
+
 ## 2026-10-24 22:37 UTC - LEX + GRAPH 9, one commit (CCh 273): the collision walk asks for `enacting-unresolved`; `madeUnderFor()` uses the per-instrument power rule
 
 - **Streams:** GRAPH (entry below: reader, provision_power, mentions, source_zone, caselaw) and LEX (this entry), committed together because the reader without Lex's walk would drop 1,100 pairs from "What depends on this".
