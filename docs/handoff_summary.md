@@ -1014,6 +1014,19 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-10-24 23:30 UTC: 274 + 26-V2d + 276 done. `8e2b281` is live and verified** (health; live chunks "Review this document" and the Risks view's "On an action, not on one of its documents"; build-worker `68c2fee1` SUCCESS on `8e2b2819df38`, with its retrieval-OK and queue-on lines at 23:26:25). The schema went first in `949dd4b` (`lex_26v2d_document_review.sql`, applied 23:05 and read back). Report: `docs/LEX_26V2d_REPORT.md`; CHANGE_LOG 23:20 and 23:30.
+- **274:** all seven kinds are set on 452c5ade (Oversight is TRANSPARENCY, Rules & Standards is BUDGET, the other five are Lex's). The platform is PLATFORM again.
+- **V2d:** the five passes each read a document's current version part by part. Each review writes a `document_review` row and issues keyed `review:<PASS>` at runVersion 0, carrying action, document, part and `reviewId`.
+  - On screen: "Review this document" asks first; the Issues tab counts by pass; the tree shows ⚑ on parts and "reviewed by n of 5".
+  - **The Risks view (225) did not exist and is now built:** every issue, by document, answered in place.
+  - The proposal snapshot leaves review issues out.
+- **276:** D.38.1 reviewed, **9.09p**, 38 issues. 452c5ade went from 176 to 214 open issues (38 on a document, 57 on an action, 119 on the proposal).
+  - D.202.1 was not reviewed (it has only a proposal), nor D.203.1 (an empty schedule).
+- **Checks:** check:lex-26v2d 62/62, and a mutation run where 9 of 9 mutations turned it red. lex-26v2c's fixture was fixed for 274.
+  - ⚠ check:lex-26u and check:scripts were not run: the memory reaper stopped the sweep.
+- **For Charlie:** §8 of the report — the Risks view's grouping, the 38 issues, using or setting aside D.202.1's proposal and then reviewing it (≈5.5p), and whether the Pack should print review issues.
+- **Still owed:** the §20 read-back of "appears to confer none"; `entity_list_v5.md` (DocumentReview, reviewId).
+
 **▶ 2026-10-24 11:35 UTC: 26-V2b ("Draft what this heading needs") pushed as `959bd3a`, with its table (`lex_26v2b_draft_jobs.sql`, applied 11:27).** See CHANGE_LOG 11:35.
 - **Live, verified 11:50:** health shows `959bd3a`; the new strings are in chunk `e31087ec0df28fab.js`. build-worker `076acbad` SUCCESS on 959bd3a563f9, with its "queue on" line at 11:48:12.
 - **Prices** (measured on scratch, 13 runs, about 15p): operating text 1.0p, costing 1.1p, code text 1.3p, specification 1.7p, background note 1.1p.

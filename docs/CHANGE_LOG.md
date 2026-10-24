@@ -1,5 +1,20 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-24 23:30 UTC - LEX: 8e2b281 (26-V2d) verified live; 276 run on 452c5ade (9.09p, 38 issues on D.38.1)
+
+- **Live:**
+  - health `8e2b2819df38…` (production);
+  - "Review this document", "reviewed by n of 5" and "On an action, not on one of its documents" in live chunks `0b76a118de5a89b5.js` / `88aedd55bfa31741.js`, and a control string in none of the 22 scanned;
+  - build-worker `68c2fee1` appeared unprompted at 23:23:50, SUCCESS on `8e2b2819df38`, retrieval-OK and queue-on at 23:26:25.
+- **Before the push:** clean worktree of HEAD at C:/cb2 (npm ci 0, tsc 0, removed); every new file confirmed tracked; only `949dd4b` and `8e2b281` shipped.
+- **276** (`scripts/run-276-reviews.ts --run`, without asking; ceilings £1.50 in all and 30p a pass; projected 9.00p first):
+  - D.38.1 v1 reviewed by all five, **9.09p**. Per pass: evidence 1.77p (7 issues), legal 1.97p (8), financial 1.73p (8), political 1.92p (8), statutory 1.70p (7).
+  - The ledger agrees: 5 `LlmSpend` rows, `documents.review`, 9.09p.
+  - Open issues: 176 → **214** (on a document 0 → 38; on an action 57; on the proposal 119).
+  - Most issues on one part: 38.1.1 (definitions), 9. No part fell back.
+  - Not reviewed: D.202.1 (only Lex's proposal), D.203.1 (empty generated schedule).
+- **Report:** `docs/LEX_26V2d_REPORT.md`, with what only Charlie can confirm in §8.
+
 ## 2026-10-24 23:20 UTC - LEX 274 + 26-V2d: the seven heading kinds set on 452c5ade; the five review passes read documents and parts; the Risks view, by document
 
 - **274 (set shortly after 22:48, read back):** 452c5ade's seven headings now have kinds. Lex's proposals accepted for Primary legislation, CS Code, CS Mgt Code, The platform, Rules & Standards (budget) and Training (guidance or pilot). Oversight set to **transparency**, per CCh, over Lex's "other". No proposal is left waiting. "The platform" is PLATFORM, so its actions now need a specification again.
