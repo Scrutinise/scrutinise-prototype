@@ -79,4 +79,11 @@ async function main() {
   if (failures > 0) { console.error(`[download] ${failures} failure(s)`); process.exit(1) }
   console.log('[download] all files present + size-verified')
 }
-main().catch(e => { console.error('[download] FATAL', e); process.exit(1) })
+// ⚠ GUARDED (GRAPH 9, 24 Oct 2026). `DATA_DIR` is imported by the extractors and audits, and an unguarded
+// main() meant importing it DOWNLOADED THE FOUR DAILY-REGENERATED ZIPS OVER THE ONES ON DISK — silently, beside
+// whatever the importer was doing. audit-g9-provision-ids.ts did exactly that at 18:21 UTC: the 5 July uksi/ssi/
+// nisr/wsi copies `legislation_edges` was built from were replaced mid-audit, and the same audit run twice gave
+// 0 and then 274 + 201 mismatches. The third time this guard has been needed (extract-cites-edges, extract-madeunder-edges).
+if (require.main === module) {
+  main().catch(e => { console.error('[download] FATAL', e); process.exit(1) })
+}

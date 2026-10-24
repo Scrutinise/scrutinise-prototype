@@ -1,0 +1,49 @@
+{
+  "measured_at": "2026-10-24T18:40:24.091Z",
+  "dry_run": false,
+  "zip": "C:/Code/scrutinise-prototype/scripts/legislation/v276-bulk/best-collection-xml.zip (mtime 2026-05-14)",
+  "documents": {
+    "with_stored_rows": 70628,
+    "walked_from_file": 70290,
+    "not_in_file": 338,
+    "rows_of_docs_not_in_file": 11415
+  },
+  "rows": {
+    "stored_in_walked_docs": 1023133,
+    "matched": 1016062,
+    "unmatched": 6575,
+    "ambiguous": 496,
+    "written": 1016062
+  },
+  "by_zone": {
+    "body": 696227,
+    "explanatory-note": 149928,
+    "earlier-orders-note": 169907
+  },
+  "by_detection_zone": {
+    "text:body": 555674,
+    "markup:body": 140553,
+    "markup:explanatory-note": 71384,
+    "text:explanatory-note": 78544,
+    "markup:earlier-orders-note": 165258,
+    "text:earlier-orders-note": 4649
+  },
+  "note_share": {
+    "numerator": 319835,
+    "denominator": 1016062,
+    "pct": 31.48,
+    "reading": "note-sourced rows as a share of stored markup+text rows whose zone was determined; rows not determined are stated above, never assumed body"
+  },
+  "unmatched_samples": [
+    "anaw/2012/2 text . .. . .. . .Section 60 of the Food Act 1984",
+    "anaw/2012/2 text  council and community councilSection 31 of the Road Traffic Regulation Act 1984",
+    "anaw/2012/2 text . .. . .. . .Section 60 of the Food Act 1984",
+    "anaw/2013/1 text ee5b00b689\">or 68, oriisection 28 of the School Standards and Framework Act 1998",
+    "anaw/2013/1 text 48, 59, 63D or 68, orsection 31 of the School Standards and Framework Act 1998",
+    "anaw/2013/1 text schedule-5-paragraph-2\" RestrictStartDate=\"2025-09-01\">21 The Education Act 1996",
+    "anaw/2013/1 text ct-1998\" RestrictStartDate=\"2026-04-01\"> School Standards and Framework Act 1998",
+    "anaw/2013/1 text 2026-04-01\" RestrictExtent=\"E+W\">191 The School Standards and Framework Act 1998",
+    "anaw/2016/3 markup in the meaning given by section 157A of the Government of Wales Act 2006 (c. 32)",
+    "anaw/2016/3 markup ter under the Environment (Air Quality and Soundscapes) (Wales) Act 2024 (asc 2)"
+  ]
+}

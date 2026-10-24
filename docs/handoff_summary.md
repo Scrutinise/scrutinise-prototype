@@ -234,6 +234,21 @@ not run, not omitted. `tsc` clean, `check-clean-build.sh --fast` PASS.
 
 ---
 
+## GRAPH THREAD — last updated 2026-10-24 19:01 UTC (GRAPH 9)
+
+*Report: `docs/GRAPH_9_REPORT.md`. Neon: `citation_edge.source_zone` added and backfilled, new table `provision_power` (18:36–18:40 UTC, additive). Decision 271 is live at `4f6fd57`. **GRAPH 9's reader is not committed and not deployed.***
+
+▼ **§0: the 36.1% is ours, not the official record's.** 0 of 1.79M / 1.74M official section refs differ from the publisher's own identifiers, so GRAPH 6 stands. ⚠ `download-graph-sources.ts` ran on import and replaced the July uksi/ssi/nisr/wsi zips mid-audit; it is now guarded.
+▼ **§2: the provision is a second witness that can only withhold.**
+- New table `provision_power`. New kind `enacting-unresolved` (strength `unresolved`): the words say power, the provision is `none`.
+- No text rule reached the precision floor, so every provision state is low confidence.
+- CRaG s.20: 0 made-under, 0 unresolved, 3 mentions, and "None is made under a power in it".
+▼ **§3:** `mentions` kind, opt-in, never merged into `cites`.
+▼ **§4:** **31% of citation rows and 57% of walked `cites` rows quote an explanatory note** (not 5.7%). The rows are tagged; a note row is handed back as the instrument, labelled "not part of the law".
+▼ **§5:** `detectionOf` knows case law; `verify:statutory-parity` 13/13 (red since GRAPH 5).
+⚠ **Ship together with Lex's collision walk asking for `enacting-unresolved`.** Otherwise 1,100 pairs drop out of "What depends on this". Lex also has an unfiltered `madeUnderFor()` in `action-touches.ts` (271 never reached it).
+▶ **For Charlie:** the refs-list parser (the last gap on s.20); multi-Act target resolution; missed power families; re-extract note rows without a provision?
+
 ## GRAPH THREAD — last updated 2026-10-24 16:05 UTC (decision 271 + E1)
 
 *Report: `docs/GRAPH_271_REPORT.md`. Neon altered + backfilled 16:00–16:01 UTC, presence CHECK validated. GRAPH 8 itself is live at `2030266`. **The 271 reader change is not committed and not deployed.***

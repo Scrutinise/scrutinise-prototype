@@ -97,6 +97,25 @@ function exclusionZones(xml: string): Array<[number, number]> {
   }
   return zones.sort((a, b) => a[0] - b[0])
 }
+/**
+ * ⚠ GRAPH 9 §4 — WHERE IN THE DOCUMENT A REFERENCE SITS, recorded rather than excluded.
+ * An SI's `<ExplanatoryNotes>` ("This note is not part of the Order") and its `<EarlierOrders>` note are NOT THE LAW.
+ * GRAPH 8 found them in the review set ("at least 5.7%" of joined windows). Charlie (GRAPH 9): tag, do not exclude —
+ * a note often says WHY a reference exists, which is what a drafter wants, and excluding it would cost a re-extraction.
+ * Every row now carries its `source_zone`; a reader renders a note-sourced row as "explanatory note — not part of the law".
+ */
+export type SourceZone = 'body' | 'explanatory-note' | 'earlier-orders-note'
+export const SOURCE_ZONES: readonly SourceZone[] = ['body', 'explanatory-note', 'earlier-orders-note']
+export function noteZones(xml: string): Array<[number, number, SourceZone]> {
+  const z: Array<[number, number, SourceZone]> = []
+  for (const m of xml.matchAll(/<ExplanatoryNotes\b[\s\S]*?<\/ExplanatoryNotes>/g)) z.push([m.index!, m.index! + m[0].length, 'explanatory-note'])
+  for (const m of xml.matchAll(/<EarlierOrders\b[\s\S]*?<\/EarlierOrders>/g)) z.push([m.index!, m.index! + m[0].length, 'earlier-orders-note'])
+  return z.sort((a, b) => a[0] - b[0])
+}
+export function zoneAt(zones: Array<[number, number, SourceZone]>, i: number): SourceZone {
+  for (const [s, e, k] of zones) if (i >= s && i < e) return k
+  return 'body'
+}
 function zoneCursor(zones: Array<[number, number]>) {
   let zi = 0
   return (i: number): boolean => {
@@ -245,6 +264,8 @@ export type CitationRow = {
   citationText: string; rawFragment: string
   resolved: boolean; sourceType: 'primary' | 'SI' | 'other'; sourceGid: string
   detection: 'markup' | 'text'
+  /** GRAPH 9 §4: body text, or a note that is not part of the law. */
+  sourceZone: SourceZone
 }
 
 // ── the TEXT detector ────────────────────────────────────────────────────────
@@ -336,10 +357,11 @@ export async function loadActTitles(): Promise<Map<string, string>> {
   return titles
 }
 
-function extractDoc(gid: string, xml: string, held: Set<string>): CitationRow[] {
+export function extractDoc(gid: string, xml: string, held: Set<string>): CitationRow[] {
   stats.docs++
   const zones = exclusionZones(xml)
   const inZone = zoneCursor(zones)
+  const notes = noteZones(xml)
   const marks = provisionMarks(xml)
   const rows: CitationRow[] = []
   const sourceType = sourceTypeFor(gid)
@@ -411,6 +433,7 @@ function extractDoc(gid: string, xml: string, held: Set<string>): CitationRow[] 
       sourceType,
       sourceGid: flat(gid),
       detection: 'markup',
+      sourceZone: zoneAt(notes, at),
     })
   }
   stats.rows += rows.length
@@ -431,6 +454,7 @@ export function extractDocText(
 ): CitationRow[] {
   const zones = exclusionZones(xml)
   const inZone = zoneCursor(zones)
+  const notes = noteZones(xml)
   const marks = provisionMarks(xml)
   const rows: CitationRow[] = []
   const sourceType = sourceTypeFor(gid)
@@ -490,6 +514,7 @@ export function extractDocText(
       sourceType,
       sourceGid: flat(gid),
       detection: 'text',
+      sourceZone: zoneAt(notes, at),
     })
   }
   stats.textRows += rows.length
@@ -506,14 +531,14 @@ async function insertRows(rows: CitationRow[], provenance: string): Promise<numb
     const values: unknown[] = []
     const tuples = batch.map((r, j) => {
       values.push(r.sourceDocUri, r.sourceProvisionRef, r.targetUri, r.targetActId, r.targetProvisionRef,
-        r.citationText, r.rawFragment, r.resolved, r.sourceType, r.sourceGid, r.detection, provenance)
-      const b = j * 12
-      return `($${b + 1},$${b + 2},$${b + 3},$${b + 4},$${b + 5},$${b + 6},$${b + 7},$${b + 8},$${b + 9},$${b + 10},$${b + 11},$${b + 12})`
+        r.citationText, r.rawFragment, r.resolved, r.sourceType, r.sourceGid, r.detection, provenance, r.sourceZone)
+      const b = j * 13
+      return `($${b + 1},$${b + 2},$${b + 3},$${b + 4},$${b + 5},$${b + 6},$${b + 7},$${b + 8},$${b + 9},$${b + 10},$${b + 11},$${b + 12},$${b + 13})`
     })
     const res = await pool.query(
       `INSERT INTO ${CITATION_TABLE}
        (source_doc_uri, source_provision_ref, target_uri, target_act_id, target_provision_ref,
-        citation_text, raw_fragment, resolved, source_type, source_gid, detection, extracted_from)
+        citation_text, raw_fragment, resolved, source_type, source_gid, detection, extracted_from, source_zone)
        VALUES ${tuples.join(',')}`, values)
     written += res.rowCount ?? 0
   }

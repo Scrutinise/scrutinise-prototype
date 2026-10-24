@@ -6,7 +6,8 @@
 import { z } from 'zod'
 import { onwardFrom } from '@/lib/lex/onward'
 import {
-  ONWARD_RULES, ONWARD_KINDS, CASELAW_KIND, STRENGTH_HEADING, ENABLING_ROLE_WORDS, describeOnwardSummary, citingTextForDisplay, withheldAt,
+  ONWARD_RULES, ONWARD_KINDS, CASELAW_KIND, MENTIONS_KIND, STRENGTH_HEADING, ENABLING_ROLE_WORDS, KIND_LABEL, PROVISION_POWER_WORDS,
+  PROVISION_POWER_CONFIDENCE, describeOnwardSummary, citingTextForDisplay, zoneLabel, withheldAt,
 } from '@/lib/lex/onward-pure'
 import type { ToolDefinition, ToolResult } from './types'
 
@@ -23,15 +24,19 @@ export const statuteOnward: ToolDefinition = {
   schema: z.object({
     target: z.string().min(3).max(200).describe('legislation.gov.uk id such as "ukpga/2010/25" or "ukpga/2010/25/section/20", or a `node` from a previous step'),
     provision: z.string().max(60).optional().describe('optional provision id such as "section-20", if not already in target'),
-    kinds: z.array(z.enum(ONWARD_KINDS)).max(ONWARD_KINDS.length).optional().describe(`default: all ${ONWARD_KINDS.length}. made-under (the enacting words name this as the power exercised) is the strongest; cites and enacting-mention are references only`),
+    kinds: z.array(z.enum(ONWARD_KINDS)).max(ONWARD_KINDS.length).optional().describe(`default: all ${ONWARD_KINDS.length}. made-under (the enacting words name this as the power exercised) is the strongest; enacting-unresolved is for a human to read; cites and enacting-mention are references only`),
+    include_mentions: z.boolean().default(false).describe('the target’s name found in running text (not marked up) — weaker than cites, never counted with them; not walked by default'),
     include_case_law: z.boolean().default(false).describe('judgments citing the target — interpretation, never a drafting consequence; not walked by default'),
     depth: z.number().int().min(1).max(12).default(1).describe('which step of the walk this is: 1 for the target itself'),
     limit: z.number().int().min(1).max(50).default(20),
   }),
-  async run(ctx, { target, provision, kinds, include_case_law, depth, limit }) {
+  async run(ctx, { target, provision, kinds, include_mentions, include_case_law, depth, limit }) {
     let r
     try {
-      r = await onwardFrom(target, { provision, kinds: [...(kinds ?? ONWARD_KINDS), ...(include_case_law ? [CASELAW_KIND] : [])], limit, depth })
+      r = await onwardFrom(target, {
+        provision, limit, depth,
+        kinds: [...(kinds ?? ONWARD_KINDS), ...(include_mentions ? [MENTIONS_KIND] : []), ...(include_case_law ? [CASELAW_KIND] : [])],
+      })
     } catch (err) {
       // ⚠ FAILED ≠ EMPTY.
       return fail(`the onward lookup did not complete: ${err instanceof Error ? err.message : String(err)}`)
@@ -44,11 +49,17 @@ export const statuteOnward: ToolDefinition = {
     const shown = r.rows.filter((row) => !withheldAt(row.strength, depth))
     const words: string[] = []
     const rows = shown.map((row, i) => {
-      const display = citingTextForDisplay(row.citingText)
+      const display = citingTextForDisplay(row.citingText, row.sourceZone)
       if (display) words.push(`[row ${i + 1}] ${display}`)
       return {
-        n: i + 1, node: row.provision, title: row.actTitle ?? undefined, kind: row.kind, strength: row.strength,
+        n: i + 1, node: row.provision, title: row.actTitle ?? undefined, kind: row.kind, kind_reads: KIND_LABEL[row.kind], strength: row.strength,
         heading: STRENGTH_HEADING[row.strength].heading,
+        // ⚠ GRAPH 9 §4: a note is not part of the law — said on the row, not only inside the fenced words.
+        not_part_of_the_law: row.sourceZone && row.sourceZone !== 'body' ? zoneLabel(row.sourceZone) ?? undefined : undefined,
+        // ⚠ GRAPH 9 §2: what the provision named says of itself — low confidence, always.
+        provision_confers_power: row.provisionPower
+          ? { state: row.provisionPower.state, reads: PROVISION_POWER_WORDS[row.provisionPower.state], basis: row.provisionPower.basis, confidence: PROVISION_POWER_CONFIDENCE }
+          : undefined,
         sub_type: row.subType || undefined, changes_the_words: row.changeKind ?? undefined,
         reading: row.changeKind && row.changeKind !== 'textual' ? row.changeReason ?? undefined : undefined,
         bears_on: row.thisEndProvision ?? 'the Act as a whole', scope: row.scope,
@@ -66,6 +77,14 @@ export const statuteOnward: ToolDefinition = {
         depth,
         // The scope split is shown only for a provision: on a whole Act every row bears on it.
         summary: describeOnwardSummary(r.target.provision ? r.perKind : r.perKind.map(({ scope: _s, ...c }) => c)),
+        provision_itself: r.targetProvisionPower
+          ? { state: r.targetProvisionPower.state, reads: PROVISION_POWER_WORDS[r.targetProvisionPower.state], confidence: PROVISION_POWER_CONFIDENCE }
+          : undefined,
+        mention_only: r.mentionOnly ?? undefined,
+        notes_not_law: r.perKind.some((c) => c.zones && (c.zones.notes || c.zones.undetermined))
+          ? r.perKind.filter((c) => c.zones && (c.zones.notes || c.zones.undetermined))
+            .map((c) => `${c.kind}: ${c.zones!.notes} of ${c.counted} rows quote an explanatory note, which is not part of the law; ${c.zones!.undetermined} rows’ place in the document was not determined`)
+          : undefined,
         weak: depth === 2 && r.perKind.some((c) => c.strength === 'reference' && c.counted > 0)
           ? 'This is depth 2: the references here refer to something that refers to the target. Label them as a weak set for review, if you show them at all.'
           : undefined,

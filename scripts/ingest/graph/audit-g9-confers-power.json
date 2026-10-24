@@ -1,0 +1,545 @@
+{
+  "measured_at": "2026-10-24T18:36:27.339Z",
+  "zip": "C:/Code/scrutinise-prototype/scripts/legislation/v276-bulk/best-collection-xml.zip (mtime 2026-05-14)",
+  "documents": 131647,
+  "labels": {
+    "flag": "legislation.gov.uk ConfersPower=\"true\" on a P1 or its P1group, counted only in documents the publisher marked (≥1 flag anywhere)",
+    "si": "provisions an SI's enacting words name as the power exercised (citation_edge enabling_role = 'power'): 15106 distinct (gid, provision)"
+  },
+  "coverage_by_type": {
+    "aep": {
+      "docs": 657,
+      "marked": 0,
+      "provisions": 6312,
+      "flagged": 0
+    },
+    "aip": {
+      "docs": 11,
+      "marked": 0,
+      "provisions": 40,
+      "flagged": 0
+    },
+    "anaw": {
+      "docs": 44,
+      "marked": 39,
+      "provisions": 4673,
+      "flagged": 592
+    },
+    "aosp": {
+      "docs": 106,
+      "marked": 0,
+      "provisions": 208,
+      "flagged": 0
+    },
+    "apgb": {
+      "docs": 58,
+      "marked": 0,
+      "provisions": 429,
+      "flagged": 0
+    },
+    "apni": {
+      "docs": 286,
+      "marked": 16,
+      "provisions": 4239,
+      "flagged": 51
+    },
+    "asc": {
+      "docs": 32,
+      "marked": 23,
+      "provisions": 2945,
+      "flagged": 343
+    },
+    "asp": {
+      "docs": 409,
+      "marked": 338,
+      "provisions": 25030,
+      "flagged": 3394
+    },
+    "eudn": {
+      "docs": 13173,
+      "marked": 2,
+      "provisions": 48166,
+      "flagged": 2
+    },
+    "eudr": {
+      "docs": 2035,
+      "marked": 0,
+      "provisions": 26664,
+      "flagged": 0
+    },
+    "eur": {
+      "docs": 24488,
+      "marked": 160,
+      "provisions": 119759,
+      "flagged": 1017
+    },
+    "mnia": {
+      "docs": 2,
+      "marked": 0,
+      "provisions": 5,
+      "flagged": 0
+    },
+    "mwa": {
+      "docs": 22,
+      "marked": 21,
+      "provisions": 1266,
+      "flagged": 238
+    },
+    "nia": {
+      "docs": 250,
+      "marked": 120,
+      "provisions": 8876,
+      "flagged": 1384
+    },
+    "nisi": {
+      "docs": 558,
+      "marked": 108,
+      "provisions": 22759,
+      "flagged": 954
+    },
+    "nisr": {
+      "docs": 9815,
+      "marked": 0,
+      "provisions": 109152,
+      "flagged": 0
+    },
+    "nisro": {
+      "docs": 1,
+      "marked": 0,
+      "provisions": 38,
+      "flagged": 0
+    },
+    "ssi": {
+      "docs": 8885,
+      "marked": 5,
+      "provisions": 78244,
+      "flagged": 11
+    },
+    "ukci": {
+      "docs": 60,
+      "marked": 0,
+      "provisions": 44,
+      "flagged": 0
+    },
+    "ukcm": {
+      "docs": 158,
+      "marked": 67,
+      "provisions": 3976,
+      "flagged": 161
+    },
+    "ukla": {
+      "docs": 198,
+      "marked": 1,
+      "provisions": 4149,
+      "flagged": 1
+    },
+    "ukmo": {
+      "docs": 1,
+      "marked": 0,
+      "provisions": 4,
+      "flagged": 0
+    },
+    "ukpga": {
+      "docs": 4407,
+      "marked": 1710,
+      "provisions": 303729,
+      "flagged": 27484
+    },
+    "uksi": {
+      "docs": 61179,
+      "marked": 39,
+      "provisions": 646732,
+      "flagged": 65
+    },
+    "wsi": {
+      "docs": 4812,
+      "marked": 4,
+      "provisions": 64174,
+      "flagged": 3
+    }
+  },
+  "acts_marked_by_decade": {
+    "regnal (pre-1963)": {
+      "docs": 1650,
+      "marked": 254
+    },
+    "1900s": {
+      "docs": 1,
+      "marked": 0
+    },
+    "1910s": {
+      "docs": 1,
+      "marked": 0
+    },
+    "1930s": {
+      "docs": 1,
+      "marked": 0
+    },
+    "1960s": {
+      "docs": 275,
+      "marked": 68
+    },
+    "1970s": {
+      "docs": 448,
+      "marked": 138
+    },
+    "1980s": {
+      "docs": 536,
+      "marked": 217
+    },
+    "1990s": {
+      "docs": 538,
+      "marked": 366
+    },
+    "2000s": {
+      "docs": 367,
+      "marked": 283
+    },
+    "2010s": {
+      "docs": 314,
+      "marked": 219
+    },
+    "2020s": {
+      "docs": 276,
+      "marked": 165
+    }
+  },
+  "totals_by_half": {
+    "train": {
+      "flagged": 18124,
+      "unflagged": 145370,
+      "si": 6929
+    },
+    "test": {
+      "flagged": 17576,
+      "unflagged": 145914,
+      "si": 6630
+    }
+  },
+  "derivation": {
+    "half": "train (FNV-1a of gid even)",
+    "precision_floor": 0.8,
+    "support_floor": 30,
+    "per_family": [
+      {
+        "family": "by_regulations",
+        "fires_in_marked_docs": 4900,
+        "of_which_flagged": 3705,
+        "of_which_flag_says_no_power": 1195,
+        "precision_vs_flag": 0.756,
+        "si_confirmed": 6929,
+        "si_confirmed_text_fires": 1220,
+        "recall_vs_si": 0.176,
+        "selected": false
+      },
+      {
+        "family": "by_order_in_council",
+        "fires_in_marked_docs": 707,
+        "of_which_flagged": 372,
+        "of_which_flag_says_no_power": 335,
+        "precision_vs_flag": 0.526,
+        "si_confirmed": 6929,
+        "si_confirmed_text_fires": 199,
+        "recall_vs_si": 0.029,
+        "selected": false
+      },
+      {
+        "family": "by_statutory_instrument",
+        "fires_in_marked_docs": 2790,
+        "of_which_flagged": 2012,
+        "of_which_flag_says_no_power": 778,
+        "precision_vs_flag": 0.721,
+        "si_confirmed": 6929,
+        "si_confirmed_text_fires": 1131,
+        "recall_vs_si": 0.163,
+        "selected": false
+      },
+      {
+        "family": "by_order_minister",
+        "fires_in_marked_docs": 3393,
+        "of_which_flagged": 2453,
+        "of_which_flag_says_no_power": 940,
+        "precision_vs_flag": 0.723,
+        "si_confirmed": 6929,
+        "si_confirmed_text_fires": 1272,
+        "recall_vs_si": 0.184,
+        "selected": false
+      },
+      {
+        "family": "by_order_any",
+        "fires_in_marked_docs": 4000,
+        "of_which_flagged": 2712,
+        "of_which_flag_says_no_power": 1288,
+        "precision_vs_flag": 0.678,
+        "si_confirmed": 6929,
+        "si_confirmed_text_fires": 1392,
+        "recall_vs_si": 0.201,
+        "selected": false
+      },
+      {
+        "family": "by_rules",
+        "fires_in_marked_docs": 166,
+        "of_which_flagged": 76,
+        "of_which_flag_says_no_power": 90,
+        "precision_vs_flag": 0.458,
+        "si_confirmed": 6929,
+        "si_confirmed_text_fires": 58,
+        "recall_vs_si": 0.008,
+        "selected": false
+      },
+      {
+        "family": "by_scheme_or_byelaws",
+        "fires_in_marked_docs": 11,
+        "of_which_flagged": 5,
+        "of_which_flag_says_no_power": 6,
+        "precision_vs_flag": 0.455,
+        "si_confirmed": 6929,
+        "si_confirmed_text_fires": 2,
+        "recall_vs_si": 0,
+        "selected": false
+      },
+      {
+        "family": "make_regulations",
+        "fires_in_marked_docs": 1124,
+        "of_which_flagged": 850,
+        "of_which_flag_says_no_power": 274,
+        "precision_vs_flag": 0.756,
+        "si_confirmed": 6929,
+        "si_confirmed_text_fires": 317,
+        "recall_vs_si": 0.046,
+        "selected": false
+      },
+      {
+        "family": "make_order",
+        "fires_in_marked_docs": 612,
+        "of_which_flagged": 146,
+        "of_which_flag_says_no_power": 466,
+        "precision_vs_flag": 0.239,
+        "si_confirmed": 6929,
+        "si_confirmed_text_fires": 54,
+        "recall_vs_si": 0.008,
+        "selected": false
+      },
+      {
+        "family": "regulations_may",
+        "fires_in_marked_docs": 7117,
+        "of_which_flagged": 5022,
+        "of_which_flag_says_no_power": 2095,
+        "precision_vs_flag": 0.706,
+        "si_confirmed": 6929,
+        "si_confirmed_text_fires": 1832,
+        "recall_vs_si": 0.264,
+        "selected": false
+      },
+      {
+        "family": "in_regulations",
+        "fires_in_marked_docs": 890,
+        "of_which_flagged": 496,
+        "of_which_flag_says_no_power": 394,
+        "precision_vs_flag": 0.557,
+        "si_confirmed": 6929,
+        "si_confirmed_text_fires": 161,
+        "recall_vs_si": 0.023,
+        "selected": false
+      },
+      {
+        "family": "power_to_make",
+        "fires_in_marked_docs": 1426,
+        "of_which_flagged": 878,
+        "of_which_flag_says_no_power": 548,
+        "precision_vs_flag": 0.616,
+        "si_confirmed": 6929,
+        "si_confirmed_text_fires": 508,
+        "recall_vs_si": 0.073,
+        "selected": false
+      },
+      {
+        "family": "appointed_day",
+        "fires_in_marked_docs": 142,
+        "of_which_flagged": 102,
+        "of_which_flag_says_no_power": 40,
+        "precision_vs_flag": 0.718,
+        "si_confirmed": 6929,
+        "si_confirmed_text_fires": 87,
+        "recall_vs_si": 0.013,
+        "selected": false
+      },
+      {
+        "family": "prescribed",
+        "fires_in_marked_docs": 7058,
+        "of_which_flagged": 3655,
+        "of_which_flag_says_no_power": 3403,
+        "precision_vs_flag": 0.518,
+        "si_confirmed": 6929,
+        "si_confirmed_text_fires": 1606,
+        "recall_vs_si": 0.232,
+        "selected": false
+      },
+      {
+        "family": "may_direct",
+        "fires_in_marked_docs": 448,
+        "of_which_flagged": 61,
+        "of_which_flag_says_no_power": 387,
+        "precision_vs_flag": 0.136,
+        "si_confirmed": 6929,
+        "si_confirmed_text_fires": 29,
+        "recall_vs_si": 0.004,
+        "selected": false
+      },
+      {
+        "family": "may_by_notice",
+        "fires_in_marked_docs": 515,
+        "of_which_flagged": 79,
+        "of_which_flag_says_no_power": 436,
+        "precision_vs_flag": 0.153,
+        "si_confirmed": 6929,
+        "si_confirmed_text_fires": 16,
+        "recall_vs_si": 0.002,
+        "selected": false
+      }
+    ],
+    "selected": []
+  },
+  "text_rule_in_code": [],
+  "code_matches_selected": true,
+  "score_test_selected": {
+    "fires_in_marked_docs": 0,
+    "of_which_flagged": 0,
+    "of_which_flag_says_no_power": 0,
+    "precision_vs_flag": 0,
+    "si_confirmed": 6630,
+    "si_confirmed_text_fires": 0,
+    "recall_vs_si": 0
+  },
+  "score_train_selected": {
+    "fires_in_marked_docs": 0,
+    "of_which_flagged": 0,
+    "of_which_flag_says_no_power": 0,
+    "precision_vs_flag": 0,
+    "si_confirmed": 6929,
+    "si_confirmed_text_fires": 0,
+    "recall_vs_si": 0
+  },
+  "score_test_all_candidates": {
+    "fires_in_marked_docs": 21817,
+    "of_which_flagged": 12232,
+    "of_which_flag_says_no_power": 9585,
+    "precision_vs_flag": 0.561,
+    "si_confirmed": 6630,
+    "si_confirmed_text_fires": 4785,
+    "recall_vs_si": 0.722
+  },
+  "text_evidence_families_in_code": [
+    "by_regulations",
+    "by_statutory_instrument",
+    "by_order_minister",
+    "by_order_any",
+    "make_regulations",
+    "regulations_may",
+    "power_to_make",
+    "appointed_day"
+  ],
+  "text_evidence_families_at_or_above_0_6": [
+    "by_regulations",
+    "by_statutory_instrument",
+    "by_order_minister",
+    "by_order_any",
+    "make_regulations",
+    "regulations_may",
+    "power_to_make",
+    "appointed_day"
+  ],
+  "state_on_si_confirmed_powers": {
+    "power:flag-and-text": 6180,
+    "power:text-only": 1976,
+    "unknown:weak-text-only": 597,
+    "power:flag-only": 1553,
+    "none:no-flag-no-text": 902,
+    "unknown:repealed-text": 2163,
+    "unknown:unmarked-and-silent": 188
+  },
+  "false_none_rate_on_si_confirmed": {
+    "si_confirmed_held": 13559,
+    "state_none": 902,
+    "pct": 0.067,
+    "reading": "upper bound: an SI naming an interpretation section among its powers is counted here, and that provision rightly confers none"
+  },
+  "state_on_every_provision": {
+    "unknown:unmarked-and-silent": 875587,
+    "unknown:repealed-text": 255207,
+    "unknown:weak-text-only": 41823,
+    "power:text-only": 63688,
+    "none:no-flag-no-text": 214713,
+    "power:flag-and-text": 20685,
+    "power:flag-only": 9910
+  },
+  "non_text_instruments_agree": {
+    "si_confirmed_found_in_zip": 13559,
+    "si_confirmed_in_marked_docs": 12398,
+    "of_which_flagged": 8830,
+    "pct": 0.712
+  },
+  "samples_test_half": {
+    "textButFlagSaysNoPower": [
+      "asp/2014/3 schedule-3-paragraph-16 [regulations_may] 16 1 The Control of Pollution Act 1974 is amended as follows. 2 The following provisions are repealed— a section 30B (classification of quality waters), b section 30C (water quality objectives), c section 30D (general duties to achieve and maintain objectives, etc.), d section 30E (consultation and collaboration), e section 31B (nitrate sensitive areas), f section 31C (registering of agreement), g",
+      "asp/2020/11 schedule-1-paragraph-2 [by_regulations] 2 1 Consumer Scotland is to consist of— a a member appointed by the Scottish Ministers to chair Consumer Scotland, and b at least 2 but no more than 4 other members appointed by the Scottish Ministers. 2 ​A member is appointed for such period not exceeding 5 years as the Scottish Ministers determine. 3 The Scottish Ministers may reappoint as a member a person who is, or has been, a member of Consu",
+      "asp/2024/11 section-8 [regulations_may] Form of support and conditions 8 1 Support may be provided— a in such manner as the Scottish Ministers consider appropriate including, in particular, financial support by way of grant, loan or guarantee, and b under or in accordance with a scheme established by regulations made under section 15 (1) , a scheme established administratively, or otherwise. 2 Except as otherwise provided in regulations",
+      "nisi/1979/1709 article-18C [regulations_may] Appeals to Department: procedure and fees 18C 1 Building regulations may make provision— a with respect to the procedure to be followed in connection with appeals to the Department under this Order; b for the payment of a fee of the prescribed amount in respect of an appeal to the Department under this Order; c for the remission of a prescribed fee (in whole or in part) in prescribed circumstances",
+      "nisi/1991/2872 article-5 [by_regulations] Display of warning statements in retail premises and on vending machines 5 1 A notice displaying the following statement— [inserted text] shall be exhibited at every premises at which tobacco is sold by retail, and shall be so exhibited in a prominent position where the statement is readily visible to persons at the point of sale of the tobacco; and where— a any person carries on a business involv",
+      "nisi/2000/1347 article-4 [regulations_may] Regulations under Article 3 – supplementary 4 1 Where the Secretary of State proposes to make regulations under Article 3, he shall refer a draft of the proposed regulations to the Assembly. 2 The Assembly shall, within such period as the Secretary of State may specify, report to the Secretary of State the views expressed in the Assembly on the proposed regulations. 3 The Secretary of State shall ",
+      "ukcm/2003/3 section-5 [by_regulations] Registrar of tribunals 5 1 The archbishops of Canterbury and York shall each for his province, after consultation with the president of tribunals, appoint a person to be the registrar of tribunals for the province for the purposes of this Measure. 2 A person so appointed shall be a person who has a general qualification within the meaning of the Courts and Legal Services Act 1990 (c. 41). 3 The pe",
+      "ukpga/1968/62 section-7A [by_regulations,regulations_may] Application to gases of certain provisions as to grit and dust. 7A 1 The Minister may by regulations— a apply all or any of the provisions of sections 2, 3, 4 and 5 of this Act and of sections 7, 18(2), 19(3), 20(4) and 22(1) of the principal Act (provisions relating to grit and dust or smoke) to prescribed gases as they apply to grit and dust; and b apply all or any of the provisions of section 3",
+      "ukpga/1968/62 section-12 [by_statutory_instrument] Regulations. 12 1 Any power of the Minister under this Act to make regulations and any power of the Minister under section . . . 15 of this Act to make orders shall be exercisable by statutory instrument. 2 Any statutory instrument containing regulations made under this Act, except an instrument containing regulations a draft of which is required by section 3(2), 5(2) or 7(3) of this Act to be app",
+      "ukpga/1970/9 section-18D [regulations_may] Content of regulations under section 18B: supplementary provision 18D 1 Regulations under section 18B may include provision for notices under such regulations to be combined with notices under paragraph 1 of Schedule 23 to the Finance Act 2011 (data-gathering powers) . 2 Regulations under section 18B may include provision about the time at or within which, and the manner in which, any requirement ",
+      "ukpga/1970/9 section-59A [by_regulations,regulations_may] Payments on account of income tax. 59A 1 Subject to subsection (9) below, this section applies to any person (the taxpayer) as regards a year of assessment if as regards the immediately preceding year— a he is assessed to income tax under section 9 of this Act in any amount, and b that amount (the assessed amount) exceeds the amount of any income tax which has been deducted at source, and c the am",
+      "ukpga/1970/9 section-59B [regulations_may] Payment of income tax and capital gains tax : assessments other than simple assessments . 59B 1 Subject to subsection (2) below, the difference between— a the amount of income tax and capital gains tax contained in a person’s self-assessment under section 9 of this Act for any year of assessment, and b the aggregate of any payments on account made by him in respect of that year (whether under sect",
+      "ukpga/1970/9 section-59E [by_regulations,regulations_may] Further provision as to when corporation tax is due and payable. 59E 1 The Treasury may by regulations make provision, in relation to companies of such descriptions as may be prescribed, for or in connection with treating amounts of corporation tax for an accounting period as becoming due and payable on dates which fall on or before the date on which corporation tax for that period would become du",
+      "ukpga/1970/9 section-115 [by_statutory_instrument] Delivery and service of documents. 115 1 A notice or form which is to be served under the Taxes Acts on a person may be either delivered to him or left at his usual or last known place of residence. 2 Any notice or other document to be given, sent, served or delivered under the Taxes Acts may be served by post, and, if to be given, sent, served or delivered to or on any person by HMRC may be so se",
+      "ukpga/1971/77 section-28L [by_statutory_instrument] Interpretation of Part III. 28L 1 Subject to subsection (1A) in this Part, “premises” and “items subject to legal privilege” have the same meaning— a in relation to England and Wales, as in the Police and Criminal Evidence Act 1984; b in relation to Northern Ireland, as in the Police and Criminal Evidence (Northern Ireland) Order 1989; and c in relation to Scotland, as in section 412 of the Procee"
+    ],
+    "siPowerButTextSilent": [
+      "ukpga/1969/54 section-23 Remands and committals to local authority accommodation. 23 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .",
+      "ukpga/1970/9 section-46A Regulations about jurisdiction. 46A . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .",
+      "ukpga/1970/9 section-56A Appeals from the Special Commissioners. 56A . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .",
+      "ukpga/1970/9 section-56B Regulations about practice and procedure. 56B . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .",
+      "ukpga/1970/9 section-56D Power of Special Commissioners to publish reports of decisions. 56D . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .",
+      "ukpga/1970/9 section-98A Special penalties in the case of certain returns. 98A 1 PAYE regulations or regulations under section 70(1)(a) or 71 of the Finance Act 2004 (sub-contractors) may provide that this section shall apply in relation to any specified provision of the regulations. 2 Where this section applies in relation to a provision of regulations, any person who fails to make a return in accordance with the provisi",
+      "ukpga/1970/9 section-98C Notification under Part 7 of Finance Act 2004 98C . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .",
+      "ukpga/1971/77 section-31A Procedural requirements as to applications. 31A . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .",
+      "ukpga/1974/47 section-47 Jurisdiction and powers of Tribunal. 47 1 Any application— a to strike the name of a solicitor off the roll; b to require a solicitor to answer allegations contained in an affidavit; c to require a former solicitor whose name has been removed from or struck off the roll to answer allegations contained in an affidavit relating to a time when he was a solicitor; d by a solicitor who has been suspend",
+      "ukpga/1976/25 section-27 Appeal to Court of Appeal. 27 1 If any party to a complaint under section 24 is dissatisfied in point of law with a decision of the Tribunal, he may, according as rules of court may provide, either appeal from it to the Court of Appeal or require the Tribunal to state and sign a case for the opinion of the Court of Appeal. 2 Rules of court may provide for authorising or requiring the Tribunal to s",
+      "ukpga/1976/25 section-37 Excepted employments, etc. 37 1 Parts III and IV and the Fair Employment (Northern Ireland) Act 1989 shall not apply to or in relation to— a any employment or occupation as a clergyman or minister of a religious denomination; b employment for the purposes of a private household; or c employment as a teacher in a school. 2 The Fair Employment (Northern Ireland) Act 1989 shall not apply to or in rel",
+      "ukpga/1982/24 section-17 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 17",
+      "ukpga/1982/24 section-26 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 26",
+      "ukpga/1982/24 section-47 Interpretation. 47 In this Act— “ benefit ”, except in . . . section 43, has the same meaning as in the principal Act; “ principal Act ” means the Social Security Act 1975; “ regulations ” means regulations made by the Secretary of State; “ tax year ” means the period of twelve months beginning with 6th April in any year.",
+      "ukpga/1984/51 section-233 Interest on unpaid tax. 233 1 If— a an amount of tax charged on the value transferred by a chargeable transfer not within paragraph (aa) below and made after 5th April and before 1st October in any year and otherwise than on death remains unpaid after the end of the period ending with April in the next year, or aa an amount of tax charged under Chapter 3 of Part 3 of this Act on the value transfer"
+    ],
+    "siPowerButStateNone": [
+      "anaw/2014/4 section-51 Direct payments: conditions for payment to meet a child’s needs 51 1 The conditions referred to in section 49A(2)(b) in relation to making direct payments towards the cost of meeting the needs of a child (“ C ”) under section 37, 38 or 39 are as follows. 2 Condition 1 is that— a the payments are to be made to a person (“ P ”) who is— i C, or ii a person with",
+      "anaw/2014/4 section-52 Direct payments: conditions for payment to meet a carer’s needs 52 1 The conditions referred to in section 49A(2)(c) in relation to making direct payments towards the cost of meeting the needs of a carer (“ R ”) under section 40, 42 or 45 are as follows. 2 Condition 1 is that— a the payments are to be made to R, b where R is— i an adult or a child aged 16 or",
+      "anaw/2014/4 section-81 Ways in which looked after children are to be accommodated and maintained 81 1 This section applies where a local authority is looking after a child (“C”). 2 The local authority must make arrangements for C to live with a person who falls within subsection (3), but this is subject to subsections (4) and (11). 3 A person (“P”) falls within this subsection if—",
+      "anaw/2014/5 section-2 Education Workforce Council 2 1 The body corporate established in pursuance of section 8 of the Teaching and Higher Education Act 1998 (c. 30) and known as the General Teaching Council for Wales— a is to continue to exist, but b is to change its name to (and now be known as) the “Education Workforce Council” (in this Act referred to as “ the Council ”). 2 Sc",
+      "anaw/2014/7 section-61 Eligibility for help under this Chapter 61 Schedule 2 has effect for the purposes of determining whether an applicant is eligible for help under the following provisions of this Chapter.",
+      "apni/1949/2 section-6 Grants for the improvement of land, etc. 6 1 The Ministry may, with the approval of the Ministry of Finance, make schemes providing for the payment, on such terms and subject to such conditions as are mentioned in the respective schemes, of grants to occupiers of agricultural land for all or any of the following purposes:— a the improvement or reclamation of",
+      "apni/1949/2 section-9 Improvement of livestock and poultry. 9 1 The Ministry may, with the approval of the Ministry of Finance, make schemes for aiding, improving and developing the breeding of horses, cattle, sheep, pigs and other livestock and poultry. 2 Without prejudice to the general powers of the Ministry under the preceding sub-section any such scheme may provide for— a th",
+      "apni/1967/28 section-3A Recovery of expenses incurred exercising default powers under orders made under this Act. 3A An order made or having effect under this Act may contain provisions for requiring a person to pay to a government department or local authority the cost to the department or authority of doing anything which that person has, in breach of a requirement imposed on him",
+      "asp/2001/14 section-5 Court appearance 5 1 Where a person is detained under section 4(2), the person must wherever practicable be brought before the sheriff sitting as a court of summary criminal jurisdiction for the district in which the person was arrested not later than in the course of the first day after the arrest, such day not being a Saturday, a Sunday or a court holiday ",
+      "asp/2001/2 section-67 Interpretation of Part 3 67 1 In this Part of this Act— “ charging authority ” and “ charging authorities ” have the meanings given by section 49(5) of this Act; and “ operation ” includes enforcement (related expressions being construed accordingly). 2 Any reference in this Part of this Act to a class of motor vehicles is a reference to a class defined or d",
+      "asp/2003/2 section-14 Prohibition signs, obstructions, dangerous impediments etc. 14 1 The owner of land in respect of which access rights are exercisable shall not, for the purpose or for the main purpose of preventing or deterring any person entitled to exercise these rights from doing so— a put up any sign or notice; b put up any fence or wall, or plant, grow or permit to grow",
+      "asp/2003/2 section-15 Measures for safety, protection, guidance and assistance 15 1 The local authority may take such steps (which may include the putting up and maintenance of notices and fences) as appear to them appropriate— a to warn the public of and protect the public from danger on any land in respect of which access rights are exercisable; b to indicate or enclose, or to ",
+      "asp/2003/2 section-28 Judicial determination of existence and extent of access rights and rights of way 28 1 It is competent, on summary application made to the sheriff, for the sheriff— a to declare that the land specified in the application is or, as the case may be, is not land in respect of which access rights are exercisable; b to declare— i whether a person who has exercise",
+      "asp/2003/2 section-33 Land in respect of which community interest may be registered 33 1 ... A community interest may be registered under this Part of this Act in any land other than excluded land. 2 In subsection (1) above, “ excluded land ” means land consisting of a separate tenement which is owned separately from the land in respect of which it is exigible (subject to subsect",
+      "asp/2003/8 section-47 Appeals 47 1 This subsection applies to— a a decision under section 3 refusing an application for a direction dispensing with or relaxing a provision of building regulations, b a decision of a verifier under section 9 refusing to grant a building warrant or an amendment to the terms of a warrant, c a decision of a verifier under section 14 refusing to extend",
+      "asp/2007/5 section-1 The Scottish Legal Complaints Commission 1 1 There is established a body to be known as the Scottish Legal Complaints Commission (referred to in this Act as “ the Commission ”). 2 Schedule 1 makes further provision about the status, constitution, proceedings etc. of the Commission.",
+      "asp/2009/1 section-3 Modification of pension schemes etc. 3 1 The Scottish Parliament may resolve to modify— a the Scottish Parliamentary Pension Scheme, b the grants scheme set out in schedule 2, or c the pension scheme for First Ministers and Presiding Officers which is comprised in Part S of the 1999 pensions order. 2 A resolution may, in particular, modify— a the rules set o",
+      "asp/2010/16 section-120 Regulation of the Faculty 120 1 The Court of Session is responsible— a for— i admitting persons to (and removing persons from) the office of advocate, ii prescribing the criteria and procedure for admission to (and removal from) the office of advocate, b for regulating the professional practice, conduct and discipline of advocates. 2 The Court's responsibili",
+      "asp/2010/16 section-121 Professional rules 121 1 Subsections (2) and (3) apply to any rule which— a prescribes the criteria or procedure for admission to (or removal from) the office of advocate, or b regulates in respect of any matter the professional practice, conduct or discipline of advocates. 2 If the rule is made by the Faculty, the rule— a is of no effect unless it has been ",
+      "asp/2010/3 section-4C Sale of tobacco or nicotine vapour products by persons under 18 4C 1 A responsible person who allows a tobacco product, cigarette papers or a nicotine vapour product to be sold by a person under the age of 18 commits an offence. 2 For the purposes of subsection (1), “ responsible person ” means— a where the sale is at premises which are noted in a registered",
+      "asp/2010/5 section-117 Offence: harassment at haul-out sites 117 Harassing a seal (intentionally or recklessly) at a haul-out site is an offence. “ haul-out site ” means any place which the Scottish Ministers, after consulting United Kingdom Research and Innovation , by order designate as such for the purposes of this section.",
+      "asp/2014/8 section-103 Short title 103 The short title of this Act is the Children and Young People (Scotland) Act 2014.",
+      "asp/2016/16 section-15 Power to specify requirements about the register 15 1 The Scottish Parliament may by resolution make provision about this Part including provision about— a the duties of the Clerk in relation to the register, b the content of the register, c the duty of a person who is not an active registrant to provide information, d information to be provided by a person ",
+      "mwa/2011/1 section-2 The Welsh Language Commissioner 2 1 There is to be a Welsh Language Commissioner (referred to in this Measure as “the Commissioner”). 2 The First Minister must appoint the Commissioner. 3 Schedule 1 makes further provision about the Commissioner. 4 For provision about the integrity of the Commissioner, see Chapter 1 of Part 8.",
+      "nia/2001/17 section-12 Interpretation of sections 5A to 11 12 In this section and sections 5A to 11 — “benefit” includes any allowance, payment, credit or loan; “ cautioned ”, in relation to any person and any offence, means cautioned after the person concerned has admitted the offence; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . “family” has the same meaning a"
+    ]
+  }
+}

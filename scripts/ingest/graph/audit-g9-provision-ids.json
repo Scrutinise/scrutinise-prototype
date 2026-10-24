@@ -1,0 +1,106 @@
+{
+  "measured_at": "2026-10-24T18:26:04.113Z",
+  "sources": {
+    "amendments-to-eudn.zip": "2026-07-05T16:23:40.460Z",
+    "amendments-to-eudr.zip": "2026-07-05T16:23:42.625Z",
+    "amendments-to-eur.zip": "2026-07-05T16:23:37.911Z",
+    "amendments-to-nisr.zip": "2026-10-24T18:21:10.162Z",
+    "amendments-to-primary.zip": "2026-07-05T16:22:51.405Z",
+    "amendments-to-secondary.zip": "2026-07-05T16:23:05.914Z",
+    "amendments-to-ssi.zip": "2026-10-24T18:21:08.879Z",
+    "amendments-to-uksi.zip": "2026-10-24T18:21:07.939Z",
+    "amendments-to-wsi.zip": "2026-10-24T18:21:10.688Z"
+  },
+  "rows_built_from": "the 5 July 2026 files (extract-effects-edges.ts); the July uksi/ssi/nisr/wsi copies no longer exist on disk",
+  "run_against_july_files": {
+    "measured_at": "2026-10-24T18:21:21Z",
+    "to_side": "0 of 1,786,206",
+    "from_side": "0 of 1,744,253",
+    "effects_reparsed": 2605737
+  },
+  "publisher_ref_vs_uri": {
+    "section_elements": 6550007,
+    "with_both": 6548847,
+    "disagree": 33,
+    "samples": [
+      "annex-D- vs http://www.legislation.gov.uk/id/eudn/1978/200/annex/D/",
+      "annex-I- vs http://www.legislation.gov.uk/id/eudn/1981/248/annex/I/",
+      "annex-10/01 vs http://www.legislation.gov.uk/id/eudn/2005/176/annex/10/01",
+      "annex-10/01 vs http://www.legislation.gov.uk/id/eudn/2005/176/annex/10/01",
+      "annex-10/03 vs http://www.legislation.gov.uk/id/eudn/2005/176/annex/10/03",
+      "annex-10/09 vs http://www.legislation.gov.uk/id/eudn/2005/176/annex/10/09",
+      "annex-10/11 vs http://www.legislation.gov.uk/id/eudn/2005/176/annex/10/11",
+      "annex-10/16 vs http://www.legislation.gov.uk/id/eudn/2005/176/annex/10/16"
+    ]
+  },
+  "official_bulk_amendments": {
+    "effects_reparsed": 2649539,
+    "rows_read": 1857994,
+    "to_side": {
+      "checked": 1786206,
+      "not_a_publisher_ref": 274,
+      "pct": 0.015,
+      "by_affected_type": {
+        "nisr": 157,
+        "nisi": 3,
+        "uksi": 106,
+        "wsi": 1,
+        "ssi": 7
+      }
+    },
+    "from_side": {
+      "checked": 1744253,
+      "not_a_publisher_ref": 201,
+      "pct": 0.012
+    },
+    "samples": [
+      "to regional:nisr/1997/458:schedule-2 ← regional:nisr/2000/375:schedule-10",
+      "from regional:nisr/2000/375:schedule-10 → regional:nisr/1997/458:schedule-2",
+      "to regional:nisr/1997/458:schedule-2-paragraph-8-2 ← regional:nisr/2000/375:schedule-10",
+      "from regional:nisr/2000/375:schedule-10 → regional:nisr/1997/458:schedule-2-paragraph-8-2",
+      "from regional:nisr/2003/68:regulation-2-1 → regional:nisr/2000/315:schedule-4",
+      "from regional:nisr/2003/68:regulation-3-2-a → regional:nisr/2000/315",
+      "to regional:nisr/2012/408:regulation-12-2-a ← regional:nia/2026/2:schedule",
+      "to regional:nisr/2012/408:regulation-12-3-a ← regional:nia/2026/2:schedule",
+      "to regional:nisr/2013/253:regulation-3-1-h ← regional:nisr/2026/5:regulation-5-3",
+      "to regional:nisr/2013/253:regulation-3-1-j ← regional:nisr/2026/5:regulation-5-3",
+      "to regional:nisr/2013/253:schedule-1-a ← regional:nisr/2026/5:regulation-5-9-a",
+      "to regional:nisr/2013/253:schedule-1-h ← regional:nisr/2026/5:regulation-5-9-b"
+    ],
+    "control": {
+      "subsection": 4816,
+      "subsectionMissed": 4526,
+      "reattributed": 1980,
+      "reattributedMissed": 1525,
+      "reading": "real rows with the provision made wrong the old parser's two ways; \"missed\" must be close to the total. A few may legitimately hit — the same effect pair can genuinely name section-2 as well as section-52-2."
+    }
+  },
+  "official_inforce": {
+    "checked": 51,
+    "not_in_publisher_csv": 0,
+    "pct": 0,
+    "samples": []
+  },
+  "extracted_made_under": {
+    "section_rows": 130430,
+    "instrument_not_in_citation_edge": 128,
+    "checked": 130302,
+    "not_produced_by_corrected_parser": 46820,
+    "pct": 35.932,
+    "samples": [
+      "regional:nisr/1976/99 → external:apni/1966/6:section-7",
+      "regional:nisr/1978/114 → primary-acts-pre-2000:ukpga/1975/15:section-3",
+      "regional:nisr/1978/114 → primary-acts-pre-2000:ukpga/1975/15:section-5",
+      "regional:nisr/1978/114 → primary-acts-pre-2000:ukpga/1975/15:section-1",
+      "regional:nisr/1979/195 → regional:nisi/1978/1908:article-4",
+      "regional:nisr/1979/90 → primary-acts-pre-2000:ukpga/1978/23:section-5",
+      "regional:nisr/1979/90 → primary-acts-pre-2000:ukpga/1978/23:section-1",
+      "regional:nisr/1979/90 → external:apni/1968/10:section-48",
+      "regional:nisr/1979/90 → external:apni/1968/10:section-5",
+      "regional:nisr/1979/90 → external:apni/1968/10:section-51",
+      "regional:nisr/1979/90 → external:apni/1968/10:section-1",
+      "regional:nisr/1982/306 → primary-acts-pre-2000:ukpga/1980/30:section-2"
+    ],
+    "reading": "upper bound on wrongness: the corrected parser drops \"52(2) and (4)\"-shaped lists (GRAPH_271_REPORT §6.1); the 36.1% (GRAPH 4B, same bytes) is the measurement of record"
+  }
+}

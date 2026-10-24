@@ -63,14 +63,17 @@ async function partA() {
 function fixtureWalker(calls: Array<{ node: string; kinds: string[]; depth: number }>): Walker {
   const step = (node: string, kind: string, k: number, act = `uksi/2020/${k}`) => ({
     provision: `${act}/article/${k}`, act, actTitle: `Fixture ${kind} ${k}`, kind, strength: 'x', subType: '', changeKind: kind === 'cites' ? null : 'textual',
-    changeReason: null, thisEndProvision: null, scope: 'provision' as const, citingText: kind === 'cites' ? `the fixture words before the reference ${k}` : kind === 'made-under' ? `in exercise of the fixture power ${k}` : kind === 'enacting-mention' ? `the requirements of the fixture section have been complied with ${k}` : null, citingTextState: null,
+    changeReason: null, thisEndProvision: null, scope: 'provision' as const, citingText: kind === 'cites' ? `the fixture words before the reference ${k}` : kind === 'made-under' ? `in exercise of the fixture power ${k}` : kind === 'enacting-mention' ? `the requirements of the fixture section have been complied with ${k}` : kind === 'enacting-unresolved' ? `in exercise of the fixture unresolved power ${k}` : null, citingTextState: null,
     citingTextOthers: 0, citedProvision: null, origin: null, source: `fixture from ${node}`,
-    enablingRole: kind === 'made-under' ? 'power' : kind === 'enacting-mention' ? 'mention' : null, enablingRoleWords: kind === 'enacting-mention' ? 'requirements of' : null,
+    enablingRole: kind === 'made-under' || kind === 'enacting-unresolved' ? 'power' : kind === 'enacting-mention' ? 'mention' : null, enablingRoleWords: kind === 'enacting-mention' ? 'requirements of' : null,
+    // GRAPH 9: the third cite at step 1 quotes an explanatory note
+    provisionPower: kind === 'enacting-unresolved' ? { state: 'none', basis: 'fixture', words: null } : null, sourceZone: kind === 'cites' && k % 10 === 2 && k < 2000 ? 'explanatory-note' : null,
   })
   return async (node, o) => {
     calls.push({ node, kinds: [...o.kinds], depth: o.depth })
     const many = (kind: string, n: number) => Array.from({ length: n }, (_, k) => step(node, kind, o.depth * 1000 + calls.length * 10 + k))
-    const rows = o.kinds.includes('made-under') ? (o.depth <= 3 ? many('made-under', 1) : [])
+    const rows = o.kinds.includes('enacting-unresolved') ? (o.depth === 1 ? many('enacting-unresolved', 2) : [])
+      : o.kinds.includes('made-under') ? (o.depth <= 3 ? many('made-under', 1) : [])
       : o.kinds.includes('cites') ? [...many('cites', o.depth === 1 ? 3 : 2), ...(o.depth === 1 && o.kinds.includes('enacting-mention') ? [step(node, 'enacting-mention', o.depth * 1000 + calls.length * 10 + 5)] : [])]   // its own provision, not a cite's
       : many('amends', 2)
     const perKind = [...new Set(rows.map((r) => r.kind))].map((kind) => { const n = rows.filter((r) => r.kind === kind).length; return { kind, strength: 'x', counted: n, returned: n, instruments: n, scope: { provision: n, actWide: 0 }, split: null, citingText: null } })
@@ -139,6 +142,14 @@ async function partB(): Promise<{ copyId: string; userId: string; cleanup: () =>
   const mention = byPart('refers', 1).filter((r) => r.relation === 'mentioned in enacting words')
   ok('271: an enacting MENTION is a reference, under "Provisions that refer to this", in words, with its words — never under "What depends on this"', mention.length === 1 && /complied with/.test(mention[0].words ?? '') && !byPart('depends').some((r) => r.relation === 'mentioned in enacting words' || r.relation === 'enacting-mention'))
   ok('…and the references note counts it, in words', w.notes.some((n) => n.part === 'refers' && /1 of them an instrument whose enacting words mention this provision without making it under it/.test(n.line)), w.notes.filter((n) => n.part === 'refers').map((n) => n.line).join(' | ').slice(0, 300))
+  // GRAPH 9: unresolved rows (named as the power by a provision that appears to confer none)
+  const unres = byPart('depends').filter((r) => /unresolved/.test(r.relation))
+  ok('GRAPH 9: the walk ASKS for enacting-unresolved (without asking, those rows leave the report silently)', calls.some((c) => c.kinds.includes('enacting-unresolved') && c.depth === 1) && !calls.some((c) => c.kinds.includes('enacting-unresolved') && c.depth > 1))
+  ok('…they sit under "What depends on this" at step 1, labelled in words, with their words — never as made-under, never under references', unres.length === 2 && unres.every((r) => r.step === 1 && /appears to confer none/.test(r.relation) && /fixture unresolved power/.test(r.words ?? '')) && byPart('depends').filter((r) => r.relation === 'made-under').every((r) => !/unresolved/.test(r.words ?? '')) && !byPart('refers').some((r) => /unresolved/.test(r.relation)), JSON.stringify(unres.map((r) => [r.relation, r.step])))
+  ok('…nothing is walked from them', w.rows.every((r) => !unres.some((u) => u.i === r.parent)))
+  ok('…and the note counts them apart from made-under, in words', w.notes.some((n) => n.part === 'depends' && /^Unresolved: 2 instruments name this provision as the power/.test(n.line)) && w.notes.some((n) => n.part === 'depends' && /^Made under it: 1 instrument at step 1/.test(n.line)), w.notes.filter((n) => n.part === 'depends').map((n) => n.line.slice(0, 80)).join(' | '))
+  const noteRow = byPart('refers', 1).filter((r) => /explanatory note/.test(r.words ?? ''))
+  ok('GRAPH 9: words from an explanatory note open with "[explanatory note — not part of the law]"; body words carry no such label', noteRow.length === 1 && /^\[explanatory note — not part of the law\] “/.test(noteRow[0].words ?? '') && byPart('refers', 1).filter((r) => r !== noteRow[0]).every((r) => !/^\[/.test(r.words ?? '')), JSON.stringify(byPart('refers', 1).map((r) => (r.words ?? '').slice(0, 50))))
   ok('no part of the report says an instrument "would fall" or "falls" (the enabling-vs-procedural rule is undecided: GRAPH 8 §8 decision 2)', !/would fall|falls? with/i.test(D.collisionBody([...fxClause, ...w.rows], { loadDate: null, caveat: w.caveat, notes: w.notes })))
   ok('a "relies on" line is not walked: the clause does not change it', !calls.some((c) => c.node.startsWith('ukpga/2000/2')) && w.rows.every((r) => r.parent !== 1))
   ok('every step-2 row hangs from a step-1 row of the same part', [...byPart('depends', 2).filter((r) => r.relation === 'amends'), ...byPart('refers', 2)].every((r) => { const p = w.rows.find((x) => x.i === r.parent); return !!p && p.part === r.part && p.step === 1 }))

@@ -1,0 +1,20 @@
+{
+  "measured_at": "2026-10-24T18:37:28.415Z",
+  "dry_run": false,
+  "extracted_from": "best-collection-xml.zip@2026-05-14",
+  "named_provisions": 17530,
+  "documents": 3215,
+  "documents_in_file": 2793,
+  "rows": 17530,
+  "written": 17530,
+  "by_state_basis": {
+    "power:flag-and-text": 6242,
+    "unknown:not-held": 3271,
+    "unknown:repealed-text": 2313,
+    "power:text-only": 2041,
+    "power:flag-only": 1610,
+    "none:no-flag-no-text": 1159,
+    "unknown:weak-text-only": 638,
+    "unknown:unmarked-and-silent": 256
+  }
+}

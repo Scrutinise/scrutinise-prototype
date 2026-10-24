@@ -5,6 +5,7 @@
 //   "What depends on this" — made-under, walked until it ends; and the official record (amends / repeals / modifies / commences) at
 //                             steps 1 and 2, never 3 (GRAPH 8 §1: by step 3 it reaches thousands of instruments; the tool withholds it).
 //                             269 confirms the stop and puts the reason on screen (OFFICIAL_STOP_WHY); 267 amended accordingly.
+//                             GRAPH 9: "unresolved" rows (named as the power by a provision that appears to confer none) at step 1, labelled.
 //   "Provisions that refer to this — for review" — cites at step 1 with the stored words, step 2 labelled weak, never step 3.
 // Judgments (case law) are not walked: interpretation, not drafting (GRAPH 8 §1.1).
 //
@@ -25,6 +26,13 @@ export type Walker = (target: string, opts: { kinds: OnwardKind[]; limit: number
 const OPERATION: OnwardKind[] = ['amends', 'repeals', 'modifies', 'commences']
 /** "Provisions that refer to this — for review": marked-up citations, and (271) enacting words that mention without making under. */
 const REFERS_KINDS: OnwardKind[] = ['cites', 'enacting-mention']
+/**
+ * GRAPH 9: an instrument whose enacting words name this provision as the power, where the provision itself appears to confer none. Shown
+ * under "What depends on this" with its own label and words, NEVER counted as made-under, and not walked onward (whether anything depends
+ * on it through this provision is the open question). ⚠ The walk asks for kinds by name: without this, these rows leave the report silently.
+ */
+const UNRESOLVED_KINDS: OnwardKind[] = ['enacting-unresolved']
+const UNRESOLVED_RELATION = 'named as the power, but this provision appears to confer none — unresolved, read the words'
 /** The clause's lines that change a provision; a "relies on" or "precedent" line changes nothing, so it has no parts. */
 export const WALKED_RELATIONS: ReadonlySet<string> = new Set(['amends', 'repeals', 'modifies'])
 export const WALK_LIMITS = {
@@ -56,11 +64,12 @@ export async function onwardRows(clause: EffectRow[], walk: Walker = onwardFrom 
   let walked = 0
   const add = (s: OneStep, part: Exclude<ReportPart, 'clause'>, step: number, parent: number): EffectRow => {
     const r: EffectRow = {
-      i: next++, depth: 1 + step, parent, relation: s.kind === 'enacting-mention' ? 'mentioned in enacting words' : s.kind, docUri: s.act, provisionPath: pathOf(s), actTitle: s.actTitle, state: 'held',
+      i: next++, depth: 1 + step, parent, relation: s.kind === 'enacting-mention' ? 'mentioned in enacting words' : s.kind === 'enacting-unresolved' ? UNRESOLVED_RELATION : s.kind, docUri: s.act, provisionPath: pathOf(s), actTitle: s.actTitle, state: 'held',
       note: s.changeKind ? CHANGE_WORD[s.changeKind] ?? s.changeKind : '', effects: [], part, step, scope: s.scope,
       // made-under rows carry their stored enacting words too: the extractor files a PROCEDURAL mention ("the requirements of section 20
-      // … have been complied with") as a power (GRAPH 8 §5, §7.4), and only the words let a reader see which it is
-      words: part === 'refers' || s.kind === 'made-under' ? citingTextForDisplay(s.citingText) : null, weak: part === 'refers' && step >= 2,
+      // … have been complied with") as a power (GRAPH 8 §5, §7.4), and only the words let a reader see which it is. GRAPH 9: the zone is
+      // passed so words from an explanatory note open with "[explanatory note — not part of the law]".
+      words: part === 'refers' || s.kind === 'made-under' || s.kind === 'enacting-unresolved' ? citingTextForDisplay(s.citingText, s.sourceZone) : null, weak: part === 'refers' && step >= 2,
     }
     rows.push(r)
     return r
@@ -99,6 +108,15 @@ export async function onwardRows(clause: EffectRow[], walk: Walker = onwardFrom 
       line: mu.counted
         ? `Made under it: ${plural(mu.counted, 'instrument')} at step 1 — ${mu.provision} name this provision, ${mu.actWide} only the Act as a whole${mu.returned < mu.counted ? ` (${mu.returned} shown)` : ''}; ${frontier.length ? `the walk was stopped at step ${WALK_LIMITS.madeUnderSafety} with ${frontier.length} still to walk` : `the walk ended after step ${perStep.filter((x) => x > 0).length}`}. Only instruments whose enacting words name this as the power are here (271); one whose words only mention it is under “Provisions that refer to this”.`
         : 'Made under it: nothing is recorded as made under this provision.',
+    })
+
+    // ── What depends on this (1b): unresolved — named as the power, by a provision that appears to confer none (GRAPH 9). Step 1 only. ──
+    const un = await call(target, UNRESOLVED_KINDS, WALK_LIMITS.perNode, 1)
+    for (const s of un.rows) add(s, 'depends', 1, c.i)
+    const uc = counted(un, UNRESOLVED_KINDS)
+    if (uc.counted) notes.push({
+      from: c.i, part: 'depends',
+      line: `Unresolved: ${plural(uc.counted, 'instrument')} name${uc.counted === 1 ? 's' : ''} this provision as the power ${uc.counted === 1 ? 'it was' : 'they were'} made under, but the provision itself appears to confer no power${uc.returned < uc.counted ? ` (${uc.returned} shown)` : ''}. ${uc.counted === 1 ? 'It is' : 'They are'} not counted as made under it, and nothing is walked from ${uc.counted === 1 ? 'it' : 'them'}: read the words and the provision before relying on ${uc.counted === 1 ? 'it' : 'them'}.`,
     })
 
     // ── What depends on this (2): the official record, steps 1 and 2 ──

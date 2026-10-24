@@ -70,9 +70,16 @@ export type Detection = 'markup' | 'text' | 'enabling'
  * the ternary's else-branch happened to name. `inboundFor` returns those rows in their own
  * list so they are reported, never merged and never dropped (§7).
  */
-export function detectionOf(raw: string): Detection | null {
-  return raw === 'markup' || raw === 'text' || raw === 'enabling' ? raw : null
+export function detectionOf(raw: string): Detection | typeof CASELAW_DETECTION | null {
+  return raw === 'markup' || raw === 'text' || raw === 'enabling' || raw === CASELAW_DETECTION ? raw : null
 }
+/**
+ * ⚠ GRAPH 9 §5a. GRAPH 5 added judgments to `citation_edge` as `caselaw-markup`, and this function went on returning
+ * null for them, so `inboundFor` filed every judgment as "a detection this build does not know". Recognised now, and
+ * deliberately NOT a `Detection`: a judgment is not a statute reference of any strength, and `DETECTION_KINDS` /
+ * `splitInbound` must never place one among the provisions that break.
+ */
+export const CASELAW_DETECTION = 'caselaw-markup' as const
 
 /**
  * How a kind should be described to a reader, and what it is NOT.
@@ -290,13 +297,24 @@ const LAYERS: Array<{
     id: 'enabling-power',
     what: 'made-under: “this instrument was made under section N of that Act”',
     consequence: 'a stronger fact than a mention — an instrument whose enabling power is repealed may fall with it, and it is not in this table',
-    where: `detection NOT IN ('markup', 'text')`,
+    // ⚠ GRAPH 9 §5b: this read `detection NOT IN ('markup', 'text')`, written when those were the only other kinds, and so
+    // counted every judgment (1,288,630 caselaw-markup rows) as an enabling power — 7x the real 201,776.
+    where: `detection = 'enabling'`,
   },
   {
     id: 'case-law-citations',
     what: 'a judgment citing a statutory provision',
     consequence: 'a provision may be read down, disapplied or construed by a court with nothing here to show it',
     where: `source_type = 'caselaw'`,
+  },
+  {
+    // ⚠ GRAPH 9 §5b. Search/Graph declared this layer in GRAPH 5 and this reader never did, so `verify:statutory-parity`
+    // stayed red for three sprints on a missing declaration, and the caveat did not say a line of authority cannot be followed.
+    id: 'case-to-case-citations',
+    what: 'a judgment we hold citing another case, whether or not we hold that case',
+    consequence: 'a line of authority cannot be followed at all, and an authority we do not hold looks like an authority that does not exist',
+    where: `false`,
+    heldIn: { table: 'caselaw_case_edge', where: 'true' },
   },
   {
     id: 'treaty-obligations',
@@ -629,12 +647,20 @@ export interface InboundResult {
   /** ⚠ Separated, never dropped and never mixed in. See §7. Excludes enabling rows. */
   titleOnly: InboundRow[]
   /**
+   * ⚠ GRAPH 9 §5a — JUDGMENTS, IN THEIR OWN LIST. A court citing the target is interpretation, not a provision
+   * that breaks and not a power, so it joins none of the three statute lists. Until GRAPH 9 these fell into
+   * `unrecognised` (1,288,630 rows, 23 Oct), which made "a detection this build does not know" the normal state.
+   */
+  caselaw: CaselawInboundRow[]
+  /**
    * ⚠ Rows whose stored `detection` this build does not know. Counted and surfaced rather
-   * than folded into whichever kind a default arm named. Normally empty.
+   * than folded into whichever kind a default arm named. Normally empty — and now it is.
    */
   unrecognised: UnrecognisedRow[]
   coverage: Coverage
 }
+
+export interface CaselawInboundRow { sourceGid: string; targetProvisionRef: string | null; citationText: string }
 
 /**
  * ⚠⚠ THE PARTITION, AS ONE PURE FUNCTION, SO NOTHING CAN RECONSTRUCT IT DIFFERENTLY.
@@ -710,11 +736,16 @@ export async function inboundFor(
   // nothing logged, and the count was right — only the KIND was wrong, on the one kind whose
   // consequence differs from every other.
   const all: InboundRow[] = []
+  const caselaw: CaselawInboundRow[] = []
   const unrecognised: UnrecognisedRow[] = []
   for (const r of raw) {
     const detection = detectionOf(r.detection)
     if (!detection) {
       unrecognised.push({ sourceGid: r.source_gid, rawDetection: r.detection })
+      continue
+    }
+    if (detection === CASELAW_DETECTION) {
+      caselaw.push({ sourceGid: r.source_gid, targetProvisionRef: r.target_provision_ref, citationText: r.citation_text })
       continue
     }
     all.push({
@@ -733,6 +764,7 @@ export async function inboundFor(
     targetProvision: targetProvisionRef?.trim() || null,
     // ⚠ ONE PARTITION, CALLED — never restated here. See `splitInbound`.
     ...splitInbound(all),
+    caselaw,
     unrecognised,
     coverage: await graphCoverage(),
   }

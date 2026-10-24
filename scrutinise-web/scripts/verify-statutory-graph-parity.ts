@@ -54,23 +54,28 @@ async function main() {
   // 1. Our reader against the table directly — the invariant that does not need their code.
   for (const t of TARGETS) {
     const mine = await inboundFor(t)
-    const direct = await prisma.$queryRawUnsafe<Array<{ n: bigint; prov: bigint }>>(`
+    // ⚠ GRAPH 9 §5b: `rows` is the STATUTE references inside a provision. A judgment's `source_provision_ref` is a
+    // paragraph of the judgment, and counting it here is what kept this line red since GRAPH 5 (reader 149, table 199).
+    const direct = await prisma.$queryRawUnsafe<Array<{ n: bigint; prov: bigint; caselaw: bigint }>>(`
       SELECT COUNT(*)::bigint AS n,
-             COUNT(*) FILTER (WHERE source_provision_ref IS NOT NULL)::bigint AS prov
+             COUNT(*) FILTER (WHERE source_provision_ref IS NOT NULL AND detection IN ('markup', 'text'))::bigint AS prov,
+             COUNT(*) FILTER (WHERE detection = 'caselaw-markup')::bigint AS caselaw
       FROM citation_edge WHERE target_act_id = ANY($1::text[])`, [t, t.toLowerCase()])
     const total = Number(direct[0].n)
     const prov = Number(direct[0].prov)
     ok(`${t}: provision rows match the table`, mine.rows.length === prov,
       `reader ${mine.rows.length}, table ${prov}`)
+    ok(`${t}: judgments are their own list, none unrecognised`, mine.caselaw.length === Number(direct[0].caselaw) && mine.unrecognised.length === 0,
+      `reader ${mine.caselaw.length} judgments + ${mine.unrecognised.length} unrecognised, table ${direct[0].caselaw} judgments`)
     // ⚠⚠ SURFACE 5 — THREE LISTS NOW, NOT TWO, AND THIS ASSERTION HAD TO LEARN THE THIRD.
     // It read `provision + title-only = total` and passed for a fortnight while every enabling
     // row in the graph was being reported as a `markup` one: the counts were right and the
     // KINDS were wrong, and a reconciliation of counts cannot see that. It is the reason the
     // kind-for-kind comparison below exists.
-    const mineAll = mine.enabling.length + mine.rows.length + mine.titleOnly.length + mine.unrecognised.length
-    ok(`${t}: nothing is dropped (enabling + provision + title-only + unknown = total)`,
+    const mineAll = mine.enabling.length + mine.rows.length + mine.titleOnly.length + mine.caselaw.length + mine.unrecognised.length
+    ok(`${t}: nothing is dropped (enabling + provision + title-only + judgments + unknown = total)`,
       mineAll === total,
-      `${mine.enabling.length} + ${mine.rows.length} + ${mine.titleOnly.length} + ${mine.unrecognised.length} = ${mineAll}, table ${total}`)
+      `${mine.enabling.length} + ${mine.rows.length} + ${mine.titleOnly.length} + ${mine.caselaw.length} + ${mine.unrecognised.length} = ${mineAll}, table ${total}`)
 
     // ⚠⚠ THE COMPARISON THE OLD CHECK COULD NOT MAKE. `detection` is what separates a power an
     // instrument was made under from a passing mention of the same Act, and a check that
@@ -83,6 +88,7 @@ async function main() {
     for (const r of [...mine.enabling, ...mine.rows, ...mine.titleOnly]) {
       seen.set(r.detection, (seen.get(r.detection) ?? 0) + 1)
     }
+    if (mine.caselaw.length) seen.set('caselaw-markup', mine.caselaw.length)
     const wrong = [...truth.entries()].filter(([k, n]) => (seen.get(k) ?? 0) !== n)
     ok(`${t}: every row keeps the KIND the table gave it`,
       wrong.length === 0,
@@ -121,7 +127,7 @@ async function main() {
         const theirCount = Array.isArray(res.rows) ? res.rows.length : -1
         // ⚠ ALL THREE LISTS. Theirs returns one array over every detection value, so ours has
         // to be summed across the partition or the comparison is between different questions.
-        const mineCount = mine.enabling.length + mine.rows.length + mine.titleOnly.length
+        const mineCount = mine.enabling.length + mine.rows.length + mine.titleOnly.length + mine.caselaw.length
         ok(`${t}: same row count as inbound()`,
           mineCount === theirCount,
           `ours ${mineCount}, theirs ${theirCount}`)

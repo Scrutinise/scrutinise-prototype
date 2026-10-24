@@ -1,5 +1,44 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-24 22:37 UTC - LEX + GRAPH 9, one commit (CCh 273): the collision walk asks for `enacting-unresolved`; `madeUnderFor()` uses the per-instrument power rule
+
+- **Streams:** GRAPH (entry below: reader, provision_power, mentions, source_zone, caselaw) and LEX (this entry), committed together because the reader without Lex's walk would drop 1,100 pairs from "What depends on this".
+- **`lib/lex/collision-walk.ts`:** asks for `enacting-unresolved` at step 1 only. Shown under depends as "named as the power, but this provision appears to confer none — unresolved, read the words". Never counted as made-under, nothing walked from it. Every words display passes the row's `sourceZone`, so a note row reads "[explanatory note — not part of the law]".
+- **`lib/lex/action-touches.ts` `madeUnderFor()`:** 271 had never reached it. It now joins `provision_power` and counts an instrument made-under only where the enacting words name the power and the provision is not `none` (whole Act: per instrument, as GRAPH 9 classifies). Unresolved instruments are not shown on this block.
+- **Checks:** lex-26v 66/66 (5 new; dropping the unresolved call turns 3 red); lex-26v1b 78/78 (CRaG s.20 made-under 0 while enabling rows exist; s.153 > 0; whole-Act touch total = onwardFrom's made-under count); onward 23/23; web tsc 0. Scratch sweep at start: 0 live copies.
+
+## 2026-10-24 19:01 UTC - GRAPH 9: §0 answered (official rows sound); provision power as a second witness (enacting-unresolved); `mentions` kind; explanatory notes tagged (31%, not 5.7%); parity green
+
+- **Report:** `docs/GRAPH_9_REPORT.md`. Applied to Neon 18:36–18:40 UTC (additive); reader **not committed, not deployed**.
+  - ⚠ Ship with Lex's collision walk asking for `enacting-unresolved`, or 1,100 instrument–Act pairs leave its "What depends on this" with nothing in their place.
+- **§0:** official effect rows carry the publisher's identifiers.
+  - **0 of 1,786,206 / 0 of 1,744,253** official section refs, against the July files the table was built from; in-force 0 of 51.
+  - A control that plants the old parser's two errors catches 94% and 77% of them.
+  - Extracted made-under rows: 35.9%. The 36.1% is ours alone, so GRAPH 6 stands.
+  - ⚠ The audit's import of `DATA_DIR` ran `download-graph-sources.ts`'s unguarded `main()` and replaced the July uksi/ssi/nisr/wsi zips mid-audit. Now guarded. Against today's files, 274/201 rows have been re-keyed by the publisher.
+- **§2:**
+  - No publisher record of powers exercised. The CLML does carry `ConfersPower="true"` on provisions (CRaG: ss.45, 46, 51, 52; not s.20).
+  - Text rule derived on a train half: **no family reached 0.8 precision** (best 0.76). The flag agrees with SI-confirmed powers 71.2% of the time, and the bulk text is current, so repealed powers read silent.
+  - So the provision test only **withholds**. New `provision_power` table (17,530 rows). New kind **`enacting-unresolved`** (strength `unresolved`): words say power, provision is `none`. Classified **per instrument**, because the Act-level row from the same anchor had been keeping every such instrument made-under.
+  - 1,100 of 75,081 made-under pairs move. False-`none` on SI-confirmed powers: 6.7% upper bound, ~2% by a 25-row hand read.
+  - CRaG s.20: 0 made-under, 0 unresolved, 3 mentions, and the "None is made under a power in it" sentence. 7 Act-wide rows remain (the refs-list defect).
+- **§3:** `mentions` kind (text-detected), opt-in, never merged into `cites`. Marked-up : text = CRaG 1 in 17, GRAA 1 in 122, Equality Act 1 in 24, CS(MF)A 0 : 7.
+- **§4:**
+  - `citation_edge.source_zone` (body / explanatory-note / earlier-orders-note, CHECK), backfilled on 1,016,062 rows (18,486 not determined, stated).
+  - **31.48%** of citation rows and **56.81%** of the `cites` rows the reader walks quote a note, not 5.7%. GRAA's whole `cites` set is notes.
+  - A note row is filed under the SI's last article, so the reader now hands it back as the instrument, and its words open "[explanatory note — not part of the law]".
+- **§5:**
+  - `detectionOf` recognises case law; `inboundFor` returns `caselaw` as its own list.
+  - The web `enabling-power` layer had counted every judgment (1.49M vs 201,776).
+  - `case-to-case-citations` declared. **`verify:statutory-parity` 13/13**, red since GRAPH 5.
+- **Checks:**
+  - `check:graph-9` (new) 8/8, 87 assertions over 1,076,234 rows, controls 9/9;
+  - `check:onward` 23/23 (2,816; B2/B10/B16 on the three-kind rule);
+  - effects 30/30, statutory 17/0, idea-law 26/26, surface-5 16/0, lex-26v 61/0;
+  - web tsc 0; clean-build --fast PASS.
+  - Mutation run: M1 (a procedural mention classified as a power) red in G2, G3, B2, B4, B10 and B16. Five more, all red; every file restored byte-identical.
+- **For Charlie:** refs-list parser; multi-Act target resolution (visible now as unresolved rows); missed power families need a fresh draw; 3 unexplained `nisi` mismatches; re-extract note rows with no provision?
+
 ## 2026-10-24 18:27 UTC - LEX: 2a334cc (26-V2c) verified live; kinds proposed on 452c5ade
 
 - Live: health `2a334cc`; build-worker `c253866b` SUCCESS on `2a334ccdb0f2`, its retrieval-OK and queue-on lines at 18:26:14; "kind not yet said" and "Ask Lex to propose kinds" read back from live chunks. Clean-room build of HEAD at C:/cb2 (npm ci, tsc) passed before the push; `check-clean-build.sh` full mode cannot make its `/tmp` worktree in this sandbox.

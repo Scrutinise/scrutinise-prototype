@@ -1,0 +1,133 @@
+{
+  "measured_at": "2026-10-24T18:41:40.685Z",
+  "section_3_marked_up_vs_text": [
+    {
+      "gid": "ukpga/2010/25",
+      "title": "Constitutional Reform and Governance Act 2010",
+      "marked_up": 11,
+      "text_detected": 171,
+      "cites_edges_walked": 8,
+      "marked_up_share_of_both": 6,
+      "reads_as": "1 in 17",
+      "notes": {
+        "marked_up": 5,
+        "text_detected": 30,
+        "undetermined": 0
+      }
+    },
+    {
+      "gid": "ukpga/2000/20",
+      "title": "Government Resources and Accounts Act 2000",
+      "marked_up": 5,
+      "text_detected": 603,
+      "cites_edges_walked": 5,
+      "marked_up_share_of_both": 0.8,
+      "reads_as": "1 in 122",
+      "notes": {
+        "marked_up": 5,
+        "text_detected": 50,
+        "undetermined": 2
+      }
+    },
+    {
+      "gid": "ukpga/2010/15",
+      "title": "Equality Act 2010",
+      "marked_up": 79,
+      "text_detected": 1789,
+      "cites_edges_walked": 61,
+      "marked_up_share_of_both": 4.2,
+      "reads_as": "1 in 24",
+      "notes": {
+        "marked_up": 39,
+        "text_detected": 239,
+        "undetermined": 36
+      }
+    },
+    {
+      "gid": "ukpga/1992/61",
+      "title": "Civil Service (Management Functions) Act 1992",
+      "marked_up": 0,
+      "text_detected": 7,
+      "cites_edges_walked": 0,
+      "marked_up_share_of_both": 0,
+      "reads_as": "no marked-up reference",
+      "notes": {
+        "marked_up": 0,
+        "text_detected": 0,
+        "undetermined": 0
+      }
+    }
+  ],
+  "section_4_note_share": {
+    "all_stored_markup_and_text": {
+      "from_notes": 319835,
+      "zone_determined": 1016062,
+      "pct": 31.48,
+      "zone_not_determined": 18486
+    },
+    "marked_up_only": {
+      "from_notes": 236642,
+      "zone_determined": 377195,
+      "pct": 62.74,
+      "zone_not_determined": 8151
+    },
+    "text_detected_only": {
+      "from_notes": 83193,
+      "zone_determined": 638867,
+      "pct": 13.02,
+      "zone_not_determined": 10335
+    },
+    "by_detection_and_zone": [
+      {
+        "detection": "markup",
+        "zone": "body",
+        "n": 140553
+      },
+      {
+        "detection": "markup",
+        "zone": "earlier-orders-note",
+        "n": 165258
+      },
+      {
+        "detection": "markup",
+        "zone": "explanatory-note",
+        "n": 71384
+      },
+      {
+        "detection": "markup",
+        "zone": null,
+        "n": 8151
+      },
+      {
+        "detection": "text",
+        "zone": "body",
+        "n": 555674
+      },
+      {
+        "detection": "text",
+        "zone": "earlier-orders-note",
+        "n": 4649
+      },
+      {
+        "detection": "text",
+        "zone": "explanatory-note",
+        "n": 78544
+      },
+      {
+        "detection": "text",
+        "zone": null,
+        "n": 10335
+      }
+    ],
+    "cites_rows_the_reader_walks": {
+      "rows": 121279,
+      "with_words": 116741,
+      "words_shown_are_from_a_note": 66325,
+      "pct_of_rows_with_words": 56.81,
+      "any_window_from_a_note": 67091,
+      "every_window_from_a_note": 66322,
+      "words_shown_zone_not_determined": 64
+    },
+    "graph_8_said": "at least 15,934 of 279,243 joined windows (5.7%) — a floor: only windows that happened to include the note header were counted"
+  }
+}

@@ -18,13 +18,21 @@
  * designation, a consent — are `enacting-mention`: a reference, for review. Before 271 both were `made-under`, and
  * every "made under CRaG s.20" row was the second kind (GRAPH_8_REPORT §5).
  */
-export const ONWARD_KINDS = ['made-under', 'amends', 'repeals', 'modifies', 'commences', 'cites', 'enacting-mention'] as const
+export const ONWARD_KINDS = ['made-under', 'enacting-unresolved', 'amends', 'repeals', 'modifies', 'commences', 'cites', 'enacting-mention'] as const
 /** ⚠ Requestable, never walked by default (§5d): a judgment citing a provision is interpretation, not drafting. */
 export const CASELAW_KIND = 'caselaw-markup' as const
-export type OnwardKind = typeof ONWARD_KINDS[number] | typeof CASELAW_KIND
-export const ALL_ONWARD_KINDS: readonly OnwardKind[] = [...ONWARD_KINDS, CASELAW_KIND]
+/**
+ * ⚠ GRAPH 9 §3 — `mentions`: the target's NAME found in running text and resolved by us (`citation_edge.detection =
+ * 'text'`). Requestable, NEVER walked by default and NEVER merged into `cites`: marked-up citations are about 1 in 19
+ * of the references held for the Equality Act, so a merged "citations" answer would be ~95% the weaker kind with no
+ * way to tell which — and these are what make depth 3 reach 13–22% of the statute book (GRAPH_8_REPORT §1).
+ */
+export const MENTIONS_KIND = 'mentions' as const
+export const OPT_IN_KINDS = [MENTIONS_KIND, CASELAW_KIND] as const
+export type OnwardKind = typeof ONWARD_KINDS[number] | typeof MENTIONS_KIND | typeof CASELAW_KIND
+export const ALL_ONWARD_KINDS: readonly OnwardKind[] = [...ONWARD_KINDS, MENTIONS_KIND, CASELAW_KIND]
 
-export type Strength = 'dependency' | 'operation' | 'reference' | 'interpretation'
+export type Strength = 'dependency' | 'unresolved' | 'operation' | 'reference' | 'interpretation'
 
 /**
  * ⚠ ONE KIND, ONE STRENGTH — A TABLE, NOT A TERNARY (§5e). A kind this build does not know has no
@@ -33,13 +41,22 @@ export type Strength = 'dependency' | 'operation' | 'reference' | 'interpretatio
  */
 export const STRENGTH_OF: Readonly<Record<OnwardKind, Strength>> = {
   'made-under': 'dependency',
+  'enacting-unresolved': 'unresolved',
   amends: 'operation',
   repeals: 'operation',
   modifies: 'operation',
   commences: 'operation',
   cites: 'reference',
   'enacting-mention': 'reference',
+  mentions: 'reference',
   'caselaw-markup': 'interpretation',
+}
+
+/** How a kind is named on screen where the bare id would mislead. ⚠ `mentions` must never read as `cites`. */
+export const KIND_LABEL: Readonly<Partial<Record<OnwardKind, string>>> = {
+  'enacting-unresolved': 'made under it, or only naming it? — unresolved',
+  'enacting-mention': 'named in enacting words, not as the power',
+  mentions: 'named in running text (found by us, not marked up — weaker than a citation)',
 }
 
 /**
@@ -56,11 +73,67 @@ export const ENABLING_ROLE_WORDS: Readonly<Record<EnablingRole, string>> = {
   unstated: 'the enacting words do not say whether this is the power exercised',
 }
 
+/**
+ * ⚠ GRAPH 9 §2 — WHAT THE PROVISION ITSELF SAYS (`provision_power`, scripts/ingest/graph/provision-power.ts), read
+ * independently of the instrument's words: the publisher's ConfersPower flag and the provision's text.
+ *   power    the publisher flags it, or its text says power
+ *   none     the publisher marked the Act and did not flag it, AND no power phrase is in its text, AND it is not repealed
+ *   unknown  anything else — not held, repealed (the bulk file holds the CURRENT text), unmarked and silent
+ * ⚠ LOW CONFIDENCE, ALWAYS: no text rule reached the 0.8 precision floor against the flag, and the flag agrees with the
+ * provisions SIs name as their power only 71.2% of the time (audit-g9-confers-power.json). So it is used for ONE thing:
+ * a row whose words say "made under this" on a provision that is `none` is UNRESOLVED, never made-under. It never
+ * makes a row a power.
+ */
+export type ProvisionPowerState = 'power' | 'none' | 'unknown'
+
+/**
+ * ⚠ THE ONE PLACE AN ENABLING ROW GETS ITS KIND (decision 271 + GRAPH 9 §2). The words decide whether it CLAIMS to be
+ * made under this; the provision can only withhold that claim:
+ *   words `power`, on a provision that is `none`              → enacting-unresolved  (the two disagree: for a human)
+ *   words `power`, on a provision that is power/unknown, or Act-wide → made-under
+ *   words `mention` / `unstated` / not read                    → enacting-mention   (whatever the provision says)
+ * ⚠ The provision never PROMOTES a row: "the requirements of section 52 have been met" is a mention even though s.52 confers a power.
+ */
+export type EnablingKind = 'made-under' | 'enacting-unresolved' | 'enacting-mention'
+export function enablingKindOf(role: EnablingRole | null, provisionRef: string | null, provisionState: ProvisionPowerState | null): EnablingKind {
+  if (role !== 'power') return 'enacting-mention'
+  return provisionRef && provisionState === 'none' ? 'enacting-unresolved' : 'made-under'
+}
+export const PROVISION_POWER_WORDS: Readonly<Record<ProvisionPowerState, string>> = {
+  power: 'the provision appears to confer a power (publisher’s flag or a power phrase in its text) — low confidence',
+  none: 'the provision appears to confer no power: the publisher marked this Act’s powers and did not mark this one, and its text has no power phrase — low confidence',
+  unknown: 'we cannot tell from the provision whether it confers a power',
+}
+export const PROVISION_POWER_CONFIDENCE = 'low' as const
+
+/**
+ * ⚠ GRAPH 9 §4 — where the citing words sit. An SI's explanatory note is NOT PART OF THE LAW; a fragment from one shown
+ * as the words of the law is the same family of error as an invented quotation, even though nothing was invented.
+ * Tagged, not excluded: a note often says WHY a reference exists. null = not determined (the row predates the tag and
+ * the bulk file could not re-produce it) — never assumed to be body text.
+ */
+export type SourceZone = 'body' | 'explanatory-note' | 'earlier-orders-note'
+/** A row's zone: a `SourceZone`; `not-determined` (a citation row the backfill could not reach); null = not applicable (enabling words, official rows). */
+export type RowZone = SourceZone | 'not-determined' | null
+export const SOURCE_ZONE_LABEL: Readonly<Record<SourceZone | 'not-determined', string | null>> = {
+  body: null,
+  'explanatory-note': 'explanatory note — not part of the law',
+  'earlier-orders-note': 'note as to earlier commencement orders — not part of the law',
+  'not-determined': 'where these words sit was not determined — they may be from a note that is not part of the law',
+}
+export function zoneLabel(zone: RowZone): string | null {
+  return zone ? SOURCE_ZONE_LABEL[zone] : null
+}
+/** `citation_edge.source_zone` as stored → a row's zone. Only for citation rows; never call it for enabling or official rows. */
+export function rowZoneOf(stored: string | null): RowZone {
+  return stored === 'body' || stored === 'explanatory-note' || stored === 'earlier-orders-note' ? stored : 'not-determined'
+}
+
 export function strengthOf(kind: string): Strength | null {
   return Object.prototype.hasOwnProperty.call(STRENGTH_OF, kind) ? STRENGTH_OF[kind as OnwardKind] : null
 }
 
-export const STRENGTH_ORDER: readonly Strength[] = ['dependency', 'operation', 'reference', 'interpretation']
+export const STRENGTH_ORDER: readonly Strength[] = ['dependency', 'unresolved', 'operation', 'reference', 'interpretation']
 
 /**
  * The ONLY heading each strength is given. ⚠ `reference` never says consequence, knock-on or
@@ -70,6 +143,10 @@ export const STRENGTH_HEADING: Readonly<Record<Strength, { heading: string; mean
   dependency: {
     heading: 'Made under this — depends on it',
     meaning: 'instruments made under this power; if the power is repealed or narrowed, each one is directly in question',
+  },
+  unresolved: {
+    heading: 'Unresolved — read the words before relying on this',
+    meaning: 'the instrument’s enacting words name this as the power it was made under, but the provision itself appears to confer no power; a person must read both',
   },
   operation: {
     heading: 'Operates on this — the official record',
@@ -94,7 +171,19 @@ export const ONWARD_RULES: readonly string[] = [
   'Walk made-under as far as it goes. Do NOT walk official effects or citations past depth 2: measured, both reach thousands of instruments by depth 3. Stop citations at depth 1, or depth 2 with the set labelled weak, and never show a depth-3 citation set to a user.',
   'Count and say what was not walked. A truncated set, an unaddressable provision, and a step with no rows are three different facts.',
   'Never put a figure from this reader in the “Consequential amendments and repeals” annexe. That annexe records drafted amendments; this reader produces candidates.',
+  'An enacting-unresolved row is neither made under this nor a mere mention: say it is unresolved and show its words. A row whose words come from an explanatory note is not the law; say “explanatory note — not part of the law” with it. A mentions row is a name found in running text, weaker than a citation; never count it as a cites row.',
 ]
+
+/**
+ * ⚠ §2.3 — the sentence for a provision whose own text confers no power. Only said when it is TRUE of the data: the
+ * provision is `none` and not one instrument is made under it. "None is made under a power in it" is about the walk,
+ * and the provision state is said in the same breath, with its confidence.
+ */
+export function mentionOnlySentence(mentioning: number, madeUnder: number, unresolved: number, provisionState: ProvisionPowerState | null): string | null {
+  if (provisionState !== 'none' || madeUnder > 0 || unresolved > 0 || mentioning === 0) return null
+  return `${mentioning} instrument${mentioning === 1 ? '' : 's'} reference${mentioning === 1 ? 's' : ''} this provision in ${mentioning === 1 ? 'its' : 'their'} enacting words. `
+    + `None is made under a power in it — and the provision itself appears to confer no power (${PROVISION_POWER_CONFIDENCE} confidence: read from the publisher’s marking and its text).`
+}
 
 // ── the target ──────────────────────────────────────────────────────────────────
 
@@ -184,10 +273,12 @@ const TAG_DEBRIS = /^[^<>]*?="[^<>]*?>\s*/
  * without a mark is an invented quotation. The leading tag debris (a third of all rows) is markup,
  * not words of the law, and is removed; the words themselves are never altered.
  */
-export function citingTextForDisplay(stored: string | null): string | null {
+export function citingTextForDisplay(stored: string | null, zone: RowZone = null): string | null {
   if (!stored || !stored.trim()) return null
   const words = stored.replace(TAG_DEBRIS, '').trim()
-  return `“…${words}” [cut at the start; the words after the reference are not stored]`
+  // ⚠ GRAPH 9 §4: the note label goes FIRST, so a reader meets "not part of the law" before the words.
+  const label = zoneLabel(zone)
+  return `${label ? `[${label}] ` : ''}“…${words}” [cut at the start; the words after the reference are not stored]`
 }
 
 // ── freshness ──────────────────────────────────────────────────────────────────
@@ -228,7 +319,8 @@ export function describeKindLine(c: KindLineInput): string {
   const scope = c.scope && c.counted
     ? ` — ${c.scope.provision} name this provision, ${c.scope.actWide} only the Act as a whole`
     : ''
-  return `${STRENGTH_HEADING[c.strength].heading} · ${c.kind}: ${c.counted} from ${c.instruments} instrument${c.instruments === 1 ? '' : 's'}${shown}${scope}${split}`
+  const label = KIND_LABEL[c.kind] ? ` (${KIND_LABEL[c.kind]})` : ''
+  return `${STRENGTH_HEADING[c.strength].heading} · ${c.kind}${label}: ${c.counted} from ${c.instruments} instrument${c.instruments === 1 ? '' : 's'}${shown}${scope}${split}`
 }
 
 /** The summary, strongest first; a strength with nothing in it is still stated, as a zero. */

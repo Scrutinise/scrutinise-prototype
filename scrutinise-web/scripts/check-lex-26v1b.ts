@@ -30,7 +30,8 @@ import { headerStrip, cutClause, takePart, joinClause } from '../lib/lex/documen
 import { bandStates, detailParts } from '../lib/lex/record-layout-pure'
 import { ideaLawSet } from '../lib/lex/statutory-graph'
 import { unansweredAmendment, alsoNamedAt, sourceWords } from '../lib/lex/law-panel-words'
-import { touchOf } from '../lib/lex/action-touches'
+import { touchOf, madeUnderFor } from '../lib/lex/action-touches'
+import { onwardFrom } from '../lib/lex/onward'
 import { SYSTEM_PREFIX } from '../lib/lex/agent/system-prompt'
 import { MODEL_TOOLS } from '../lib/lex/agent/tools'
 import IdeaLawPanel from '../components/lex/IdeaLawPanel'
@@ -205,6 +206,17 @@ async function partB(): Promise<{ copyId: string; userId: string; docId: string 
   ok('Equality Act s.149: no instrument is made under it, and it says so — and how many name the Act without a section', !!t149.madeUnder && t149.madeUnder.total === 0 && t149.madeUnder.actLevel > 0)
   ok('Equality Act s.153: the instruments made under it, titled and linked', !!t153.madeUnder && t153.madeUnder.total > 0 && t153.madeUnder.rows.every((r) => !!r.title && r.link.startsWith('https://www.legislation.gov.uk/')))
   ok('CRaG s.10: no judgment held — the block will say "none held", not be empty', !!t10.judgments && t10.judgments.cases === 0 && t10.judgments.failed === null)
+  // Decision 271 on this surface (found by GRAPH 9): only enacting words that name the POWER are "made under". CRaG s.20 is the case:
+  // instruments whose enacting words only mention it ("the requirements of section 20 … have been complied with") are not made under it.
+  const t20 = await touchOf({ docUri: CRAG, provisionPath: 'section/20', relation: 'relies_on', note: '' })
+  const [{ n: anyRole }] = await prisma.$queryRawUnsafe<Array<{ n: number }>>(`SELECT COUNT(DISTINCT source_gid)::int n FROM citation_edge WHERE detection = 'enabling' AND target_act_id = $1 AND (lower(target_provision_ref) = 'section-20' OR lower(target_provision_ref) ~ '^section-20([^0-9].*)?$')`, CRAG)
+  ok('271: CRaG s.20 — nothing is "made under" it here, though enabling rows name it (they only mention it)', !!t20.madeUnder && t20.madeUnder.failed === null && t20.madeUnder.total === 0 && anyRole > 0, `made under ${t20.madeUnder?.total}, enabling rows of any role ${anyRole}`)
+  ok('…and s.153’s instruments survive the filter (the power rows are still read)', !!t153.madeUnder && t153.madeUnder.total > 0)
+  ok('GRAPH 9: "names the Act without a section" counts instruments whose power rows are ALL Act-level (CRaG: the ss.45/46/52 instruments whose section the parser drops)', !!t20.madeUnder && t20.madeUnder.actLevel > 0, `actLevel ${t20.madeUnder?.actLevel}`)
+  // The two surfaces agree: the touch block's whole-Act count is the reader's made-under instrument count (one per-instrument rule).
+  const wholeTouch = await madeUnderFor([CRAG], null)
+  const wholeReader = (await onwardFrom(CRAG, { kinds: ['made-under'], limit: 1 })).perKind.find((k) => k.kind === 'made-under')?.instruments ?? -1
+  ok('GRAPH 9: CRaG as a whole — the touch block counts exactly the instruments the onward reader calls made under', wholeTouch.failed === null && wholeTouch.total === wholeReader && wholeReader > 0, `touch ${wholeTouch.total}, reader ${wholeReader}`)
   control('a judgment that cites s.1490 counted as citing s.149 (must be FALSE)', !!t149.judgments?.rows.some((j) => /section-1490/.test(j.passage)))
 
   section('B5 · item 7 (pure) — the working copy: Take this, Take all')

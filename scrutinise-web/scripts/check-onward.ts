@@ -201,7 +201,15 @@ tc('B2 made-under: instruments equal the enabling rows whose words name the POWE
   const a = new A()
   for (const act of ACTS) {
     const r = await onwardFrom(act.gid, { kinds: ['made-under'], limit: 500 })
-    const n = await sql<{ n: bigint; rows: bigint }>(`SELECT COUNT(DISTINCT source_gid) n, COUNT(*) rows FROM citation_edge WHERE target_act_id = $1 AND detection = 'enabling' AND enabling_role = 'power'`, act.gid)
+    // GRAPH 9: made-under = a named power the provision does not contradict, or the Act with no provision named (B16's rule).
+    const n = await sql<{ n: bigint; rows: bigint }>(`
+      SELECT COUNT(*) FILTER (WHERE pp_ok OR (NOT pp_any AND act_p)) n, SUM(rows) rows FROM (
+        SELECT c.source_gid, COUNT(*) rows,
+               bool_or(c.target_provision_ref IS NOT NULL) pp_any,
+               bool_or(c.target_provision_ref IS NOT NULL AND pp.state IS DISTINCT FROM 'none') pp_ok,
+               bool_or(c.target_provision_ref IS NULL) act_p
+          FROM citation_edge c LEFT JOIN provision_power pp ON pp.gid = c.target_act_id AND pp.provision_ref = c.target_provision_ref
+         WHERE c.target_act_id = $1 AND c.detection = 'enabling' AND c.enabling_role = 'power' GROUP BY 1) s`, act.gid)
     a.read(num(n[0].rows))
     const c = r.perKind[0]
     a.ok(`${act.label} instruments`, c.instruments === num(n[0].n), `${c.instruments} vs ${num(n[0].n)}`)
@@ -335,9 +343,13 @@ tc('B10 a provision walk: no instrument made under ANOTHER section comes back, a
   const a = new A()
   for (const [gid, prov] of [['ukpga/2010/25', 'section-20'], ['ukpga/2010/25', 'section-2'], ['ukpga/2010/15', 'section-149']] as const) {
     const r = await onwardFrom(gid, { provision: prov, kinds: ['made-under'], limit: 500 })
+    // GRAPH 9: a named power whose provision confers none is not a power the instrument is made under (check:graph-9 G3);
+    // only made-under instruments are counted here, and only the provisions that are not contradicted.
     const q = await sql<{ source_gid: string; refs: string[] }>(
-      `SELECT source_gid, array_remove(array_agg(DISTINCT target_provision_ref), NULL) refs FROM citation_edge
-       WHERE target_act_id = $1 AND detection = 'enabling' AND enabling_role = 'power' GROUP BY 1`, gid)
+      `SELECT c.source_gid, array_remove(array_agg(DISTINCT CASE WHEN pp.state IS DISTINCT FROM 'none' THEN c.target_provision_ref END), NULL) refs
+         FROM citation_edge c LEFT JOIN provision_power pp ON pp.gid = c.target_act_id AND pp.provision_ref = c.target_provision_ref
+        WHERE c.target_act_id = $1 AND c.detection = 'enabling' AND c.enabling_role = 'power' GROUP BY 1
+       HAVING bool_or(c.target_provision_ref IS NOT NULL AND pp.state IS DISTINCT FROM 'none') OR NOT bool_or(c.target_provision_ref IS NOT NULL)`, gid)
     a.read(q.length)
     const other = q.filter((x) => x.refs.length && !x.refs.some((p) => provisionMatches(p, prov))).length
     const nw = r.notWalked.find((x) => x.kind === 'made-under')?.rows ?? 0
@@ -426,16 +438,25 @@ tc('B14 a provision count is split into "names this provision" and "only the Act
 tc('B16 ⚠ DECISION 271: an enabling row is made-under only when its words name the power; every other one is an enacting-mention, a reference', async () => {
   const a = new A()
   for (const act of ACTS) {
-    const r = await onwardFrom(act.gid, { kinds: ['made-under', 'enacting-mention'], limit: 500 })
-    const q = await sql<{ all_i: bigint; power_i: bigint; only_other_i: bigint }>(`
-      SELECT COUNT(*) all_i, COUNT(*) FILTER (WHERE has_power) power_i, COUNT(*) FILTER (WHERE NOT has_power) only_other_i
-        FROM (SELECT source_gid, bool_or(enabling_role = 'power') has_power FROM citation_edge
-               WHERE target_act_id = $1 AND detection = 'enabling' GROUP BY 1) s`, act.gid)
+    // ⚠ GRAPH 9: a THIRD kind from the same rows. An instrument whose words name provisions as the power, every one of
+    // which ITSELF confers none (`provision_power.state = 'none'`), is enacting-unresolved; check:graph-9 G3 owns that rule.
+    const r = await onwardFrom(act.gid, { kinds: ['made-under', 'enacting-unresolved', 'enacting-mention'], limit: 500 })
+    const q = await sql<{ all_i: bigint; power_i: bigint; un_i: bigint; only_other_i: bigint }>(`
+      WITH s AS (
+        SELECT c.source_gid,
+               bool_or(c.enabling_role = 'power' AND c.target_provision_ref IS NOT NULL) pp_any,
+               bool_or(c.enabling_role = 'power' AND c.target_provision_ref IS NOT NULL AND pp.state IS DISTINCT FROM 'none') pp_ok,
+               bool_or(c.enabling_role = 'power' AND c.target_provision_ref IS NULL) act_p
+          FROM citation_edge c LEFT JOIN provision_power pp ON pp.gid = c.target_act_id AND pp.provision_ref = c.target_provision_ref
+         WHERE c.target_act_id = $1 AND c.detection = 'enabling' GROUP BY 1)
+      SELECT COUNT(*) all_i, COUNT(*) FILTER (WHERE pp_ok OR (NOT pp_any AND act_p)) power_i,
+             COUNT(*) FILTER (WHERE pp_any AND NOT pp_ok) un_i, COUNT(*) FILTER (WHERE NOT pp_any AND NOT act_p) only_other_i FROM s`, act.gid)
     a.read(num(q[0].all_i))
-    const mu = r.perKind.find((c) => c.kind === 'made-under')!, em = r.perKind.find((c) => c.kind === 'enacting-mention')!
-    a.ok(`${act.label} made-under instruments = those with a power row`, mu.instruments === num(q[0].power_i), `${mu.instruments} vs ${num(q[0].power_i)}`)
-    a.ok(`${act.label} enacting-mention instruments = those with none`, em.instruments === num(q[0].only_other_i), `${em.instruments} vs ${num(q[0].only_other_i)}`)
-    a.ok(`${act.label} none lost, none twice`, mu.instruments + em.instruments === num(q[0].all_i))
+    const mu = r.perKind.find((c) => c.kind === 'made-under')!, un = r.perKind.find((c) => c.kind === 'enacting-unresolved')!, em = r.perKind.find((c) => c.kind === 'enacting-mention')!
+    a.ok(`${act.label} made-under instruments = those with a power row the provision does not contradict`, mu.instruments === num(q[0].power_i), `${mu.instruments} vs ${num(q[0].power_i)}`)
+    a.ok(`${act.label} unresolved instruments = those whose named powers all confer none`, un.instruments === num(q[0].un_i), `${un.instruments} vs ${num(q[0].un_i)}`)
+    a.ok(`${act.label} enacting-mention instruments = those with no power row`, em.instruments === num(q[0].only_other_i), `${em.instruments} vs ${num(q[0].only_other_i)}`)
+    a.ok(`${act.label} none lost, none twice`, mu.instruments + un.instruments + em.instruments === num(q[0].all_i))
     a.ok(`${act.label} an enacting-mention row is a reference, its role not power`, r.rows.filter((x) => x.kind === 'enacting-mention').every((x) => x.strength === 'reference' && x.enablingRole !== 'power'))
   }
   // The test case: CRaG s.20 confers no power, and the three instruments that name it say so in their own words.

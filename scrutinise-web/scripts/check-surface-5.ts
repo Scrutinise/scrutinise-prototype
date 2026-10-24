@@ -437,7 +437,8 @@ const CASES: Case[] = [
         return `${target}: an enabling row is in the title-only list`
       }
       const total = Number(table.reduce((s, r) => s + Number(r.n), 0))
-      const partitioned = got.enabling.length + got.rows.length + got.titleOnly.length + got.unrecognised.length
+      // GRAPH 9 §5a: judgments are their own list now (they used to be `unrecognised`).
+      const partitioned = got.enabling.length + got.rows.length + got.titleOnly.length + got.caselaw.length + got.unrecognised.length
       return total === partitioned
         ? null
         : `${target}: the table holds ${total} rows and the partition accounts for ${partitioned}`

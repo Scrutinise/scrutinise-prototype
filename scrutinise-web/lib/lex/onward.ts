@@ -24,10 +24,14 @@ import {
   type EffectsResult,
 } from '@/lib/lex/statutory-graph'
 import {
-  ONWARD_KINDS, ALL_ONWARD_KINDS, CASELAW_KIND, STRENGTH_ORDER, strengthOf, parseTarget, isUnaddressableRef,
-  legPath, provisionMatches, citingTextStateOf, onwardCaveat,
-  type OnwardKind, type Strength, type CitingTextState, type EnablingRole,
+  ONWARD_KINDS, ALL_ONWARD_KINDS, CASELAW_KIND, MENTIONS_KIND, STRENGTH_ORDER, strengthOf, parseTarget, isUnaddressableRef,
+  legPath, provisionMatches, citingTextStateOf, onwardCaveat, rowZoneOf, mentionOnlySentence, enablingKindOf,
+  type OnwardKind, type Strength, type CitingTextState, type EnablingRole, type ProvisionPowerState, type RowZone,
 } from '@/lib/lex/onward-pure'
+
+/** GRAPH 9 §2 — what the provision itself says (`provision_power`). Low confidence, always; see onward-pure. */
+export interface ProvisionPower { state: ProvisionPowerState; basis: string; words: string | null }
+export const PROVISION_POWER_TABLE = 'provision_power'
 
 export interface OneStep {
   /** The node at the other end, in legislation.gov.uk form, bridged — pass it back to walk on. */
@@ -61,6 +65,14 @@ export interface OneStep {
    */
   enablingRole: EnablingRole | null
   enablingRoleWords: string | null
+  /**
+   * ⚠ GRAPH 9 §2 — made-under / enacting-unresolved / enacting-mention naming a provision: what that provision itself
+   * says. null on an Act-wide row (no provision to read) and on every other kind. `undefined` never: a provision the
+   * extractor has not computed reads `{ state: 'unknown', basis: 'not-computed' }`.
+   */
+  provisionPower: ProvisionPower | null
+  /** ⚠ GRAPH 9 §4 — where the citing words sit (cites, mentions): a note is not part of the law. null = not applicable. */
+  sourceZone: RowZone
   origin: EdgeOrigin | null
   source: string
 }
@@ -84,6 +96,8 @@ export interface OnwardKindCount {
   split: { total: number; changeWords: number; doNot: number; unclassified: number } | null
   /** `made-under` / `cites` / case law: the three text states across the counted rows. */
   citingText: { held: number; noneStored: number; possiblyTruncated: number } | null
+  /** GRAPH 9 §4 — `cites` / `mentions`: of the counted rows, how many have words from a note (not the law), and how many a zone was never determined for. */
+  zones: { notes: number; undetermined: number } | null
 }
 
 export interface OnwardResult {
@@ -101,13 +115,17 @@ export interface OnwardResult {
   freshness: { loadDate: string | null; ageDays: number | null; basis: string; depth: number; caveat: string }
   /** ⚠ What was counted: rows read to make the counts, and rows handed back. */
   examined: { rowsCounted: number; rowsReturned: number }
+  /** GRAPH 9 §2 — the TARGET provision's own state, where the walk starts at a provision some enabling row names; else null. */
+  targetProvisionPower: ProvisionPower | null
+  /** GRAPH 9 §2.3 — "N instruments reference this provision … None is made under a power in it", only when true. */
+  mentionOnly: string | null
 }
 
 export const FRESHNESS_BASIS =
   'the newest load time of the stored relationships table (official effects and our own extractions) — '
   + 'the date we loaded the record, not the date the record is current to'
 
-const isEdgeKind = (k: OnwardKind) => k !== CASELAW_KIND
+const OFFICIAL_KINDS = ['amends', 'repeals', 'modifies', 'commences'] as const
 
 export async function onwardFrom(
   target: string,
@@ -128,7 +146,7 @@ export async function onwardFrom(
   const shell = (unaddressable: OnwardResult['unaddressable'], resolution: OnwardResult['resolution'], title: string | null = null): OnwardResult => ({
     target: { given: target, gid: resolution?.canonical ?? parsed.gid, provision: parsed.provision, title },
     resolution, rows: [], unaddressable, truncated: zeros(), perKind: [], notWalked: [], next: [], freshness,
-    examined: { rowsCounted: 0, rowsReturned: 0 },
+    examined: { rowsCounted: 0, rowsReturned: 0 }, targetProvisionPower: null, mentionOnly: null,
   })
   if (parsed.error) return shell({ code: 'not-an-id', reason: parsed.error }, null)
 
@@ -149,7 +167,7 @@ export async function onwardFrom(
 
   const provision = parsed.provision
   const perKind = new Map<OnwardKind, OnwardKindCount>(kinds.map((kind) => [kind, {
-    kind, strength: strengthOf(kind)!, counted: 0, returned: 0, instruments: 0, scope: { provision: 0, actWide: 0 }, split: null, citingText: null,
+    kind, strength: strengthOf(kind)!, counted: 0, returned: 0, instruments: 0, scope: { provision: 0, actWide: 0 }, split: null, citingText: null, zones: null,
   }]))
   const scopeOf = (c: OnwardKindCount, kept: OneStep[]) => {
     for (const k of kept) if (k.scope === 'provision') c.scope.provision++; else c.scope.actWide++
@@ -162,19 +180,26 @@ export async function onwardFrom(
   // ⚠ The two kinds come from one table and are NEVER summed: `made-under` is a row whose words name this as the
   // power exercised, `enacting-mention` every other enabling row. An instrument that is made under this provision
   // is not listed again as merely mentioning it.
-  if (kinds.includes('made-under') || kinds.includes('enacting-mention')) {
+  // ⚠ GRAPH 9 §2: a third kind from the same table. `enacting-unresolved` is a row whose WORDS name this as the power
+  // exercised (271 `power`) on a provision that ITSELF appears to confer none (`provision_power.state = 'none'`) — the two
+  // instruments disagree, so it is shown for a human and is neither made-under nor a mention. Precedence per instrument:
+  // made-under, then unresolved, then mention; an instrument is listed under one of the three only.
+  let targetProvisionPower: ProvisionPower | null = null
+  const ENABLING_KINDS = ['made-under', 'enacting-unresolved', 'enacting-mention'] as const
+  if (ENABLING_KINDS.some((k) => kinds.includes(k))) {
     const got = await enablingRows(resolution.candidates)
     rowsCounted += got.read
-    const madeUnder = new Set<string>()
-    for (const kind of ['made-under', 'enacting-mention'] as const) {
+    if (provision) targetProvisionPower = [...got.powerOf].find(([p]) => p.toLowerCase() === provision.toLowerCase())?.[1] ?? null
+    const claimed = new Set<string>()
+    for (const kind of ENABLING_KINDS) {
       const c = perKind.get(kind)
       const states = { held: 0, noneStored: 0, possiblyTruncated: 0 }
       let otherSection = 0
       const kept: OneStep[] = []
-      for (const [gid, both] of got.byInstrument) {
-        const inst = kind === 'made-under' ? both.power : both.other
+      for (const [gid, sets] of got.byInstrument) {
+        const inst = kind === 'made-under' ? sets.power : kind === 'enacting-unresolved' ? sets.unresolved : sets.other
         if (!inst.actLevel && !inst.provisions.size) continue
-        if (kind === 'enacting-mention' && madeUnder.has(gid)) continue
+        if (claimed.has(gid)) continue
         const named = [...inst.provisions.keys()]
         let use: Array<[string | null, EnablingWords]>
         if (!provision) use = named.length ? [...inst.provisions] : [[null, inst.actLevel!]]
@@ -186,7 +211,9 @@ export async function onwardFrom(
           else if (named.length) { otherSection++; continue }
           else use = [[null, inst.actLevel!]]
         }
-        if (kind === 'made-under') madeUnder.add(gid)
+        // ⚠ Claimed whether or not its kind was asked for (as before GRAPH 9): a made-under instrument is never listed again
+        // as unresolved or as a mention, and one whose words name a different section (`otherSection`) claims nothing.
+        if (kind !== 'enacting-mention') claimed.add(gid)
         if (!c) continue
         for (const [p, w] of use) {
           const state = citingTextStateOf(w.text)
@@ -196,6 +223,7 @@ export async function onwardFrom(
             changeKind: null, changeReason: null, thisEndProvision: p, scope: p ? 'provision' : 'act-wide',
             citingText: w.text || null, citingTextState: state, citingTextOthers: 0, citedProvision: p,
             enablingRole: w.role, enablingRoleWords: w.roleWords,
+            provisionPower: p ? got.powerOf.get(p) ?? NOT_COMPUTED : null, sourceZone: null,
             origin: 'extracted', source: ENABLING_SOURCE,
           })
         }
@@ -212,7 +240,9 @@ export async function onwardFrom(
   }
 
   // ── the official effects: counted in SQL, rows capped per kind ──────────────────────────
-  const sqlKinds = kinds.filter((k) => isEdgeKind(k) && k !== 'cites' && k !== 'made-under' && k !== 'enacting-mention')
+  // ⚠ An ALLOW-list. It was a deny-list (`not cites, not made-under, not enacting-mention`), and each new kind from
+  // another table — GRAPH 9 added two — would have been sent to the effects table as an edge type.
+  const sqlKinds = kinds.filter((k) => (OFFICIAL_KINDS as readonly string[]).includes(k))
   if (sqlKinds.length) {
     const thisProv = `split_part(to_id, ':', 3)`
     const pc = provision ? provisionPredicate(thisProv, provision) : null
@@ -284,6 +314,9 @@ export async function onwardFrom(
       step.scope = scope
       step.citedProvision = cited
       step.citingTextOthers = Math.max(w.length - 1, 0)
+      // GRAPH 9 §4: the zone of the words SHOWN (the first window); with no words there is nothing to label.
+      step.sourceZone = w[0] ? rowZoneOf(w[0].source_zone) : null
+      step.provision = noteNode(step.sourceZone, step.act, step.provision)
       const s = step.citingTextState
       if (s === 'held') states.held++; else if (s === 'none-stored') states.noneStored++; else states.possiblyTruncated++
       kept.push(step)
@@ -291,6 +324,10 @@ export async function onwardFrom(
     c.counted = kept.length
     c.instruments = new Set(kept.map((k) => k.act)).size
     c.citingText = states
+    c.zones = {
+      notes: kept.filter((k) => k.sourceZone === 'explanatory-note' || k.sourceZone === 'earlier-orders-note').length,
+      undetermined: kept.filter((k) => k.sourceZone === 'not-determined').length,
+    }
     scopeOf(c, kept)
     c.returned = Math.min(kept.length, limit)
     rows.push(...kept.slice(0, limit))
@@ -326,7 +363,46 @@ export async function onwardFrom(
         subType: '', changeKind: null, changeReason: null, thisEndProvision: g.target_provision_ref,
         scope: g.target_provision_ref ? 'provision' : 'act-wide',
         citingText: g.citation_text, citingTextState: citingTextStateOf(g.citation_text), citingTextOthers: 0,
-        citedProvision: g.target_provision_ref, enablingRole: null, enablingRoleWords: null, origin: 'extracted', source: 'tna-caselaw',
+        citedProvision: g.target_provision_ref, enablingRole: null, enablingRoleWords: null, provisionPower: null, sourceZone: null,
+        origin: 'extracted', source: 'tna-caselaw',
+      })
+    }
+  }
+
+  // ── mentions (GRAPH 9 §3): the target's NAME in running text, resolved by us — only when asked for, never merged ──
+  // ⚠ From `citation_edge.detection = 'text'`, never from the `cites` rows, and counted on its own line: a merged
+  // "citations" figure would be ~95% this weaker kind on the Equality Act with no way to tell which.
+  if (kinds.includes(MENTIONS_KIND)) {
+    const c = perKind.get(MENTIONS_KIND)!
+    let q = `SELECT source_gid, source_provision_ref, target_provision_ref, citation_text, source_zone FROM ${CITATION_TABLE}
+             WHERE target_act_id = ANY($1::text[]) AND detection = 'text'`
+    const params: unknown[] = [resolution.candidates]
+    if (provision) {
+      const p = provisionPredicate('target_provision_ref', provision)
+      q += ` AND (${p.sql.replace(/\$P/g, '$2')} OR target_provision_ref IS NULL)`
+      params.push(...p.params)
+    }
+    const counted = await prisma.$queryRawUnsafe<Array<{ n: bigint; g: bigint; aw: bigint; notes: bigint; undetermined: bigint }>>(
+      `SELECT COUNT(*)::bigint n, COUNT(DISTINCT source_gid)::bigint g,
+              COUNT(*) FILTER (WHERE target_provision_ref IS NULL)::bigint aw,
+              COUNT(*) FILTER (WHERE source_zone IN ('explanatory-note', 'earlier-orders-note'))::bigint notes,
+              COUNT(*) FILTER (WHERE source_zone IS NULL)::bigint undetermined FROM (${q}) x`, ...params)
+    c.counted = Number(counted[0].n); c.instruments = Number(counted[0].g); rowsCounted += c.counted
+    c.scope = { provision: c.counted - Number(counted[0].aw), actWide: Number(counted[0].aw) }
+    c.citingText = { held: 0, noneStored: 0, possiblyTruncated: c.counted }
+    c.zones = { notes: Number(counted[0].notes), undetermined: Number(counted[0].undetermined) }
+    const got = await prisma.$queryRawUnsafe<Array<{ source_gid: string; source_provision_ref: string | null; target_provision_ref: string | null; citation_text: string; source_zone: string | null }>>(
+      `${q} ORDER BY source_gid, source_provision_ref NULLS LAST LIMIT ${limit}`, ...params)
+    c.returned = got.length
+    for (const g of got) {
+      rows.push({
+        provision: noteNode(rowZoneOf(g.source_zone), g.source_gid, legPath(g.source_gid, g.source_provision_ref)),
+        act: g.source_gid, actTitle: null, kind: MENTIONS_KIND, strength: 'reference',
+        subType: '', changeKind: null, changeReason: null, thisEndProvision: g.target_provision_ref,
+        scope: g.target_provision_ref ? 'provision' : 'act-wide',
+        citingText: g.citation_text, citingTextState: citingTextStateOf(g.citation_text), citingTextOthers: 0,
+        citedProvision: g.target_provision_ref, enablingRole: null, enablingRoleWords: null, provisionPower: null,
+        sourceZone: rowZoneOf(g.source_zone), origin: 'extracted', source: 'citation_edge:text',
       })
     }
   }
@@ -353,18 +429,34 @@ export async function onwardFrom(
   }
 
   const counts = kinds.map((k) => perKind.get(k)!)
+  // §2.3's sentence — only with all three enabling kinds asked, so a kind left out is never read as a zero.
+  const e = (k: OnwardKind) => perKind.get(k)?.scope.provision
+  const mentionOnly = provision && ENABLING_KINDS.every((k) => perKind.has(k))
+    ? mentionOnlySentence(e('enacting-mention')!, e('made-under')!, e('enacting-unresolved')!, targetProvisionPower?.state ?? null)
+    : null
   return {
     target: { given: target, gid: resolution.canonical, provision, title },
     resolution, rows, unaddressable: null,
     truncated: counts.map((c) => ({ kind: c.kind, counted: c.counted, returned: c.returned })),
     perKind: counts, notWalked, next: [...nextMap.values()], freshness,
     examined: { rowsCounted, rowsReturned: rows.length },
+    targetProvisionPower, mentionOnly,
   }
 }
 
 // ── internals ───────────────────────────────────────────────────────────────────
 
 interface RawEdge { from_id: string; to_id: string; edge_type: string; sub_type: string; source: string }
+
+/**
+ * ⚠ GRAPH 9 §4 — A NOTE HAS NO PROVISION, AND THE STORED ONE IS WRONG. The extractors file a reference under the last
+ * provision id BEFORE it, and an SI's explanatory note comes after its last article or schedule paragraph — so a note's
+ * "This Order brings into force section 45(1) …" is stored as a citation FROM `article-2` (uksi/2014/3245, measured).
+ * The node handed back to walk from is therefore the instrument as a whole, never the provision the row was filed under.
+ */
+export function noteNode(zone: RowZone, act: string, filedUnder: string): string {
+  return zone === 'explanatory-note' || zone === 'earlier-orders-note' ? act : filedUnder
+}
 
 const gidOf = (id: string) => id.split(':')[1] ?? id
 const provOf = (id: string) => id.split(':')[2] || null
@@ -384,7 +476,8 @@ function edgeRow(r: RawEdge, citing: string | null): OneStep {
     changeKind: reading?.kind ?? null, changeReason: reading?.reason ?? null,
     thisEndProvision: provOf(r.to_id), scope: provOf(r.to_id) ? 'provision' : 'act-wide',
     citingText: isCites ? citing : null, citingTextState: isCites ? citingTextStateOf(citing) : null,
-    citingTextOthers: 0, citedProvision: null, enablingRole: null, enablingRoleWords: null, origin: originOf(r.source), source: r.source,
+    citingTextOthers: 0, citedProvision: null, enablingRole: null, enablingRoleWords: null, provisionPower: null,
+    sourceZone: null, origin: originOf(r.source), source: r.source,
   }
 }
 
@@ -394,17 +487,17 @@ function edgeRow(r: RawEdge, citing: string | null): OneStep {
  * weaker kind of evidence (SURFACE 5). Measured: 116,741 of 121,279 cites rows find their words this way.
  */
 async function citingWords(rows: RawEdge[], targetForms: string[]) {
-  const out = new Map<string, Array<{ citation_text: string; target_provision_ref: string | null }>>()
+  const out = new Map<string, Array<{ citation_text: string; target_provision_ref: string | null; source_zone: string | null }>>()
   if (!rows.length) return out
   const gids = [...new Set(rows.flatMap((r) => gidCandidates(gidOf(r.from_id))))]
-  const got = await prisma.$queryRawUnsafe<Array<{ source_gid: string; source_provision_ref: string | null; target_provision_ref: string | null; citation_text: string }>>(
-    `SELECT source_gid, source_provision_ref, target_provision_ref, citation_text FROM ${CITATION_TABLE}
+  const got = await prisma.$queryRawUnsafe<Array<{ source_gid: string; source_provision_ref: string | null; target_provision_ref: string | null; citation_text: string; source_zone: string | null }>>(
+    `SELECT source_gid, source_provision_ref, target_provision_ref, citation_text, source_zone FROM ${CITATION_TABLE}
      WHERE source_gid = ANY($1::text[]) AND target_act_id = ANY($2::text[]) AND detection = 'markup' ORDER BY id`,
     gids, targetForms)
   for (const g of got) {
     const k = joinKey(g.source_gid, g.source_provision_ref)
     const list = out.get(k) ?? []
-    list.push({ citation_text: g.citation_text, target_provision_ref: g.target_provision_ref })
+    list.push({ citation_text: g.citation_text, target_provision_ref: g.target_provision_ref, source_zone: g.source_zone })
     out.set(k, list)
   }
   return out
@@ -430,21 +523,46 @@ export const ENABLING_SOURCE = 'citation_edge:enabling'
  */
 interface EnablingWords { text: string; role: EnablingRole | null; roleWords: string | null }
 type EnablingSet = { actLevel: EnablingWords | null; provisions: Map<string, EnablingWords> }
+/** A named provision `extract-provision-power.ts` never computed (a target added since it ran) — said, never guessed. */
+export const NOT_COMPUTED: ProvisionPower = { state: 'unknown', basis: 'not-computed', words: null }
 async function enablingRows(targetForms: string[]) {
-  const got = await prisma.$queryRawUnsafe<Array<{ source_gid: string; target_provision_ref: string | null; citation_text: string; enabling_role: EnablingRole | null; enabling_role_words: string | null }>>(
-    `SELECT source_gid, target_provision_ref, citation_text, enabling_role, enabling_role_words FROM ${CITATION_TABLE}
-     WHERE target_act_id = ANY($1::text[]) AND detection = 'enabling' ORDER BY source_gid, id`, targetForms)
-  const byInstrument = new Map<string, { power: EnablingSet; other: EnablingSet }>()
+  const got = await prisma.$queryRawUnsafe<Array<{
+    source_gid: string; target_provision_ref: string | null; citation_text: string; enabling_role: EnablingRole | null; enabling_role_words: string | null
+    pp_state: ProvisionPowerState | null; pp_basis: string | null; pp_words: string | null
+  }>>(
+    `SELECT c.source_gid, c.target_provision_ref, c.citation_text, c.enabling_role, c.enabling_role_words,
+            pp.state AS pp_state, pp.basis AS pp_basis, pp.words AS pp_words
+       FROM ${CITATION_TABLE} c
+       LEFT JOIN ${PROVISION_POWER_TABLE} pp ON pp.gid = c.target_act_id AND pp.provision_ref = c.target_provision_ref
+      WHERE c.target_act_id = ANY($1::text[]) AND c.detection = 'enabling' ORDER BY c.source_gid, c.id`, targetForms)
+  const byInstrument = new Map<string, { power: EnablingSet; unresolved: EnablingSet; other: EnablingSet }>()
+  const powerOf = new Map<string, ProvisionPower>()
   const empty = (): EnablingSet => ({ actLevel: null, provisions: new Map() })
   for (const g of got) {
-    const both = byInstrument.get(g.source_gid) ?? { power: empty(), other: empty() }
-    const i = g.enabling_role === 'power' ? both.power : both.other
+    const sets = byInstrument.get(g.source_gid) ?? { power: empty(), unresolved: empty(), other: empty() }
+    if (g.target_provision_ref && !powerOf.has(g.target_provision_ref)) {
+      powerOf.set(g.target_provision_ref, g.pp_state ? { state: g.pp_state, basis: g.pp_basis ?? '', words: g.pp_words } : NOT_COMPUTED)
+    }
+    // ⚠ The provision test only WITHHOLDS (onward-pure `enablingKindOf`, the one place this is decided).
+    const k = enablingKindOf(g.enabling_role, g.target_provision_ref, g.pp_state)
+    const i = k === 'made-under' ? sets.power : k === 'enacting-unresolved' ? sets.unresolved : sets.other
     const w = { text: g.citation_text, role: g.enabling_role, roleWords: g.enabling_role_words }
     if (g.target_provision_ref) { if (!i.provisions.has(g.target_provision_ref)) i.provisions.set(g.target_provision_ref, w) }
     else i.actLevel ??= w
-    byInstrument.set(g.source_gid, both)
+    byInstrument.set(g.source_gid, sets)
   }
-  return { read: got.length, byInstrument }
+  // ⚠⚠ PER INSTRUMENT, NOT PER ROW. The extractor writes an Act-level row for every anchor BESIDE its provision rows,
+  // with the same words and the same role. Classified row by row, an instrument whose only named provision is `none`
+  // kept its Act-level `power` row and came back "made under the Act as a whole" — on a walk from that very provision
+  // too — so the withholding never took effect (check:graph-9 G3 found 0 unresolved instruments in the whole table).
+  // Where an instrument's words name provisions, its Act-level row is that same anchor and goes with them.
+  for (const sets of byInstrument.values()) {
+    if (!sets.power.provisions.size && sets.unresolved.provisions.size && sets.power.actLevel) {
+      sets.unresolved.actLevel = sets.power.actLevel
+      sets.power.actLevel = null
+    }
+  }
+  return { read: got.length, byInstrument, powerOf }
 }
 
 /** The bridge's canonical form for each gid that has one (§2.5: the OTHER end is bridged too). */

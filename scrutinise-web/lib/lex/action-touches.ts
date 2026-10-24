@@ -115,14 +115,27 @@ const citatorRef = (path: string | null): string | null => (path ? path.toLowerC
 const PROVISION_MATCH = `(lower(target_provision_ref) = $2 OR lower(target_provision_ref) ~ ('^' || $2 || '([^0-9].*)?$'))`
 const JUDGMENTS_SHOWN = 10
 
+// ⚠ Decision 271 (GRAPH, 24 Oct): only `enabling_role = 'power'` is "made under". A row whose enacting words only MENTION the provision
+//   ('mention') or do not say ('unstated') is not, and was counted here until GRAPH 9's review found this surface had never been told.
+// ⚠ GRAPH 9: a power row naming a provision that confers none (`provision_power.state = 'none'`) is UNRESOLVED, not made under. The rule
+//   is PER INSTRUMENT, the same as onwardFrom's: the extractor writes an Act-level row beside every provision row from the same anchor,
+//   so a row-by-row filter withholds nothing. An instrument is made under the Act when it names a provision that is not `none`, or names
+//   no provision at all and has an Act-level power row; "names the Act without a section" means ALL its power rows are Act-level.
+const POWER = `c.detection = 'enabling' AND c.enabling_role = 'power' AND c.target_act_id = ANY($1::text[])`
+const PP_JOIN = `LEFT JOIN provision_power pp ON pp.gid = c.target_act_id AND pp.provision_ref = c.target_provision_ref`
+
 export async function madeUnderFor(acts: string[], path: string | null): Promise<MadeUnderBlock> {
   const ref = citatorRef(path)
   try {
-    const rows = await prisma.$queryRawUnsafe<Array<{ gid: string }>>(
-      `SELECT DISTINCT source_gid AS gid FROM citation_edge WHERE detection = 'enabling' AND target_act_id = ANY($1::text[])${ref ? ` AND ${PROVISION_MATCH}` : ''} ORDER BY 1 LIMIT 500`,
-      ...(ref ? [acts, ref] : [acts]))
+    const rows = ref
+      ? await prisma.$queryRawUnsafe<Array<{ gid: string }>>(
+        `SELECT DISTINCT c.source_gid AS gid FROM citation_edge c ${PP_JOIN} WHERE ${POWER} AND ${PROVISION_MATCH.replace(/target_provision_ref/g, 'c.target_provision_ref')} AND pp.state IS DISTINCT FROM 'none' ORDER BY 1 LIMIT 500`, acts, ref)
+      : await prisma.$queryRawUnsafe<Array<{ gid: string }>>(
+        `SELECT c.source_gid AS gid FROM citation_edge c ${PP_JOIN} WHERE ${POWER} GROUP BY 1
+          HAVING bool_or(c.target_provision_ref IS NOT NULL AND pp.state IS DISTINCT FROM 'none') OR NOT bool_or(c.target_provision_ref IS NOT NULL)
+          ORDER BY 1 LIMIT 500`, acts)
     const actLevel = ref ? (await prisma.$queryRawUnsafe<Array<{ n: number }>>(
-      `SELECT COUNT(DISTINCT source_gid)::int n FROM citation_edge WHERE detection = 'enabling' AND target_act_id = ANY($1::text[]) AND target_provision_ref IS NULL`, acts))[0].n : 0
+      `SELECT COUNT(*)::int n FROM (SELECT c.source_gid FROM citation_edge c WHERE ${POWER} GROUP BY 1 HAVING NOT bool_or(c.target_provision_ref IS NOT NULL)) x`, acts))[0].n : 0
     const titles = rows.length ? await prisma.$queryRawUnsafe<Array<{ gid: string; title: string | null }>>(`SELECT gid, title FROM corpus_acts WHERE gid = ANY($1::text[])`, rows.map((r) => r.gid)) : []
     const t = new Map(titles.map((x) => [x.gid, x.title]))
     return { total: rows.length, actLevel, failed: null, rows: rows.map((r) => ({ gid: r.gid, title: t.get(r.gid) ?? null, link: `https://www.legislation.gov.uk/${r.gid}` })) }

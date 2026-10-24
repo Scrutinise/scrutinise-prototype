@@ -115,6 +115,15 @@ DO $$ BEGIN
       CHECK ((detection = 'enabling') = (enabling_role IS NOT NULL)) NOT VALID;
   END IF;
 END $$;
+-- GRAPH 9 §4 (24 Oct 2026): WHERE in the source document the reference sits. An SI's explanatory note and its note as
+-- to earlier commencement orders are NOT PART OF THE LAW; tagged, not excluded (Charlie: a note often says why the
+-- reference exists). Set by extract-citation-edges.ts on markup/text rows and by backfill-g9-source-zone.ts on rows
+-- stored before it existed. NULL = not determined: an enabling or case-law row, or a stored row the bulk file on
+-- disk can no longer reproduce (counted by the backfill, never guessed).
+ALTER TABLE ${CITATION_TABLE} ADD COLUMN IF NOT EXISTS source_zone text;
+ALTER TABLE ${CITATION_TABLE} DROP CONSTRAINT IF EXISTS citation_edge_source_zone_ck;
+ALTER TABLE ${CITATION_TABLE} ADD CONSTRAINT citation_edge_source_zone_ck
+  CHECK (source_zone IN ('body', 'explanatory-note', 'earlier-orders-note'));
 -- The dominant query is INBOUND, not outbound: "what points at this Act?"
 CREATE INDEX IF NOT EXISTS citation_edge_target_act ON ${CITATION_TABLE} (target_act_id);
 CREATE INDEX IF NOT EXISTS citation_edge_target_uri ON ${CITATION_TABLE} (target_uri);
@@ -127,7 +136,7 @@ async function main() {
   const pool = getNeonPool()
   if (!process.argv.includes('--status')) {
     await pool.query(DDL)
-    console.log(`[setup-citation-edge] ${CITATION_TABLE} + 4 indexes + decision-271 enabling_role ensured`)
+    console.log(`[setup-citation-edge] ${CITATION_TABLE} + 4 indexes + decision-271 enabling_role + GRAPH 9 source_zone ensured`)
   }
   const exists = await pool.query(`SELECT to_regclass('${CITATION_TABLE}') AS t`)
   if (!exists.rows[0].t) { console.log('[setup-citation-edge] table does not exist'); await endNeonPool(); return }
