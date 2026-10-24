@@ -16,6 +16,7 @@ import * as CD from '@/lib/lex/action-conditions-server'
 import * as RS from '@/lib/lex/action-resort'
 import * as DR from '@/lib/lex/action-draft'
 import * as TO from '@/lib/lex/action-touches'
+import * as HK from '@/lib/lex/heading-kind'
 
 export const maxDuration = 300
 
@@ -47,7 +48,7 @@ export async function POST(req: Request, { params }: Params) {
   try {
     switch (b.op) {
       case 'createHeading': result = await S.createHeading(id, b.name, b.colourKey); break
-      case 'updateHeading': result = await S.updateHeading(id, b.headingId, { name: b.name, colourKey: b.colourKey, hidden: b.hidden }); break
+      case 'updateHeading': result = await S.updateHeading(id, b.headingId, { name: b.name, colourKey: b.colourKey, hidden: b.hidden, kind: b.kind }); break
       case 'deleteHeading': result = await S.deleteHeading(id, b.headingId); break
       case 'assignHeading': result = await S.assignHeading(id, b.actionIds, b.headingId); break
       case 'assignToNewHeading': result = await S.assignToNewHeading(id, b.actionIds, b.name); break
@@ -111,6 +112,15 @@ export async function POST(req: Request, { params }: Params) {
         break
       }
       case 'setAfter': result = await S.setAfter(id, b.actionId, b.afterId, b.on, b.because ?? null); break
+      case 'proposeHeadingKinds': {
+        // asks first: the measured price, re-reckoned here, must not exceed what the owner agreed to
+        const price = HK.kindProposalPrice()
+        result = price.pence == null ? { ok: false, error: 'The price of Lex proposing kinds is not measured yet, so it is not offered. Set each heading’s kind on its row. Nothing was changed.' }
+          : b.agreedPence + 0.05 < price.pence ? { ok: false, error: `This now costs about ${price.pence}p, more than the ${b.agreedPence}p agreed. Nothing was asked; press it again to see the new price.` }
+          : await HK.proposeHeadingKinds(id, uid)
+        break
+      }
+      case 'answerKindProposal': result = await HK.answerKindProposal(id, b.headingId, b.accept); break
     }
   } catch (err) {
     console.error('[action-structure] failed', b.op, err)

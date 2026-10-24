@@ -10,6 +10,7 @@
 
 import { z } from 'zod'
 import { LIMITS } from './input-limits'
+import { HEADING_KINDS } from './action-documents-pure'
 
 const ids = z.array(z.string().min(1)).min(1).max(300)
 const SLOT_NAMES = ['who', 'incentiveNow', 'whatChangesIt', 'skill', 'how', 'against', 'worked'] as const
@@ -40,7 +41,7 @@ const DraftInstructionBody = z.object({
 
 export const ActionStructureBody = z.discriminatedUnion('op', [
   z.object({ op: z.literal('createHeading'), name: z.string().min(1).max(LIMITS.headingName), colourKey: z.string().max(30).optional() }),
-  z.object({ op: z.literal('updateHeading'), headingId: z.string(), name: z.string().min(1).max(LIMITS.headingName).optional(), colourKey: z.string().max(30).optional(), hidden: z.boolean().optional() }),
+  z.object({ op: z.literal('updateHeading'), headingId: z.string(), name: z.string().min(1).max(LIMITS.headingName).optional(), colourKey: z.string().max(30).optional(), hidden: z.boolean().optional(), kind: z.enum(HEADING_KINDS).nullable().optional() }),
   z.object({ op: z.literal('deleteHeading'), headingId: z.string() }),
   z.object({ op: z.literal('assignHeading'), actionIds: ids, headingId: z.string().nullable() }),
   // 26-S browser pass B — the bulk bar's "+ New heading…": the heading is made and the selected rows go onto it in ONE request.
@@ -104,6 +105,9 @@ export const ActionStructureBody = z.discriminatedUnion('op', [
   z.object({ op: z.literal('touches'), actionId: z.string() }),
   // 26-V1b §7b (262) — step 4, Order by dependency only: `actionId` must come after `afterId` (on), or no longer (off); `because` optional.
   z.object({ op: z.literal('setAfter'), actionId: z.string(), afterId: z.string(), on: z.boolean(), because: z.string().max(LIMITS.orderBecause).nullable().optional() }),
+  // 26-V2c (268, revised) — Lex proposes a kind for each heading with none (asked first, at the measured price); the owner answers each.
+  z.object({ op: z.literal('proposeHeadingKinds'), agreedPence: z.number().min(0).max(500) }),
+  z.object({ op: z.literal('answerKindProposal'), headingId: z.string(), accept: z.boolean() }),
 ])
 
 /** What the UI must send — the schema's INPUT type, so an optional/defaulted key stays optional. */
@@ -128,6 +132,7 @@ export const OP_WORDS: Record<ActionStructureOp, string> = {
   consolidatePlan: '“Consolidate this heading”', consolidate: '“Consolidate this heading”', restoreHeading: '“Bring the heading back”', setHeadingsHidden: '“Hide all / Show all headings”',
   saveDraft: 'Saving the drafting instruction', draftAction: '“Draft this clause”', acceptDraft: 'Using Lex’s draft', dismissDraft: 'Dismissing Lex’s draft', touches: '“What this touches”',
   setAfter: 'Saving what this action must come after',
+  proposeHeadingKinds: '“Ask Lex to propose kinds”', answerKindProposal: 'Answering Lex’s proposed kind',
 }
 
 /** And the words for the inputs those controls send. */
@@ -139,4 +144,5 @@ export const INPUT_WORDS: Record<string, string> = {
   instruction: 'the drafting instruction', provisions: 'the provisions it amends, repeals or relies on', docUri: 'the Act’s id (for example ukpga/2010/25)', provisionPath: 'the provision (for example section/5)', clause: 'the clause', extent: 'the extent', instrument: 'the instrument', precedents: 'the precedents',
   op: 'the control', step: 'the step (1 to 4)', note: 'the note', slot: 'the question being answered', text: 'the answer', direction: 'the direction (with, against, indifferent)', linkActionId: 'the linked action', replace: 'the choice to replace your answer',
   afterId: 'the action it must come after', on: 'whether it must come after', because: 'the reason (“because …”)',
+  kind: 'the kind of heading', agreedPence: 'the price you agreed', accept: 'accept or not',
 }

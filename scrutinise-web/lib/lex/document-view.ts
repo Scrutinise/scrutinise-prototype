@@ -20,6 +20,7 @@ import { heldSectionText } from './action-touches'
 import { versionChange, changeWords, type VersionChange } from './document-view-pure'
 import { provisionWords, instructionVersion, RELATION_WORD } from './law-panel-words'
 import type { LawRelation } from './idea-law-pure'
+import { issuesOn } from './issue-attach'
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string }
 
@@ -60,6 +61,8 @@ export interface DocumentViewData {
   /** 26-V1b §4 — the held text of every section the current instruction amends, repeals or modifies, keyed `docUri|provisionPath`
    *  (the three views are computed from it on the screen; pure). `text` null with the reason in words when it is not held. */
   held: Record<string, { text: string | null; reason: string }>
+  /** 26-V2c (§7) — the open issues attached to this document, in part order (partN null = the document as a whole). */
+  issues: Array<{ id: string; title: string | null; text: string; partN: number | null; attachedBy: string | null; attachReason: string | null; sourceModel: string | null }>
 }
 
 async function titlesFor(uris: string[]): Promise<Record<string, string | null>> {
@@ -131,6 +134,7 @@ export async function documentView(ideaId: string, documentId: string): Promise<
       setAside: proposalRows.filter((p) => p.answer === 'DISMISSED').map((p) => ({ v: p.v, at: p.createdAt.toISOString(), answeredAt: p.answeredAt?.toISOString() ?? null, replacedBy: proposalRows.find((q) => q.v > p.v)?.v ?? null })),
       law: { live: live.filter((l) => l.relation !== 'precedent').map((l) => lawWords(l, titles)), precedents: live.filter((l) => l.relation === 'precedent').length },
       titles, held,
+      issues: await issuesOn(ideaId, { documentId }),
     },
   }
 }

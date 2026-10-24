@@ -3185,6 +3185,13 @@ model ActionHeading {
   purpose    String?
   /// 26-S2 190 - a retired heading is ARCHIVED, not deleted; lib/prisma.ts hides archived headings from direct reads. DDL: prisma/lex_26s2_conditions.sql.
   archivedAt DateTime?
+  /// 26-V2c (268, revised) - the type of instrument this heading's actions make: PRIMARY_LEGISLATION · CODE · MANAGEMENT_CODE · PLATFORM ·
+  /// BUDGET · TRANSPARENCY · GUIDANCE_PILOT · OTHER (CHECK). NULL = not yet said. Set by the OWNER only; rules bind to it, never to the name
+  /// (PLATFORM derives a specification). DDL: prisma/lex_26v2c_heading_kind_issue_attach.sql.
+  kind       String?
+  /// Lex's proposed kind, waiting for the owner (Accept sets `kind` and clears it; "Not this" clears it). Same CHECK as `kind`.
+  proposedKind       String?
+  proposedKindReason String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @default(now()) @updatedAt
 
@@ -4414,12 +4421,29 @@ model DeepeningIssue {
   /// §24.3-ready and deliberately unused today: review findings land on this same list.
   /// The column exists now so building §24 is an insert, not a migration of live rows.
   reviewFindingId      String?
+
+  // ════════ 26-V2c §7 (239) — AN ISSUE IS ATTACHED TO THE ACTION, DOCUMENT AND PART IT CONCERNS ════════
+  // All null = on the proposal as a whole (every issue before 26-V2c). DDL: prisma/lex_26v2c_heading_kind_issue_attach.sql — FKs
+  // ON DELETE SET NULL (an issue is never deleted because what it was attached to went), and a CHECK that a document or part needs its
+  // action, and a part its document. ⚠ No Prisma relations on purpose (as ActionDocument): the keys live in the SQL.
+  // ⚠ A trigger in the same SQL ("DeepeningIssue_detach") clears partN / the attach fields when a key is cleared, or a delete is refused.
+  actionId             String?
+  documentId           String?
+  /// The part's number within the document's current version (38.2.1 → 1).
+  partN                Int?
+  /// LEX (proposed by the re-attach pass, with its reason) · OWNER (moved by hand). CHECK.
+  attachedBy           String?
+  attachReason         String?
+  attachedAt           DateTime?
+
   createdAt            DateTime             @default(now())
   resolvedAt           DateTime?
   updatedAt            DateTime             @updatedAt
 
   @@index([ideaId, passKey])
   @@index([ideaId, status])
+  @@index([actionId])
+  @@index([documentId])
 }
 
 enum DeepeningPassStatus {

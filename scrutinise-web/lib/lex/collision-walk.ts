@@ -23,6 +23,8 @@ export type Walker = (target: string, opts: { kinds: OnwardKind[]; limit: number
   Promise<Pick<OnwardResult, 'rows' | 'perKind' | 'unaddressable' | 'freshness'>>
 
 const OPERATION: OnwardKind[] = ['amends', 'repeals', 'modifies', 'commences']
+/** "Provisions that refer to this — for review": marked-up citations, and (271) enacting words that mention without making under. */
+const REFERS_KINDS: OnwardKind[] = ['cites', 'enacting-mention']
 /** The clause's lines that change a provision; a "relies on" or "precedent" line changes nothing, so it has no parts. */
 export const WALKED_RELATIONS: ReadonlySet<string> = new Set(['amends', 'repeals', 'modifies'])
 export const WALK_LIMITS = {
@@ -54,7 +56,7 @@ export async function onwardRows(clause: EffectRow[], walk: Walker = onwardFrom 
   let walked = 0
   const add = (s: OneStep, part: Exclude<ReportPart, 'clause'>, step: number, parent: number): EffectRow => {
     const r: EffectRow = {
-      i: next++, depth: 1 + step, parent, relation: s.kind, docUri: s.act, provisionPath: pathOf(s), actTitle: s.actTitle, state: 'held',
+      i: next++, depth: 1 + step, parent, relation: s.kind === 'enacting-mention' ? 'mentioned in enacting words' : s.kind, docUri: s.act, provisionPath: pathOf(s), actTitle: s.actTitle, state: 'held',
       note: s.changeKind ? CHANGE_WORD[s.changeKind] ?? s.changeKind : '', effects: [], part, step, scope: s.scope,
       // made-under rows carry their stored enacting words too: the extractor files a PROCEDURAL mention ("the requirements of section 20
       // … have been complied with") as a power (GRAPH 8 §5, §7.4), and only the words let a reader see which it is
@@ -95,7 +97,7 @@ export async function onwardRows(clause: EffectRow[], walk: Walker = onwardFrom 
     notes.push({
       from: c.i, part: 'depends',
       line: mu.counted
-        ? `Made under it: ${plural(mu.counted, 'instrument')} at step 1 — ${mu.provision} name this provision, ${mu.actWide} only the Act as a whole${mu.returned < mu.counted ? ` (${mu.returned} shown)` : ''}; ${frontier.length ? `the walk was stopped at step ${WALK_LIMITS.madeUnderSafety} with ${frontier.length} still to walk` : `the walk ended after step ${perStep.filter((x) => x > 0).length}`}. ⚠ A procedural mention can be recorded as a power (GRAPH 8 §5): read the words.`
+        ? `Made under it: ${plural(mu.counted, 'instrument')} at step 1 — ${mu.provision} name this provision, ${mu.actWide} only the Act as a whole${mu.returned < mu.counted ? ` (${mu.returned} shown)` : ''}; ${frontier.length ? `the walk was stopped at step ${WALK_LIMITS.madeUnderSafety} with ${frontier.length} still to walk` : `the walk ended after step ${perStep.filter((x) => x > 0).length}`}. Only instruments whose enacting words name this as the power are here (271); one whose words only mention it is under “Provisions that refer to this”.`
         : 'Made under it: nothing is recorded as made under this provision.',
     })
 
@@ -117,19 +119,22 @@ export async function onwardRows(clause: EffectRow[], walk: Walker = onwardFrom 
     })
 
     // ── Provisions that refer to this — for review: step 1 with the words, step 2 weak, never step 3 ──
-    const ref1 = await call(target, ['cites'], WALK_LIMITS.perNode, 1)
+    // 271 (GRAPH, 24 Oct): an instrument whose enacting words only MENTION this provision ("the requirements of …", "laid before …") is
+    // a reference, read with its words — never "made under it". GRAPH's reader returns it as its own kind; it is walked with the cites.
+    const ref1 = await call(target, REFERS_KINDS, WALK_LIMITS.perNode, 1)
     const refRows = ref1.rows.map((s) => ({ s, r: add(s, 'refers', 1, c.i) }))
     const refNodes = [...new Map(refRows.map((x) => [x.s.provision, x])).values()]
     let ref2 = 0
     for (const x of refNodes.slice(0, WALK_LIMITS.step2From)) {
-      const res = await call(x.s.provision, ['cites'], 10, 2)
+      const res = await call(x.s.provision, REFERS_KINDS, 10, 2)
       for (const s of res.rows) { add(s, 'refers', 2, x.r.i); ref2++ }
     }
-    const rc = counted(ref1, ['cites'])
+    const rc = counted(ref1, REFERS_KINDS)
+    const em = counted(ref1, ['enacting-mention'])
     notes.push({
       from: c.i, part: 'refers',
       line: rc.counted
-        ? `${plural(rc.counted, 'reference')} at step 1 — ${rc.provision} name this provision, ${rc.actWide} only the Act as a whole${rc.returned < rc.counted ? ` (${rc.returned} shown)` : ''}; step 2, weak, from ${Math.min(refNodes.length, WALK_LIMITS.step2From)} of ${refNodes.length} (${plural(ref2, 'row')}). Never shown past step 2. The words are the stored window before each reference, cut at both ends. These are marked-up citations only: a mention in plain text is not here (GRAPH 8 §7.1).`
+        ? `${plural(rc.counted, 'reference')} at step 1${em.counted ? ` (${em.counted} of them ${em.counted === 1 ? 'an instrument whose' : 'instruments whose'} enacting words mention this provision without making ${em.counted === 1 ? 'it' : 'them'} under it — read the words)` : ''} — ${rc.provision} name this provision, ${rc.actWide} only the Act as a whole${rc.returned < rc.counted ? ` (${rc.returned} shown)` : ''}; step 2, weak, from ${Math.min(refNodes.length, WALK_LIMITS.step2From)} of ${refNodes.length} (${plural(ref2, 'row')}). Never shown past step 2. The words are the stored window before each reference, cut at both ends. These are marked-up citations only: a mention in plain text is not here (GRAPH 8 §7.1).`
         : 'No marked-up citation of this provision is held. A mention in plain text would not be here (GRAPH 8 §7.1).',
     })
   }

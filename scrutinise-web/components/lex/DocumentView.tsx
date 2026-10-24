@@ -143,7 +143,7 @@ export default function DocumentView({ ideaId, documentId, readOnly = false, onC
           : <InstructionTab data={data} />)}
         {tab === 'touches' && data.isInstruction && <TouchesTab data={data} ideaId={ideaId} />}
         {tab === 'versions' && <VersionsTab data={data} />}
-        {tab === 'issues' && <p data-document-issues>The five review passes raise their issues on the idea as a whole; they are not yet attached to documents or their parts (that is the next stage of this work). See them in the Risks view.</p>}
+        {tab === 'issues' && <IssuesTab data={data} />}
       </div>
     </div>
   )
@@ -308,6 +308,25 @@ function TouchBlocks({ t, title }: { t: Touch; title: string | null }) {
 }
 function Block({ n, title, data, children }: { n: number; title: string; data?: string; children: React.ReactNode }) {
   return <div data-touch-block={data ?? n}><p className="font-semibold">{n}. {title}</p><div className="ml-3">{children}</div></div>
+}
+
+// ── Issues (26-V2c, §7): the open issues attached to this document, by part ─────────────────────────────────────
+function IssuesTab({ data }: { data: DocumentViewData }) {
+  const { doc, issues } = data
+  if (!issues.length) return <p data-document-issues="0">No open issue is attached to {doc.d}. Issues raised on the proposal as a whole, or on the action, are in the Risks view and the action’s record.</p>
+  const where = (n: number | null) => (n == null ? `${doc.d} as a whole` : `part ${partNumber(doc.actionNumber, doc.number, n)}`)
+  return (
+    <ul className="space-y-1.5" data-document-issues={issues.length}>
+      {issues.map((i) => (
+        <li key={i.id} className="border border-zinc-200 rounded p-1.5" data-document-issue={i.partN ?? 'whole'}>
+          <p><span className="font-semibold">{i.title ?? 'An issue'}</span> · on {where(i.partN)}</p>
+          <p className="whitespace-pre-wrap">{i.text}</p>
+          <p className="text-zinc-600">{i.attachedBy === 'LEX' ? `Placed here by Lex${i.attachReason ? `: ${i.attachReason}` : ''}` : 'Placed here by you'}{i.sourceModel ? ` · raised by ${i.sourceModel}` : ''}</p>
+        </li>
+      ))}
+      <li className="text-zinc-600">Answer an issue in the Risks view, or by redrafting this document.</li>
+    </ul>
+  )
 }
 
 // ── Versions (3e) ────────────────────────────────────────────────────────────────────────────────────────────

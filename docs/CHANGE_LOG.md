@@ -1,5 +1,16 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-24 18:20 UTC - LEX 26-V2c: headings have a kind (268 revised); issues attach to action, document and part; Lex's side of 271; 270 recorded
+
+- **268 revised** (24 Oct (4, revised)): the name match from fc0012b is removed. `ActionHeading.kind` is one of eight (primary legislation · code · management code · platform · budget · transparency · guidance or pilot · other), set by the owner on the heading row; `needsSpecification(kind)` is true for PLATFORM only. Lex proposes kinds for headings with none into `proposedKind` + reason, never into `kind`; Accept / Not this beside the heading. The tree says the kind in words, or "kind not yet said".
+  - ⚠ Until Charlie accepts PLATFORM for "The platform" on 452c5ade, its actions no longer need a specification.
+- **V2c issues** (BRIEF_26V §7): `DeepeningIssue` gains `actionId` / `documentId` / `partN` / `attachedBy` (LEX|OWNER) / `attachReason` / `attachedAt`. Lex places open, unplaced issues in batches of 25 (`issues.reattach`); a placement naming something that does not exist falls back one level and is counted in words; the owner's placement is never overwritten; Undo removes Lex's only. Counts with ⚑ on actions and documents in the tree; an Issues tab on the document lists them by part with Lex's reason. No re-attach button yet: run per idea on approval.
+- **SQL** `prisma/lex_26v2c_heading_kind_issue_attach.sql`, applied 18:05 UTC (Charlie approved) after whichdb (ep-old-dust-aboxi69a / neondb), columns read back; nothing seeded. Amended and re-applied 18:12: the check's cleanup found that ON DELETE SET NULL left `partN` (or `attachedBy`) behind and the CHECK refused the delete. A BEFORE UPDATE trigger (`DeepeningIssue_detach`) now clears what hangs off a cleared key; asserted.
+- **Prices, measured on scratch** (`scripts/measure-26v2c.ts`, 452c5ade read-only): kinds 0.98p and 0.97p for 7 headings; attach 4.74p and 4.71p per 50 issues (≈16.6p for all 176). Placements 0 document / 12–16 action / 34–38 proposal per 50, read and sensible (research and diagnosis questions stay on the proposal); the two runs differ by 4 action placements. The two kind runs disagree on Rules & Standards (budget / code) and Oversight (other / transparency).
+- **271, Lex side**: "Provisions that refer to this" walks `cites` + `enacting-mention`; a mention row reads "mentioned in enacting words" with its words; the notes count mentions and say made-under holds powers only.
+- **270**: one live Lex turn on a scratch copy of 452c5ade, "What else would I need to look at if I changed section 20 of CRaG 2010?": 13.79p (LlmSpend). No "would fall" wording; it said s.20 concerns treaties. Fault: three instruments listed as "made under" s.20 without their words, which 271 addresses.
+- **Checks**: `check:lex-26v2c` 44/44 (A pure 15, B scratch, C Chromium); `check:lex-26v` 61/61 (fixture gives the enacting mention its own provision); `check:lex-26v2b` 47/47; `check:prompt-examples` and `check:client-boundary` pass; tsc clean; clean-build --fast PASS.
+
 ## 2026-10-24 16:05 UTC - GRAPH: decision 271 (made-under only where the enacting words name the power) in extraction and the reader; check:idea-law E1 split into E1a/b/c
 
 - **Report:** `docs/GRAPH_271_REPORT.md`. Applied to Neon 16:00–16:01 UTC; reader **not committed, not deployed**.

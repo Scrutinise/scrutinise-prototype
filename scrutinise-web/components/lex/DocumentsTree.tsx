@@ -11,7 +11,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { DocumentTree, TreeActionRow, TreeDocument } from '@/lib/lex/action-documents'
-import { KIND_WORD, GENERATED_KINDS, documentNumber, needsLine, partNumber, treeCounts, type DocumentKind } from '@/lib/lex/action-documents-pure'
+import { KIND_WORD, GENERATED_KINDS, HEADING_KIND_WORD, documentNumber, isHeadingKind, needsLine, partNumber, treeCounts, type DocumentKind } from '@/lib/lex/action-documents-pure'
 import { explainFailure } from '@/lib/api-rejection'
 import { LIMITS } from '@/lib/lex/input-limits'
 import FocusDialog from './FocusDialog'
@@ -103,7 +103,7 @@ export default function DocumentsTree({ ideaId, readOnly = false }: { ideaId: st
             <div className="flex items-center bg-zinc-50">
               <button type="button" onClick={() => toggle(hk)} aria-expanded={hOpen} className="flex-1 flex items-center gap-2 px-2 py-1 text-left">
                 <span aria-hidden>{hOpen ? '▾' : '▸'}</span><span className="text-sm font-semibold">{h.name}</span>
-                <span className="text-[11px] text-zinc-500">{rows.length} action{rows.length === 1 ? '' : 's'}</span>
+                <span className="text-[11px] text-zinc-500">{rows.length} action{rows.length === 1 ? '' : 's'}{h.id && <span data-tree-heading-kind={h.kind ?? 'none'}> · {isHeadingKind(h.kind) ? HEADING_KIND_WORD[h.kind] : 'kind not yet said'}</span>}</span>
               </button>
               {!readOnly && h.actions.some((a) => a.missing.length) && (
                 <button type="button" className="text-xs underline px-2 shrink-0" data-draft-heading onClick={() => setDrafting({ headingId: h.id, label: h.name })}>Draft what this heading needs</button>
@@ -150,7 +150,7 @@ function ActionRow({ ideaId, a, readOnly, busy, opened, closed, toggle, onOpen, 
         <button type="button" onClick={() => toggle(ak)} aria-expanded={isOpen} className="text-xs mt-0.5" aria-label={`${isOpen ? 'Close' : 'Open'} #${a.number}`}>{isOpen ? '▾' : '▸'}</button>
         <span aria-hidden className="text-xs mt-0.5">■</span>
         <div className="flex-1 min-w-0">
-          <p className="text-sm"><span className="font-semibold">#{a.number}</span> {a.title ?? a.statement.slice(0, 120)}</p>
+          <p className="text-sm"><span className="font-semibold">#{a.number}</span> {a.title ?? a.statement.slice(0, 120)}{a.issues > 0 && <span className="text-[11px] font-semibold" data-tree-issues={a.issues}> · ⚑ {a.issues} open issue{a.issues === 1 ? '' : 's'} on this action</span>}</p>
           <p className="text-[11px] text-zinc-600" data-needs-line>
             {needsLine(a.needs.kinds.length, live.filter((d) => a.needs.kinds.includes(d.kind)).length, live.filter((d) => a.needs.kinds.includes(d.kind) && d.status === 'ACCEPTED').length)}
             {' · '}{a.needs.why}{a.needs.overridden ? ' (set by hand)' : ''}
@@ -168,6 +168,7 @@ function ActionRow({ ideaId, a, readOnly, busy, opened, closed, toggle, onOpen, 
                 className={`w-full text-left text-xs rounded px-1.5 py-1 ${opened === d.id ? 'border-2 border-zinc-900' : 'border border-zinc-200'}`}>
                 <span aria-hidden>●</span> <span className="font-semibold">{documentNumber(a.number, d.number)}</span> {d.title}
                 <span className="text-zinc-600"> — {KIND_WORD[d.kind]} · <span data-doc-status>{statusWords(d.status, d.acceptedV, d.current?.v ?? null)}</span>{d.stale ? ' · out of date' : ''}{d.proposalWaiting ? ' · Lex’s proposal waiting' : ''} · {d.d}</span>
+                {d.issues > 0 && <span className="font-semibold" data-tree-doc-issues={d.issues}> · ⚑ {d.issues} open issue{d.issues === 1 ? '' : 's'}</span>}
                 {opened === d.id && <span className="ml-1 font-semibold">open</span>}
               </button>
               {opened === d.id && <div className="ml-5 mt-1"><DocumentView ideaId={ideaId} documentId={d.id} readOnly={readOnly} onChanged={onChanged} /></div>}

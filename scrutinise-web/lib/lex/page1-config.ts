@@ -488,6 +488,11 @@ export interface CanonicalActionHeading {
   colourKey: string
   hidden: boolean
   orderIndex: number
+  /** 26-V2c (268) — the type of instrument the heading's actions make (HEADING_KINDS); null = not yet said. */
+  kind: string | null
+  /** Lex's proposed kind and its reason, waiting for the owner; null when none. */
+  proposedKind: string | null
+  proposedKindReason: string | null
 }
 
 /** A costing benchmark (§18.3 + COSTING_SCOPE §3) — a shared, sourced default value. */

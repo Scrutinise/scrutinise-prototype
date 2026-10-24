@@ -280,7 +280,7 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
   const actions: CanonicalAction[] = actionRows.filter((a) => a.status === 'LIVE').map(toAction)
   const setAsideActions: CanonicalAction[] = actionRows.filter((a) => a.status !== 'LIVE').map(toAction)
   const actionHeadings = (await prisma.actionHeading.findMany({ where: { ideaId }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }] }))
-    .map((h) => ({ id: h.id, name: h.name, colourKey: h.colourKey, hidden: h.hidden, orderIndex: h.orderIndex }))
+    .map((h) => ({ id: h.id, name: h.name, colourKey: h.colourKey, hidden: h.hidden, orderIndex: h.orderIndex, kind: h.kind, proposedKind: h.proposedKind, proposedKindReason: h.proposedKindReason }))
 
   // §19-C Task 6 — cost lines under this idea's actions.
   const costLineRows = await prisma.costLine.findMany({

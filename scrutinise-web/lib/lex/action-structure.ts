@@ -33,6 +33,7 @@ import { readConditions } from './action-conditions-server'
 import { TEST_SYSTEM, TEST_SCHEMA, placeGroups } from './action-ideas'
 import { parseRecord } from './action-record'
 import { cycleRefusal } from './action-order-pure'
+import { HEADING_KINDS, HEADING_KIND_WORD, isHeadingKind } from './action-documents-pure'
 const TITLE_MAX = LIMITS.actionTitle
 
 export type Result<T = unknown> = { ok: true; data: T } | { ok: false; error: string }
@@ -82,13 +83,14 @@ export async function createHeading(ideaId: string, name: string, colourKey?: st
   return { ok: true, data: { id: row.id, name: row.name, created: true } }
 }
 
-export async function updateHeading(ideaId: string, headingId: string, patch: { name?: string; colourKey?: string; hidden?: boolean }): Promise<Result> {
+export async function updateHeading(ideaId: string, headingId: string, patch: { name?: string; colourKey?: string; hidden?: boolean; kind?: string | null }): Promise<Result> {
   const h = await prisma.actionHeading.findFirst({ where: { id: headingId, ideaId }, select: { id: true } })
   if (!h) return fail('That heading is not on this idea.')
   const data: Record<string, unknown> = {}
   if (patch.name !== undefined) { const n = clip(patch.name, 60); if (!n) return fail('A heading needs a name.'); data.name = n }
   if (patch.colourKey !== undefined) { if (!HEADING_PALETTE.some((c) => c.key === patch.colourKey)) return fail(`"${patch.colourKey}" is not one of the heading colours.`); data.colourKey = patch.colourKey }
   if (patch.hidden !== undefined) data.hidden = !!patch.hidden
+  if (patch.kind !== undefined) { if (patch.kind !== null && !isHeadingKind(patch.kind)) return fail(`"${patch.kind}" is not one of the heading kinds (${HEADING_KINDS.map((k) => HEADING_KIND_WORD[k]).join(', ')}).`); data.kind = patch.kind; data.proposedKind = null; data.proposedKindReason = null /* the owner's choice answers any proposal waiting */ }
   await prisma.actionHeading.update({ where: { id: headingId }, data: data as never })
   return { ok: true, data: null }
 }

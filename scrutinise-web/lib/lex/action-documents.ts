@@ -344,25 +344,31 @@ export function staleWhy(kind: string, last: { effectsLoadDate: Date | null; pay
 export interface TreeDocument {
   id: string; number: number; d: string; kind: DocumentKind; title: string; status: DocumentStatus; acceptedV: number | null
   current: { v: number; author: string; at: string } | null; versions: number; proposalWaiting: boolean; parts: Array<{ n: number; title: string }>; stale: string | null
+  /** 26-V2c — open issues attached to this document (any of its parts). */
+  issues: number
 }
-export interface TreeActionRow { id: string; number: number | null; title: string | null; statement: string; headingId: string | null; avenue: string | null; needs: Needs; documents: TreeDocument[]; missing: DocumentKind[] }
-export interface DocumentTree { headings: Array<{ id: string | null; name: string; actions: TreeActionRow[] }>; loadDate: string | null }
+/** `issues`: open issues attached to the action itself, not to one of its documents (those are counted on the document). */
+export interface TreeActionRow { id: string; number: number | null; title: string | null; statement: string; headingId: string | null; avenue: string | null; needs: Needs; documents: TreeDocument[]; missing: DocumentKind[]; issues: number }
+export interface DocumentTree { headings: Array<{ id: string | null; name: string; kind: string | null; actions: TreeActionRow[] }>; loadDate: string | null }
 
 export async function documentTree(ideaId: string, opts: { recordStale?: boolean } = {}): Promise<DocumentTree> {
   const [actions, headings, docs, loadDate] = await Promise.all([
     prisma.lexCoherentAction.findMany({ where: { ideaId, status: 'LIVE' }, select: { id: true, number: true, title: true, practicalStep: true, headingId: true, avenue: true, record: true }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }] }),
-    prisma.actionHeading.findMany({ where: { ideaId }, select: { id: true, name: true }, orderBy: [{ orderIndex: 'asc' }] }).catch(() => [] as Array<{ id: string; name: string }>),
+    prisma.actionHeading.findMany({ where: { ideaId }, select: { id: true, name: true, kind: true }, orderBy: [{ orderIndex: 'asc' }] }).catch(() => [] as Array<{ id: string; name: string; kind: string | null }>),
     prisma.actionDocument.findMany({ where: { ideaId }, include: { versions: { orderBy: [{ role: 'asc' }, { v: 'asc' }] } }, orderBy: [{ number: 'asc' }] }),
     effectsLoadDate().catch(() => null),
   ])
+  // 26-V2c — open issues per action and per document (§7: "shown in the tree as a count on the node")
+  const attached = await prisma.deepeningIssue.groupBy({ by: ['actionId', 'documentId'], where: { ideaId, status: 'OPEN', actionId: { not: null } }, _count: true })
+  const issuesOn = (actionId: string, documentId: string | null) => attached.find((g) => g.actionId === actionId && g.documentId === documentId)?._count ?? 0
   const drafts = await draftsFor(actions.map((a) => a.id))
   const schedule = docs.some((d) => d.kind === 'CONSEQUENTIAL_SCHEDULE') ? scheduleRows(await acceptedInstructions(ideaId)) : undefined
-  const headingName = new Map(headings.map((h) => [h.id, h.name]))
+  const headingOf = new Map(headings.map((h) => [h.id, h]))
   const staleWrites: Array<{ id: string; reason: string | null }> = []
   const rowOf = (a: (typeof actions)[number]): TreeActionRow => {
     const draftV = currentVersion(drafts.get(a.id))?.v ?? null
     const clauseAccepted = docs.some((d) => d.actionId === a.id && d.kind === 'DRAFT_CLAUSE' && d.status !== 'SUPERSEDED' && d.acceptedV != null)
-    const needs = needsDocuments({ avenue: a.avenue, instrument: currentVersion(drafts.get(a.id))?.instrument ?? null, override: needsOverrideOf(a.record), clauseAccepted, headingName: headingName.get(a.headingId ?? '') ?? null })
+    const needs = needsDocuments({ avenue: a.avenue, instrument: currentVersion(drafts.get(a.id))?.instrument ?? null, override: needsOverrideOf(a.record), clauseAccepted, headingKind: headingOf.get(a.headingId ?? '')?.kind ?? null, headingName: headingOf.get(a.headingId ?? '')?.name ?? null })
     const documents: TreeDocument[] = docs.filter((d) => d.actionId === a.id).map((d) => {
       const vs = d.versions.filter((x) => x.role === 'VERSION')
       const last = vs.at(-1)
@@ -372,11 +378,11 @@ export async function documentTree(ideaId: string, opts: { recordStale?: boolean
         id: d.id, number: d.number, d: dNumber(a.number, d.number), kind: d.kind as DocumentKind, title: d.title, status: d.status as DocumentStatus, acceptedV: d.acceptedV,
         current: last ? { v: last.v, author: last.author, at: last.createdAt.toISOString() } : null, versions: vs.length,
         proposalWaiting: d.versions.some((x) => x.role === 'PROPOSAL' && !x.answer),
-        parts: last ? partsOf(d.kind as DocumentKind, last.body).map((p) => ({ n: p.n, title: p.title })) : [], stale,
+        parts: last ? partsOf(d.kind as DocumentKind, last.body).map((p) => ({ n: p.n, title: p.title })) : [], stale, issues: issuesOn(a.id, d.id),
       }
     })
     const live = documents.filter((d) => d.status !== 'SUPERSEDED')
-    return { id: a.id, number: a.number, title: a.title, statement: a.practicalStep, headingId: a.headingId, avenue: a.avenue, needs, documents, missing: needs.kinds.filter((k) => !live.some((d) => d.kind === k)) }
+    return { id: a.id, number: a.number, title: a.title, statement: a.practicalStep, headingId: a.headingId, avenue: a.avenue, needs, documents, missing: needs.kinds.filter((k) => !live.some((d) => d.kind === k)), issues: issuesOn(a.id, null) }
   }
   const rows = actions.map(rowOf)
   if (staleWrites.length) {
@@ -386,8 +392,8 @@ export async function documentTree(ideaId: string, opts: { recordStale?: boolean
   const known = new Set(headings.map((h) => h.id))
   return {
     headings: [
-      ...headings.map((h) => ({ id: h.id as string | null, name: h.name, actions: rows.filter((r) => r.headingId === h.id) })),
-      { id: null, name: 'Not under a heading', actions: rows.filter((r) => !r.headingId || !known.has(r.headingId)) },
+      ...headings.map((h) => ({ id: h.id as string | null, name: h.name, kind: h.kind, actions: rows.filter((r) => r.headingId === h.id) })),
+      { id: null, name: 'Not under a heading', kind: null, actions: rows.filter((r) => !r.headingId || !known.has(r.headingId)) },
     ].filter((h) => h.actions.length),
     loadDate,
   }

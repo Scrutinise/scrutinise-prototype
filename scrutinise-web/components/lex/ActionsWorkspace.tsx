@@ -18,6 +18,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { CanonicalAction, CanonicalActionHeading, CanonicalCause } from '@/lib/lex/page1-config'
 import { HEADING_PALETTE, colourFor } from '@/lib/lex/action-headings'
+import { HEADING_KINDS, HEADING_KIND_WORD, isHeadingKind, type HeadingKind } from '@/lib/lex/action-documents-pure'
+import { kindProposalPrice } from '@/lib/lex/heading-kind-pure'
 import { POLICY_VERDICT_UI } from '@/lib/lex/action-facets'
 import type { ActionStructureRequest, ActionStructureOp } from '@/lib/lex/action-structure-schema'
 import { OP_WORDS } from '@/lib/lex/action-structure-schema'
@@ -471,10 +473,28 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
     ops.setNote(`Lex proposed ${proposed} answer${proposed === 1 ? '' : 's'} for ${acts} action${acts === 1 ? '' : 's'}${unpriced ? '' : ` (${pence.toFixed(1)}p)`}. Each sits beside its slot: use it, edit it or dismiss it. Nothing you wrote was changed.`)
   }
   // 190 (UI A, 18 Oct (6) C) - Hide all / Show all headings: the same control on every step (a heading's hidden state is per idea, so it holds across steps)
+  // 26-V2c (268, revised) — "Ask Lex to propose kinds": for headings with no kind and no proposal waiting; asks first, at the measured price
+  const [askKinds, setAskKinds] = useState(false)
+  const kindless = headings.filter((h) => !h.kind && !h.proposedKind).length
+  const kPrice = kindProposalPrice()
+  const KindsAsk = kindless > 0 && kPrice.pence != null ? (askKinds
+    ? <span className="inline-flex flex-wrap items-center gap-1.5 rounded border-2 border-zinc-900 bg-white px-2 py-1 text-xs" data-kinds-ask>
+        Lex proposes a kind for {kindless} heading{kindless === 1 ? '' : 's'} with none — about {kPrice.pence}p (measured on a copy of a real idea, n={kPrice.n}). Each proposal waits beside its heading for you to accept; none is set by Lex.
+        <button type="button" disabled={disabled} data-kinds-go onClick={() => { setAskKinds(false); void ops.run('proposeHeadingKinds', { agreedPence: kPrice.pence! }, 'Lex is proposing kinds',
+          (r: { proposals: unknown[]; pence: number | null; dropped: string[] }) => `Lex proposed a kind for ${r.proposals.length} heading${r.proposals.length === 1 ? '' : 's'}${r.pence != null ? ` (${r.pence.toFixed(1)}p)` : ''}. Each waits beside its heading: Accept or Not this.${r.dropped.length ? ` Not proposed: ${r.dropped.join('; ')}.` : ''}`) }}
+          className="px-2 py-0.5 rounded bg-zinc-900 text-white font-medium disabled:opacity-40">Propose them — about {kPrice.pence}p</button>
+        <button type="button" onClick={() => setAskKinds(false)} className="underline">Not now</button>
+      </span>
+    : <button type="button" disabled={disabled} data-kinds-button onClick={() => setAskKinds(true)} title="Each heading has a kind: the type of instrument its actions make. Lex reads each heading's actions and proposes one; you accept or not."
+        className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Ask Lex to propose kinds ({kindless} heading{kindless === 1 ? '' : 's'} with none)</button>
+  ) : null
   const HideAll = view === 'list' && mode === 'heading' && headings.length > 0 ? (
-    <button type="button" disabled={disabled} data-hide-all-headings onClick={() => void ops.run('setHeadingsHidden', { hidden: !allHeadingsHidden }, undefined,
-      (r: { changed: number }) => `Saved: ${allHeadingsHidden ? 'every heading is shown' : 'every heading is hidden'} (${r.changed} changed).`)}
-      className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{allHeadingsHidden ? 'Show all headings' : 'Hide all headings'}</button>
+    <>
+      <button type="button" disabled={disabled} data-hide-all-headings onClick={() => void ops.run('setHeadingsHidden', { hidden: !allHeadingsHidden }, undefined,
+        (r: { changed: number }) => `Saved: ${allHeadingsHidden ? 'every heading is shown' : 'every heading is hidden'} (${r.changed} changed).`)}
+        className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{allHeadingsHidden ? 'Show all headings' : 'Hide all headings'}</button>
+      {KindsAsk}
+    </>
   ) : null
   const Step2Toolbar = (
     <div className="space-y-2">
@@ -1012,9 +1032,29 @@ function GroupHeader<T>({ g, h, compact = false, ops, disabled, archived = 0, on
           <select value={h.colourKey} disabled={disabled} onChange={(e) => void ops.run('updateHeading', { headingId: h.id, colourKey: e.target.value })} aria-label={`Colour for ${h.name}`} className="border border-zinc-300 rounded px-1 py-0.5">
             {HEADING_PALETTE.map((p) => <option key={p.key} value={p.key}>{p.glyph} {p.name}</option>)}
           </select>
+          {/* 26-V2c (268, revised) — the heading's kind: the type of instrument its actions make, set by the owner. "Platform" derives a specification for each. */}
+          <label className="flex items-center gap-1" title="The type of instrument this heading's actions make. “Platform” means each action under it needs a specification.">
+            <span className="text-zinc-600">Kind</span>
+            <select value={h.kind ?? ''} disabled={disabled} data-heading-kind={h.kind ?? 'none'}
+              onChange={(e) => { const kind = (e.target.value || null) as HeadingKind | null; void ops.run('updateHeading', { headingId: h.id, kind }, undefined, () => `Saved: “${h.name}” is now ${kind ? `a ${HEADING_KIND_WORD[kind]} heading` : 'a heading with no kind'}${kind === 'PLATFORM' ? ' — each action under it needs a specification' : ''}.`) }}
+              aria-label={`Kind of instrument for ${h.name}`} className="border border-zinc-300 rounded px-1 py-0.5">
+              <option value="">not yet said</option>
+              {HEADING_KINDS.map((k) => <option key={k} value={k}>{HEADING_KIND_WORD[k]}</option>)}
+            </select>
+          </label>
           <button disabled={disabled} onClick={() => void ops.run('updateHeading', { headingId: h.id, hidden: !h.hidden })} className="underline text-zinc-600">{h.hidden ? 'Show' : 'Hide'}</button>
           <button disabled={disabled} onClick={() => { if (g.actions.length === 0 || window.confirm(`Retire the heading “${h.name}”? Its ${g.actions.length} action(s) stay, with no heading. Nothing is deleted: “Bring back” under Retired headings restores it.`)) void ops.run('deleteHeading', { headingId: h.id }, undefined, () => `Saved: the heading “${h.name}” is retired; its actions stay, with no heading. Bring it back under Retired headings.`) }} className="underline text-zinc-500">Retire heading</button>
         </span>
+      )}
+      {/* 26-V2c (268, revised) — Lex's proposed kind waits beside the heading for the owner: Accept or Not this. It never sets the kind itself. */}
+      {h && !compact && h.proposedKind && isHeadingKind(h.proposedKind) && (
+        <p className="basis-full text-[11px] border border-zinc-900 rounded px-1.5 py-0.5" data-kind-proposal={h.proposedKind}>
+          <span aria-hidden>◇</span> <span className="font-semibold">Lex proposes the kind “{HEADING_KIND_WORD[h.proposedKind]}”</span>{h.kind ? ` (now “${isHeadingKind(h.kind) ? HEADING_KIND_WORD[h.kind] : h.kind}”)` : ''}{h.proposedKindReason ? ` — ${h.proposedKindReason}` : ''}{' '}
+          <button type="button" disabled={disabled} data-kind-accept onClick={() => void ops.run('answerKindProposal', { headingId: h.id, accept: true }, undefined, () => `Saved: “${h.name}” is now a ${HEADING_KIND_WORD[h.proposedKind as HeadingKind]} heading${h.proposedKind === 'PLATFORM' ? ' — each action under it needs a specification' : ''}.`)}
+            className="ml-1 px-1.5 py-0.5 rounded bg-zinc-900 text-white font-medium disabled:opacity-40">Accept</button>{' '}
+          <button type="button" disabled={disabled} data-kind-dismiss onClick={() => void ops.run('answerKindProposal', { headingId: h.id, accept: false }, undefined, () => `Saved: Lex’s proposal for “${h.name}” is set aside; its kind is unchanged.`)}
+            className="underline">Not this</button>
+        </p>
       )}
     </div>
   )

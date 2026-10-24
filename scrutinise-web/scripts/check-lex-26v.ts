@@ -63,16 +63,17 @@ async function partA() {
 function fixtureWalker(calls: Array<{ node: string; kinds: string[]; depth: number }>): Walker {
   const step = (node: string, kind: string, k: number, act = `uksi/2020/${k}`) => ({
     provision: `${act}/article/${k}`, act, actTitle: `Fixture ${kind} ${k}`, kind, strength: 'x', subType: '', changeKind: kind === 'cites' ? null : 'textual',
-    changeReason: null, thisEndProvision: null, scope: 'provision' as const, citingText: kind === 'cites' ? `the fixture words before the reference ${k}` : kind === 'made-under' ? `the requirements of the fixture section have been complied with ${k}` : null, citingTextState: null,
+    changeReason: null, thisEndProvision: null, scope: 'provision' as const, citingText: kind === 'cites' ? `the fixture words before the reference ${k}` : kind === 'made-under' ? `in exercise of the fixture power ${k}` : kind === 'enacting-mention' ? `the requirements of the fixture section have been complied with ${k}` : null, citingTextState: null,
     citingTextOthers: 0, citedProvision: null, origin: null, source: `fixture from ${node}`,
+    enablingRole: kind === 'made-under' ? 'power' : kind === 'enacting-mention' ? 'mention' : null, enablingRoleWords: kind === 'enacting-mention' ? 'requirements of' : null,
   })
   return async (node, o) => {
     calls.push({ node, kinds: [...o.kinds], depth: o.depth })
     const many = (kind: string, n: number) => Array.from({ length: n }, (_, k) => step(node, kind, o.depth * 1000 + calls.length * 10 + k))
     const rows = o.kinds.includes('made-under') ? (o.depth <= 3 ? many('made-under', 1) : [])
-      : o.kinds.includes('cites') ? many('cites', o.depth === 1 ? 3 : 2)
+      : o.kinds.includes('cites') ? [...many('cites', o.depth === 1 ? 3 : 2), ...(o.depth === 1 && o.kinds.includes('enacting-mention') ? [step(node, 'enacting-mention', o.depth * 1000 + calls.length * 10 + 5)] : [])]   // its own provision, not a cite's
       : many('amends', 2)
-    const perKind = [{ kind: o.kinds[0], strength: 'x', counted: rows.length, returned: rows.length, instruments: rows.length, scope: { provision: rows.length, actWide: 0 }, split: null, citingText: null }]
+    const perKind = [...new Set(rows.map((r) => r.kind))].map((kind) => { const n = rows.filter((r) => r.kind === kind).length; return { kind, strength: 'x', counted: n, returned: n, instruments: n, scope: { provision: n, actWide: 0 }, split: null, citingText: null } })
     return { rows, perKind, unaddressable: null, freshness: { loadDate: '2026-07-05', ageDays: 1, basis: '', depth: o.depth, caveat: 'Fixture caveat.' } } as never
   }
 }
@@ -133,8 +134,11 @@ async function partB(): Promise<{ copyId: string; userId: string; cleanup: () =>
   const byPart = (p: string, step?: number) => w.rows.filter((r) => r.part === p && (step == null || r.step === step))
   ok('made-under is walked until it ends: steps 1, 2 and 3, then a step-4 read that returns nothing', [1, 2, 3].map((k) => byPart('depends', k).filter((r) => r.relation === 'made-under').length).join(',') === '1,1,1' && calls.some((c) => c.kinds.includes('made-under') && c.depth === 4))
   ok('the official record: 2 rows at step 1, 2 under each at step 2, and NO read at step 3', byPart('depends', 1).filter((r) => r.relation === 'amends').length === 2 && byPart('depends', 2).filter((r) => r.relation === 'amends').length === 4 && !calls.some((c) => c.kinds.includes('amends') && c.depth >= 3))
-  ok('references: 3 at step 1 with their words, 6 weak at step 2, and NO read at step 3', byPart('refers', 1).length === 3 && byPart('refers', 1).every((r) => /fixture words/.test(r.words ?? '') && !r.weak) && byPart('refers', 2).length === 6 && byPart('refers', 2).every((r) => r.weak) && !calls.some((c) => c.kinds.includes('cites') && c.depth >= 3))
-  ok('made-under rows show their stored words (a procedural mention filed as a power is visible as one: GRAPH 8 §5); official rows have none', byPart('depends').filter((r) => r.relation === 'made-under').every((r) => /complied with/.test(r.words ?? '')) && byPart('depends').filter((r) => r.relation === 'amends').every((r) => !r.words))
+  ok('references: 3 cites and 1 enacting mention at step 1 with their words, 8 weak at step 2, and NO read at step 3', byPart('refers', 1).length === 4 && byPart('refers', 1).every((r) => !!r.words && !r.weak) && byPart('refers', 1).filter((r) => r.relation === 'cites').every((r) => /fixture (words|section)/.test(r.words ?? '')) && byPart('refers', 2).length === 8 && byPart('refers', 2).every((r) => r.weak) && !calls.some((c) => c.kinds.includes('cites') && c.depth >= 3), JSON.stringify({ s1: byPart('refers', 1).map((r) => [r.relation, r.words, r.weak]), s2: byPart('refers', 2).length, s3: calls.filter((c) => c.kinds.includes('cites') && c.depth >= 3).length }))
+  ok('made-under rows show their stored enacting words; official rows have none', byPart('depends').filter((r) => r.relation === 'made-under').every((r) => /fixture power/.test(r.words ?? '')) && byPart('depends').filter((r) => r.relation === 'amends').every((r) => !r.words))
+  const mention = byPart('refers', 1).filter((r) => r.relation === 'mentioned in enacting words')
+  ok('271: an enacting MENTION is a reference, under "Provisions that refer to this", in words, with its words — never under "What depends on this"', mention.length === 1 && /complied with/.test(mention[0].words ?? '') && !byPart('depends').some((r) => r.relation === 'mentioned in enacting words' || r.relation === 'enacting-mention'))
+  ok('…and the references note counts it, in words', w.notes.some((n) => n.part === 'refers' && /1 of them an instrument whose enacting words mention this provision without making it under it/.test(n.line)), w.notes.filter((n) => n.part === 'refers').map((n) => n.line).join(' | ').slice(0, 300))
   ok('no part of the report says an instrument "would fall" or "falls" (the enabling-vs-procedural rule is undecided: GRAPH 8 §8 decision 2)', !/would fall|falls? with/i.test(D.collisionBody([...fxClause, ...w.rows], { loadDate: null, caveat: w.caveat, notes: w.notes })))
   ok('a "relies on" line is not walked: the clause does not change it', !calls.some((c) => c.node.startsWith('ukpga/2000/2')) && w.rows.every((r) => r.parent !== 1))
   ok('every step-2 row hangs from a step-1 row of the same part', [...byPart('depends', 2).filter((r) => r.relation === 'amends'), ...byPart('refers', 2)].every((r) => { const p = w.rows.find((x) => x.i === r.parent); return !!p && p.part === r.part && p.step === 1 }))
@@ -165,10 +169,9 @@ async function partB(): Promise<{ copyId: string; userId: string; cleanup: () =>
   ok('a code (statutory or management) → code text', needs('LEGISLATIVE', 'STATUTORY_CODE') === 'CODE_TEXT' && needs('ORGANISATIONAL', 'MANAGEMENT_CODE') === 'CODE_TEXT')
   ok('financial → costing; organisational → operating text', needs('FINANCIAL', null) === 'COSTING' && needs('ORGANISATIONAL', null) === 'OPERATING_TEXT')
   ok('no avenue → nothing derived, and the line says so (not "needs nothing")', needs(null, null) === '' && /no avenue chosen/.test(D.needsDocuments({ avenue: null, instrument: null }).why))
-  const spec = (avenue: string | null, headingName: string | null) => D.needsDocuments({ avenue, instrument: null, headingName })
-  ok('26-V2 §4: under "The accountability platform" a specification is derived (alone with no avenue, beside a legislative action’s own), and says why', spec(null, 'The accountability platform').kinds.join('+') === 'SPECIFICATION' && spec('LEGISLATIVE', ' the accountability platform ').kinds.join('+') === 'DRAFT_CLAUSE+COLLISION_REPORT+SPECIFICATION' && spec(null, 'The accountability platform').why.includes('The accountability platform'))
-  ok('268: "The platform" (Charlie\'s heading) matches too — the word, any case — and the why names the heading as written', spec(null, 'The platform').kinds.join('+') === 'SPECIFICATION' && spec(null, 'THE PLATFORM').kinds.includes('SPECIFICATION') && spec(null, 'The platform').why === 'under “The platform”')
-  ok('…anywhere else it is not derived (added by hand)', !spec(null, 'Primary legislation').kinds.includes('SPECIFICATION') && !spec('ORGANISATIONAL', 'Accountability platforms').kinds.includes('SPECIFICATION'))
+  const spec = (avenue: string | null, headingKind: string | null, headingName: string | null = null) => D.needsDocuments({ avenue, instrument: null, headingKind, headingName })
+  ok('26-V2 §4 / 268: under a heading of kind PLATFORM a specification is derived (alone with no avenue, beside a legislative action’s own), and the why names the heading', spec(null, 'PLATFORM', 'The platform').kinds.join('+') === 'SPECIFICATION' && spec('LEGISLATIVE', 'PLATFORM').kinds.join('+') === 'DRAFT_CLAUSE+COLLISION_REPORT+SPECIFICATION' && spec(null, 'PLATFORM', 'The platform').why.includes('“The platform”'))
+  ok('…268 revised, "no name match": a heading NAMED platform with no kind derives nothing, and any other kind derives no specification', !spec(null, null, 'The platform').kinds.includes('SPECIFICATION') && !spec(null, null, 'The accountability platform').kinds.includes('SPECIFICATION') && !spec('ORGANISATIONAL', 'PRIMARY_LEGISLATION', 'The platform').kinds.includes('SPECIFICATION'))
   const noReason = await D.setNeeds(copy.id, owner.id, { mode: 'nothing', reason: ' ' }, copy.userId)
   ok('"needs nothing" without a reason is refused, in words', !noReason.ok && /Say why/.test((noReason as { error: string }).error))
   const withReason = await D.setNeeds(copy.id, owner.id, { mode: 'nothing', reason: 'a fixture reason' }, copy.userId)

@@ -68,28 +68,39 @@ export interface NeedsInput {
   avenue: string | null; instrument: DraftInstruction['instrument'] | null; override?: NeedsOverride | null
   /** 26-V1b §5a — the action's clause has been accepted (at some version): it then needs its explanatory note. */
   clauseAccepted?: boolean
-  /** 26-V2 §4 — the name of the heading the action sits under (a specification is derived from the heading; no avenue says "software"). */
+  /** 26-V2c (268) — the KIND of the heading the action sits under: a specification is derived from it (no avenue says "software"). */
+  headingKind?: string | null
+  /** The heading's name, for the why line only — the rule never reads it. */
   headingName?: string | null
 }
 export interface Needs { kinds: DocumentKind[]; why: string; overridden: boolean }
 
-/**
- * 26-V2 §4 (24 Oct (3)): no avenue or instrument means "software", so a specification is derived from the HEADING: every action under
- * a heading whose name has the word "platform" in it needs one (268, 24 Oct (4): Charlie's idea calls it "The platform", the seven-heading
- * plan "The accountability platform"). Anywhere else a specification is added by hand. Matched as a whole word, without case.
- * ⚠ Interim: V2c gives headings a kind (instrument type) and binds this rule to the kind, not the name.
- */
-export const SPECIFICATION_HEADING_WORD = 'platform'
-export const underSpecificationHeading = (name: string | null | undefined) => !!name && new RegExp(`\\b${SPECIFICATION_HEADING_WORD}\\b`, 'i').test(name)
+// ── a heading's KIND (26-V2c, 268): the type of instrument its actions make ──────────────────────────────────────
+//
+// 24 Oct (4, revised): "no name match. Give each heading a kind (the instrument type …), set by the owner on the heading row and proposed by
+// Lex for existing headings; the specification rule and any future rule bind to the kind." Charlie's eight, in his order. Null = not yet
+// said. The DDL's CHECK lists the same values (prisma/lex_26v2c_heading_kind_issue_attach.sql); check:lex-26v2c asserts the two agree.
+// ⚠ The heading's NAME is never read by a rule. A kind is set by the owner, or proposed by Lex (`proposedKind`) and accepted by the owner.
+export const HEADING_KINDS = ['PRIMARY_LEGISLATION', 'CODE', 'MANAGEMENT_CODE', 'PLATFORM', 'BUDGET', 'TRANSPARENCY', 'GUIDANCE_PILOT', 'OTHER'] as const
+export type HeadingKind = (typeof HEADING_KINDS)[number]
+export const HEADING_KIND_WORD: Record<HeadingKind, string> = {
+  PRIMARY_LEGISLATION: 'primary legislation', CODE: 'code', MANAGEMENT_CODE: 'management code', PLATFORM: 'platform', BUDGET: 'budget',
+  TRANSPARENCY: 'transparency', GUIDANCE_PILOT: 'guidance or pilot', OTHER: 'other',
+}
+export const isHeadingKind = (k: unknown): k is HeadingKind => typeof k === 'string' && (HEADING_KINDS as readonly string[]).includes(k)
+
+/** 26-V2 §4, bound to the kind by 268: every action under a heading of kind PLATFORM needs a specification. Anywhere else one is added by hand. */
+export const needsSpecification = (kind: string | null | undefined) => kind === 'PLATFORM'
 
 export function needsDocuments(a: NeedsInput): Needs {
   if (a.override?.mode === 'nothing') return { kinds: [], why: `needs nothing: ${a.override.reason}`, overridden: true }
   if (a.override?.mode === 'set') return { kinds: [...new Set(a.override.kinds ?? [])], why: a.override.reason, overridden: true }
   const base = derivedNeeds(a)
-  if (!underSpecificationHeading(a.headingName)) return base
+  if (!needsSpecification(a.headingKind)) return base
+  const under = a.headingName?.trim() ? `under “${a.headingName.trim()}”, a ${HEADING_KIND_WORD.PLATFORM} heading` : `under a ${HEADING_KIND_WORD.PLATFORM} heading`
   return base.kinds.length
-    ? { kinds: [...base.kinds, 'SPECIFICATION'], why: `${base.why}, under “${a.headingName!.trim()}”`, overridden: false }
-    : { kinds: ['SPECIFICATION'], why: `under “${a.headingName!.trim()}”`, overridden: false }
+    ? { kinds: [...base.kinds, 'SPECIFICATION'], why: `${base.why}, ${under}`, overridden: false }
+    : { kinds: ['SPECIFICATION'], why: under, overridden: false }
 }
 
 function derivedNeeds(a: NeedsInput): Needs {
