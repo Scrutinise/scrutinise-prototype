@@ -563,7 +563,7 @@ function pct(n: number): string {
  * matching by equality against both candidate forms is complete, unambiguous, and indexable
  * — `= ANY(array)` uses the btree, `lower(col) =` cannot.
  */
-function gidCandidates(gid: string): string[] {
+export function gidCandidates(gid: string): string[] {
   const raw = gid.trim().replace(/^https?:\/\/(?:www\.)?legislation\.gov\.uk\//, '').replace(/\/+$/, '')
   const lower = raw.toLowerCase()
   return raw === lower ? [raw] : [raw, lower]
@@ -601,7 +601,7 @@ export async function targetTitle(targetActId: string): Promise<string | null> {
  * never another digit. Copied in behaviour from Search/Graph's `inbound()`; the parity check
  * asserts the two agree row for row.
  */
-function provisionPredicate(column: string, ref: string): { sql: string; params: string[] } {
+export function provisionPredicate(column: string, ref: string): { sql: string; params: string[] } {
   const r = ref.trim().toLowerCase()
   return {
     sql: `(lower(${column}) = $P OR lower(${column}) ~ ('^' || $P || '([^0-9].*)?$'))`,
@@ -940,7 +940,7 @@ export async function effectsLoadDate(): Promise<string | null> {
  * MORE THAN ONE Act is stored as `ambiguous-refused`: we do not guess between them, and the caller
  * is told so rather than handed an empty answer that reads as "nothing affects it".
  */
-async function resolveActForms(given: string): Promise<EffectsResult['resolution']> {
+export async function resolveActForms(given: string): Promise<EffectsResult['resolution']> {
   const base = gidCandidates(given)
   let rows: Array<{ form: string; canonical: string | null; basis: string }>
   try {

@@ -148,6 +148,8 @@
     "measure:26u-draft": "tsx --tsconfig tsconfig.json --env-file=.env scripts/measure-26u-draft.ts",
     "check:field-revision-on-accept": "tsx --tsconfig tsconfig.json --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-field-revision-on-accept.ts",
     "report:effects": "tsx --env-file=.env scripts/report-effects.ts",
+    "check:onward": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-onward.ts",
+    "measure:onward-branching": "tsx --env-file=.env --tsconfig tsconfig.json scripts/measure-onward-branching.ts",
     "check:surface-5": "tsx --env-file=.env scripts/check-surface-5.ts",
     "verify:statutory-parity": "tsx --env-file=.env scripts/verify-statutory-graph-parity.ts",
     "verify:consequences": "tsx --env-file=.env scripts/verify-consequences-live.ts",

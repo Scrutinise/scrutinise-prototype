@@ -27,6 +27,7 @@ import type { ToolCtx, ToolDefinition, ToolResult, UiEffect } from './types'
 import { runSearch } from '@/lib/lex/search-gateway'
 import { effectsFor } from '@/lib/lex/statutory-graph'
 import { readSection } from '@/lib/lex/read-section'
+import { statuteOnward } from './onward-tool'  // GRAPH 8 — one step of the onward reader
 import { describeEffects, effectsHeadline } from '@/lib/lex/effects-describe'
 import { webSearch } from '@/lib/lex/orientation/web-search'
 import { markPublicSources } from '@/lib/lex/public-sources'
@@ -1671,7 +1672,7 @@ const summariseSourceTool: ToolDefinition = {
 /** The tools the MODEL is offered. The `undo_*` / `restore_*` inverses are reachable only through a signed undo token. */
 export const MODEL_TOOLS: ToolDefinition[] = [
   readField, listCandidates, listActionsTool, listSources, readSource, listChallenges, readHistory, listNotes,
-  searchCorpus, searchWeb, searchMyDocuments, statuteEffects, readSectionTool,
+  searchCorpus, searchWeb, searchMyDocuments, statuteEffects, statuteOnward, readSectionTool,
   fileUrl, fileText,
   draftField, addCandidate, addActionTool, setActionDetailTool, writeNote,
   explain,

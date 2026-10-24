@@ -234,6 +234,29 @@ not run, not omitted. `tsc` clean, `check-clean-build.sh --fast` PASS.
 
 ---
 
+## GRAPH THREAD — last updated 2026-10-24 00:00 UTC (GRAPH 8)
+
+*Report: `docs/GRAPH_8_REPORT.md`. Built, `check:onward` 22/22 (2,790 assertions, 8/8 controls). **Nothing committed, nothing pushed, NOT live.***
+
+▼ **THE ONWARD READER EXISTS: `onwardFrom()` + `statute_onward` (registered). One step, inbound, every row typed `dependency` / `operation` / `reference` (/ `interpretation` on request), never merged.**
+⚠⚠ **A CITATION IS NOT A CONSEQUENCE, AND IT IS NOW ENFORCED, NOT JUST SAID.**
+- A `cites` row only ever carries "Provisions that refer to this — for review".
+- At depth ≥3 the tool **withholds** references and official effects and states their counts.
+- Mutation M1 (cites→dependency) turned 4 cases red.
+⚠ **made-under now reads `citation_edge` `enabling` (the fixed parser).**
+- `legislation_edges`' made-under section refs are 36.1% wrong (CRaG "52(2)" → section-2).
+- ⚠ Even the fixed parser files procedural mentions as powers. **Every "made under CRaG s.20" row is false**, and s.20 confers no power. Report §5.
+⚠ **cites ≠ "what refers to this": it is marked-up citations only.** About 1 in 19 of the Equality Act's references; **0 for the Civil Service (MF) Act 1992**. Whether to add text references as a separate `mentions` kind is Charlie's / Lex's decision (§7.1).
+⚠ **No stored citing text is a sentence**: a ≤300-character window, cut at both ends. The `held` state never fires, and the words are shown marked as cut.
+▶ **Branching (report §1)**:
+- `cites` depth 3: CRaG 83, GRAA 15, Equality Act 733.
+- With text references: 13–22% of the statute book.
+- Official effects: 673–2,388 instruments at depth 2.
+- Made-under ends after one step for all four Acts.
+▶ **For Charlie:**
+- Commit by explicit path (report §8). **Diff `tools.ts`, `package.json` and `statutory-graph.ts` first**: each held only GRAPH 8 changes when edited, but LEX is live in this tree.
+- After deploy, one Lex turn on CRaG s.20. Read the answer for "consequence" or "made under s.20".
+
 ## GRAPH THREAD — last updated 2026-10-22 02:07 UTC (GRAPH 7)
 
 *Report: `docs/GRAPH_7_REPORT.md`. Table LIVE on Neon (0 rows); schema + SQL committed locally `8fb2e80`; the rest uncommitted; **nothing pushed, NOT verified live**.*
@@ -964,7 +987,7 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
-**▶ 2026-10-23 23:57 UTC: 26-V1b-b built and committed with its schema (`lex_26v1b_explanatory_note.sql`, applied to Neon at push). Live verification is in `docs/LEX_26V1b_REPORT.md`.** See CHANGE_LOG 23:57.
+**▶ 2026-10-24 00:08 UTC: 26-V1b-b is LIVE at `13538ec`, with its schema** (`lex_26v1b_explanatory_note.sql`, applied to Neon just before the push, same commit). Verified by `/api/health`, live chunks (`c6d9d49faf20404c.js`: "The order, derived"; control in none), and build-worker `c8a34d6d` (SUCCESS, `meta.commitHash` 13538eca1247, "retrieval configuration OK" 00:07:20). See CHANGE_LOG 23:57 and `docs/LEX_26V1b_REPORT.md`.
 - **§7:**
   - The card board is step 1's List · Board.
   - Order is by dependency only: "must come after #59 (because …)", a derived order, and a circle refused in words. **Now / Next / Later is retired from screen, pack and Lex.**

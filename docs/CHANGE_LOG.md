@@ -1,5 +1,35 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-24 00:00 UTC - GRAPH 8: the onward reader (`onwardFrom()`) and `statute_onward` — one step, typed by strength, walkable
+
+- **Report:** `docs/GRAPH_8_REPORT.md`. Brief: `docs/BRIEF_GRAPH_8_ONWARD.md`. Read-only, no schema change. **Not committed, not pushed.**
+- **The reader** (`lib/lex/onward.ts`, pure half `onward-pure.ts`):
+  - One step inbound. Every row has a kind and a strength: `dependency` (made-under), `operation` (official effects), `reference` (cites), and `interpretation` (case law, only when asked for).
+  - Strengths are never merged. A Part or Chapter returns `unaddressable`. `truncated` is given per kind, and so is the provision vs Act-wide split.
+- **made-under is read from `citation_edge` `enabling` rows (the fixed parser), not `legislation_edges`.**
+  - The old parser's section refs are 36.1% wrong: CRaG "52(2)" was also filed as section-2.
+  - ⚠ The fixed parser still files procedural mentions as powers. All three CRaG s.20 rows are of this kind.
+- **cites words are joined from `citation_edge`** (96.3% of rows). Every one is a window cut at both ends: max 300 characters, a pile-up at 296–299, and nothing after the reference stored. They are shown marked, never as a sentence.
+- **Branching measured, prediction recorded first:**
+  - `cites` depth 3 is small: CRaG 83, GRAA ends at 15, CS(MF)A 0. That edge holds marked-up citations only.
+  - With text references, depth 3 is 13–22% of the statute book.
+  - Official effects alone reach 673–2,388 instruments at depth 2.
+  - The tool therefore **withholds** depth-3 references and effects, labels depth 2 weak, and lets made-under walk (it ends after one step).
+- **`statute_onward`** (`agent/onward-tool.ts`) is registered in `MODEL_TOOLS`: one import and one list entry in `tools.ts`, made after `13538ec` left that file clean. The four rules are in its description verbatim.
+- `statutory-graph.ts`: `export` added to `gidCandidates`, `provisionPredicate` and `resolveActForms`. Nothing else changed.
+- **Checks:**
+  - `check:onward` 22/22: 2,790 assertions over 200,983 rows, 8/8 controls.
+  - Mutations: cites→dependency turned 4 cases red; the identity bridge dropped turned 1 red. Both reverted.
+  - Regression: `check:effects` 30/30, `check:lex-26p` 116/116, `check:statutory` 17/0, `check:llm-guards` 9/0. `tsc` is clean.
+
+## 2026-10-24 00:08 UTC - LEX 26-V1b-b verified live at 13538ec
+
+- `/api/health` reports `13538eca…` (production).
+- New strings are in live chunks `c6d9d49faf20404c.js` and `438918a1f512b74e.js`; the removed V1b-a line is in no chunk.
+- build-worker `c8a34d6d` deployed on the push: SUCCESS, `meta.commitHash` `13538eca1247`, "retrieval configuration OK" at 00:07:20.
+- Neon: `action_document_kind_check` read back with EXPLANATORY_NOTE.
+- `check:lex-26v1b` is 71/71 after the schema; the mutation run was red as it should be. Full regression in `docs/LEX_26V1b_REPORT.md`.
+
 ## 2026-10-23 23:57 UTC - LEX 26-V1b-b: textual amendments and their three views, the explanatory note, the card board, Order by dependency
 
 - **Sized first, no split needed** (`docs/LEX_26V1b_REPORT.md`, "V1b-b — size first"). §6 had nothing left after V1b-a.

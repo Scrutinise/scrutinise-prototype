@@ -1,0 +1,505 @@
+{
+ "measuredAt": "2026-10-23T23:45:31.843Z",
+ "book": 250808,
+ "identityRows": 13873,
+ "refusedHits": 0,
+ "walks": [
+  {
+   "subject": "ukpga/2010/25",
+   "label": "Constitutional Reform and Governance Act 2010",
+   "set": "cites",
+   "rows": [
+    {
+     "depth": 1,
+     "reached": 8,
+     "new": 8,
+     "cumulative": 8,
+     "provisionsAtStep": 8,
+     "frontierQueried": 1,
+     "ms": 20
+    },
+    {
+     "depth": 2,
+     "reached": 9,
+     "new": 7,
+     "cumulative": 15,
+     "provisionsAtStep": 17,
+     "frontierQueried": 8,
+     "ms": 23
+    },
+    {
+     "depth": 3,
+     "reached": 76,
+     "new": 68,
+     "cumulative": 83,
+     "provisionsAtStep": 131,
+     "frontierQueried": 7,
+     "ms": 23
+    }
+   ],
+   "ended": null
+  },
+  {
+   "subject": "ukpga/2010/25",
+   "label": "Constitutional Reform and Governance Act 2010",
+   "set": "cites+text",
+   "rows": [
+    {
+     "depth": 1,
+     "reached": 75,
+     "new": 75,
+     "cumulative": 75,
+     "provisionsAtStep": 125,
+     "frontierQueried": 1,
+     "ms": 42
+    },
+    {
+     "depth": 2,
+     "reached": 7560,
+     "new": 7493,
+     "cumulative": 7568,
+     "provisionsAtStep": 20808,
+     "frontierQueried": 75,
+     "ms": 398
+    },
+    {
+     "depth": 3,
+     "reached": 48335,
+     "new": 42062,
+     "cumulative": 49630,
+     "provisionsAtStep": 210109,
+     "frontierQueried": 7493,
+     "ms": 3474
+    }
+   ],
+   "ended": null
+  },
+  {
+   "subject": "ukpga/2010/25",
+   "label": "Constitutional Reform and Governance Act 2010",
+   "set": "made-under",
+   "rows": [
+    {
+     "depth": 1,
+     "reached": 16,
+     "new": 16,
+     "cumulative": 16,
+     "provisionsAtStep": 16,
+     "frontierQueried": 1,
+     "ms": 23
+    },
+    {
+     "depth": 2,
+     "reached": 0,
+     "new": 0,
+     "cumulative": 16,
+     "provisionsAtStep": 0,
+     "frontierQueried": 16,
+     "ms": 21
+    }
+   ],
+   "ended": 2
+  },
+  {
+   "subject": "ukpga/2010/25",
+   "label": "Constitutional Reform and Governance Act 2010",
+   "set": "strong",
+   "rows": [
+    {
+     "depth": 1,
+     "reached": 32,
+     "new": 32,
+     "cumulative": 32,
+     "provisionsAtStep": 90,
+     "frontierQueried": 1,
+     "ms": 42
+    },
+    {
+     "depth": 2,
+     "reached": 648,
+     "new": 641,
+     "cumulative": 673,
+     "provisionsAtStep": 1954,
+     "frontierQueried": 32,
+     "ms": 66
+    },
+    {
+     "depth": 3,
+     "reached": 2655,
+     "new": 2310,
+     "cumulative": 2983,
+     "provisionsAtStep": 10533,
+     "frontierQueried": 641,
+     "ms": 242
+    }
+   ],
+   "ended": null
+  },
+  {
+   "subject": "ukpga/1992/61",
+   "label": "Civil Service (Management Functions) Act 1992",
+   "set": "cites",
+   "rows": [
+    {
+     "depth": 1,
+     "reached": 0,
+     "new": 0,
+     "cumulative": 0,
+     "provisionsAtStep": 0,
+     "frontierQueried": 1,
+     "ms": 23
+    }
+   ],
+   "ended": 1
+  },
+  {
+   "subject": "ukpga/1992/61",
+   "label": "Civil Service (Management Functions) Act 1992",
+   "set": "cites+text",
+   "rows": [
+    {
+     "depth": 1,
+     "reached": 3,
+     "new": 3,
+     "cumulative": 3,
+     "provisionsAtStep": 7,
+     "frontierQueried": 1,
+     "ms": 41
+    },
+    {
+     "depth": 2,
+     "reached": 1602,
+     "new": 1598,
+     "cumulative": 1601,
+     "provisionsAtStep": 3684,
+     "frontierQueried": 3,
+     "ms": 77
+    },
+    {
+     "depth": 3,
+     "reached": 32896,
+     "new": 31447,
+     "cumulative": 33048,
+     "provisionsAtStep": 130671,
+     "frontierQueried": 1598,
+     "ms": 1470
+    }
+   ],
+   "ended": null
+  },
+  {
+   "subject": "ukpga/1992/61",
+   "label": "Civil Service (Management Functions) Act 1992",
+   "set": "made-under",
+   "rows": [
+    {
+     "depth": 1,
+     "reached": 0,
+     "new": 0,
+     "cumulative": 0,
+     "provisionsAtStep": 0,
+     "frontierQueried": 1,
+     "ms": 20
+    }
+   ],
+   "ended": 1
+  },
+  {
+   "subject": "ukpga/1992/61",
+   "label": "Civil Service (Management Functions) Act 1992",
+   "set": "strong",
+   "rows": [
+    {
+     "depth": 1,
+     "reached": 7,
+     "new": 7,
+     "cumulative": 7,
+     "provisionsAtStep": 7,
+     "frontierQueried": 1,
+     "ms": 38
+    },
+    {
+     "depth": 2,
+     "reached": 1317,
+     "new": 1312,
+     "cumulative": 1319,
+     "provisionsAtStep": 2422,
+     "frontierQueried": 7,
+     "ms": 70
+    },
+    {
+     "depth": 3,
+     "reached": 10953,
+     "new": 10283,
+     "cumulative": 11602,
+     "provisionsAtStep": 32088,
+     "frontierQueried": 1312,
+     "ms": 1338
+    }
+   ],
+   "ended": null
+  },
+  {
+   "subject": "ukpga/2000/20",
+   "label": "Government Resources and Accounts Act 2000",
+   "set": "cites",
+   "rows": [
+    {
+     "depth": 1,
+     "reached": 5,
+     "new": 5,
+     "cumulative": 5,
+     "provisionsAtStep": 5,
+     "frontierQueried": 1,
+     "ms": 20
+    },
+    {
+     "depth": 2,
+     "reached": 10,
+     "new": 10,
+     "cumulative": 15,
+     "provisionsAtStep": 10,
+     "frontierQueried": 5,
+     "ms": 19
+    },
+    {
+     "depth": 3,
+     "reached": 8,
+     "new": 0,
+     "cumulative": 15,
+     "provisionsAtStep": 8,
+     "frontierQueried": 10,
+     "ms": 20
+    }
+   ],
+   "ended": 3
+  },
+  {
+   "subject": "ukpga/2000/20",
+   "label": "Government Resources and Accounts Act 2000",
+   "set": "cites+text",
+   "rows": [
+    {
+     "depth": 1,
+     "reached": 164,
+     "new": 164,
+     "cumulative": 164,
+     "provisionsAtStep": 343,
+     "frontierQueried": 1,
+     "ms": 47
+    },
+    {
+     "depth": 2,
+     "reached": 4195,
+     "new": 4109,
+     "cumulative": 4273,
+     "provisionsAtStep": 12946,
+     "frontierQueried": 164,
+     "ms": 218
+    },
+    {
+     "depth": 3,
+     "reached": 45555,
+     "new": 41764,
+     "cumulative": 46037,
+     "provisionsAtStep": 191870,
+     "frontierQueried": 4109,
+     "ms": 2127
+    }
+   ],
+   "ended": null
+  },
+  {
+   "subject": "ukpga/2000/20",
+   "label": "Government Resources and Accounts Act 2000",
+   "set": "made-under",
+   "rows": [
+    {
+     "depth": 1,
+     "reached": 74,
+     "new": 74,
+     "cumulative": 74,
+     "provisionsAtStep": 74,
+     "frontierQueried": 1,
+     "ms": 22
+    },
+    {
+     "depth": 2,
+     "reached": 0,
+     "new": 0,
+     "cumulative": 74,
+     "provisionsAtStep": 0,
+     "frontierQueried": 74,
+     "ms": 20
+    }
+   ],
+   "ended": 2
+  },
+  {
+   "subject": "ukpga/2000/20",
+   "label": "Government Resources and Accounts Act 2000",
+   "set": "strong",
+   "rows": [
+    {
+     "depth": 1,
+     "reached": 96,
+     "new": 96,
+     "cumulative": 96,
+     "provisionsAtStep": 108,
+     "frontierQueried": 1,
+     "ms": 39
+    },
+    {
+     "depth": 2,
+     "reached": 1332,
+     "new": 1284,
+     "cumulative": 1380,
+     "provisionsAtStep": 2600,
+     "frontierQueried": 96,
+     "ms": 72
+    },
+    {
+     "depth": 3,
+     "reached": 9340,
+     "new": 8684,
+     "cumulative": 10064,
+     "provisionsAtStep": 33034,
+     "frontierQueried": 1284,
+     "ms": 1357
+    }
+   ],
+   "ended": null
+  },
+  {
+   "subject": "ukpga/2010/15",
+   "label": "Equality Act 2010",
+   "set": "cites",
+   "rows": [
+    {
+     "depth": 1,
+     "reached": 56,
+     "new": 56,
+     "cumulative": 56,
+     "provisionsAtStep": 61,
+     "frontierQueried": 1,
+     "ms": 20
+    },
+    {
+     "depth": 2,
+     "reached": 277,
+     "new": 254,
+     "cumulative": 310,
+     "provisionsAtStep": 383,
+     "frontierQueried": 56,
+     "ms": 21
+    },
+    {
+     "depth": 3,
+     "reached": 513,
+     "new": 423,
+     "cumulative": 733,
+     "provisionsAtStep": 598,
+     "frontierQueried": 254,
+     "ms": 31
+    }
+   ],
+   "ended": null
+  },
+  {
+   "subject": "ukpga/2010/15",
+   "label": "Equality Act 2010",
+   "set": "cites+text",
+   "rows": [
+    {
+     "depth": 1,
+     "reached": 530,
+     "new": 530,
+     "cumulative": 530,
+     "provisionsAtStep": 1180,
+     "frontierQueried": 1,
+     "ms": 95
+    },
+    {
+     "depth": 2,
+     "reached": 16613,
+     "new": 16190,
+     "cumulative": 16720,
+     "provisionsAtStep": 52970,
+     "frontierQueried": 530,
+     "ms": 643
+    },
+    {
+     "depth": 3,
+     "reached": 52608,
+     "new": 39718,
+     "cumulative": 56438,
+     "provisionsAtStep": 236434,
+     "frontierQueried": 16190,
+     "ms": 5919
+    }
+   ],
+   "ended": null
+  },
+  {
+   "subject": "ukpga/2010/15",
+   "label": "Equality Act 2010",
+   "set": "made-under",
+   "rows": [
+    {
+     "depth": 1,
+     "reached": 74,
+     "new": 74,
+     "cumulative": 74,
+     "provisionsAtStep": 74,
+     "frontierQueried": 1,
+     "ms": 56
+    },
+    {
+     "depth": 2,
+     "reached": 0,
+     "new": 0,
+     "cumulative": 74,
+     "provisionsAtStep": 0,
+     "frontierQueried": 74,
+     "ms": 28
+    }
+   ],
+   "ended": 2
+  },
+  {
+   "subject": "ukpga/2010/15",
+   "label": "Equality Act 2010",
+   "set": "strong",
+   "rows": [
+    {
+     "depth": 1,
+     "reached": 199,
+     "new": 198,
+     "cumulative": 198,
+     "provisionsAtStep": 593,
+     "frontierQueried": 1,
+     "ms": 55
+    },
+    {
+     "depth": 2,
+     "reached": 2297,
+     "new": 2190,
+     "cumulative": 2388,
+     "provisionsAtStep": 8061,
+     "frontierQueried": 198,
+     "ms": 224
+    },
+    {
+     "depth": 3,
+     "reached": 3681,
+     "new": 2597,
+     "cumulative": 4985,
+     "provisionsAtStep": 20871,
+     "frontierQueried": 2190,
+     "ms": 1392
+    }
+   ],
+   "ended": null
+  }
+ ]
+}
