@@ -1,5 +1,11 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-24 18:27 UTC - LEX: 2a334cc (26-V2c) verified live; kinds proposed on 452c5ade
+
+- Live: health `2a334cc`; build-worker `c253866b` SUCCESS on `2a334ccdb0f2`, its retrieval-OK and queue-on lines at 18:26:14; "kind not yet said" and "Ask Lex to propose kinds" read back from live chunks. Clean-room build of HEAD at C:/cb2 (npm ci, tsc) passed before the push; `check-clean-build.sh` full mode cannot make its `/tmp` worktree in this sandbox.
+- 452c5ade: Lex proposed a kind for each of the seven headings (0.97p), waiting for Charlie's Accept: Primary legislation → primary legislation; CS Code → code; CS Mgt Code → management code; The platform → platform; Rules & Standards → budget; Oversight → other; Training → guidance or pilot. No kind is set.
+- Not run: re-attaching 452c5ade's 176 open issues (measured ≈16.6p), waiting for Charlie.
+
 ## 2026-10-24 18:20 UTC - LEX 26-V2c: headings have a kind (268 revised); issues attach to action, document and part; Lex's side of 271; 270 recorded
 
 - **268 revised** (24 Oct (4, revised)): the name match from fc0012b is removed. `ActionHeading.kind` is one of eight (primary legislation · code · management code · platform · budget · transparency · guidance or pilot · other), set by the owner on the heading row; `needsSpecification(kind)` is true for PLATFORM only. Lex proposes kinds for headings with none into `proposedKind` + reason, never into `kind`; Accept / Not this beside the heading. The tree says the kind in words, or "kind not yet said".
