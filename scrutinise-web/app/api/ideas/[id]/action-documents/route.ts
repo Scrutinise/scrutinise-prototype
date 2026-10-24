@@ -12,6 +12,9 @@
 //   POST { op: 'generate' }   the action's collision report, or the idea's consequential schedule (free: no model call)
 //   POST { op: 'draftNote' }  26-V1b §5: Lex drafts the explanatory note as a proposal (spends; the screen asks first, at the measured price)
 //   POST { op: 'useProposal' | 'setAsideProposal' }  Lex's proposal on a text document: used as the next version, or set aside (kept)
+//   POST { op: 'draftPlan' }   26-V2b §5: what a heading (or one action) needs, each with its MEASURED price — asks nothing, spends nothing
+//   POST { op: 'draftQueue' }  26-V2b §5: queue that plan for the worker once the owner agreed the price (re-reckoned; refused if higher)
+//   POST { op: 'draftRun' | 'draftStop' }  the run's progress in words; stop its waiting documents (the one drafting now finishes)
 
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -21,6 +24,7 @@ import { LIMITS } from '@/lib/lex/input-limits'
 import * as D from '@/lib/lex/action-documents'
 import { documentView, actionDocuments } from '@/lib/lex/document-view'
 import { draftExplanatoryNote } from '@/lib/lex/explanatory-note'
+import { planFor, queueDrafting, draftRunView, stopDraftRun, type DraftScope } from '@/lib/lex/document-drafting'
 
 export const maxDuration = 300
 type Params = { params: Promise<{ id: string }> }
@@ -39,13 +43,20 @@ const Body = z.discriminatedUnion('op', [
   z.object({ op: z.literal('draftNote'), actionId: z.string().min(1) }),
   z.object({ op: z.literal('useProposal'), documentId: z.string().min(1) }),
   z.object({ op: z.literal('setAsideProposal'), documentId: z.string().min(1) }),
+  // 26-V2b §5 — "Draft what this heading needs" (headingId; null = not under a heading) or "… this action needs" (actionId)
+  z.object({ op: z.literal('draftPlan'), headingId: z.string().min(1).nullable().optional(), actionId: z.string().min(1).optional() }),
+  z.object({ op: z.literal('draftQueue'), headingId: z.string().min(1).nullable().optional(), actionId: z.string().min(1).optional(), agreedPence: z.number().min(0).max(5000) }),
+  z.object({ op: z.literal('draftRun'), runId: z.string().min(1).optional() }),
+  z.object({ op: z.literal('draftStop'), runId: z.string().min(1) }),
 ])
+const scopeOf = (b: { headingId?: string | null; actionId?: string }): DraftScope => (b.actionId ? { actionId: b.actionId } : { headingId: b.headingId ?? null })
 const OP_WORDS: Record<string, string> = {
   open: 'Opening that document', view: 'Opening that document', forAction: 'Reading that action’s documents', accept: 'Accepting that document', addByHand: 'Adding that document', saveText: 'Saving that document',
   setNeeds: 'Changing what that action needs', generate: 'Generating that document',
   draftNote: '“Draft the explanatory note”', useProposal: 'Using Lex’s proposal', setAsideProposal: 'Setting Lex’s proposal aside',
+  draftPlan: 'Listing what needs drafting', draftQueue: 'Starting the drafting', draftRun: 'Reading the drafting run', draftStop: 'Stopping the drafting run',
 }
-const INPUT_WORDS = { documentId: 'the document', actionId: 'the action', kind: 'the kind of document', title: 'the title', body: 'the text', mode: 'the choice', kinds: 'the kinds of document', reason: 'the reason', what: 'what to generate' }
+const INPUT_WORDS = { documentId: 'the document', actionId: 'the action', kind: 'the kind of document', title: 'the title', body: 'the text', mode: 'the choice', kinds: 'the kinds of document', reason: 'the reason', what: 'what to generate', headingId: 'the heading', agreedPence: 'the price you agreed', runId: 'the drafting run' }
 
 export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
@@ -95,6 +106,10 @@ export async function POST(req: Request, { params }: Params) {
       case 'draftNote': result = await draftExplanatoryNote(id, b.actionId, uid); break
       case 'useProposal': result = await D.useTextProposal(id, b.documentId); break
       case 'setAsideProposal': result = await D.setAsideTextProposal(id, b.documentId); break
+      case 'draftPlan': result = await planFor(id, scopeOf(b)); break
+      case 'draftQueue': result = await queueDrafting(id, scopeOf(b), uid, b.agreedPence); break
+      case 'draftRun': result = { ok: true, data: await draftRunView(id, b.runId) }; break
+      case 'draftStop': result = await stopDraftRun(id, b.runId); break
     }
   } catch (err) {
     console.error('[action-documents] failed', b.op, err)

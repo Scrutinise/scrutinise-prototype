@@ -42,6 +42,7 @@ import {
 import { WORKER_CONCURRENCY, WORKER_IDLE_MS, buildDriver } from '../lib/lex/build-config'
 import { assertRetrievalConfig, resolvedConfigLine } from '../lib/lex/harness-preflight'
 import { capabilityLine } from '../lib/env-flags'
+import { runNextDraftJob, sweepDraftJobs } from '../lib/lex/document-drafting'
 
 const ONCE = process.argv.includes('--once')
 
@@ -116,6 +117,37 @@ async function runOne(): Promise<boolean> {
     inFlight--
   }
   return true
+}
+
+/**
+ * LEX 26-V2b (decision 243) — "Draft what this heading needs" runs here, one document at a time, in a loop BESIDE the build loop: a
+ * ten-minute build must not hold up a list of short drafts, and the drafts make no searches, so §B's one-build-at-a-time reason does not
+ * bind them. Each row is claimed, drafted, saved as a proposal and settled; the sweep puts back a row a killed worker left mid-draft, so a
+ * run resumes at its next undone row. A SIGTERM lets the document in hand finish, like a build.
+ */
+const DRAFT_SWEEP_MS = 60_000
+async function draftLoop(): Promise<void> {
+  let lastSweep = 0
+  while (!stopping) {
+    let did = false
+    try {
+      if (Date.now() - lastSweep > DRAFT_SWEEP_MS) {
+        lastSweep = Date.now()
+        const s = await sweepDraftJobs()
+        if (s.requeued || s.failed) console.warn(`[build-worker ${WORKER_ID}] documents: ${s.requeued} put back to waiting, ${s.failed} failed after two tries`)
+      }
+      inFlight++
+      try {
+        const r = await runNextDraftJob(WORKER_ID)
+        if (r) { did = true; console.log(`[build-worker ${WORKER_ID}] document job ${r.id}: ${r.settled.status} — ${r.settled.outcome}${r.settled.pence ? ` (${r.settled.pence.toFixed(2)}p)` : ''}`) }
+      } finally { inFlight-- }
+    } catch (err) {
+      console.error(`[build-worker ${WORKER_ID}] document queue failed:`, err instanceof Error ? err.message : err)
+    }
+    if (did) continue
+    if (ONCE) return
+    await sleep(WORKER_IDLE_MS)
+  }
 }
 
 async function main() {
@@ -224,6 +256,10 @@ async function main() {
     console.log(`[build-worker ${WORKER_ID}] email is configured — completion notices can be sent.`)
   }
 
+  // 26-V2b — the documents loop starts beside the builds; this line is the new build's own (a container built before it cannot print it)
+  console.log(`[build-worker ${WORKER_ID}] documents: “Draft what this heading needs” queue on — one document at a time, beside the builds`)
+  const drafting = draftLoop()
+
   let idleTicks = 0
   while (!stopping) {
     // Housekeeping first: a build whose worker died is reset to its last completed pass
@@ -261,6 +297,7 @@ async function main() {
     await sleep(WORKER_IDLE_MS)
   }
 
+  await drafting
   while (inFlight > 0) await sleep(500)
   console.log(`[build-worker ${WORKER_ID}] stopped cleanly`)
   await prisma.$disconnect()

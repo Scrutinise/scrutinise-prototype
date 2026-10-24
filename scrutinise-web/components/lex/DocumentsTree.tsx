@@ -18,6 +18,7 @@ import FocusDialog from './FocusDialog'
 import DocumentView from './DocumentView'
 import { statusWords } from '@/lib/lex/document-view-pure'
 import BoundedInput from './BoundedInput'
+import { DraftPlanDialog, DraftRunLine, type DraftScopeInput } from './DraftNeedsPanel'
 
 type Filter = 'all' | 'missing' | 'drafted' | 'accepted'
 const FILTER_WORD: Record<Filter, string> = { all: 'All', missing: 'Missing', drafted: 'Drafted, not accepted', accepted: 'Accepted' }
@@ -33,6 +34,9 @@ export default function DocumentsTree({ ideaId, readOnly = false }: { ideaId: st
   const [opened, setOpened] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [adding, setAdding] = useState<{ action: TreeActionRow; kind: DocumentKind } | null>(null)
+  // 26-V2b §5 — "Draft what this heading needs": the plan dialog, and the run this page started (null = pick up one already going)
+  const [drafting, setDrafting] = useState<DraftScopeInput | null>(null)
+  const [runId, setRunId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/ideas/${ideaId}/action-documents`)
@@ -86,6 +90,7 @@ export default function DocumentsTree({ ideaId, readOnly = false }: { ideaId: st
         <input value={find} onChange={(e) => setFind(e.target.value)} placeholder="Find a title or a number (38, 38.2, D.38.2)" aria-label="Find in the documents"
           className="ml-auto w-72 max-w-full text-xs border border-zinc-300 rounded px-2 py-1" />
       </div>
+      {!readOnly && <DraftRunLine key={runId ?? 'latest'} ideaId={ideaId} runId={runId} onProgress={() => void load()} />}
       {said && <p className="text-xs border border-zinc-300 rounded px-2 py-1" role="status">{said} <button type="button" className="underline ml-1" onClick={() => setSaid(null)}>OK</button></p>}
 
       {tree.headings.map((h) => {
@@ -95,20 +100,31 @@ export default function DocumentsTree({ ideaId, readOnly = false }: { ideaId: st
         const hOpen = !closed.has(hk)
         return (
           <section key={hk} className="border border-zinc-200 rounded">
-            <button type="button" onClick={() => toggle(hk)} aria-expanded={hOpen} className="w-full flex items-center gap-2 px-2 py-1 text-left bg-zinc-50">
-              <span aria-hidden>{hOpen ? '▾' : '▸'}</span><span className="text-sm font-semibold">{h.name}</span>
-              <span className="text-[11px] text-zinc-500">{rows.length} action{rows.length === 1 ? '' : 's'}</span>
-            </button>
+            <div className="flex items-center bg-zinc-50">
+              <button type="button" onClick={() => toggle(hk)} aria-expanded={hOpen} className="flex-1 flex items-center gap-2 px-2 py-1 text-left">
+                <span aria-hidden>{hOpen ? '▾' : '▸'}</span><span className="text-sm font-semibold">{h.name}</span>
+                <span className="text-[11px] text-zinc-500">{rows.length} action{rows.length === 1 ? '' : 's'}</span>
+              </button>
+              {!readOnly && h.actions.some((a) => a.missing.length) && (
+                <button type="button" className="text-xs underline px-2 shrink-0" data-draft-heading onClick={() => setDrafting({ headingId: h.id, label: h.name })}>Draft what this heading needs</button>
+              )}
+            </div>
             {hOpen && <ul className="divide-y divide-zinc-100">{rows.map((a) => (
               <ActionRow key={a.id} ideaId={ideaId} a={a} readOnly={readOnly} busy={busy} opened={opened} closed={closed} toggle={toggle} onOpen={open} onChanged={() => void load()}
                 onGenerate={async (what) => { const r = await post({ op: 'generate', what, actionId: a.id }, 'Generating the collision report') as { d?: string; rows?: number; unchanged?: boolean } | null; if (r) { setSaid(r.unchanged ? `Unchanged: ${r.d} already matches the clause and the effects data.` : `Saved: ${r.d} generated, ${r.rows} row${r.rows === 1 ? '' : 's'}.`); await load() } }}
                 onAdd={(kind) => setAdding({ action: a, kind })}
+                onDraftNeeds={() => setDrafting({ actionId: a.id, label: `#${a.number ?? '?'}` })}
                 onNeeds={async (mode, kinds, reason) => { const r = await post({ op: 'setNeeds', actionId: a.id, mode, kinds, reason }, `Changing what #${a.number} needs`); if (r) { setSaid(`Saved: what #${a.number} needs.`); await load() } }}
               />
             ))}</ul>}
           </section>
         )
       })}
+
+      {drafting && (
+        <DraftPlanDialog ideaId={ideaId} scope={drafting} onClose={() => setDrafting(null)}
+          onQueued={(id, line) => { setRunId(id); setDrafting(null); setSaid(line) }} />
+      )}
 
       {adding && (
         <AddDialog action={adding.action} kind={adding.kind} busy={busy} onClose={() => setAdding(null)}
@@ -118,10 +134,11 @@ export default function DocumentsTree({ ideaId, readOnly = false }: { ideaId: st
   )
 }
 
-function ActionRow({ ideaId, a, readOnly, busy, opened, closed, toggle, onOpen, onChanged, onGenerate, onAdd, onNeeds }: {
+function ActionRow({ ideaId, a, readOnly, busy, opened, closed, toggle, onOpen, onChanged, onGenerate, onAdd, onNeeds, onDraftNeeds }: {
   ideaId: string; a: TreeActionRow; readOnly: boolean; busy: boolean; opened: string | null; closed: Set<string>; toggle: (k: string) => void
   onOpen: (d: TreeDocument) => void; onChanged: () => void; onGenerate: (what: 'collision') => void; onAdd: (k: DocumentKind) => void
   onNeeds: (mode: 'derived' | 'nothing' | 'set', kinds: DocumentKind[] | undefined, reason: string) => void
+  onDraftNeeds: () => void
 }) {
   const ak = `a:${a.id}`
   const isOpen = !closed.has(ak)
@@ -138,6 +155,7 @@ function ActionRow({ ideaId, a, readOnly, busy, opened, closed, toggle, onOpen, 
             {needsLine(a.needs.kinds.length, live.filter((d) => a.needs.kinds.includes(d.kind)).length, live.filter((d) => a.needs.kinds.includes(d.kind) && d.status === 'ACCEPTED').length)}
             {' · '}{a.needs.why}{a.needs.overridden ? ' (set by hand)' : ''}
             {!readOnly && <button type="button" className="underline ml-1" onClick={() => setNeedsOpen(!needsOpen)}>Change what this needs</button>}
+            {!readOnly && a.missing.length > 0 && <button type="button" className="underline ml-1" data-draft-action onClick={onDraftNeeds}>Draft what this action needs</button>}
           </p>
           {needsOpen && !readOnly && <NeedsForm busy={busy} onSave={(m, k, r) => { onNeeds(m, k, r); setNeedsOpen(false) }} />}
         </div>

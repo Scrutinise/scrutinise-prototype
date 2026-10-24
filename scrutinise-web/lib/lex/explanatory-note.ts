@@ -83,13 +83,13 @@ export async function composeNote(input: NoteInput, ctx: { ideaId: string; userI
 }
 
 /** "Draft the explanatory note" on the screen: compose, then write a PROPOSAL on the action's note (the document is made if it is not there). */
-export async function draftExplanatoryNote(ideaId: string, actionId: string, userId: string | null): Promise<Result<{ d: string; v: number; pence: number | null; reason: string }>> {
+export async function draftExplanatoryNote(ideaId: string, actionId: string, userId: string | null, opts: { call?: typeof callModelJson } = {}): Promise<Result<{ d: string; v: number; pence: number | null; reason: string }>> {
   const a = await prisma.lexCoherentAction.findFirst({ where: { id: actionId, ideaId, status: 'LIVE' }, select: { id: true, number: true, title: true, practicalStep: true, commentary: true, avenue: true } })
   if (!a) return fail('That action is not on this idea’s live list. Nothing was drafted.')
   if (a.avenue !== 'LEGISLATIVE') return fail(`#${a.number ?? '?'} is not a legislative action, so it has no clause to explain. Nothing was drafted.`)
   const cur = currentVersion(await draftFor(a.id))
   if (!cur?.clause.trim()) return fail(`#${a.number ?? '?'} has no clause yet. Draft or write the clause first. Nothing was drafted.`)
-  const r = await composeNote({ number: a.number, title: a.title, statement: a.practicalStep, detail: a.commentary, instruction: cur }, { ideaId, userId })
+  const r = await composeNote({ number: a.number, title: a.title, statement: a.practicalStep, detail: a.commentary, instruction: cur }, { ideaId, userId, call: opts.call })
   if (!r.ok) return fail((r as { error: string }).error)
   const fresh = await prisma.lexCoherentAction.findFirst({ where: { id: a.id, status: 'LIVE' }, select: { id: true } })
   if (!fresh) return fail('The action was ruled out or merged while Lex was drafting. Nothing was written.')

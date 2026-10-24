@@ -1,5 +1,25 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-24 11:35 UTC - LEX 26-V2b: "Draft what this heading needs" on the worker, five kind templates, prices measured
+
+- **The button** (§5, decision 243): "Draft what this heading needs" on each heading of the Documents tree, and "Draft what this action needs" on each action.
+  - The dialog lists every missing document by action and kind with its MEASURED price, or "generated, free". What cannot run now is listed with why: no clause version for a collision report, no cited source for a background note, or a kind whose price is not measured.
+  - One button, "Draft these — about Np". Nothing is spent before it is pressed, and the server re-reckons the price and refuses if it rose (asks first).
+- **On the worker:** `document_draft_job` (new table, `prisma/lex_26v2b_draft_jobs.sql`) has one row per document.
+  - `scripts/build-worker.ts` runs them one at a time, in a loop beside the builds. Its start-up line "documents: “Draft what this heading needs” queue on" is new-build-only.
+  - Each result is saved as a PROPOSAL as it finishes, never a version.
+  - Resumable: a row a killed worker left running is put back after 10 min, and failed after two tries. A document written meanwhile is "not needed". Stop takes out the waiting rows.
+  - The worker never takes a row on a scratch copy.
+- **Five templates** (`lib/lex/document-drafting-pure.ts`): code text, specification, costing, operating text, background note.
+  - Each opens with the §4 caveat, plus "expect gaps" where there is no Explanation, and ends with "Gaps Lex could not fill".
+  - References are kept only where the Explanation or the supplied sources cite them; a pinpointed `[Ref: n, section …]` is checked too. D-numbers are taken out.
+  - The clause and the explanatory note keep their own drafters.
+- **Prices measured** on a scratch copy of 452c5ade (`scripts/measure-26v2b-kinds.ts`, Sonnet 5.5 at medium effort, 13 runs, about 15p): operating text 1.0p (n=4), costing 1.1p (n=3), code text 1.3p (n=2), specification 1.7p (n=2), background note 1.1p (n=2).
+  - ⚠ No action on 452c5ade has cost lines, so every costing run is the "no figure" case.
+- ⚠ 452c5ade's platform heading is "The platform", not "The accountability platform", so V2a's derived specification never fires there. Flagged to Charlie, not changed.
+- **Checks:** new `check:lex-26v2b` 47/47, including a real-browser part. Five mutations each turned it red. `check:lex-26v` 59/59, `check:lex-26v1b` 74/74, prompt examples clean, client boundary clean, `tsc` clean.
+- **DDL:** whichdb showed ep-old-dust-aboxi69a. Applied 11:27 UTC and read back (columns, the two CHECKs, the cascade FK, the partial unique index), shipped in this push.
+
 ## 2026-10-24 09:05 UTC - LEX 26-V2a follow-up (GRAPH 8's review): made-under rows show their stored words
 
 - GRAPH 8 reported that every CRaG s.20 "made-under" row is a procedural mention filed as a power (§5, §7.4). Its three asks, checked:

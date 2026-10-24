@@ -5698,3 +5698,32 @@ model ActionDocumentVersion {
   @@index([documentId], map: "action_document_version_document_idx")
   @@map("action_document_version")
 }
+
+/// LEX 26-V2b (decision 243) — one document to draft or generate in a "Draft what this heading needs" run (rows sharing runId). The worker
+/// claims the oldest QUEUED row, saves its result as a PROPOSAL, and settles it; a row left RUNNING by a killed worker is put back by the
+/// sweep (attempts counted). DDL: prisma/lex_26v2b_draft_jobs.sql (FK to Idea with cascade, CHECKs on kind/status, one live row per
+/// action and kind). pricePence = the measured price the owner agreed to; pence = what it spent.
+model DocumentDraftJob {
+  id         String    @id @default(uuid())
+  runId      String    @map("run_id")
+  ideaId     String    @map("idea_id")
+  actionId   String    @map("action_id")
+  kind       String
+  seq        Int
+  /// QUEUED · RUNNING · DONE · FAILED · SKIPPED · STOPPED (CHECK)
+  status     String    @default("QUEUED")
+  pricePence Decimal?  @map("price_pence") @db.Decimal
+  pence      Decimal?  @db.Decimal
+  outcome    String?
+  dNumber    String?   @map("d_number")
+  attempts   Int       @default(0)
+  userId     String?   @map("user_id")
+  worker     String?
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  claimedAt  DateTime? @map("claimed_at") @db.Timestamptz()
+  finishedAt DateTime? @map("finished_at") @db.Timestamptz()
+
+  @@index([status, createdAt, seq], map: "document_draft_job_queue_idx")
+  @@index([ideaId, runId], map: "document_draft_job_run_idx")
+  @@map("document_draft_job")
+}
