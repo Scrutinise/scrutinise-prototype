@@ -4435,6 +4435,10 @@ model DeepeningIssue {
   attachedBy           String?
   attachReason         String?
   attachedAt           DateTime?
+  /// 26-V2d (§7) — the document review this issue came from (document_review: the pass, and the version it read). Null for every issue not
+  /// raised by a review of a document. A review issue's passKey is "review:<PASS>" and its runVersion is 0, so a build's readers (which select
+  /// by runVersion = buildVersion) never take one up. DDL: prisma/lex_26v2d_document_review.sql (ON DELETE SET NULL; no Prisma relation).
+  reviewId             String?
 
   createdAt            DateTime             @default(now())
   resolvedAt           DateTime?
@@ -4444,6 +4448,7 @@ model DeepeningIssue {
   @@index([ideaId, status])
   @@index([actionId])
   @@index([documentId])
+  @@index([reviewId])
 }
 
 enum DeepeningPassStatus {
@@ -5721,6 +5726,34 @@ model ActionDocumentVersion {
   @@unique([documentId, role, v], map: "action_document_version_unique")
   @@index([documentId], map: "action_document_version_document_idx")
   @@map("action_document_version")
+}
+
+/// 26-V2d (BRIEF_26V §7, 239) — one of the five review passes read one version of one document. Written once, never updated; the record that
+/// a review RAN, including one that raised nothing (RUN, issues 0, heldUp says why) or failed (FAILED, failureReason in words). The issues it
+/// raised point back with DeepeningIssue.reviewId. DDL: prisma/lex_26v2d_document_review.sql (CHECKs on passKey, status; FKs in the SQL only).
+model DocumentReview {
+  id            String   @id @default(uuid())
+  ideaId        String   @map("idea_id")
+  documentId    String   @map("document_id")
+  /// The version of the document that was read.
+  v             Int
+  /// One of the five PASSES (deepening-config.ts).
+  passKey       String   @map("pass_key")
+  /// RUN · FAILED (CHECK; FAILED ⇔ failureReason).
+  status        String
+  issues        Int      @default(0)
+  heldUp        String?  @map("held_up")
+  /// The corrections made to the answer, in words ("1 named a part the document does not have …"), or null.
+  falls         String?
+  failureReason String?  @map("failure_reason")
+  pence         Decimal? @db.Decimal
+  seconds       Decimal? @db.Decimal
+  byUserId      String?  @map("by_user_id")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([documentId, passKey, v], map: "document_review_document_idx")
+  @@index([ideaId], map: "document_review_idea_idx")
+  @@map("document_review")
 }
 
 /// LEX 26-V2b (decision 243) — one document to draft or generate in a "Draft what this heading needs" run (rows sharing runId). The worker
