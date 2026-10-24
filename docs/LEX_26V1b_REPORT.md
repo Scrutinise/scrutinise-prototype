@@ -1,6 +1,24 @@
 # LEX 26-V1b — Report
 
-**Status, 2026-10-24: V1b-b BUILT — see "V1b-b" below for the push and live verification.** V1b-a LIVE at `009198f`.
+**Status, 2026-10-24 00:08 UTC: V1b-b LIVE at `13538ec`, schema with it. `check:lex-26v1b` 71/71 (10 controls, 0 dead, 0 not run), with a mutation run.**
+- **Schema:** `lex_26v1b_explanatory_note.sql` was applied to Neon after whichdb (`ep-old-dust-aboxi69a`, neondb) and read back. That was minutes before the push, in the same commit as the code that writes the kind.
+- **Clean build:** `npm ci` + `tsc` on a worktree of the commit, exit 0. Boundary check A: 0 cross-package files. (`check-clean-build.sh` step B cannot write `/tmp` on this machine, so it was run by hand at `C:/cb2`.)
+- **Verified live:**
+  - `/api/health` reports `13538eca…` (production).
+  - "The order, derived" and "drop to merge" are in live chunk `c6d9d49faf20404c.js`; "A non-textual modification" and "Use it as version" are in `438918a1f512b74e.js`.
+  - Control: V1b-a's removed line "…are the next part of this work" is in no chunk (24 read).
+  - build-worker deployed itself as `c8a34d6d` (push-triggered). It went SUCCESS with `meta.commitHash` `13538eca1247`, and its container printed "retrieval configuration OK" at 00:07:20 UTC.
+- **Mutation run:** two faults planted together, both caught; the files were restored. Removing the change words from the marked-up view, and removing the circle refusal, gave 5 failures and flipped the 2 controls that watch those properties.
+- **Regression, run one at a time:**
+  - 26-U 57/57; 26-V 50/50; 26-T1 98/98; 26-T2 72/72.
+  - 26-S2 221/221; 26-S2-structure 105/105.
+  - 26-S-browser 92/92; 26-S2-browser 33/33; 26-Q 74/74; verify:lex-26q-ui 25/25.
+  - prompt-examples 0 leaks; client-boundary clean; check:scripts clean.
+  - idea-law is 23/24: GRAPH's E1, as before, not ours.
+  - 26-S2-structure's "Retire heading" failed once in the background run and passed on rerun. It reads `deleteHeading` on whichever heading the copy offers, and this sprint did not touch that code.
+- **Updated for 262/255, by name:** `check:lex-26q` (accept drops Now / Next / Later), `check:lex-26s2` (step 4's row, checklist and accept), `check:lex-26s2-structure` (step 1's view list), `verify:lex-26q-ui` (OrderView in place of SequenceView).
+
+V1b-a LIVE at `009198f` (below).
 
 ## V1b-b — size first (24 Oct, before building)
 
