@@ -1,5 +1,12 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-24 08:55 UTC - LEX: a9680f0 and 9a8b79f verified live; GRAPH 8 (2030266) verified live; 452c5ade's schedule regenerated
+
+- **GRAPH 8 `2030266`** (joint commit, pushed by LEX): Vercel health `2030266`. build-worker `c56e579e` SUCCESS, `meta.commitHash` 2030266c1bd9, "retrieval configuration OK" 07:46:10.
+- **`a9680f0`** (264–266): health `a9680f0`. build-worker `f5ae9092` SUCCESS on a9680f071e3a, config line 08:21:24. "Explanation — what this action does in full and why" is in live chunk `46494a7c96f36022.js`; "Detail, parts, tables — no limit" is in no chunk.
+- **`9a8b79f`** (26-V2a): health `9a8b79f`. build-worker `f9342bff` SUCCESS on 9a8b79f75b11, config line 08:54:28. The new collision line is in chunk `12216682c8b308c5.js`; "depths 2–3 wait on the graph" is in no chunk.
+- **After the code went live (free):** 452c5ade's one generated document, D.203.1 (the schedule), was out of date as "generated from the collision reports". It is regenerated as version 2 with **0 rows**: no accepted drafting instruction on the idea amends, repeals or modifies anything yet (#38's lines are "relies on"). No collision report exists on the idea, and nothing reads as out of date now.
+
 ## 2026-10-24 08:47 UTC - LEX 26-V2a: the collision report in two parts on onwardFrom() (267), the schedule from accepted drafts only, Specification derived
 
 - **Sized and split** (24 Oct (3)):
