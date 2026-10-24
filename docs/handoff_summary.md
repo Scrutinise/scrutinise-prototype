@@ -987,6 +987,12 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-10-24 11:35 UTC: 26-V2b ("Draft what this heading needs") pushed as `959bd3a`, with its table (`lex_26v2b_draft_jobs.sql`, applied 11:27).** See CHANGE_LOG 11:35.
+- **Live, verified 11:50:** health shows `959bd3a`; the new strings are in chunk `e31087ec0df28fab.js`. build-worker `076acbad` SUCCESS on 959bd3a563f9, with its "queue on" line at 11:48:12.
+- **Prices** (measured on scratch, 13 runs, about 15p): operating text 1.0p, costing 1.1p, code text 1.3p, specification 1.7p, background note 1.1p.
+- ⚠ **For Charlie:** 452c5ade's heading is "The platform", not "The accountability platform", so the derived specification never fires there. Change the constant?
+- **Next — V2c:** issues re-pointed at documents; measure the re-attachment on scratch, then ask before running it on 452c5ade.
+
 **▶ 2026-10-24 08:47 UTC: 26-V2a (267 plus the §4 Specification rule) is built and checked; committed and pushed with this line.** See CHANGE_LOG 08:47.
 - The collision report has two parts, walked by strength over `onwardFrom()`.
 - The schedule and the pack annexe hold accepted drafted amendments only.

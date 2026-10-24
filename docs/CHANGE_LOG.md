@@ -1,5 +1,11 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-24 11:50 UTC - LEX: 959bd3a (26-V2b) verified live
+
+- Vercel health `959bd3a`. "Draft what this heading needs" and "Stop the waiting ones" are in live chunk `e31087ec0df28fab.js`.
+- build-worker `076acbad` SUCCESS, `meta.commitHash` 959bd3a563f9. "retrieval configuration OK" and the new-build-only "documents: “Draft what this heading needs” queue on" both logged at 11:48:12.
+- No drafting has been run on 452c5ade. That is Charlie's to press, with the price shown first.
+
 ## 2026-10-24 11:35 UTC - LEX 26-V2b: "Draft what this heading needs" on the worker, five kind templates, prices measured
 
 - **The button** (§5, decision 243): "Draft what this heading needs" on each heading of the Documents tree, and "Draft what this action needs" on each action.
