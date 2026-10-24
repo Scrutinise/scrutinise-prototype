@@ -92,9 +92,29 @@ ALTER TABLE ${CITATION_TABLE} ADD COLUMN IF NOT EXISTS detection text NOT NULL D
 -- more than before, so no existing row can fail it. Drop-then-add because a
 -- CHECK cannot be altered in place; both statements are in one transaction by
 -- virtue of being one query, so the table is never briefly unguarded.
+-- WIDENED AGAIN by GRAPH 5 (setup-caselaw-edge-tables.ts) to admit 'caselaw-markup'. This list must stay the
+-- live one: on 24 Oct 2026 it still read ('markup', 'text', 'enabling'), and re-running this file failed against
+-- the 1.29M caselaw rows (rolled back whole, nothing changed) - a narrowing nobody meant.
 ALTER TABLE ${CITATION_TABLE} DROP CONSTRAINT IF EXISTS citation_edge_detection_ck;
 ALTER TABLE ${CITATION_TABLE} ADD CONSTRAINT citation_edge_detection_ck
-  CHECK (detection IN ('markup', 'text', 'enabling'));
+  CHECK (detection IN ('markup', 'text', 'enabling', 'caselaw-markup'));
+-- DECISION 271 (24 Oct 2026): an enabling row is a DEPENDENCY only when the enacting words name the provision as
+-- the power exercised. enabling_role is read by parseEnabling's enablingRole: power | mention | unstated, and only
+-- 'power' is a dependency. enabling_role_words is the phrase it was read from (NULL for unstated). Additive, nullable.
+-- The presence CHECK is added NOT VALID (it binds every new row at once) and VALIDATEd by backfill-271-enabling-role
+-- once every existing enabling row carries a role - so a row the backfill could not reach fails the validation
+-- instead of passing as a silent NULL.
+ALTER TABLE ${CITATION_TABLE} ADD COLUMN IF NOT EXISTS enabling_role text;
+ALTER TABLE ${CITATION_TABLE} ADD COLUMN IF NOT EXISTS enabling_role_words text;
+ALTER TABLE ${CITATION_TABLE} DROP CONSTRAINT IF EXISTS citation_edge_enabling_role_ck;
+ALTER TABLE ${CITATION_TABLE} ADD CONSTRAINT citation_edge_enabling_role_ck
+  CHECK (enabling_role IN ('power', 'mention', 'unstated'));
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'citation_edge_enabling_role_present_ck') THEN
+    ALTER TABLE ${CITATION_TABLE} ADD CONSTRAINT citation_edge_enabling_role_present_ck
+      CHECK ((detection = 'enabling') = (enabling_role IS NOT NULL)) NOT VALID;
+  END IF;
+END $$;
 -- The dominant query is INBOUND, not outbound: "what points at this Act?"
 CREATE INDEX IF NOT EXISTS citation_edge_target_act ON ${CITATION_TABLE} (target_act_id);
 CREATE INDEX IF NOT EXISTS citation_edge_target_uri ON ${CITATION_TABLE} (target_uri);
@@ -107,7 +127,7 @@ async function main() {
   const pool = getNeonPool()
   if (!process.argv.includes('--status')) {
     await pool.query(DDL)
-    console.log(`[setup-citation-edge] ${CITATION_TABLE} + 4 indexes ensured`)
+    console.log(`[setup-citation-edge] ${CITATION_TABLE} + 4 indexes + decision-271 enabling_role ensured`)
   }
   const exists = await pool.query(`SELECT to_regclass('${CITATION_TABLE}') AS t`)
   if (!exists.rows[0].t) { console.log('[setup-citation-edge] table does not exist'); await endNeonPool(); return }

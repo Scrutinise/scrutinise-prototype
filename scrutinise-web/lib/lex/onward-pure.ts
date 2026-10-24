@@ -9,8 +9,16 @@
 // a strength on every row, and as the only words the reader has for each strength.
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** The kinds walked by default. Order is strength order, strongest first. */
-export const ONWARD_KINDS = ['made-under', 'amends', 'repeals', 'modifies', 'commences', 'cites'] as const
+/**
+ * The kinds walked by default. Order is strength order, strongest first.
+ *
+ * ⚠⚠ DECISION 271 (24 Oct 2026): `made-under` is a row whose enacting words name this as THE POWER EXERCISED
+ * (`citation_edge.enabling_role = 'power'`). An instrument's enacting words that name it any other way — "the
+ * requirements of section 20 … have been complied with", "laid before Parliament under section 20(1)(a)", a
+ * designation, a consent — are `enacting-mention`: a reference, for review. Before 271 both were `made-under`, and
+ * every "made under CRaG s.20" row was the second kind (GRAPH_8_REPORT §5).
+ */
+export const ONWARD_KINDS = ['made-under', 'amends', 'repeals', 'modifies', 'commences', 'cites', 'enacting-mention'] as const
 /** ⚠ Requestable, never walked by default (§5d): a judgment citing a provision is interpretation, not drafting. */
 export const CASELAW_KIND = 'caselaw-markup' as const
 export type OnwardKind = typeof ONWARD_KINDS[number] | typeof CASELAW_KIND
@@ -30,7 +38,22 @@ export const STRENGTH_OF: Readonly<Record<OnwardKind, Strength>> = {
   modifies: 'operation',
   commences: 'operation',
   cites: 'reference',
+  'enacting-mention': 'reference',
   'caselaw-markup': 'interpretation',
+}
+
+/**
+ * `citation_edge.enabling_role` — read by the extractor from the enacting words (scripts/ingest/graph/
+ * extract-madeunder-edges.ts `enablingRole`, validated against 211 hand-labelled hits). Only `power` is a dependency.
+ *   power     the words name this as the power exercised            → made-under
+ *   mention   they name it as a procedure, consent, designation, …  → enacting-mention
+ *   unstated  they say neither                                      → enacting-mention
+ */
+export type EnablingRole = 'power' | 'mention' | 'unstated'
+export const ENABLING_ROLE_WORDS: Readonly<Record<EnablingRole, string>> = {
+  power: 'the enacting words name this as the power exercised',
+  mention: 'the enacting words mention this, but not as the power exercised',
+  unstated: 'the enacting words do not say whether this is the power exercised',
 }
 
 export function strengthOf(kind: string): Strength | null {
@@ -67,7 +90,7 @@ export const CONSEQUENCE_WORDS = /\bconsequen|\bknock[- ]on|\bconsequential sche
 
 /** The rules a caller is held to — the tool description repeats them verbatim (§4). */
 export const ONWARD_RULES: readonly string[] = [
-  'A cites row is a provision to read, not a provision that changes. Describe such a set as “provisions that refer to this — for review”, never as consequences, knock-ons or a consequential schedule.',
+  'A cites row is a provision to read, not a provision that changes. Describe such a set as “provisions that refer to this — for review”, never as consequences, knock-ons or a consequential schedule. An enacting-mention row is the same: the instrument’s enacting words name this, but not as the power it was made under.',
   'Walk made-under as far as it goes. Do NOT walk official effects or citations past depth 2: measured, both reach thousands of instruments by depth 3. Stop citations at depth 1, or depth 2 with the set labelled weak, and never show a depth-3 citation set to a user.',
   'Count and say what was not walked. A truncated set, an unaddressable provision, and a step with no rows are three different facts.',
   'Never put a figure from this reader in the “Consequential amendments and repeals” annexe. That annexe records drafted amendments; this reader produces candidates.',

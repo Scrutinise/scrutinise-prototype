@@ -1,5 +1,20 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-24 16:05 UTC - GRAPH: decision 271 (made-under only where the enacting words name the power) in extraction and the reader; check:idea-law E1 split into E1a/b/c
+
+- **Report:** `docs/GRAPH_271_REPORT.md`. Applied to Neon 16:00–16:01 UTC; reader **not committed, not deployed**.
+- **Extraction** (`scripts/ingest/graph/extract-madeunder-edges.ts` `enablingRole`, one parser for both writers): every enabling hit is `power` / `mention` / `unstated`, read from its own clause. Powers named only by back-reference ("…section 2(2) of that Act", "section 59(1) of the Act") are now hits of their own.
+- **Schema** (`setup-citation-edge-table.ts`, DDL of record): `citation_edge.enabling_role` + `enabling_role_words`, value CHECK, presence CHECK (enabling ⇔ role) added NOT VALID then **VALIDATED** after the backfill. The file's stale detection CHECK (missing GRAPH 5's `caselaw-markup`) failed the first apply and rolled back whole; corrected.
+- **Backfill** (`backfill-271-enabling-role.ts`): 191,258 rows given a role; 10,518 back-reference power rows inserted. Now power 150,607 · mention 38,715 · unstated 12,454.
+  - ⚠ 1,301 rows from 340 instruments the bulk zip on disk (14 May copy; rows say 26 Aug) no longer holds were read from their stored words, marked `[stored words]`. That fallback agrees with the full parse 92.3% of the time.
+  - ⚠ `v36/source-entries.json` absent; inserted rows were bridged through `legislation_identity`.
+- **Validation:** `check-271-enabling-role.ts` 15/0. 211 hand-labelled hits, 4/4 controls. Final untuned holdout 39/40, no false power; every untuned score is in the report.
+- **Reader:** `made-under` = `enabling_role = 'power'` only. New kind **`enacting-mention`** (strength `reference`) for the rest. `OneStep.enablingRole` / `enablingRoleWords`; the tool shows `enabling_role`. CRaG s.20: made-under naming s.20 3 → **0**; 3 enacting-mentions.
+- **E1:** `check:idea-law` E1 compared lines with rows. Now E1a (rows accounted), E1b (lines = keys), E1c (each merge keeps every source and action id), each with controls. 26/26, 11/11 controls.
+- **Checks:** `check:onward` 23/23 (2,808 assertions, 9/9 controls, new B16 + K9); `check:effects` 30/30; `check:statutory` 17/0; web `tsc` clean; ingest tsc clean.
+  - `check:lex-26v` 8/1: the failure is an `actionHeading` column missing from the DB, LEX's in-flight 26-V2c, not this change.
+- **For Charlie:** 28% of power hits lose their provision list ("section 52(2) and (4) of"), so they read Act-wide (report §6.1). Fix + additive backfill?
+
 ## 2026-10-24 15:37 UTC - LEX 268 + 269: specification under any "platform" heading; the official record's step-2 stop said in plain words
 
 - **268** (24 Oct (4)): a heading whose name contains the word "platform" (whole word, any case) now derives a specification for every action under it, so Charlie's "The platform" on 452c5ade gets one, before he presses "Draft what this heading needs". The why line names the heading as written ("under “The platform”"). Interim: V2c gives headings a kind (instrument type) and binds the rule to the kind.

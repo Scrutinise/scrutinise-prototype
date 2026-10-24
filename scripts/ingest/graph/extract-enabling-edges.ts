@@ -36,7 +36,7 @@ import { ZipReader, ZipEntryMeta } from './zip-reader'
 import { getNeonPool, endNeonPool } from '../shared/neon-pool'
 import { ENTRY_RX, gidFromEntry } from './audit-25h-citations'
 import { CITATION_TABLE } from './setup-citation-edge-table'
-import { parseEnabling, EnablingHit } from './extract-madeunder-edges'
+import { parseEnabling, EnablingHit, EnablingRole } from './extract-madeunder-edges'
 import { identitiesFor, loadIdentityBridge } from './identity'
 
 const ZIP_PATH = 'C:/Code/scrutinise-prototype/scripts/legislation/v276-bulk/best-collection-xml.zip'
@@ -63,10 +63,13 @@ type Stats = {
   hits: number; recitalFallback: number
   rows: number; written: number
   withProvision: number; resolvedRows: number
+  /** DECISION 271: hits by role, and how many were back-references */
+  power: number; mention: number; unstated: number; backReference: number
 }
 const stats: Stats = {
   docs: 0, docErrors: 0, noPreamble: 0, elided: 0, noTarget: 0,
   hits: 0, recitalFallback: 0, rows: 0, written: 0, withProvision: 0, resolvedRows: 0,
+  power: 0, mention: 0, unstated: 0, backReference: 0,
 }
 
 export type EnablingRow = {
@@ -74,6 +77,8 @@ export type EnablingRow = {
   targetUri: string; targetActId: string; targetProvisionRef: string | null
   citationText: string; rawFragment: string
   resolved: boolean; sourceGid: string
+  /** DECISION 271 — only 'power' is a dependency. See `enablingRole` in extract-madeunder-edges.ts. */
+  enablingRole: EnablingRole; enablingRoleWords: string | null
 }
 
 const uriFor = (gid: string) => `http://www.legislation.gov.uk/id/${gid}`
@@ -88,13 +93,15 @@ export function rowsFor(gid: string, hits: EnablingHit[], held: Set<string>): En
     // It must never be quoted back as if the enacting sentence contained it.
     const canonical = loadIdentityBridge().canonical(h.targetGid)
     const resolved = identitiesFor(h.targetGid).some(id => held.has(id))
-    const text = (h.recitalFallback ? '[preamble-recital] ' : '') + h.citationText
+    // ⚠ A back-reference names its power with no anchor ("of that Act"): the words say so, so the quote does too.
+    const text = (h.recitalFallback ? '[preamble-recital] ' : '') + (h.backReference ? '[back-reference] ' : '') + h.citationText
     const base = {
       sourceDocUri: uriFor(gid), sourceProvisionRef: null as null,
       targetUri: uriFor(h.targetGid), targetActId: canonical,
       citationText: text.slice(0, CITATION_TEXT_MAX) || '(enacting words empty)',
       rawFragment: h.rawFragment.slice(0, RAW_FRAGMENT_MAX) || '(no fragment)',
       resolved, sourceGid: gid,
+      enablingRole: h.role, enablingRoleWords: h.roleWords,
     }
     // ⚠ An act-level row is ALWAYS written, even when provisions are named. A
     // provision-only row would make "is this instrument made under that Act at
@@ -105,14 +112,14 @@ export function rowsFor(gid: string, hits: EnablingHit[], held: Set<string>): En
   return out
 }
 
-async function loadHeld(): Promise<Set<string>> {
+export async function loadHeld(): Promise<Set<string>> {
   const { rows } = await getNeonPool().query(
     `SELECT DISTINCT split_part(id, ':', 2) gid FROM corpus_sections
      WHERE corpus = ANY($1::text[]) AND status = 'compiled'`, [LEG_CORPORA])
   return new Set(rows.map((r: { gid: string }) => r.gid))
 }
 
-async function insert(rows: EnablingRow[], provenance: string): Promise<number> {
+export async function insert(rows: EnablingRow[], provenance: string): Promise<number> {
   if (rows.length === 0) return 0
   const pool = getNeonPool()
   let written = 0
@@ -123,14 +130,15 @@ async function insert(rows: EnablingRow[], provenance: string): Promise<number> 
     const tuples = batch.map((r, j) => {
       values.push(r.sourceDocUri, r.sourceProvisionRef, r.targetUri, r.targetActId,
                   r.targetProvisionRef, r.citationText, r.rawFragment, r.resolved,
-                  'SI', r.sourceGid, DETECTION, provenance)
-      const b = j * 12
-      return `($${b + 1},$${b + 2},$${b + 3},$${b + 4},$${b + 5},$${b + 6},$${b + 7},$${b + 8},$${b + 9},$${b + 10},$${b + 11},$${b + 12})`
+                  'SI', r.sourceGid, DETECTION, provenance, r.enablingRole, r.enablingRoleWords)
+      const b = j * 14
+      return `(${Array.from({ length: 14 }, (_, k) => `$${b + k + 1}`).join(',')})`
     })
     const res = await pool.query(
       `INSERT INTO ${CITATION_TABLE}
         (source_doc_uri, source_provision_ref, target_uri, target_act_id, target_provision_ref,
-         citation_text, raw_fragment, resolved, source_type, source_gid, detection, extracted_from)
+         citation_text, raw_fragment, resolved, source_type, source_gid, detection, extracted_from,
+         enabling_role, enabling_role_words)
        VALUES ${tuples.join(',')}`, values)
     written += res.rowCount ?? 0
   }
@@ -185,6 +193,7 @@ async function main() {
       else if (outcome.kind === 'no-target') stats.noTarget++
       else {
         stats.hits += outcome.hits.length
+        for (const h of outcome.hits) { stats[h.role]++; if (h.backReference) stats.backReference++ }
         if (outcome.hits.some(h => h.recitalFallback)) stats.recitalFallback++
         const rows = rowsFor(gid, outcome.hits, held)
         stats.rows += rows.length

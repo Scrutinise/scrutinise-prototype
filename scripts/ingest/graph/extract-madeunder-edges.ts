@@ -158,13 +158,157 @@ export type EnablingHit = {
   /** ⚠ the exact input `refListBefore` was given, so an audit can re-run a
    *  different parser over IDENTICAL bytes rather than over the truncated quote */
   beforeWindow: string
+  /** ⚠ DECISION 271 — whether the words name this anchor as the power exercised. See `enablingRole`. */
+  role: EnablingRole
+  /** the phrase the role was read from, verbatim from the enacting words; null for `unstated` */
+  roleWords: string | null
+  /** true when the power is named by back-reference ("of that Act") rather than at an anchor — see `enablingRole` */
+  backReference: boolean
 }
+
+/**
+ * ⚠⚠ DECISION 271 (Charlie, 24 Oct 2026): AN ENABLING ROW IS A DEPENDENCY ONLY WHEN THE ENACTING WORDS NAME THE
+ * PROVISION AS THE POWER EXERCISED. A procedural mention is a reference, for review.
+ *
+ * Every anchor in the enacting words became an enabling hit, so "the requirements of section 20 of the Constitutional
+ * Reform and Governance Act 2010 have been complied with" was filed exactly as "in exercise of the powers conferred by
+ * section 20" would have been — all 11 "made under CRaG s.20" rows were of that kind (GRAPH_8_REPORT §5). The role is
+ * read from the CLAUSE the anchor sits in (back to the last sentence end): whichever formula ENDS nearest the anchor
+ * governs it, so "in exercise of the powers conferred by section 2 of X[a], a draft having been laid in
+ * accordance with section 3 of X[b]" makes [a] a power and [b] a mention.
+ *
+ *   power     a power formula governs the anchor ("in exercise of", "powers conferred by", "by virtue of", …)
+ *   mention   a non-power formula governs it — procedure ("requirements of", "laid before", "in accordance with",
+ *             "consulted"), consent, definition ("within the meaning of") or amendment ("as amended by")
+ *   unstated  neither appears in the clause. ⚠ NOT a dependency (the rule needs the words to SAY so), and not a
+ *             mention either: the words are shown and a reader decides.
+ *
+ * ⚠⚠ AND A POWER CAN BE NAMED WITHOUT AN ANCHOR OF ITS OWN — commonly. "The Secretary of State is designated for the
+ * purposes of section 2(2) of the European Communities Act 1972[a] … . Accordingly, the Secretary of State makes the
+ * following Regulations in exercise of the powers conferred by section 2(2) of THAT ACT" (uksi/2016/912), or "Under
+ * section 58(4) of the 2009 Act[a] (“the Act”) the Commission published a report … . The Commission makes the
+ * following Order in exercise of the power conferred by section 59(1) of THE ACT" (uksi/2022/131). Anchor [a] is
+ * rightly a mention, and before this the power was simply lost. So `parseEnabling` turns a power formula that ends in
+ * "of that Act / of the Act / of the said Order / by that section" into a hit of its OWN — `backReference: true`,
+ * role `power`, its own provision list (s.59, not s.58) — resolved to the anchor it refers back to. "the Act" is
+ * resolved only through an anchor the text itself defines as (“the Act”); an unresolvable one writes nothing.
+ */
+export type EnablingRole = 'power' | 'mention' | 'unstated'
+export const ENABLING_ROLES: readonly EnablingRole[] = ['power', 'mention', 'unstated']
+
+// ⚠ "in pursuance of section 150(4) …" and "having … power under section 55" are how older Orders and rules name
+// their power; "make the following Regulations pursuant to section 1" names it too, and must beat the bare
+// "pursuant to" inside it (the formula that ENDS last governs — see `enablingRole`).
+const POWER_RX = /\b(?:in exercise of|exercis(?:e|es|ing) (?:the |his |her |its |their |all )?(?:powers?|functions?)|powers? (?:conferred|given|contained|vested|exercisable|under)|conferred (?:on|upon|in)|vested in (?:it|him|her|them) by|authority conferred|by virtue of|(?<!\b(?:has|have|had|having|been|was|were),?\s)in pursuance of|powers? exercised|those conferred by|enabling powers?|makes? (?:the following|these|this)\b[^.]{0,60}?\b(?:under|pursuant to|in pursuance of))\b/gi
+const MENTION_RX = /\b(?:requirements? (?:of|in|under)|complied with|in accordance with|(?:as )?required (?:by virtue of|by|under)|pursuant to|laid (?:before|in draft)|approved by (?:a )?resolution|consult(?:ed|ing|ation)|having regard to|consent of|with the (?:consent|approval|agreement)|has been (?:laid|published|given)|designated (?:for the purposes?|in relation|under)|referred to in|within the meaning of|as defined (?:in|by)|as (?:amended|inserted|substituted) by|whereas|(?:has|have|had|having|been|was|were),?\s+in pursuance of|proposals? (?:submitted|made)|for the purpose of giving effect to|after (?:reference|agreement)|referred to it)\b/gi
+/** A sentence ends at a full stop followed by a capital — not "c. 68", "No. 2", "S.I. 1991/…", or the "etc." of
+ *  "the Health and Safety at Work etc. Act 1974", which cut a real power's clause in two in the first pilot. */
+const SENTENCE_END_RX = /(?<!\b(?:etc|No|Nos|art|arts|reg|regs|para|paras|s|ss|c|Sch|St|Co|Ltd|vol|Vol))\.\s+(?=[A-Z])/g
+
+const lastMatch = (rx: RegExp, s: string): RegExpMatchArray | null => {
+  let last: RegExpMatchArray | null = null
+  for (const m of s.matchAll(rx)) last = m
+  return last
+}
+
+/**
+ * ⚠ "now vested in him" is bound to the ONE anchor it precedes (the transfer-of-functions Order that moved the power),
+ * so it is read only from the words since the previous anchor. Read from the whole clause, it carried onto the next
+ * power list — "…and now vested in it[a], and sections 5 and 17 of the State Pension Credit Act[b]" made [b] a
+ * mention (validation sample, #41).
+ */
+/** Words that name a provision: "section 5", "Article 3", "Schedule 2", "Part IV" — or the bare tail of a list a
+ *  footnote split, "…and 428(3) of the Act" or "…and 189(1) and (4) of" (brackets already dropped). */
+const PROVISION_RX = /\b(?:(?:sections?|subsections?|articles?|regulations?|paragraphs?|schedules?|rules?|parts?|chapters?)\s+(?:[0-9]|[IVX]+\b|[A-Z]\b)|\d+[A-Z]*\b[\s,]*(?:and\s+)?(?:of|to)\b)/i
+const ANCHOR_BOUND_RX = /\bnow vested in (?:it|him|her|them)\b(?! by)/gi
+/** ⚠ Bracketed words are an aside: "powers conferred by section 3(3) (having regard to the definition … in section
+ *  3(4)) of the Act" is a power, and the bracket's "having regard to" outranked it before they were dropped (#57).
+ *  Repeated until nothing changes: that aside has a bracket inside it, and one pass left it standing. */
+const dropAsides = (s: string) => { let t = s, prev: string; do { prev = t; t = t.replace(/\([^()]*\)/g, ' ') } while (t !== prev); return t }
+
+/**
+ * Pure. `before` = the stripped enacting words up to the anchor; `sincePrevious` = the words since the previous
+ * anchor in the same scope (the whole of `before` for the first).
+ */
+export function enablingRole(before: string, sincePrevious: string = before): { role: EnablingRole; roleWords: string | null } {
+  const ends = [...before.matchAll(SENTENCE_END_RX)]
+  const clause = dropAsides(ends.length ? before.slice(ends[ends.length - 1].index! + ends[ends.length - 1][0].length) : before)
+  const local = dropAsides(sincePrevious).slice(-clause.length)
+  // Every candidate measured by how far it ENDS before the anchor: the nearest governs. On a tie the LONGER phrase
+  // wins, because one holds the other: "makes the following Regulations pursuant to" (power) holds "pursuant to",
+  // and "required by virtue of" (mention) holds "by virtue of" (third holdout, T18).
+  const gap = (text: string, m: RegExpMatchArray | null) => (m ? text.length - (m.index! + m[0].length) : Infinity)
+  let power = lastMatch(POWER_RX, clause)
+  // ⚠ A power formula INHERITED across an earlier anchor reaches this one only if the words since that anchor name a
+  // provision of it. "…sections 3 and 13 of the 1992 Act[a], and of all other powers enabling him, after reference to
+  // the Social Security Advisory Committee[b]": [b] is a body, cited to the Act that set it up (third holdout, T3, T5).
+  if (power && !lastMatch(POWER_RX, local) && !PROVISION_RX.test(local)) power = null
+  let mention = lastMatch(MENTION_RX, clause)
+  let mentionGap = gap(clause, mention)
+  const bound = lastMatch(ANCHOR_BOUND_RX, local)
+  if (gap(local, bound) < mentionGap) { mention = bound; mentionGap = gap(local, bound) }
+  if (power && (gap(clause, power) < mentionGap || (gap(clause, power) === mentionGap && power[0].length >= mention![0].length))) {
+    return { role: 'power', roleWords: power[0] }
+  }
+  if (mention) return { role: 'mention', roleWords: mention[0] }
+  return { role: 'unstated', roleWords: null }
+}
+
+/** Primary legislation, for "that Act"; everything else an anchor can name is an instrument, for "that Order". */
+const PRIMARY_GID_RX = /^(?:ukpga|asp|nia|anaw|asc|mwa|ukla|apni|aep|aosp|apgb|gbla|ukcm|mnia|aip)\//
+const BACK_ACT_RX = /\b(?:of|to) (that|the said|the) (Act|Order)\b(?!\s*\u0001)/g
+const BACK_SECTION_RX = /\b(?:by|under|in) (?:that|the said) (?:section|sections|article|articles|regulation|regulations)\b/g
+const DEFINED_AS_RX = (noun: string) => new RegExp(`^[^\\u0001]{0,160}?\\(\\s*[“"‘']\\s*the ${noun}\\s*[”"’']\\s*\\)`)
 
 export type EnablingOutcome =
   | { kind: 'no-preamble' }
   | { kind: 'elided' }          // TNA replaced a revised SI's preamble with ". . . ."
   | { kind: 'no-target' }
   | { kind: 'hits'; hits: EnablingHit[] }
+
+/**
+ * The powers named by back-reference — see `enablingRole`'s header. `marked` is the scope's stripped words with each
+ * anchor kept as \u0001; `anchors` says where each one ends in it and what it names. Only a phrase a POWER formula
+ * governs is written, and never one that repeats a power hit already there (same target, same provisions).
+ */
+function backReferences(marked: string, anchors: Array<{ at: number; gid: string | null; hit: EnablingHit | null }>,
+                        hits: EnablingHit[], recital: boolean): EnablingHit[] {
+  const out: EnablingHit[] = []
+  const clean = (s: string) => s.replace(/\u0001/g, ' ').replace(/\s+/g, ' ').trim()
+  const key = (target: string, refs: string[]) => `${target}|${[...refs].sort().join(',')}`
+  const add = (p: number, words: string, targetGid: string, refs: string[]) => {
+    const before = clean(marked.slice(0, p))
+    const previous = anchors.filter(a => a.at <= p && a.gid !== null).pop()
+    const { role, roleWords } = enablingRole(before, clean(marked.slice(previous?.at ?? 0, p)))
+    if (role !== 'power') return
+    if ([...hits, ...out].some(h => h.role === 'power' && key(h.targetGid, h.refs) === key(targetGid, refs))) return
+    out.push({
+      targetGid, refs, role, roleWords, backReference: true,
+      citationText: `${before} ${words}`.slice(-240).replace(/^\S*\s+/, '').trim(),
+      rawFragment: marked.slice(Math.max(0, p - 300), p + 300).replace(/\u0001/g, '[anchor]'),
+      recitalFallback: recital, beforeWindow: before.slice(-300),
+    })
+  }
+  for (const m of marked.matchAll(BACK_ACT_RX)) {
+    const p = m.index!
+    const prior = anchors.filter(a => a.at <= p && a.gid !== null)
+    const target = m[1] === 'the'
+      ? prior.filter(a => DEFINED_AS_RX(m[2]).test(marked.slice(a.at, a.at + 220))).pop()?.gid
+      : prior.filter(a => (m[2] === 'Act') === PRIMARY_GID_RX.test(a.gid!)).pop()?.gid
+    if (!target) continue
+    // "section 59(1) of the Act" → the list before it, read exactly as at an anchor; "Schedule 2 to the Act" → Act-wide.
+    add(p, m[0], target, refListBefore(`${clean(marked.slice(0, p))} ${m[0].split(' ')[0]}`))
+  }
+  // ⚠ "that section" is the nearest earlier hit that NAMES a section (article, regulation) — not merely the nearest
+  // anchor: in "(being the appropriate Minister under subsection (7) of the said section 14[f4]) in exercise of the
+  // powers conferred by that section", [f4] names the Minister's appointment and no section at all.
+  for (const m of marked.matchAll(BACK_SECTION_RX)) {
+    const kind = m[0].split(' ').pop()!.replace(/s$/, '')
+    const prior = anchors.filter(a => a.at <= m.index! && a.hit?.refs.some(r => r.startsWith(`${kind}-`))).pop()
+    if (prior?.hit) add(m.index!, m[0], prior.hit.targetGid, prior.hit.refs.filter(r => r.startsWith(`${kind}-`)))
+  }
+  return out
+}
 
 /** Parse one SI's enacting words. Pure: no counters, no writes. */
 export function parseEnabling(gid: string, xml: string): EnablingOutcome {
@@ -185,12 +329,35 @@ export function parseEnabling(gid: string, xml: string): EnablingOutcome {
   const anchorRx = /<Citation\b[^>]*\sURI="([^"]+)"[^>]*>|<FootnoteRef\b[^>]*\sRef="([^"]+)"[^>]*\/?>/g
   const scan = (scope: string, recital: boolean): EnablingHit[] => {
     const out: EnablingHit[] = []
+    // The stripped words with every anchor kept as \u0001, and what each one names — for the back-references below.
+    let marked = ''
+    const anchors: Array<{ at: number; gid: string | null; hit: EnablingHit | null }> = []
+    let previous = 0
+    // ⚠ Only an anchor that NAMES something splits the words for `enablingRole`: "sections 23, 312(1) and 59(1)[f2]
+    // of the Water Act 1945[f3]" has a footnote [f2] that resolves to nothing, and splitting there left [f3] with
+    // " of the Water Act 1945" — no provision, so the power was refused (final holdout, F35).
+    let previousNaming = 0
     for (const a of scope.matchAll(anchorRx)) {
+      marked += ` ${stripTags(scope.slice(previous, a.index))} \u0001`
+      previous = a.index ?? 0
       const targetGid = a[1] ? parseLegUri(a[1])?.gid : footnoteGid.get(a[2] ?? '')
-      if (!targetGid || targetGid === gid) continue
+      const usable = !!targetGid && targetGid !== gid
+      anchors.push({ at: marked.length, gid: usable ? targetGid! : null, hit: null })
+      if (!usable) continue
+      const sincePrevious = stripTags(scope.slice(previousNaming, a.index))
+      previousNaming = a.index ?? 0
       const before = stripTags(scope.slice(0, a.index))
+      // ⚠ Newer instruments mark EVERY fragment of one reference — "sections 5[c] (1)[c] (i)[c], 15[c] (1)[c] (a)[c]
+      // … of the Social Security Administration Act 1992" (uksi/2026/201) — so the words between two anchors can be
+      // "(1)". An anchor that continues the previous anchor's target, in the same sentence, is the same reference and
+      // takes its role when its own words decide nothing; read alone, the fragments fell to `unstated`.
+      const last = anchors.slice(0, -1).filter(x => x.gid !== null).pop() ?? null
+      const continues = last?.hit && last.gid === targetGid && !new RegExp(SENTENCE_END_RX.source).test(sincePrevious)
+      const own = enablingRole(before, sincePrevious)
       out.push({
-        targetGid,
+        ...(own.role === 'unstated' && continues ? { role: last!.hit!.role, roleWords: last!.hit!.roleWords } : own),
+        backReference: false,
+        targetGid: targetGid!,
         refs: refListBefore(before),
         // ⚠ the words that GRANT the power, not the document's opening line.
         // A fixed slice of the preamble would quote the same sentence for every
@@ -202,8 +369,10 @@ export function parseEnabling(gid: string, xml: string): EnablingOutcome {
         recitalFallback: recital,
         beforeWindow: before.slice(-300),
       })
+      anchors[anchors.length - 1].hit = out[out.length - 1]
     }
-    return out
+    marked += ` ${stripTags(scope.slice(previous))}`
+    return [...out, ...backReferences(marked, anchors, out, recital)]
   }
   let hits = scan(enacting, false)
   if (hits.length === 0 && pre[0] !== enacting) {

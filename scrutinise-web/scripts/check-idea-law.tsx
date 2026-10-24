@@ -572,17 +572,93 @@ tc('D3 the panel is REACHED (CLAUDE.md §23.1): the idea page imports it and the
 })
 
 // ═══ E — THE COLD READ ════════════════════════════════════════════════════════
-tc('E1 cold read: the real marquee idea and the most recently updated real idea answer without throwing, and say what they hold', async () => {
-  const a = new A()
+// ⚠ E1 WAS ONE CASE AND COMPARED LINES WITH ROWS. A line is a (relation, doc_uri, provision_path); stored rows naming
+// the same one merge into it (BRIEF_26U §5), so on 452c5ade 27 live rows are 24 lines and "lines ≥ rows" failed on a
+// correct reader (LEX, 24 Oct). Split, each against a plain-SQL read of the stored rows and each with its own control:
+//   E1a  every live stored row is on exactly one line (or in `inconsistent`) — none lost, none doubled
+//   E1b  lines = the distinct keys of those rows — no key unmerged, none invented
+//   E1c  each line carries every row of its key with that row's own source and action id — the merge drops neither
+interface StoredRow { id: string; relation: string; doc_uri: string; provision_path: string | null; source: string; action_id: string | null }
+const storedKey = (r: StoredRow) => lawLineKey({ relation: r.relation as IdeaLawSet['rows'][number]['relation'], docUri: r.doc_uri, provisionPath: r.provision_path })
+const consistentStored = (s: IdeaLawSet, stored: StoredRow[]) => { const bad = new Set(s.inconsistent.map((r) => r.id)); return stored.filter((r) => !bad.has(r.id)) }
+/** E1a */
+function rowsAccounted(s: IdeaLawSet, stored: StoredRow[]): boolean {
+  const placed = [...s.rows.flatMap((r) => r.sources.map((e) => e.id)), ...s.inconsistent.map((r) => r.id)]
+  const ids = new Set(stored.map((r) => r.id))
+  return placed.length === ids.size && new Set(placed).size === placed.length && placed.every((id) => ids.has(id))
+}
+/** E1b */
+function linesMatchKeys(s: IdeaLawSet, stored: StoredRow[]): boolean {
+  const keys = new Set(consistentStored(s, stored).map(storedKey))
+  const lineKeys = s.rows.map(lawLineKey)
+  return lineKeys.length === keys.size && new Set(lineKeys).size === lineKeys.length && lineKeys.every((k) => keys.has(k))
+}
+/** E1c — and a hand row, where the key has one, is the primary entry. */
+function mergeKeepsEveryRow(s: IdeaLawSet, stored: StoredRow[]): boolean {
+  const own = consistentStored(s, stored)
+  const byId = new Map(own.map((r) => [r.id, r]))
+  return s.rows.every((line) => {
+    const k = lawLineKey(line)
+    const want = own.filter((r) => storedKey(r) === k)
+    return line.sources.length === want.length
+      && line.sources.every((e) => { const r = byId.get(e.id); return !!r && storedKey(r) === k && e.source === r.source && (e.action?.id ?? null) === r.action_id })
+      && (!want.some((r) => r.source === 'hand') || line.sources[0].source === 'hand')
+  })
+}
+/** The stored rows a set was built from, read back off the set itself — for the controls, which break the set. */
+const storedOf = (s: IdeaLawSet): StoredRow[] => [
+  ...s.rows.flatMap((l) => l.sources.map((e) => ({ id: e.id, relation: l.relation, doc_uri: l.docUri, provision_path: l.provisionPath, source: e.source, action_id: e.action?.id ?? null }))),
+  ...s.inconsistent.map((r) => ({ id: r.id, relation: r.relation, doc_uri: r.docUri, provision_path: r.provisionPath, source: r.source, action_id: r.action?.id ?? null })),
+]
+
+/** The marquee and the most recently updated real idea, each with a plain-SQL read of its live rows (own, or through its actions). */
+async function coldReads(): Promise<Array<{ id: string; s: IdeaLawSet; stored: StoredRow[] }>> {
   const recent = await prisma.idea.findFirst({ where: { deletedAt: null, NOT: { title: { startsWith: 'ZZ-' } }, id: { not: MARQUEE } }, orderBy: { updatedAt: 'desc' }, select: { id: true } })
-  const notes: string[] = []
+  const out = []
   for (const id of [MARQUEE, recent?.id].filter(Boolean) as string[]) {
-    const direct = await sql<{ n: number }>(`SELECT COUNT(*)::int AS n FROM idea_law_link WHERE idea_id = $1 AND superseded_by IS NULL`, id)
-    const s = await ideaLawSet(id, { external: false })
-    a.read(s.examined.linkRows + 1)
-    a.ok(`${id.slice(0, 8)} rows = plain count of its live own rows (${direct[0].n})`, s.rows.length + s.inconsistent.length >= direct[0].n)
+    const stored = await sql<StoredRow>(
+      `SELECT l.id, l.relation, l.doc_uri, l.provision_path, l.source, l.action_id FROM idea_law_link l
+        WHERE (l.idea_id = $1 OR l.action_id IN (SELECT id FROM "LexCoherentAction" WHERE "ideaId" = $1))
+          AND l.superseded_by IS NULL AND l.withdrawn_at IS NULL`, id)
+    out.push({ id, s: await ideaLawSet(id, { external: false }), stored })
+  }
+  return out
+}
+let coldCache: ReturnType<typeof coldReads> | null = null
+const cold = () => (coldCache ??= coldReads())
+
+tc('E1a cold read: every live stored row is on exactly one line (or reported inconsistent) — none lost, none doubled', async () => {
+  const a = new A()
+  const notes: string[] = []
+  for (const { id, s, stored } of await cold()) {
+    a.read(stored.length + 1)
+    a.ok(`${id.slice(0, 8)} rows accounted (${stored.length} stored)`, rowsAccounted(s, stored))
     a.ok(`${id.slice(0, 8)} partition holds`, partitionHolds(s))
-    notes.push(`${id.slice(0, 8)}: ${s.rows.length} rows, ${s.counts.held} held`)
+    notes.push(`${id.slice(0, 8)}: ${stored.length} live rows`)
+  }
+  return a.done(notes.join('; '))
+})
+tc('E1b cold read: lines = the distinct (relation, doc_uri, provision_path) of the live rows, and the merged count is the difference', async () => {
+  const a = new A()
+  const notes: string[] = []
+  for (const { id, s, stored } of await cold()) {
+    a.read(stored.length)
+    const own = consistentStored(s, stored)
+    a.ok(`${id.slice(0, 8)} lines match keys`, linesMatchKeys(s, stored), `${s.rows.length} lines`)
+    a.ok(`${id.slice(0, 8)} mergedIntoALine = rows − lines`, s.examined.mergedIntoALine === own.length - s.rows.length, `${s.examined.mergedIntoALine} vs ${own.length}−${s.rows.length}`)
+    notes.push(`${id.slice(0, 8)}: ${own.length} rows on ${s.rows.length} lines, ${s.counts.held} held`)
+  }
+  return a.done(notes.join('; '))
+})
+tc('E1c cold read: a merged line keeps every row of its key — each one\'s source and action id — hand row first', async () => {
+  const a = new A()
+  const notes: string[] = []
+  for (const { id, s, stored } of await cold()) {
+    a.read(stored.length)
+    a.ok(`${id.slice(0, 8)} merge keeps every row`, mergeKeepsEveryRow(s, stored))
+    const merged = s.rows.filter((l) => l.sources.length > 1)
+    const twoActions = merged.filter((l) => new Set(l.sources.map((e) => e.action?.id ?? null)).size > 1)
+    notes.push(`${id.slice(0, 8)}: ${merged.length} merged lines, ${twoActions.length} carrying more than one action id`)
   }
   return a.done(notes.join('; '))
 })
@@ -596,6 +672,36 @@ control('partition: a row moved into the wrong group', () => {
 control('partition: a row dropped from its group', () => {
   const s = needFixture()
   return partitionHolds({ ...s, grouped: { ...s.grouped, precedent: s.grouped.precedent.slice(1) } })
+})
+/** The fixture's merged line (C9: hand + instruction on amends ukpga/2010/25), and the set with it replaced. */
+function withMerged(f: (line: IdeaLawSet['rows'][number]) => IdeaLawSet['rows'][number][]): IdeaLawSet {
+  const s = needFixture()
+  const line = s.rows.find((r) => r.sources.length > 1)
+  if (!line) throw new Error('the fixture has no merged line')
+  return { ...s, rows: s.rows.flatMap((r) => (r === line ? f(r) : [r])) }
+}
+control('E1a: a merged line loses its instruction entry', () => {
+  const stored = storedOf(needFixture())
+  return rowsAccounted(withMerged((l) => [{ ...l, sources: l.sources.slice(0, 1) }]), stored)
+})
+control('E1a: an entry placed on two lines', () => {
+  const s = needFixture()
+  const stored = storedOf(s)
+  const merged = s.rows.find((r) => r.sources.length > 1)!
+  const other = s.rows.find((r) => r !== merged)!
+  return rowsAccounted({ ...s, rows: s.rows.map((r) => (r === other ? { ...r, sources: [...r.sources, merged.sources[1]] } : r)) }, stored)
+})
+control('E1b: a merged line left as two lines', () => {
+  const stored = storedOf(needFixture())
+  return linesMatchKeys(withMerged((l) => l.sources.map((e) => ({ ...l, id: e.id, sources: [e] }))), stored)
+})
+control('E1c: the merge keeps both entries but nulls the instruction\'s action id', () => {
+  const stored = storedOf(needFixture())
+  return mergeKeepsEveryRow(withMerged((l) => [{ ...l, sources: l.sources.map((e) => ({ ...e, action: null })) }]), stored)
+})
+control('E1c: the instruction row made primary over the hand row', () => {
+  const stored = storedOf(needFixture())
+  return mergeKeepsEveryRow(withMerged((l) => [{ ...l, sources: [...l.sources].reverse() }]), stored)
 })
 control('split: a per-type total that is not the sum of its kinds', () =>
   splitHolds({ perType: [{ edgeType: 'amends', total: 705, textual: 705, notTextual: 6, unclassified: 8 }], caveat: '', rowsCounted: 705, failed: null }))

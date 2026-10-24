@@ -26,7 +26,7 @@ import {
 import {
   ONWARD_KINDS, ALL_ONWARD_KINDS, CASELAW_KIND, STRENGTH_ORDER, strengthOf, parseTarget, isUnaddressableRef,
   legPath, provisionMatches, citingTextStateOf, onwardCaveat,
-  type OnwardKind, type Strength, type CitingTextState,
+  type OnwardKind, type Strength, type CitingTextState, type EnablingRole,
 } from '@/lib/lex/onward-pure'
 
 export interface OneStep {
@@ -54,6 +54,13 @@ export interface OneStep {
   citingTextOthers: number
   /** `cites` / `made-under`: the target provision as parsed from the stored words, where any was. */
   citedProvision: string | null
+  /**
+   * ⚠ DECISION 271 — `made-under` / `enacting-mention` only: what the instrument's enacting words make of this
+   * (`citation_edge.enabling_role`), and the phrase that was read from. `power` is the only dependency; null on
+   * every other kind, and on an enabling row stored before the role existed.
+   */
+  enablingRole: EnablingRole | null
+  enablingRoleWords: string | null
   origin: EdgeOrigin | null
   source: string
 }
@@ -151,48 +158,61 @@ export async function onwardFrom(
   let rowsCounted = 0
   const rows: OneStep[] = []
 
-  // ── made-under: the FIXED parser's enabling rows, one per instrument and power ──────────
-  if (kinds.includes('made-under')) {
+  // ── made-under and enacting-mention: the FIXED parser's enabling rows, split by DECISION 271 ──────────
+  // ⚠ The two kinds come from one table and are NEVER summed: `made-under` is a row whose words name this as the
+  // power exercised, `enacting-mention` every other enabling row. An instrument that is made under this provision
+  // is not listed again as merely mentioning it.
+  if (kinds.includes('made-under') || kinds.includes('enacting-mention')) {
     const got = await enablingRows(resolution.candidates)
     rowsCounted += got.read
-    const c = perKind.get('made-under')!
-    const states = { held: 0, noneStored: 0, possiblyTruncated: 0 }
-    let otherSection = 0
-    const kept: OneStep[] = []
-    for (const [gid, inst] of got.byInstrument) {
-      const named = [...inst.provisions.keys()]
-      let use: Array<[string | null, string]>
-      if (!provision) use = named.length ? [...inst.provisions] : [[null, inst.actLevel ?? '']]
-      else {
-        const hit = named.filter((p) => provisionMatches(p, provision))
-        // ⚠ An instrument whose words name ANOTHER section of this Act is not made under this one, and
-        // its Act-level row must not bring it back in. One whose words name no section stays, act-wide.
-        if (hit.length) use = hit.map((p) => [p, inst.provisions.get(p)!])
-        else if (named.length) { otherSection++; continue }
-        else use = [[null, inst.actLevel ?? '']]
+    const madeUnder = new Set<string>()
+    for (const kind of ['made-under', 'enacting-mention'] as const) {
+      const c = perKind.get(kind)
+      const states = { held: 0, noneStored: 0, possiblyTruncated: 0 }
+      let otherSection = 0
+      const kept: OneStep[] = []
+      for (const [gid, both] of got.byInstrument) {
+        const inst = kind === 'made-under' ? both.power : both.other
+        if (!inst.actLevel && !inst.provisions.size) continue
+        if (kind === 'enacting-mention' && madeUnder.has(gid)) continue
+        const named = [...inst.provisions.keys()]
+        let use: Array<[string | null, EnablingWords]>
+        if (!provision) use = named.length ? [...inst.provisions] : [[null, inst.actLevel!]]
+        else {
+          const hit = named.filter((p) => provisionMatches(p, provision))
+          // ⚠ An instrument whose words name ANOTHER section of this Act is not made under this one, and
+          // its Act-level row must not bring it back in. One whose words name no section stays, act-wide.
+          if (hit.length) use = hit.map((p) => [p, inst.provisions.get(p)!])
+          else if (named.length) { otherSection++; continue }
+          else use = [[null, inst.actLevel!]]
+        }
+        if (kind === 'made-under') madeUnder.add(gid)
+        if (!c) continue
+        for (const [p, w] of use) {
+          const state = citingTextStateOf(w.text)
+          if (state === 'held') states.held++; else if (state === 'none-stored') states.noneStored++; else states.possiblyTruncated++
+          kept.push({
+            provision: gid, act: gid, actTitle: null, kind, strength: strengthOf(kind)!, subType: '',
+            changeKind: null, changeReason: null, thisEndProvision: p, scope: p ? 'provision' : 'act-wide',
+            citingText: w.text || null, citingTextState: state, citingTextOthers: 0, citedProvision: p,
+            enablingRole: w.role, enablingRoleWords: w.roleWords,
+            origin: 'extracted', source: ENABLING_SOURCE,
+          })
+        }
       }
-      for (const [p, words] of use) {
-        const state = citingTextStateOf(words)
-        if (state === 'held') states.held++; else if (state === 'none-stored') states.noneStored++; else states.possiblyTruncated++
-        kept.push({
-          provision: gid, act: gid, actTitle: null, kind: 'made-under', strength: 'dependency', subType: '',
-          changeKind: null, changeReason: null, thisEndProvision: p, scope: p ? 'provision' : 'act-wide',
-          citingText: words || null, citingTextState: state, citingTextOthers: 0, citedProvision: p,
-          origin: 'extracted', source: ENABLING_SOURCE,
-        })
-      }
+      if (!c) continue
+      c.counted = kept.length
+      c.instruments = new Set(kept.map((k) => k.act)).size
+      c.citingText = states
+      scopeOf(c, kept)
+      c.returned = Math.min(kept.length, limit)
+      rows.push(...kept.slice(0, limit))
+      if (otherSection) notWalked.push({ kind, rows: otherSection, why: `instruments whose enacting words name a different section of this Act than ${provision}` })
     }
-    c.counted = kept.length
-    c.instruments = new Set(kept.map((k) => k.act)).size
-    c.citingText = states
-    scopeOf(c, kept)
-    c.returned = Math.min(kept.length, limit)
-    rows.push(...kept.slice(0, limit))
-    if (otherSection) notWalked.push({ kind: 'made-under', rows: otherSection, why: `instruments whose enacting words name a different section of this Act than ${provision}` })
   }
 
   // ── the official effects: counted in SQL, rows capped per kind ──────────────────────────
-  const sqlKinds = kinds.filter((k) => isEdgeKind(k) && k !== 'cites' && k !== 'made-under')
+  const sqlKinds = kinds.filter((k) => isEdgeKind(k) && k !== 'cites' && k !== 'made-under' && k !== 'enacting-mention')
   if (sqlKinds.length) {
     const thisProv = `split_part(to_id, ':', 3)`
     const pc = provision ? provisionPredicate(thisProv, provision) : null
@@ -306,7 +326,7 @@ export async function onwardFrom(
         subType: '', changeKind: null, changeReason: null, thisEndProvision: g.target_provision_ref,
         scope: g.target_provision_ref ? 'provision' : 'act-wide',
         citingText: g.citation_text, citingTextState: citingTextStateOf(g.citation_text), citingTextOthers: 0,
-        citedProvision: g.target_provision_ref, origin: 'extracted', source: 'tna-caselaw',
+        citedProvision: g.target_provision_ref, enablingRole: null, enablingRoleWords: null, origin: 'extracted', source: 'tna-caselaw',
       })
     }
   }
@@ -364,7 +384,7 @@ function edgeRow(r: RawEdge, citing: string | null): OneStep {
     changeKind: reading?.kind ?? null, changeReason: reading?.reason ?? null,
     thisEndProvision: provOf(r.to_id), scope: provOf(r.to_id) ? 'provision' : 'act-wide',
     citingText: isCites ? citing : null, citingTextState: isCites ? citingTextStateOf(citing) : null,
-    citingTextOthers: 0, citedProvision: null, origin: originOf(r.source), source: r.source,
+    citingTextOthers: 0, citedProvision: null, enablingRole: null, enablingRoleWords: null, origin: originOf(r.source), source: r.source,
   }
 }
 
@@ -402,21 +422,27 @@ export const ENABLING_SOURCE = 'citation_edge:enabling'
  * were written by the fixed parser and cover the same instruments (16 / 74 / 74 for CRaG, GRAA and
  * the Equality Act, against 16 / 74 / 73). They also keep the words up to the reference.
  *
- * ⚠ THE FIXED PARSER IS NOT CLEAN EITHER. It records an instrument as enabled by an Act it merely
- * names in its preamble: SIs that say CRaG s.20's treaty procedure "has been met" come back as made
- * under s.20, which confers no power. The words are returned so a reader can see that. This reader
- * does not reclassify them.
+ * ⚠ THE FIXED PARSER WAS NOT CLEAN EITHER: every anchor in the enacting words became an enabling row, so
+ * SIs that say CRaG s.20's treaty procedure "has been met" came back as made under s.20, which confers no
+ * power. DECISION 271 (24 Oct 2026) put the answer in the extraction — `enabling_role`, read from the words
+ * and validated by `check-271-enabling-role.ts` — and this reader only sorts by it: `power` → made-under,
+ * anything else (or a row stored before the role existed) → enacting-mention.
  */
+interface EnablingWords { text: string; role: EnablingRole | null; roleWords: string | null }
+type EnablingSet = { actLevel: EnablingWords | null; provisions: Map<string, EnablingWords> }
 async function enablingRows(targetForms: string[]) {
-  const got = await prisma.$queryRawUnsafe<Array<{ source_gid: string; target_provision_ref: string | null; citation_text: string }>>(
-    `SELECT source_gid, target_provision_ref, citation_text FROM ${CITATION_TABLE}
+  const got = await prisma.$queryRawUnsafe<Array<{ source_gid: string; target_provision_ref: string | null; citation_text: string; enabling_role: EnablingRole | null; enabling_role_words: string | null }>>(
+    `SELECT source_gid, target_provision_ref, citation_text, enabling_role, enabling_role_words FROM ${CITATION_TABLE}
      WHERE target_act_id = ANY($1::text[]) AND detection = 'enabling' ORDER BY source_gid, id`, targetForms)
-  const byInstrument = new Map<string, { actLevel: string | null; provisions: Map<string, string> }>()
+  const byInstrument = new Map<string, { power: EnablingSet; other: EnablingSet }>()
+  const empty = (): EnablingSet => ({ actLevel: null, provisions: new Map() })
   for (const g of got) {
-    const i = byInstrument.get(g.source_gid) ?? { actLevel: null, provisions: new Map<string, string>() }
-    if (g.target_provision_ref) { if (!i.provisions.has(g.target_provision_ref)) i.provisions.set(g.target_provision_ref, g.citation_text) }
-    else i.actLevel ??= g.citation_text
-    byInstrument.set(g.source_gid, i)
+    const both = byInstrument.get(g.source_gid) ?? { power: empty(), other: empty() }
+    const i = g.enabling_role === 'power' ? both.power : both.other
+    const w = { text: g.citation_text, role: g.enabling_role, roleWords: g.enabling_role_words }
+    if (g.target_provision_ref) { if (!i.provisions.has(g.target_provision_ref)) i.provisions.set(g.target_provision_ref, w) }
+    else i.actLevel ??= w
+    byInstrument.set(g.source_gid, both)
   }
   return { read: got.length, byInstrument }
 }

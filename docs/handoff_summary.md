@@ -234,6 +234,18 @@ not run, not omitted. `tsc` clean, `check-clean-build.sh --fast` PASS.
 
 ---
 
+## GRAPH THREAD — last updated 2026-10-24 16:05 UTC (decision 271 + E1)
+
+*Report: `docs/GRAPH_271_REPORT.md`. Neon altered + backfilled 16:00–16:01 UTC, presence CHECK validated. GRAPH 8 itself is live at `2030266`. **The 271 reader change is not committed and not deployed.***
+
+▼ **Decision 271 is in the extraction.** `citation_edge.enabling_role` (power / mention / unstated) is set on every enabling row (201,776), and only `power` is a dependency.
+- `onwardFrom`: `made-under` = power only. Every other enabling row is the new kind `enacting-mention` (reference).
+- CRaG s.20: 0 made-under rows naming it; 3 enacting-mentions.
+⚠ **Validated against hand labels:** 211 cases in `scripts/ingest/graph/decision-271-validation.json`. The last untuned holdout scored 39/40 with no false power.
+⚠ **The bulk zip on disk is the 14 May copy; the rows came from a 26 Aug copy.** 1,301 rows were read from their stored words and marked `[stored words]`. `v36/source-entries.json` is absent, so `legislation_identity` was used instead.
+▶ **For Charlie:** provision lists like "section 52(2) and (4) of" are dropped, so 28% of power hits read Act-wide (report §6.1). Fix + additive backfill?
+▶ **E1** of `check:idea-law` is split into E1a/b/c. 26/26.
+
 ## GRAPH THREAD — last updated 2026-10-24 00:00 UTC (GRAPH 8)
 
 *Report: `docs/GRAPH_8_REPORT.md`. Built, `check:onward` 22/22 (2,790 assertions, 8/8 controls). **Nothing committed, nothing pushed, NOT live.***

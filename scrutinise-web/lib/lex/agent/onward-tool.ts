@@ -6,7 +6,7 @@
 import { z } from 'zod'
 import { onwardFrom } from '@/lib/lex/onward'
 import {
-  ONWARD_RULES, ONWARD_KINDS, CASELAW_KIND, STRENGTH_HEADING, describeOnwardSummary, citingTextForDisplay, withheldAt,
+  ONWARD_RULES, ONWARD_KINDS, CASELAW_KIND, STRENGTH_HEADING, ENABLING_ROLE_WORDS, describeOnwardSummary, citingTextForDisplay, withheldAt,
 } from '@/lib/lex/onward-pure'
 import type { ToolDefinition, ToolResult } from './types'
 
@@ -23,7 +23,7 @@ export const statuteOnward: ToolDefinition = {
   schema: z.object({
     target: z.string().min(3).max(200).describe('legislation.gov.uk id such as "ukpga/2010/25" or "ukpga/2010/25/section/20", or a `node` from a previous step'),
     provision: z.string().max(60).optional().describe('optional provision id such as "section-20", if not already in target'),
-    kinds: z.array(z.enum(ONWARD_KINDS)).max(6).optional().describe('default: all six. made-under is the strongest; cites is a reference only'),
+    kinds: z.array(z.enum(ONWARD_KINDS)).max(ONWARD_KINDS.length).optional().describe(`default: all ${ONWARD_KINDS.length}. made-under (the enacting words name this as the power exercised) is the strongest; cites and enacting-mention are references only`),
     include_case_law: z.boolean().default(false).describe('judgments citing the target — interpretation, never a drafting consequence; not walked by default'),
     depth: z.number().int().min(1).max(12).default(1).describe('which step of the walk this is: 1 for the target itself'),
     limit: z.number().int().min(1).max(50).default(20),
@@ -53,6 +53,9 @@ export const statuteOnward: ToolDefinition = {
         reading: row.changeKind && row.changeKind !== 'textual' ? row.changeReason ?? undefined : undefined,
         bears_on: row.thisEndProvision ?? 'the Act as a whole', scope: row.scope,
         stored_words: row.citingTextState ?? undefined, has_words: display ? true : undefined,
+        // ⚠ Decision 271: on made-under / enacting-mention, whether the enacting words name this as the power exercised.
+        enabling_role: row.enablingRole ?? undefined,
+        enabling_role_reads: row.enablingRole ? ENABLING_ROLE_WORDS[row.enablingRole] : undefined,
         origin: row.origin ?? `unrecognised source: ${row.source}`, source: row.source,
       }
     })

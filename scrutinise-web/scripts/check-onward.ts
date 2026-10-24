@@ -197,15 +197,15 @@ tc('B1 official effects: counts, instruments and the words split equal plain SQL
   return a.done()
 })
 
-tc('B2 made-under: instruments equal the fixed parser\'s enabling rows (four Acts); a chain ends', async () => {
+tc('B2 made-under: instruments equal the enabling rows whose words name the POWER (decision 271, four Acts); a chain ends', async () => {
   const a = new A()
   for (const act of ACTS) {
     const r = await onwardFrom(act.gid, { kinds: ['made-under'], limit: 500 })
-    const n = await sql<{ n: bigint; rows: bigint }>(`SELECT COUNT(DISTINCT source_gid) n, COUNT(*) rows FROM citation_edge WHERE target_act_id = $1 AND detection = 'enabling'`, act.gid)
+    const n = await sql<{ n: bigint; rows: bigint }>(`SELECT COUNT(DISTINCT source_gid) n, COUNT(*) rows FROM citation_edge WHERE target_act_id = $1 AND detection = 'enabling' AND enabling_role = 'power'`, act.gid)
     a.read(num(n[0].rows))
     const c = r.perKind[0]
     a.ok(`${act.label} instruments`, c.instruments === num(n[0].n), `${c.instruments} vs ${num(n[0].n)}`)
-    a.ok(`${act.label} every row is a dependency from ${ENABLING_SOURCE}`, r.rows.every((x) => x.strength === 'dependency' && x.source === ENABLING_SOURCE))
+    a.ok(`${act.label} every row is a dependency from ${ENABLING_SOURCE}, its words naming the power`, r.rows.every((x) => x.strength === 'dependency' && x.source === ENABLING_SOURCE && x.enablingRole === 'power' && !!x.enablingRoleWords))
     a.ok(`${act.label} enacting words held or counted`, (c.citingText!.possiblyTruncated + c.citingText!.noneStored) === c.counted && c.citingText!.held === 0)
   }
   // "Walk it until it ends": one step from each instrument under CRaG finds nothing made under it.
@@ -337,7 +337,7 @@ tc('B10 a provision walk: no instrument made under ANOTHER section comes back, a
     const r = await onwardFrom(gid, { provision: prov, kinds: ['made-under'], limit: 500 })
     const q = await sql<{ source_gid: string; refs: string[] }>(
       `SELECT source_gid, array_remove(array_agg(DISTINCT target_provision_ref), NULL) refs FROM citation_edge
-       WHERE target_act_id = $1 AND detection = 'enabling' GROUP BY 1`, gid)
+       WHERE target_act_id = $1 AND detection = 'enabling' AND enabling_role = 'power' GROUP BY 1`, gid)
     a.read(q.length)
     const other = q.filter((x) => x.refs.length && !x.refs.some((p) => provisionMatches(p, prov))).length
     const nw = r.notWalked.find((x) => x.kind === 'made-under')?.rows ?? 0
@@ -423,6 +423,37 @@ tc('B14 a provision count is split into "names this provision" and "only the Act
   return a.done()
 })
 
+tc('B16 ⚠ DECISION 271: an enabling row is made-under only when its words name the power; every other one is an enacting-mention, a reference', async () => {
+  const a = new A()
+  for (const act of ACTS) {
+    const r = await onwardFrom(act.gid, { kinds: ['made-under', 'enacting-mention'], limit: 500 })
+    const q = await sql<{ all_i: bigint; power_i: bigint; only_other_i: bigint }>(`
+      SELECT COUNT(*) all_i, COUNT(*) FILTER (WHERE has_power) power_i, COUNT(*) FILTER (WHERE NOT has_power) only_other_i
+        FROM (SELECT source_gid, bool_or(enabling_role = 'power') has_power FROM citation_edge
+               WHERE target_act_id = $1 AND detection = 'enabling' GROUP BY 1) s`, act.gid)
+    a.read(num(q[0].all_i))
+    const mu = r.perKind.find((c) => c.kind === 'made-under')!, em = r.perKind.find((c) => c.kind === 'enacting-mention')!
+    a.ok(`${act.label} made-under instruments = those with a power row`, mu.instruments === num(q[0].power_i), `${mu.instruments} vs ${num(q[0].power_i)}`)
+    a.ok(`${act.label} enacting-mention instruments = those with none`, em.instruments === num(q[0].only_other_i), `${em.instruments} vs ${num(q[0].only_other_i)}`)
+    a.ok(`${act.label} none lost, none twice`, mu.instruments + em.instruments === num(q[0].all_i))
+    a.ok(`${act.label} an enacting-mention row is a reference, its role not power`, r.rows.filter((x) => x.kind === 'enacting-mention').every((x) => x.strength === 'reference' && x.enablingRole !== 'power'))
+  }
+  // The test case: CRaG s.20 confers no power, and the three instruments that name it say so in their own words.
+  const s20 = await onwardFrom('ukpga/2010/25', { provision: 'section-20', limit: 500 })
+  const three = ['ssi/2024/101', 'uksi/2024/512', 'uksi/2020/38']
+  a.read(s20.rows.length)
+  for (const g of three) {
+    a.ok(`${g} is NOT made under s.20`, !s20.rows.some((x) => x.act === g && x.kind === 'made-under'))
+    const m = s20.rows.find((x) => x.act === g && x.kind === 'enacting-mention')
+    a.ok(`${g} is an enacting-mention naming s.20, with the phrase it was read from`, !!m && m.scope === 'provision' && m.enablingRole === 'mention' && !!m.enablingRoleWords, JSON.stringify(m && { role: m.enablingRole, words: m.enablingRoleWords }))
+  }
+  a.ok('s.20: nothing made under it NAMES s.20', s20.perKind.find((c) => c.kind === 'made-under')!.scope.provision === 0)
+  const t = await statuteOnward.run(fakeCtx(), { target: 'ukpga/2010/25/section/20', depth: 1, limit: 50, include_case_law: false })
+  const tr = ((t.data as any).rows as any[]).filter((x) => three.includes(x.node))
+  a.ok('the tool shows them under the reference heading, with their role', tr.length === 3 && tr.every((x) => x.heading === STRENGTH_HEADING.reference.heading && x.enabling_role === 'mention'), JSON.stringify(tr.map((x) => [x.node, x.heading, x.enabling_role])))
+  return a.done()
+})
+
 tc('B15 the tool is registered where Lex can reach it, read-only, and its description is the rules', async () => {
   const a = new A()
   const t = toolByName('statute_onward')
@@ -445,6 +476,10 @@ control('K1 cites mapped to a dependency is caught (the brief\'s failure)', () =
   const broken = { ...STRENGTH_OF, cites: 'dependency' as Strength }
   const line = describeKindLine({ kind: 'cites', strength: broken.cites, counted: 3, returned: 3, instruments: 3, split: null })
   return broken.cites === 'reference' && line.startsWith(STRENGTH_HEADING.reference.heading)
+})
+control('K9 an enacting-mention mapped to a dependency is caught (decision 271 undone)', () => {
+  const broken = { ...STRENGTH_OF, 'enacting-mention': 'dependency' as Strength }
+  return broken['enacting-mention'] === 'reference'
 })
 control('K2 the consequence guard fires on a reference described as a knock-on', () => !CONSEQUENCE_WORDS.test('Provisions that refer to this — knock-on effects'))
 control('K3 an unmarked quotation is caught', () => {

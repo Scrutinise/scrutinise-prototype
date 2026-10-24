@@ -1,0 +1,1729 @@
+{
+  "about": "Decision 271 validation set (24 Oct 2026). Each case is one enabling hit, re-parsed from best-collection-xml.zip by check-271-enabling-role.ts, labelled BY HAND from its enacting words: power = the words name this target as the power exercised. Cases 1-80 are a seeded random draw (40 classified power, 20 mention, 20 unstated by the first version) from a 1,777-stride sample the rules were NOT tuned on; K1-K10 are the CRaG s.20 test case and the regressions found while building. A case is found by gid + target + back + (tail = last characters of the enacting words before the anchor | refs). H1-H50 are a SECOND holdout (seeded draw over a 2,311-stride sample: 20 power, 8 back-reference, 12 mention, 10 unstated), labelled by hand with the rules FROZEN: the classifier then scored 47/50 - two false powers (H18, H25) and one power not seen (H48). The rules were changed for those three AFTER that score was taken, and the cases are kept here as regressions. A case with mayBeAbsent counts as not-power when the parser no longer writes the hit at all. T1-T30 are a THIRD holdout (1,501-stride; 12 power, 6 back-reference, 7 mention, 5 unstated), labelled with the rules frozen after the H fixes: it scored 27/30, all three misses FALSE POWERS (T3, T5, T18), fixed afterwards by the inheritance rule and the longer-phrase tie-break. Two earlier labels were changed after a run and each case says so: 29 and 16. F1-F40 are the FINAL holdout (997-stride; 16 power, 6 back-reference, 10 mention, 8 unstated), labelled with the rules frozen after the T fixes and reported as THE measured figure: 39/40, no false power, one power not seen (F35), fixed afterwards.",
+  "cases": [
+    {
+      "n": 1,
+      "gid": "uksi/2020/1604",
+      "target": "ukpga/1946/45",
+      "back": false,
+      "tail": "he powers conferred on Her by section 1 of the United Nations Act 1946",
+      "power": true
+    },
+    {
+      "n": 2,
+      "gid": "uksi/1987/1113",
+      "target": "ukpga/1986/50",
+      "back": false,
+      "tail": "ions Act 1975 and sections 4 and 84(1) of the Social Security Act 1986",
+      "power": true
+    },
+    {
+      "n": 3,
+      "gid": "uksi/2016/326",
+      "target": "ukpga/2013/25",
+      "back": false,
+      "tail": "2)(ii) and 5(1) of Schedule 7 to, the Public Service Pensions Act 2013",
+      "power": true
+    },
+    {
+      "n": 4,
+      "gid": "uksi/2006/3385",
+      "target": "ukpga/2000/8",
+      "back": false,
+      "tail": "to, and section 428(3) of, the Financial Services and Markets Act 2000",
+      "power": true
+    },
+    {
+      "n": 5,
+      "gid": "uksi/2009/1768",
+      "target": "ukpga/2003/43",
+      "back": false,
+      "tail": "f the Health and Social Care (Community Health and Standards) Act 2003",
+      "power": true
+    },
+    {
+      "n": 6,
+      "gid": "uksi/2008/2787",
+      "target": "ukpga/2000/22",
+      "back": false,
+      "tail": "wers conferred by sections 13 and 105 of the Local Government Act 2000",
+      "power": true
+    },
+    {
+      "n": 7,
+      "gid": "wsi/2021/118",
+      "target": "ukpga/1988/41",
+      "back": false,
+      "tail": "ection 45(1)(d), (9) and (10) of the Local Government Finance Act 1988",
+      "power": true
+    },
+    {
+      "n": 8,
+      "gid": "uksi/1993/180",
+      "target": "ukpga/1988/41",
+      "back": false,
+      "tail": " paragraph 9(4) of Schedule 7 to the Local Government Finance Act 1988",
+      "power": true
+    },
+    {
+      "n": 9,
+      "gid": "nisr/2008/289",
+      "target": "ukpga/1992/7",
+      "back": false,
+      "tail": "Social Security Contributions and Benefits (Northern Ireland) Act 1992",
+      "power": true
+    },
+    {
+      "n": 10,
+      "gid": "uksi/2000/309",
+      "target": "ukpga/1998/41",
+      "back": false,
+      "tail": " conferred on him by sections 36(8) and 71 of the Competition Act 1998",
+      "power": true
+    },
+    {
+      "n": 11,
+      "gid": "nisr/2025/20",
+      "target": "nisi/1998/1760",
+      "back": false,
+      "tail": " 8(4) of the Education (Student Support) (Northern Ireland) Order 1998",
+      "power": true
+    },
+    {
+      "n": 12,
+      "gid": "uksi/2007/2085",
+      "target": "ukpga/1994/23",
+      "back": false,
+      "tail": "aragraphs 2A, 2B and 3 of Schedule 11 to, the Value Added Tax Act 1994",
+      "power": true
+    },
+    {
+      "n": 13,
+      "gid": "uksi/2014/683",
+      "target": "ukpga/1980/65",
+      "back": false,
+      "tail": " 149 and 170(3)(b) of the Local Government, Planning and Land Act 1980",
+      "power": true
+    },
+    {
+      "n": 14,
+      "gid": "nisr/2000/365",
+      "target": "ukpga/1992/8",
+      "back": false,
+      "tail": " (4) of the Social Security Administration (Northern Ireland) Act 1992",
+      "power": true
+    },
+    {
+      "n": 15,
+      "gid": "uksi/2005/2981",
+      "target": "ukpga/2001/3",
+      "back": false,
+      "tail": "ions 17(3)(a), 24(1), 25(1) and 41(2) of the Vehicles (Crime) Act 2001",
+      "power": true
+    },
+    {
+      "n": 16,
+      "gid": "uksi/1988/1206",
+      "target": "ukpga/1947/54",
+      "back": false,
+      "tail": "hting (Clauses) Act 1899 as incorporated with the Electricity Act 1947",
+      "power": false,
+      "note": "RELABELLED after the inheritance rule, and said so; marked borderline from the start. \"section 57(5) of the Schedule to the Electric Lighting (Clauses) Act 1899 as incorporated with the Electricity Act 1947[anchor]\": the power is s.57(5) of the 1899 Schedule; the 1947 Act is the incorporation route and names no provision of its own - read as a route, like \"now vested in\""
+    },
+    {
+      "n": 17,
+      "gid": "uksi/1996/1606",
+      "target": "ukpga/1986/53",
+      "back": false,
+      "tail": "rs conferred on it by section 45(5) of the Building Societies Act 1986",
+      "power": true
+    },
+    {
+      "n": 18,
+      "gid": "uksi/2014/1806",
+      "target": "ukpga/2000/41",
+      "back": false,
+      "tail": "hedule 15 to the Political Parties, Elections and Referendums Act 2000",
+      "power": true
+    },
+    {
+      "n": 19,
+      "gid": "uksi/1999/754",
+      "target": "ukpga/1895/14",
+      "back": false,
+      "tail": "rred on him by section 2 of the Courts of Law Fees (Scotland) Act 1895",
+      "power": true
+    },
+    {
+      "n": 20,
+      "gid": "uksi/2023/966",
+      "target": "ukpga/2000/8",
+      "back": false,
+      "tail": "rred by section 55NB(1) of the Financial Services and Markets Act 2000",
+      "power": true
+    },
+    {
+      "n": 21,
+      "gid": "uksi/2015/606",
+      "target": "ukpga/2004/12",
+      "back": false,
+      "tail": "xercise of the powers conferred by section 251 of the Finance Act 2004",
+      "power": true
+    },
+    {
+      "n": 22,
+      "gid": "uksi/2001/1283",
+      "target": "ukpga/2000/8",
+      "back": false,
+      "tail": "tions 416(4) and 428(3) of the Financial Services and Markets Act 2000",
+      "power": true
+    },
+    {
+      "n": 23,
+      "gid": "uksi/2000/3363",
+      "target": "ukpga/1994/29",
+      "back": false,
+      "tail": "ry of State, in exercise of the powers conferred on him by sections 17",
+      "power": true
+    },
+    {
+      "n": 24,
+      "gid": "ssi/2017/389",
+      "target": "ukpga/1972/68",
+      "back": false,
+      "tail": "2003 (“the Act”) and section 2(2) of the European Communities Act 1972",
+      "power": true
+    },
+    {
+      "n": 25,
+      "gid": "uksi/2015/769",
+      "target": "ukpga/2013/25",
+      "back": false,
+      "tail": "y section 9(2), (3) and (4)(b) of the Public Service Pensions Act 2013",
+      "power": true
+    },
+    {
+      "n": 26,
+      "gid": "uksi/1997/732",
+      "target": "ukpga/1992/19",
+      "back": false,
+      "tail": "powers conferred on him by section 22 of the Local Government Act 1992",
+      "power": true
+    },
+    {
+      "n": 27,
+      "gid": "uksi/2019/1433",
+      "target": "ukpga/1993/48",
+      "back": false,
+      "tail": "ferred by paragraph 2(1) of Schedule 3 to the Pension Schemes Act 1993",
+      "power": true
+    },
+    {
+      "n": 28,
+      "gid": "uksi/2011/2425",
+      "target": "ukpga/1998/14",
+      "back": false,
+      "tail": "97 , sections 9(1)(a), 21(1)(a) and 84 of the Social Security Act 1998",
+      "power": true
+    },
+    {
+      "n": 29,
+      "gid": "uksi/1988/778",
+      "target": "ukpga/1972/68",
+      "back": false,
+      "tail": " for the purposes of section 2(2) of the European Communities Act 1972",
+      "power": false,
+      "note": "RELABELLED after the first check run, and said so: labelled power while the design still flipped a same-sentence designation to power. The anchor words are a designation (\"being the Minister designated for the purposes of section 2(2) of the ECA 1972\"); the power is the separate back-reference hit, K11."
+    },
+    {
+      "n": 30,
+      "gid": "uksi/1996/2519",
+      "target": "ukpga/1995/18",
+      "back": false,
+      "tail": "rred by sections 35(1), 36(2) to (5) and 40 of the Jobseekers Act 1995",
+      "power": true
+    },
+    {
+      "n": 31,
+      "gid": "uksi/2026/201",
+      "target": "ukpga/1992/5",
+      "back": false,
+      "tail": "(a) and 189 (1) and (4) of the Social Security Administration Act 1992",
+      "power": true
+    },
+    {
+      "n": 32,
+      "gid": "wsi/2001/2683",
+      "target": "ukpga/1972/68",
+      "back": false,
+      "tail": " and sub-section (2) of section 2 of the European Communities Act 1972",
+      "power": true
+    },
+    {
+      "n": 33,
+      "gid": "uksi/2026/201",
+      "target": "ukpga/1992/7",
+      "back": false,
+      "tail": "e Social Security Contributions and Benefits Act 1992 and sections 163",
+      "power": true
+    },
+    {
+      "n": 34,
+      "gid": "uksi/1995/478",
+      "target": "ukpga/1977/49",
+      "back": false,
+      "tail": "erred on her by section 126(3) of the National Health Service Act 1977",
+      "power": true
+    },
+    {
+      "n": 35,
+      "gid": "ssi/2009/243",
+      "target": "ukpga/1995/46",
+      "back": false,
+      "tail": "d on them by section 305 of the Criminal Procedure (Scotland) Act 1995",
+      "power": true
+    },
+    {
+      "n": 36,
+      "gid": "uksi/2007/882",
+      "target": "ukpga/1971/77",
+      "back": false,
+      "tail": "e powers conferred upon him by section 31A of the Immigration Act 1971",
+      "power": true
+    },
+    {
+      "n": 37,
+      "gid": "uksi/1998/630",
+      "target": "ukpga/1980/66",
+      "back": false,
+      "tail": "ise of powers conferred by Sections 10 and 12 of the Highways Act 1980",
+      "power": true
+    },
+    {
+      "n": 38,
+      "gid": "wsi/2012/168",
+      "target": "ukpga/1998/30",
+      "back": false,
+      "tail": " by section 8(1) and (2) of the Teaching and Higher Education Act 1998",
+      "power": true
+    },
+    {
+      "n": 39,
+      "gid": "uksi/2011/1042",
+      "target": "ukpga/2000/36",
+      "back": false,
+      "tail": "owers conferred by section 4(5) of the Freedom of Information Act 2000",
+      "power": true
+    },
+    {
+      "n": 40,
+      "gid": "uksi/2025/501",
+      "target": "ukpga/2024/9",
+      "back": false,
+      "tail": "rred by section 32(2) of the Investigatory Powers (Amendment) Act 2024",
+      "power": true
+    },
+    {
+      "n": 41,
+      "gid": "nisr/2003/191",
+      "target": "nia/2002/14",
+      "back": false,
+      "tail": "of Schedule 1 to, the State Pension Credit Act (Northern Ireland) 2002",
+      "power": true,
+      "note": "regression: an earlier \"now vested in it\" carried onto this power list (first version)"
+    },
+    {
+      "n": 42,
+      "gid": "uksi/1988/1706",
+      "target": "uksi/1981/238",
+      "back": false,
+      "tail": "onferred by section 14 of the Harbours Act, 1964 and now vested in him",
+      "power": false
+    },
+    {
+      "n": 43,
+      "gid": "uksi/2016/912",
+      "target": "ukpga/1972/68",
+      "back": false,
+      "tail": " for the purposes of section 2(2) of the European Communities Act 1972",
+      "power": false
+    },
+    {
+      "n": 44,
+      "gid": "uksi/2012/835",
+      "target": "uksi/1999/671",
+      "back": false,
+      "tail": "dance with section 166(10A) of the Northern Ireland Administration Act",
+      "power": false
+    },
+    {
+      "n": 45,
+      "gid": "uksi/2006/1135",
+      "target": "uksi/1981/238",
+      "back": false,
+      "tail": "n exercise of the powers conferred by section 14 and now vested in him",
+      "power": false
+    },
+    {
+      "n": 46,
+      "gid": "uksi/2026/201",
+      "target": "ukpga/1992/5",
+      "back": false,
+      "tail": "’s Revenue and Customs . In accordance with section 173 (1) (b) of the",
+      "power": false
+    },
+    {
+      "n": 47,
+      "gid": "uksi/2017/215",
+      "target": "uksi/2009/2263",
+      "back": false,
+      "tail": "astructure Planning (Environmental Impact Assessment) Regulations 2009",
+      "power": false
+    },
+    {
+      "n": 48,
+      "gid": "uksi/1994/276",
+      "target": "uksi/1972/1811",
+      "back": false,
+      "tail": "ted for the purposes of that section in relation to medicinal products",
+      "power": false
+    },
+    {
+      "n": 49,
+      "gid": "uksi/1988/2226",
+      "target": "ukpga/1974/24",
+      "back": false,
+      "tail": " in accordance with subsection (3) of section 4 of the Prices Act 1974",
+      "power": false
+    },
+    {
+      "n": 50,
+      "gid": "uksi/1992/696",
+      "target": "ukpga/1973/36",
+      "back": false,
+      "tail": "on 19(4)(e) of the Veterinary Surgeons Act 1966 and now vested in them",
+      "power": false
+    },
+    {
+      "n": 51,
+      "gid": "uksi/2026/201",
+      "target": "ukpga/1992/5",
+      "back": false,
+      "tail": "for His Majesty’s Revenue and Customs . In accordance with section 173",
+      "power": false
+    },
+    {
+      "n": 52,
+      "gid": "uksi/1999/3110",
+      "target": "ukpga/1999/10",
+      "back": false,
+      "tail": "arliament in accordance with section 15(5) of the Tax Credits Act 1999",
+      "power": false
+    },
+    {
+      "n": 53,
+      "gid": "uksi/1996/1740",
+      "target": "uksi/1994/3178",
+      "back": false,
+      "tail": "from the establishment of the Pathfinder National Health Service Trust",
+      "power": false
+    },
+    {
+      "n": 54,
+      "gid": "uksi/2004/455",
+      "target": "ukpga/1999/28",
+      "back": false,
+      "tail": "1) and (3) and 48(1) of the Food Safety Act 1990 and now vested in him",
+      "power": false
+    },
+    {
+      "n": 55,
+      "gid": "uksi/2010/1462",
+      "target": "uksi/1981/238",
+      "back": false,
+      "tail": "exercise of the powers conferred by that section and now vested in him",
+      "power": false
+    },
+    {
+      "n": 56,
+      "gid": "nisr/2005/394",
+      "target": "nisr/1999/481",
+      "back": false,
+      "tail": "loyment Relations (Northern Ireland) Order 1999 , and now vested in it",
+      "power": false
+    },
+    {
+      "n": 57,
+      "gid": "uksi/2002/1838",
+      "target": "ukpga/2001/16",
+      "back": false,
+      "tail": "escribed” in section 3(4)) of the Criminal Justice and Police Act 2001",
+      "power": true,
+      "note": "regression: a bracketed \"(having regard to …)\" outranked the power formula (first version)"
+    },
+    {
+      "n": 58,
+      "gid": "uksi/1995/1129",
+      "target": "uksi/1994/850",
+      "back": false,
+      "tail": " the University College London Hospitals National Health Service Trust",
+      "power": false
+    },
+    {
+      "n": 59,
+      "gid": "uksi/2012/1154",
+      "target": "ukpga/1964/40",
+      "back": false,
+      "tail": "s applied in accordance with section 14(2)(a) of the Harbours Act 1964",
+      "power": false
+    },
+    {
+      "n": 60,
+      "gid": "wsi/2008/614",
+      "target": "ukpga/2006/32",
+      "back": false,
+      "tail": "9, 88 and 89 of the Traffic Management Act 2004 and now vested in them",
+      "power": false
+    },
+    {
+      "n": 61,
+      "gid": "nisr/2011/229",
+      "target": "ukpga/2005/4",
+      "back": false,
+      "tail": "The Northern Ireland Court of Judicature Rules Committee",
+      "power": false
+    },
+    {
+      "n": 62,
+      "gid": "nisr/2002/334",
+      "target": "uksi/2001/3495",
+      "back": false,
+      "tail": "ment of Enterprise, Trade and Investment being a Department designated",
+      "power": false
+    },
+    {
+      "n": 63,
+      "gid": "uksi/2016/912",
+      "target": "uksi/2008/301",
+      "back": false,
+      "tail": "The Secretary of State is designated",
+      "power": false
+    },
+    {
+      "n": 64,
+      "gid": "nisr/2026/63",
+      "target": "nia/2016/5",
+      "back": false,
+      "tail": "The Department for the Economy",
+      "power": false
+    },
+    {
+      "n": 65,
+      "gid": "nisr/2017/7",
+      "target": "nia/2016/5",
+      "back": false,
+      "tail": "The Department for the Economy",
+      "power": false
+    },
+    {
+      "n": 66,
+      "gid": "uksi/2020/991",
+      "target": "uksi/2007/2133",
+      "back": false,
+      "tail": "The Treasury are designated",
+      "power": false
+    },
+    {
+      "n": 67,
+      "gid": "uksi/2018/106",
+      "target": "uksi/2016/1112",
+      "back": false,
+      "tail": "The Minister for the Cabinet Office, being a Minister designated",
+      "power": false
+    },
+    {
+      "n": 68,
+      "gid": "nisr/1997/195",
+      "target": "nisi/1978/1039",
+      "back": false,
+      "tail": "The Department of Economic Development, being the Department concerned",
+      "power": false
+    },
+    {
+      "n": 69,
+      "gid": "nisr/2001/228",
+      "target": "nisi/1999/283",
+      "back": false,
+      "tail": "The Department of Agriculture and Rural Development",
+      "power": false
+    },
+    {
+      "n": 70,
+      "gid": "uksi/1993/923",
+      "target": "uksi/1972/1811",
+      "back": false,
+      "tail": "heries and Food and the Secretary of State, being Ministers designated",
+      "power": false
+    },
+    {
+      "n": 71,
+      "gid": "uksi/1999/1632",
+      "target": "ukpga/1984/12",
+      "back": false,
+      "tail": "nce (“the Licence”) under section 7 of the Telecommunications Act 1984",
+      "power": false
+    },
+    {
+      "n": 72,
+      "gid": "uksi/2011/2716",
+      "target": "ukpga/2000/8",
+      "back": false,
+      "tail": "r made under section 38 of the Financial Services and Markets Act 2000",
+      "power": false
+    },
+    {
+      "n": 73,
+      "gid": "uksi/2021/8",
+      "target": "uksi/2020/1374",
+      "back": false,
+      "tail": "ion (Coronavirus, Restrictions) (All Tiers) (England) Regulations 2020",
+      "power": false
+    },
+    {
+      "n": 74,
+      "gid": "uksi/2016/853",
+      "target": "ukpga/2008/29",
+      "back": false,
+      "tail": "An application under section 37 of the Planning Act 2008",
+      "power": false
+    },
+    {
+      "n": 75,
+      "gid": "uksi/2022/131",
+      "target": "ukpga/2009/20",
+      "back": false,
+      "tail": "of the Local Democracy, Economic Development and Construction Act 2009",
+      "power": false
+    },
+    {
+      "n": 76,
+      "gid": "uksi/1994/674",
+      "target": "uksi/1972/1811",
+      "back": false,
+      "tail": "heries and Food and the Secretary of State, being Ministers designated",
+      "power": false
+    },
+    {
+      "n": 77,
+      "gid": "uksi/2007/2539",
+      "target": "uksi/1999/2027",
+      "back": false,
+      "tail": "The Secretary of State is a Minister designated",
+      "power": false
+    },
+    {
+      "n": 78,
+      "gid": "uksi/2015/1460",
+      "target": "ukpga/2008/29",
+      "back": false,
+      "tail": "tary of State under paragraph 2 of Schedule 6 to the Planning Act 2008",
+      "power": false
+    },
+    {
+      "n": 79,
+      "gid": "uksi/2014/1187",
+      "target": "ukpga/2009/20",
+      "back": false,
+      "tail": "009 (“ the Act ”) the Local Government Boundary Commission for England",
+      "power": false
+    },
+    {
+      "n": 80,
+      "gid": "uksi/2008/557",
+      "target": "ukpga/2005/11",
+      "back": false,
+      "tail": "The Commissioners for Her Majesty’s Revenue and Customs",
+      "power": false
+    },
+    {
+      "n": "K1",
+      "gid": "ssi/2024/101",
+      "target": "ukpga/2010/25",
+      "back": false,
+      "refs": [
+        "section-20"
+      ],
+      "power": false,
+      "note": "CRaG s.20: \"the requirements of section 20 … have been complied with\" (GRAPH_8 §5)"
+    },
+    {
+      "n": "K2",
+      "gid": "uksi/2024/512",
+      "target": "ukpga/2010/25",
+      "back": false,
+      "refs": [
+        "section-20"
+      ],
+      "power": false,
+      "note": "CRaG s.20: requirements of"
+    },
+    {
+      "n": "K3",
+      "gid": "uksi/2020/38",
+      "target": "ukpga/2010/25",
+      "back": false,
+      "refs": [
+        "section-20"
+      ],
+      "power": false,
+      "note": "CRaG s.20: \"laid before Parliament … under section 20(1)(a)\""
+    },
+    {
+      "n": "K4",
+      "gid": "uksi/2010/1277",
+      "target": "ukpga/2010/25",
+      "back": false,
+      "refs": [
+        "section-52"
+      ],
+      "power": true,
+      "note": "CRaG s.52(2): a real power"
+    },
+    {
+      "n": "K5",
+      "gid": "uksi/1996/890",
+      "target": "ukpga/1974/37",
+      "back": false,
+      "power": true,
+      "note": "regression: \"Health and Safety at Work etc. Act\" — the \"etc.\" cut the clause (first pilot)"
+    },
+    {
+      "n": "K6",
+      "gid": "uksi/2016/912",
+      "target": "ukpga/1972/68",
+      "back": false,
+      "power": false,
+      "note": "ECA designation sentence: a mention"
+    },
+    {
+      "n": "K7",
+      "gid": "uksi/2016/912",
+      "target": "ukpga/1972/68",
+      "back": true,
+      "refs": [
+        "section-2"
+      ],
+      "power": true,
+      "note": "\"…powers conferred by section 2(2) of that Act\" in the NEXT sentence: a back-reference power"
+    },
+    {
+      "n": "K8",
+      "gid": "uksi/2022/131",
+      "target": "ukpga/2009/20",
+      "back": false,
+      "refs": [
+        "section-58"
+      ],
+      "power": false,
+      "note": "\"Under section 58(4) … the Commission published a report\": not the power"
+    },
+    {
+      "n": "K9",
+      "gid": "uksi/2022/131",
+      "target": "ukpga/2009/20",
+      "back": true,
+      "refs": [
+        "section-59"
+      ],
+      "power": true,
+      "note": "\"power conferred by section 59(1) of the Act\", the Act defined at the s.58 anchor"
+    },
+    {
+      "n": "K10",
+      "gid": "uksi/2014/474",
+      "target": "ukpga/1968/2",
+      "back": false,
+      "power": true,
+      "note": "\"make the following Regulations pursuant to section 1(1)\": power beats the bare \"pursuant to\" inside it"
+    },
+    {
+      "n": "K11",
+      "gid": "uksi/1988/778",
+      "target": "ukpga/1972/68",
+      "back": true,
+      "power": true,
+      "note": "\"…in exercise of the powers conferred by that section\": the back-reference power beside case 29"
+    },
+    {
+      "n": "H1",
+      "gid": "uksi/1991/684",
+      "target": "ukpga/1990/7",
+      "back": false,
+      "tail": "ion 59(1), (2), (5) and (5ZA) of the Social Security Pensions Act 1975",
+      "power": true,
+      "note": "target is the footnote's first citation (ukpga/1990/7) while the words name the 1975 Act - a target-resolution matter, not the role"
+    },
+    {
+      "n": "H2",
+      "gid": "ssi/2000/81",
+      "target": "ukpga/1967/84",
+      "back": false,
+      "tail": "sections 6(1), 15(3) and 20(1) of the Sea Fish (Conservation) Act 1967",
+      "power": true
+    },
+    {
+      "n": "H3",
+      "gid": "nisr/2011/107",
+      "target": "ukpga/1992/7",
+      "back": false,
+      "tail": "Social Security Contributions and Benefits (Northern Ireland) Act 1992",
+      "power": true
+    },
+    {
+      "n": "H4",
+      "gid": "uksi/2021/187",
+      "target": "uksi/2020/1482",
+      "back": false,
+      "tail": "ctive measures against pests of plants (“the Plant Health Regulation”)",
+      "power": true
+    },
+    {
+      "n": "H5",
+      "gid": "uksi/2006/2068",
+      "target": "ukpga/1998/29",
+      "back": false,
+      "tail": "7(2) of and paragraph 10 of Schedule 3 to the Data Protection Act 1998",
+      "power": true
+    },
+    {
+      "n": "H6",
+      "gid": "wsi/2008/716",
+      "target": "ukpga/2006/42",
+      "back": false,
+      "tail": " 5 and 7 of Schedule 3 to the National Health Service (Wales) Act 2006",
+      "power": true
+    },
+    {
+      "n": "H7",
+      "gid": "uksi/1991/2297",
+      "target": "ukpga/1991/65",
+      "back": false,
+      "tail": "by subsections (5) and (6) of section 1 of the Dangerous Dogs Act 1991",
+      "power": true
+    },
+    {
+      "n": "H8",
+      "gid": "uksi/1991/2031",
+      "target": "ukpga/1969/54",
+      "back": false,
+      "tail": "by sections 26(1) and 69(3) of the Children and Young Persons Act 1969",
+      "power": true
+    },
+    {
+      "n": "H9",
+      "gid": "nisr/1997/273",
+      "target": "nisi/1997/869",
+      "back": false,
+      "tail": "it by Article 1(2) of the Race Relations (Northern Ireland) Order 1997",
+      "power": true
+    },
+    {
+      "n": "H10",
+      "gid": "uksi/2014/2371",
+      "target": "ukpga/2012/21",
+      "back": false,
+      "tail": "onferred by sections 115(2) and 118 of the Financial Services Act 2012",
+      "power": true
+    },
+    {
+      "n": "H11",
+      "gid": "uksi/1990/269",
+      "target": "ukpga/1980/66",
+      "back": false,
+      "tail": "xercise of the powers conferred by section 16 of the Highways Act 1980",
+      "power": true
+    },
+    {
+      "n": "H12",
+      "gid": "uksi/2005/3422",
+      "target": "ukpga/1996/8",
+      "back": false,
+      "tail": "powers conferred upon them by section 103(1AA) of the Finance Act 1996",
+      "power": true
+    },
+    {
+      "n": "H13",
+      "gid": "uksi/1993/1355",
+      "target": "ukpga/1907/51",
+      "back": false,
+      "tail": "erred on them by section 40 of the Sheriff Courts (Scotland) Act 1907(",
+      "power": true
+    },
+    {
+      "n": "H14",
+      "gid": "uksi/2007/3389",
+      "target": "ukpga/2006/36",
+      "back": false,
+      "tail": "n 31(1) and (2) and section 122(7) of the Wireless Telegraphy Act 2006",
+      "power": true
+    },
+    {
+      "n": "H15",
+      "gid": "uksi/1992/2735",
+      "target": "ukpga/1990/19",
+      "back": false,
+      "tail": " Schedule 2 to the National Health Service and Community Care Act 1990",
+      "power": true
+    },
+    {
+      "n": "H16",
+      "gid": "uksi/2016/20",
+      "target": "ukpga/2003/17",
+      "back": false,
+      "tail": "d by sections 100(4) and (5), 193 and 197(2) of the Licensing Act 2003",
+      "power": true
+    },
+    {
+      "n": "H17",
+      "gid": "ssi/2017/63",
+      "target": "asp/2010/5",
+      "back": false,
+      "tail": " the powers conferred by section 117 of the Marine (Scotland) Act 2010",
+      "power": true
+    },
+    {
+      "n": "H18",
+      "gid": "uksi/1996/2037",
+      "target": "uksi/1988/1336",
+      "back": false,
+      "tail": "nsport has, in pursuance of paragraph 1A of Schedule 3 to the said Act",
+      "power": false,
+      "note": "HOLDOUT MISS (false power): \"And whereas the Secretary of State has, in pursuance of paragraph 1A\" - a recital of a step taken"
+    },
+    {
+      "n": "H19",
+      "gid": "ssi/2002/454",
+      "target": "ukpga/1995/46",
+      "back": false,
+      "tail": "upon them by section 305 of the Criminal Procedure (Scotland) Act 1995",
+      "power": true
+    },
+    {
+      "n": "H20",
+      "gid": "wsi/2012/1305",
+      "target": "mwa/2010/7",
+      "back": false,
+      "tail": " 47(1)(a) and (2), and 52(2) of the Mental Health (Wales) Measure 2010",
+      "power": true
+    },
+    {
+      "n": "H21",
+      "gid": "uksi/1996/2657",
+      "target": "ukpga/1972/68",
+      "back": true,
+      "tail": "unity, acting jointly, in the exercise of the powers conferred on them",
+      "power": true
+    },
+    {
+      "n": "H22",
+      "gid": "uksi/2015/2036",
+      "target": "ukpga/2009/20",
+      "back": true,
+      "tail": "he following Order in exercise of the power conferred by section 59(1)",
+      "power": true
+    },
+    {
+      "n": "H23",
+      "gid": "uksi/2001/167",
+      "target": "ukpga/1980/43",
+      "back": true,
+      "tail": "d 144 of the Magistrates' Courts Act 1980 , as extended by section 145",
+      "power": true,
+      "note": "\"as extended by section 145 [of that Act]\" - read as part of the power, by the same convention as \"as applied by\""
+    },
+    {
+      "n": "H24",
+      "gid": "uksi/2015/112",
+      "target": "ukpga/2009/20",
+      "back": true,
+      "tail": "he following Order in exercise of the power conferred by section 59(1)",
+      "power": true
+    },
+    {
+      "n": "H25",
+      "gid": "uksi/2022/740",
+      "target": "ukpga/1987/12",
+      "back": true,
+      "tail": "sals submitted by the Health and Safety Executive under section 24(2A)",
+      "power": false,
+      "mayBeAbsent": true,
+      "note": "HOLDOUT MISS (false power): \"for the purpose of giving effect to proposals submitted by the HSE under section 24(2A)\" - procedural; the back-reference is no longer written at all"
+    },
+    {
+      "n": "H26",
+      "gid": "uksi/2009/1485",
+      "target": "ukpga/1972/68",
+      "back": true,
+      "tail": "lowing Regulations in exercise of the powers conferred by section 2(2)",
+      "power": true
+    },
+    {
+      "n": "H27",
+      "gid": "uksi/1991/1980",
+      "target": "ukpga/1981/64",
+      "back": true,
+      "tail": "erred on him by section 41 and paragraphs 2(1) and 3(4) of Schedule 10",
+      "power": true
+    },
+    {
+      "n": "H28",
+      "gid": "nisr/2001/268",
+      "target": "ukpga/1972/68",
+      "back": true,
+      "tail": "persons engaged in road transport, in exercise of the powers conferred",
+      "power": true
+    },
+    {
+      "n": "H29",
+      "gid": "uksi/1989/830",
+      "target": "uksi/1962/1549",
+      "back": false,
+      "tail": " the Parks Regulation (Amendment) Act 1926( ), and now vested in him (",
+      "power": false
+    },
+    {
+      "n": "H30",
+      "gid": "uksi/1997/1187",
+      "target": "ukpga/1994/40",
+      "back": false,
+      "tail": "required by section 3 of the Deregulation and Contracting Out Act 1994",
+      "power": false
+    },
+    {
+      "n": "H31",
+      "gid": "nisr/2006/177",
+      "target": "nisr/1999/481",
+      "back": false,
+      "tail": "loyment Relations (Northern Ireland) Order 1999 , and now vested in it",
+      "power": false
+    },
+    {
+      "n": "H32",
+      "gid": "uksi/1998/837",
+      "target": "ukpga/1990/19",
+      "back": false,
+      "tail": "ices by the trust for Health Authorities or Special Health Authorities",
+      "power": false
+    },
+    {
+      "n": "H33",
+      "gid": "nisr/1998/333",
+      "target": "nisi/1982/378",
+      "back": false,
+      "tail": "Order, and with the consent of the Department of Finance and Personnel",
+      "power": false
+    },
+    {
+      "n": "H34",
+      "gid": "uksi/1990/1767",
+      "target": "uksi/1970/1537",
+      "back": false,
+      "tail": "rt, Export and Customs Powers (Defence) Act 1939 and now vested in him",
+      "power": false
+    },
+    {
+      "n": "H35",
+      "gid": "nisr/1999/391",
+      "target": "nisi/1993/1579",
+      "back": false,
+      "tail": " the consent of the Department of the Environment for Northern Ireland",
+      "power": false
+    },
+    {
+      "n": "H36",
+      "gid": "uksi/1997/2783",
+      "target": "ukpga/1991/40",
+      "back": false,
+      "tail": "he Secretary of State under section 58(1) of the Road Traffic Act 1991",
+      "power": false
+    },
+    {
+      "n": "H37",
+      "gid": "uksi/1988/492",
+      "target": "ukpga/1986/49",
+      "back": false,
+      "tail": "Whereas, pursuant to section 18(1) of the Agriculture Act 1986(",
+      "power": false
+    },
+    {
+      "n": "H38",
+      "gid": "uksi/1992/2656",
+      "target": "ukpga/1911/49",
+      "back": false,
+      "tail": " of the Crofters Holdings (Scotland) Act 1886 , and now vested in them",
+      "power": false
+    },
+    {
+      "n": "H39",
+      "gid": "nisr/2016/310",
+      "target": "nisi/1993/1579",
+      "back": false,
+      "tail": "The Regulations are made with the consent of the Department of Finance",
+      "power": false
+    },
+    {
+      "n": "H40",
+      "gid": "uksi/1987/1538",
+      "target": "ukpga/1985/72",
+      "back": false,
+      "tail": "f State pursuant to section 86(2) of the Weights and Measures Act 1985",
+      "power": false
+    },
+    {
+      "n": "H41",
+      "gid": "uksi/2018/882",
+      "target": "ukpga/2008/29",
+      "back": false,
+      "tail": "has been made under paragraph 2 of Schedule 6 to the Planning Act 2008",
+      "power": false
+    },
+    {
+      "n": "H42",
+      "gid": "uksi/2025/482",
+      "target": "uksi/2025/85",
+      "back": false,
+      "tail": "The Heckington Fen Solar Park Order 2025 (“ the 2025 Order ”)",
+      "power": false
+    },
+    {
+      "n": "H43",
+      "gid": "uksi/2024/247",
+      "target": "ukpga/1992/5",
+      "back": false,
+      "tail": "150(1)(a)(i) and (1)(i) of the Social Security Administration Act 1992",
+      "power": false
+    },
+    {
+      "n": "H44",
+      "gid": "uksi/2012/3039",
+      "target": "uksi/1993/595",
+      "back": false,
+      "tail": "The Secretary of State is designated",
+      "power": false
+    },
+    {
+      "n": "H45",
+      "gid": "uksi/2005/2045",
+      "target": "ukpga/2005/11",
+      "back": false,
+      "tail": "The Commissioners for Her Majesty’s Revenue and Customs",
+      "power": false
+    },
+    {
+      "n": "H46",
+      "gid": "nisr/2007/361",
+      "target": "uksi/2000/2812",
+      "back": false,
+      "tail": "nt of Agriculture and Rural Development, being a Department designated",
+      "power": false
+    },
+    {
+      "n": "H47",
+      "gid": "uksi/1998/3169",
+      "target": "uksi/1972/1811",
+      "back": false,
+      "tail": "heries and Food and the Secretary of State, being Ministers designated",
+      "power": false
+    },
+    {
+      "n": "H48",
+      "gid": "uksi/2011/797",
+      "target": "ukpga/1992/4",
+      "back": false,
+      "tail": "Schedule 1 to, the Social Security Contributions and Benefits Act 1992",
+      "power": true,
+      "note": "HOLDOUT MISS (power not seen): \"The powers exercised by the Treasury are those conferred by sections 3(2)…\""
+    },
+    {
+      "n": "H49",
+      "gid": "nisr/2010/323",
+      "target": "nisi/1999/283",
+      "back": false,
+      "tail": "The Department of Health, Social Services and Public Safety",
+      "power": false
+    },
+    {
+      "n": "H50",
+      "gid": "uksi/1987/1929",
+      "target": "ukpga/1976/70",
+      "back": false,
+      "tail": "Minister”) for an Order under section 13 of the Land Drainage Act 1976",
+      "power": false
+    },
+    {
+      "n": "T1",
+      "gid": "ssi/2023/362",
+      "target": "asp/2022/5",
+      "back": false,
+      "tail": "conferred by section 28(2) of the Good Food Nation (Scotland) Act 2022",
+      "power": true
+    },
+    {
+      "n": "T2",
+      "gid": "ssi/2012/265",
+      "target": "asp/2012/5",
+      "back": false,
+      "tail": "ed by section 123(3) of the Land Registration etc. (Scotland) Act 2012",
+      "power": true
+    },
+    {
+      "n": "T3",
+      "gid": "uksi/1989/2123",
+      "target": "ukpga/1980/30",
+      "back": false,
+      "tail": "that behalf, after reference to the Social Security Advisory Committee",
+      "power": false,
+      "note": "THIRD HOLDOUT MISS (false power): \"…and of all other powers enabling him in that behalf, after reference to the Social Security Advisory Committee[anchor]\" - a body, cited to the Act that set it up"
+    },
+    {
+      "n": "T4",
+      "gid": "uksi/2001/289",
+      "target": "ukpga/1977/49",
+      "back": false,
+      "tail": "5(1), 36(1) and (3) and 126(4) of the National Health Service Act 1977",
+      "power": true
+    },
+    {
+      "n": "T5",
+      "gid": "uksi/1991/2105",
+      "target": "ukpga/1980/30",
+      "back": false,
+      "tail": " that proposals to make these Regulations should not be referred to it",
+      "power": false,
+      "note": "THIRD HOLDOUT MISS (false power): \"after agreement by the Social Security Advisory Committee that proposals … should not be referred to it[anchor]\""
+    },
+    {
+      "n": "T6",
+      "gid": "ssi/2025/380",
+      "target": "ukpga/1978/29",
+      "back": false,
+      "tail": "(2A), and 105(7)(a) of the National Health Service (Scotland) Act 1978",
+      "power": true
+    },
+    {
+      "n": "T7",
+      "gid": "uksi/2000/2047",
+      "target": "ukcm/1991/1",
+      "back": false,
+      "tail": ") of the Care of Churches and Ecclesiastical Jurisdiction Measure 1991",
+      "power": true
+    },
+    {
+      "n": "T8",
+      "gid": "nisr/2013/203",
+      "target": "nisi/1998/1071",
+      "back": false,
+      "tail": "f the Family Homes and Domestic Violence (Northern Ireland) Order 1998",
+      "power": true
+    },
+    {
+      "n": "T9",
+      "gid": "uksi/1988/249",
+      "target": "ukpga/1972/68",
+      "back": false,
+      "tail": " conferred on Her by section 2(2) of the European Communities Act 1972",
+      "power": true
+    },
+    {
+      "n": "T10",
+      "gid": "uksi/1988/1123",
+      "target": "ukpga/1980/42",
+      "back": false,
+      "tail": "of the powers conferred on him by section 1 of the Employment Act 1980",
+      "power": true
+    },
+    {
+      "n": "T11",
+      "gid": "uksi/2021/672",
+      "target": "ukpga/2007/15",
+      "back": false,
+      "tail": "Secretary of State, in exercise of the powers conferred by section 412",
+      "power": true
+    },
+    {
+      "n": "T12",
+      "gid": "uksi/1994/484",
+      "target": "ukpga/1977/49",
+      "back": false,
+      "tail": "ferred on her by section 92(1) of the National Health Service Act 1977",
+      "power": true
+    },
+    {
+      "n": "T13",
+      "gid": "uksi/2004/1628",
+      "target": "ukpga/1972/68",
+      "back": true,
+      "tail": "the profession of lawyer, in exercise of the powers conferred upon him",
+      "power": true
+    },
+    {
+      "n": "T14",
+      "gid": "uksi/1991/823",
+      "target": "ukpga/1972/68",
+      "back": true,
+      "tail": "le securities to the public, in exercise of thepowers conferred on him",
+      "power": true
+    },
+    {
+      "n": "T15",
+      "gid": "uksi/2013/227",
+      "target": "ukpga/2004/33",
+      "back": true,
+      "tail": "ions, in exercise of the power conferred by paragraph 4 of Schedule 23",
+      "power": true
+    },
+    {
+      "n": "T16",
+      "gid": "uksi/1996/732",
+      "target": "ukpga/1977/5",
+      "back": true,
+      "tail": "f the Air Force (Constitution) Act 1917 , and sections 12(1) and 24(3)",
+      "power": true
+    },
+    {
+      "n": "T17",
+      "gid": "uksi/1991/2638",
+      "target": "ukpga/1970/30",
+      "back": true,
+      "tail": " in exercise of the powers conferred on him by sections 3(1) and 14(2)",
+      "power": true
+    },
+    {
+      "n": "T18",
+      "gid": "wsi/2008/788",
+      "target": "ukpga/2006/32",
+      "back": true,
+      "tail": "arried out such consultation as is required by virtue of section 50(5)",
+      "power": false,
+      "mayBeAbsent": true,
+      "note": "THIRD HOLDOUT MISS (false power): \"having carried out such consultation as is required by virtue of section 50(5)\" - the back-reference is no longer written"
+    },
+    {
+      "n": "T19",
+      "gid": "uksi/2005/1399",
+      "target": "ukpga/1972/68",
+      "back": false,
+      "tail": " for the purposes of section 2(2) of the European Communities Act 1972",
+      "power": false
+    },
+    {
+      "n": "T20",
+      "gid": "uksi/2016/752",
+      "target": "ukpga/2010/8",
+      "back": false,
+      "tail": "ion 5(2) of the Taxation (International and Other Provisions) Act 2010",
+      "power": false
+    },
+    {
+      "n": "T21",
+      "gid": "ssi/2002/33",
+      "target": "ukpga/1992/53",
+      "back": false,
+      "tail": "ls as required by section 8(1) of the Tribunals and Inquiries Act 1992",
+      "power": false
+    },
+    {
+      "n": "T22",
+      "gid": "nisr/2014/284",
+      "target": "ukpga/1972/68",
+      "back": false,
+      "tail": " for the purposes of section 2(2) of the European Communities Act 1972",
+      "power": false
+    },
+    {
+      "n": "T23",
+      "gid": "uksi/1998/1151",
+      "target": "ukpga/1991/40",
+      "back": false,
+      "tail": "he Secretary of State under section 58(1) of the Road Traffic Act 1991",
+      "power": false
+    },
+    {
+      "n": "T24",
+      "gid": "uksi/1989/308",
+      "target": "ukpga/1988/40",
+      "back": false,
+      "tail": " accordance with section 20(2) to (4) of the Education Reform Act 1988",
+      "power": false
+    },
+    {
+      "n": "T25",
+      "gid": "uksi/1997/927",
+      "target": "ukpga/1984/12",
+      "back": false,
+      "tail": "nce (“the Licence”) under section 7 of the Telecommunications Act 1984",
+      "power": false
+    },
+    {
+      "n": "T26",
+      "gid": "uksi/2012/835",
+      "target": "ukpga/1992/5",
+      "back": false,
+      "tail": "in section 150(1)(a)(i) of the Social Security Administration Act 1992",
+      "power": false
+    },
+    {
+      "n": "T27",
+      "gid": "uksi/2009/794",
+      "target": "uksi/2009/200",
+      "back": false,
+      "tail": "ral level of earnings has increased by 3.6 per cent during that period",
+      "power": false
+    },
+    {
+      "n": "T28",
+      "gid": "uksi/2000/1059",
+      "target": "uksi/1977/1718",
+      "back": false,
+      "tail": "The Secretary of State, being the Minister designated",
+      "power": false
+    },
+    {
+      "n": "T29",
+      "gid": "wsi/2007/2900",
+      "target": "uksi/2005/2766",
+      "back": false,
+      "tail": "The Welsh Ministers being designated",
+      "power": false
+    },
+    {
+      "n": "T30",
+      "gid": "uksi/2015/723",
+      "target": "uksi/2014/2384",
+      "back": false,
+      "tail": "The Thames Water Utilities Limited (Thames Tideway Tunnel) Order 2014",
+      "power": false
+    },
+    {
+      "n": "F1",
+      "gid": "uksi/2013/903",
+      "target": "ukpga/2012/10",
+      "back": false,
+      "tail": " (2) of the Legal Aid, Sentencing and Punishment of Offenders Act 2012",
+      "power": true
+    },
+    {
+      "n": "F2",
+      "gid": "ssi/2002/254",
+      "target": "ukpga/1986/47",
+      "back": false,
+      "tail": "section 36(1), (2)(h) and (3)(bb) of the Legal Aid (Scotland) Act 1986",
+      "power": true
+    },
+    {
+      "n": "F3",
+      "gid": "nisr/2026/87",
+      "target": "nisi/1998/1760",
+      "back": false,
+      "tail": " 8(4) of the Education (Student Support) (Northern Ireland) Order 1998",
+      "power": true
+    },
+    {
+      "n": "F4",
+      "gid": "ssi/2009/191",
+      "target": "ukpga/1995/36",
+      "back": false,
+      "tail": "ferred by sections 4(2) and 103(2) of the Children (Scotland) Act 1995",
+      "power": true
+    },
+    {
+      "n": "F5",
+      "gid": "uksi/2007/3546",
+      "target": "ukpga/2007/17",
+      "back": false,
+      "tail": " by section 66(2) of the Consumers, Estate Agents and Redress Act 2007",
+      "power": true
+    },
+    {
+      "n": "F6",
+      "gid": "nisr/2001/389",
+      "target": "ukpga/1985/48",
+      "back": false,
+      "tail": "1(1) and (2) and 24(3) of the Food and Environment Protection Act 1985",
+      "power": true
+    },
+    {
+      "n": "F7",
+      "gid": "uksi/2011/2923",
+      "target": "ukpga/1939/89",
+      "back": false,
+      "tail": "d by sections 1, 5, 7 and 15(5) of the Trading with the Enemy Act 1939",
+      "power": true
+    },
+    {
+      "n": "F8",
+      "gid": "uksi/2002/182",
+      "target": "ukpga/1985/67",
+      "back": false,
+      "tail": "ferred by section 6(3)(a), (8)(a) and (9)(a) of the Transport Act 1985",
+      "power": true
+    },
+    {
+      "n": "F9",
+      "gid": "ssi/2003/560",
+      "target": "ukpga/1978/35",
+      "back": false,
+      "tail": "nferred by section 1(1) of the Import of Live Fish (Scotland) Act 1978",
+      "power": true
+    },
+    {
+      "n": "F10",
+      "gid": "uksi/1994/944",
+      "target": "ukpga/1981/22",
+      "back": false,
+      "tail": "n them by sections 1, 8(1), and 88(4)(a) of the Animal Health Act 1981",
+      "power": true
+    },
+    {
+      "n": "F11",
+      "gid": "uksi/2001/1267",
+      "target": "ukpga/1998/30",
+      "back": false,
+      "tail": " (d), 4(3), 14(3), 42(7) of the Teaching and Higher Education Act 1998",
+      "power": true
+    },
+    {
+      "n": "F12",
+      "gid": "ssi/2008/40",
+      "target": "ukpga/1907/51",
+      "back": false,
+      "tail": "rred upon them by section 40 of the Sheriff Courts (Scotland) Act 1907",
+      "power": true
+    },
+    {
+      "n": "F13",
+      "gid": "uksi/2001/2814",
+      "target": "ukpga/1981/22",
+      "back": false,
+      "tail": "ons 1, 7, 8(1), 23, 25, 83(2), and 87(2) of the Animal Health Act 1981",
+      "power": true
+    },
+    {
+      "n": "F14",
+      "gid": "uksi/2001/1606",
+      "target": "ukpga/1977/49",
+      "back": false,
+      "tail": "erred on him by section 126(3) of the National Health Service Act 1977",
+      "power": true
+    },
+    {
+      "n": "F15",
+      "gid": "uksi/1992/1459",
+      "target": "ukpga/1980/66",
+      "back": false,
+      "tail": "ise of powers conferred by sections 10 and 12 of the Highways Act 1980",
+      "power": true
+    },
+    {
+      "n": "F16",
+      "gid": "ssi/2017/70",
+      "target": "asp/2010/3",
+      "back": false,
+      "tail": "ion 24 of the Tobacco and Primary Medical Services (Scotland) Act 2010",
+      "power": true
+    },
+    {
+      "n": "F17",
+      "gid": "uksi/2001/3926",
+      "target": "ukpga/1999/8",
+      "back": true,
+      "tail": "er Majesty, in exercise of the powers conferred upon Her by section 60",
+      "power": true
+    },
+    {
+      "n": "F18",
+      "gid": "uksi/1989/167",
+      "target": "ukpga/1972/68",
+      "back": true,
+      "tail": "ficant effects on the environment, in exercise of the powers conferred",
+      "power": true
+    },
+    {
+      "n": "F19",
+      "gid": "uksi/2001/1400",
+      "target": "ukpga/1998/46",
+      "back": true,
+      "tail": "ercise of the powers conferred upon me by sections 105, 112(1) and 113",
+      "power": true
+    },
+    {
+      "n": "F20",
+      "gid": "uksi/1988/466",
+      "target": "ukpga/1972/11",
+      "back": true,
+      "tail": "to him to be appropriate, of the powers conferred on him by section 24",
+      "power": true
+    },
+    {
+      "n": "F21",
+      "gid": "nisr/2009/8",
+      "target": "ukpga/1972/68",
+      "back": true,
+      "tail": "Department makes these Regulations in exercise of the powers conferred",
+      "power": true
+    },
+    {
+      "n": "F22",
+      "gid": "nisr/2000/388",
+      "target": "ukpga/1972/68",
+      "back": true,
+      "tail": " that relate to fire safety, in exercise of the powers conferred on it",
+      "power": true
+    },
+    {
+      "n": "F23",
+      "gid": "uksi/1999/3156",
+      "target": "ukpga/1992/5",
+      "back": false,
+      "tail": " for Social Security to be representative of the authorities concerned",
+      "power": false
+    },
+    {
+      "n": "F24",
+      "gid": "uksi/1988/236",
+      "target": "ukpga/1982/10",
+      "back": false,
+      "tail": "ces Commission under section 11(1) of the Industrial Training Act 1982",
+      "power": false
+    },
+    {
+      "n": "F25",
+      "gid": "uksi/2004/2757",
+      "target": "uksi/2003/1887",
+      "back": false,
+      "tail": "e powers conferred by section 26(1) of that Act, and now vested in him",
+      "power": false
+    },
+    {
+      "n": "F26",
+      "gid": "nisr/2018/174",
+      "target": "nisr/1973/504",
+      "back": false,
+      "tail": "Act 1971 , as adapted by section 7(9) of that Act and now vested in it",
+      "power": false
+    },
+    {
+      "n": "F27",
+      "gid": "uksi/2021/207",
+      "target": "ukpga/2020/1",
+      "back": false,
+      "tail": "In accordance with paragraph 8F(1) of Schedule 7 to that Act",
+      "power": false
+    },
+    {
+      "n": "F28",
+      "gid": "uksi/1999/2345",
+      "target": "ukpga/1991/40",
+      "back": false,
+      "tail": "he Secretary of State under section 58(1) of the Road Traffic Act 1991",
+      "power": false
+    },
+    {
+      "n": "F29",
+      "gid": "nisr/2012/168",
+      "target": "nisr/1973/504",
+      "back": false,
+      "tail": "ugs Act 1971 as adapted by section 38 of that Act and now vested in it",
+      "power": false
+    },
+    {
+      "n": "F30",
+      "gid": "nisr/1999/89",
+      "target": "ukpga/1972/68",
+      "back": false,
+      "tail": " for the purposes of section 2(2) of the European Communities Act 1972",
+      "power": false
+    },
+    {
+      "n": "F31",
+      "gid": "nisr/2000/388",
+      "target": "nisi/1998/2795",
+      "back": false,
+      "tail": "out by the Executive of consultations in accordance with Article 46(3)",
+      "power": false
+    },
+    {
+      "n": "F32",
+      "gid": "uksi/1994/2696",
+      "target": "uksi/1993/574",
+      "back": false,
+      "tail": "Service Trust , having consulted the Brent and Harrow Health Authority",
+      "power": false
+    },
+    {
+      "n": "F33",
+      "gid": "uksi/2016/858",
+      "target": "ukpga/2009/20",
+      "back": false,
+      "tail": "ecommendations to the Local Government Boundary Commission for England",
+      "power": false
+    },
+    {
+      "n": "F34",
+      "gid": "uksi/2010/3033",
+      "target": "ukpga/2006/45",
+      "back": false,
+      "tail": "in relation to England for the purposes of the Animal Welfare Act 2006",
+      "power": false
+    },
+    {
+      "n": "F35",
+      "gid": "uksi/1987/1599",
+      "target": "ukpga/1945/42",
+      "back": false,
+      "tail": "owers conferred by sections 23, 312(1) and 59(1) of the Water Act 1945",
+      "power": true,
+      "note": "FINAL HOLDOUT MISS (power not seen): a footnote that resolves to nothing, mid-list (\"59(1)[f2] of the Water Act 1945[f3]\"), split the words; fixed after the score was taken"
+    },
+    {
+      "n": "F36",
+      "gid": "wsi/2000/501",
+      "target": "uksi/1999/672",
+      "back": false,
+      "tail": "sted in the National Assembly for Wales so far as exercisable in Wales",
+      "power": false
+    },
+    {
+      "n": "F37",
+      "gid": "wsi/2008/2672",
+      "target": "uksi/1999/672",
+      "back": false,
+      "tail": "ocal Government Finance Act 1988 and now vested in the Welsh Ministers",
+      "power": false
+    },
+    {
+      "n": "F38",
+      "gid": "uksi/2026/62",
+      "target": "uksi/2010/674",
+      "back": false,
+      "tail": "appropriate Minister for the purposes of that section, has by an Order",
+      "power": false
+    },
+    {
+      "n": "F39",
+      "gid": "uksi/1998/2918",
+      "target": "uksi/1993/2661",
+      "back": false,
+      "tail": "he Environment, Transport and the Regions, being a Minister designated",
+      "power": false
+    },
+    {
+      "n": "F40",
+      "gid": "nisr/2006/108",
+      "target": "ukpga/1993/48",
+      "back": false,
+      "tail": "has made an Order under section 109(4) of the Pension Schemes Act 1993",
+      "power": false
+    }
+  ]
+}
