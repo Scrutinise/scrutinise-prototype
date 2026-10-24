@@ -753,6 +753,13 @@ model Idea {
   /// this is a different predicate from day one, so it is a different column from day one.
   ownerArchivedAt           DateTime?
 
+  /// ══ LEX 264 (24 Oct 2026) — A SCRATCH COPY MADE TO MEASURE A PRICE ══════════════════
+  ///
+  /// Set only by `scripts/lib/scratch-copy.ts`. `LIVE_IDEA` filters it, so a scratch copy is in no
+  /// list and no count, while a check can still open it by id. A copy left by a killed run is
+  /// swept by the next `scratchCopy()` (the flag is the note it leaves). `lex_264_scratch.sql`.
+  isScratch                 Boolean   @default(false)
+
   /// ══ 26-D §1/§2 — THE OWNER'S OWN DRAG ORDER FOR "MY IDEAS" ═══════════════════════
   ///
   /// §1: "where a per-user ordering of ideas would live, and what it costs to read on

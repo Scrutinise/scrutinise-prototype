@@ -26,11 +26,12 @@ export async function scratchCopy(sourceId: string, label: string): Promise<{ id
   const src = await prisma.idea.findFirst({ where: { id: { startsWith: sourceId }, deletedAt: null } })
   if (!src) throw new Error(`no idea starts with ${sourceId}`)
 
+  await sweepLeftovers()
   const title = `${SCRATCH_PREFIX}${label}: ${src.title}`.slice(0, 200)
   const copy = await prisma.idea.create({
     data: {
       ...strip(src as unknown as Row, 'proposalShareToken', 'ownershipTransferToken', 'aiChatHistory', 'aiChatSummary', 'deletedAt', 'archivedAt', 'communityId', 'groupId'),
-      title, stage: 'STAGE_1', visibility: 'PRIVATE', status: 'DRAFT',
+      title, stage: 'STAGE_1', visibility: 'PRIVATE', status: 'DRAFT', isScratch: true,
     } as never,
     select: { id: true, creatorId: true },
   })
@@ -97,6 +98,23 @@ export async function scratchCopy(sourceId: string, label: string): Promise<{ id
   }
 
   return { id: to, userId: copy.creatorId, title }
+}
+
+/**
+ * LEX 264: a run that is killed never reaches its `finally`, so its copy stays. The `isScratch` flag is the note it leaves: the next
+ * `scratchCopy()` deletes every flagged copy older than LEFTOVER_AFTER_MS and says so. (Younger ones may be another run's, still going.)
+ */
+const LEFTOVER_AFTER_MS = 6 * 60 * 60 * 1000
+export async function sweepLeftovers(): Promise<number> {
+  const old = await prisma.idea.findMany({
+    where: { isScratch: true, deletedAt: null, createdAt: { lt: new Date(Date.now() - LEFTOVER_AFTER_MS) } },
+    select: { id: true, title: true, createdAt: true },
+  })
+  for (const o of old) {
+    await deleteScratch(o.id)
+    console.warn(`swept a scratch copy left by a killed run: ${o.id.slice(0, 8)} (${o.createdAt.toISOString().slice(0, 16)} UTC) "${o.title.slice(0, 50)}"`)
+  }
+  return old.length
 }
 
 /** Deletes a scratch copy and everything cascading from it. Refuses anything not titled as one. */

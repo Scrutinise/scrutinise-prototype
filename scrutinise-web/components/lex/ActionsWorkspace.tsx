@@ -660,7 +660,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       {(view === 'list' || view === 'board') && unparked.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5" data-find-box>
           <input type="search" value={find} onChange={(e) => setFind(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setFind('') }}
-            placeholder="Find in the actions — title, statement, Detail" aria-label="Find in the actions"
+            placeholder="Find in the actions — title, statement, Explanation" aria-label="Find in the actions"
             className="text-xs p-1.5 rounded border border-zinc-300 w-80 max-w-full focus:outline-none focus:border-blue-400" />
           {find.trim() && (
             <>
@@ -946,27 +946,25 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
     after: others.filter((o) => o.beforeIds.includes(a.id)).map((o) => o.number),
     comments: facts.comments,
   })
-  const stepPart = (n: 2 | 3 | 4, key: RecordSection) => n === step
-    ? <div data-record-section={key} data-step-section={n} data-step-open="true" className="space-y-2 scroll-mt-10">{section[n]}</div>
-    : (
-      <details data-record-section={key} data-step-section={n} className="rounded border border-zinc-200 bg-white scroll-mt-10">
-        <summary className="cursor-pointer px-2 py-1 text-[11px] text-zinc-700">{otherStepLine(n, a, hasCostLines, headingName, afterOf(live, a.id, becauseFor(live)))}</summary>
-        <div className="px-2 pb-2 pt-1">{section[n]}</div>
-      </details>
-    )
-  const titled = (key: RecordSection, title: string, body: ReactNode) => (
-    <section data-record-section={key} aria-label={title} className="rounded border border-zinc-200 bg-white p-2 space-y-1 scroll-mt-10">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">{title}</p>{body}
-    </section>
+  // 265 (24 Oct) — EVERY section of the record is closed when it opens, the current step's too; the band above names each one with its
+  // state, and each closed line says the same. The current step's line ends "this step" (data-step-current), the others "from step N".
+  const here = (line: string, n: number) => (n === step ? line.replace(/ · from step \d$/, ' · this step') : line)
+  const closed = (key: string, n: number | null, line: ReactNode, body: ReactNode) => (
+    <details data-record-section={key} {...(n != null ? { 'data-step-section': n, ...(n === step ? { 'data-step-current': 'true' } : {}) } : {})} className="rounded border border-zinc-200 bg-white scroll-mt-10">
+      <summary className="cursor-pointer px-2 py-1 text-[11px] text-zinc-700">{line}</summary>
+      <div className="px-2 pb-2 pt-1 space-y-2">{body}</div>
+    </details>
   )
+  const stepPart = (n: 2 | 3 | 4, key: RecordSection) =>
+    closed(key, n, here(otherStepLine(n, a, hasCostLines, headingName, afterOf(live, a.id, becauseFor(live))), n), section[n])
+  const titled = (key: RecordSection, title: string, body: ReactNode) =>
+    closed(key, null, <><span className="font-semibold">{title}</span> · <span data-section-state>{states[key]}</span></>, body)
   return (
     <div ref={box} className="border-t-2 border-zinc-300 px-2.5 py-2 space-y-2" data-record-order="26v1b">
       {renderFull(a, 1, (
         <div className="space-y-2">
           <JumpBand states={states} onJump={jump} headingSelect={headingSelect} />
-          {step === 1
-            ? <div data-step-section={1} data-step-open="true" data-record-section="policy">{policyBlock}</div>
-            : <details data-step-section={1} data-record-section="policy" className="rounded border border-zinc-200 bg-white"><summary className="cursor-pointer px-2 py-1 text-[11px] text-zinc-700">{otherStepLine(1, a, hasCostLines, headingName)}</summary><div className="px-2 pb-2 pt-1">{policyBlock}</div></details>}
+          {closed('policy', 1, here(otherStepLine(1, a, hasCostLines, headingName), 1), policyBlock)}
         </div>
       ))}
       {titled('documents', 'Documents', <DocumentsSection ideaId={ctx.ideaId} a={a} facts={facts} disabled={disabled} onChanged={() => void ops.refresh()} />)}
@@ -974,9 +972,7 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
       {stepPart(2, 'who')}
       {stepPart(3, 'costs')}
       {stepPart(4, 'order')}
-      {step === 1
-        ? <div data-record-section="prune">{pruneBlock}</div>
-        : <details data-record-section="prune" className="rounded border border-zinc-200 bg-white"><summary className="cursor-pointer px-2 py-1 text-[11px] text-zinc-700">Sources, the originals, Later phase and Rule out · from step 1</summary><div className="px-2 pb-2 pt-1">{pruneBlock}</div></details>}
+      {closed('prune', null, `Sources, the originals, Later phase and Rule out · ${step === 1 ? 'this step' : 'from step 1'}`, pruneBlock)}
       {/* 26-T2 §6 - the comment thread, at the foot of the record on every step */}
       <div data-record-section="comments" className="scroll-mt-10"><ActionComments ideaId={ctx.ideaId} actionId={a.id} number={a.number} /></div>
     </div>
@@ -1137,7 +1133,7 @@ function PairPanel({ ideaId, a, b, mode, ops, onClose, byNumber }: { ideaId: str
               <input value={edited.title} onChange={(e) => setEdited({ ...edited, title: e.target.value })} className="w-full text-sm p-1.5 rounded border border-zinc-300" />
               <textarea value={edited.practicalStep} onChange={(e) => setEdited({ ...edited, practicalStep: e.target.value })} rows={3} className="w-full text-xs p-1.5 rounded border border-zinc-300" />
               <p className="text-[11px] text-zinc-700" data-statement-count>{edited.practicalStep.length > LIMITS.actionStatement
-                ? `${edited.practicalStep.length} characters: the statement keeps the first ${LIMITS.actionStatement}, and the whole wording is kept in the action’s Detail — nothing is dropped.`
+                ? `${edited.practicalStep.length} characters: the statement keeps the first ${LIMITS.actionStatement}, and the whole wording is kept in the action’s Explanation — nothing is dropped.`
                 : `${LIMITS.actionStatement - edited.practicalStep.length} left of ${LIMITS.actionStatement}.`}</p>
             </div>
           )}

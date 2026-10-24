@@ -151,7 +151,7 @@ function main() {
 
   ok('§4b — archived is its own column, not an overloaded deletedAt',
     /archivedAt/.test(read('prisma/schema.prisma'))
-    && JSON.stringify(LIVE_IDEA) === JSON.stringify({ deletedAt: null, archivedAt: null }))
+    && JSON.stringify(LIVE_IDEA) === JSON.stringify({ deletedAt: null, archivedAt: null, isScratch: false }))  // LEX 264: a scratch copy is in no list either
   // ⚠⚠ §4d's PROPERTY IS ABOUT NINE CALL SITES, so the assertion is that they SHARE the
   // predicate — a hand-written `archivedAt: null` passes a grep and is exactly what drifts.
   const readers = [

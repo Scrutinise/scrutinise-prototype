@@ -987,6 +987,13 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-10-24 08:16 UTC: 24 Oct (2) items 264–266 and the E1 answer are built and checked. Committed with their schema (`lex_264_scratch.sql`, applied 07:47).** See CHANGE_LOG 08:16.
+- Scratch copies are flagged (`Idea.isScratch`) and in no list; a leftover is swept by the next `scratchCopy()`. The two ZZ ideas are removed.
+- Record sections open closed; "Detail" is now "Explanation" (action box only).
+- **E1:** no bug of ours. The merged line keeps both sources. E1 compares 24 lines with 27 rows. GRAPH has been told; the E1a/b/c spec was not found in GRAPH's session.
+- **GRAPH 8 committed jointly and pushed:** `2030266`, live on Vercel.
+- **Next:** 267 (the collision report in two parts, on `onwardFrom()`), then 26-V2 (24 Oct (3)): size first.
+
 **▶ 2026-10-24 00:08 UTC: 26-V1b-b is LIVE at `13538ec`, with its schema** (`lex_26v1b_explanatory_note.sql`, applied to Neon just before the push, same commit). Verified by `/api/health`, live chunks (`c6d9d49faf20404c.js`: "The order, derived"; control in none), and build-worker `c8a34d6d` (SUCCESS, `meta.commitHash` 13538eca1247, "retrieval configuration OK" 00:07:20). See CHANGE_LOG 23:57 and `docs/LEX_26V1b_REPORT.md`.
 - **§7:**
   - The card board is step 1's List · Board.

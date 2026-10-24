@@ -26,7 +26,7 @@
  * would pull the generated client into a module the document stack's import ban (`check:20bd`)
  * keeps clean of heavy imports, and the shape is two nulls.
  */
-export const LIVE_IDEA = { deletedAt: null, archivedAt: null } as const
+export const LIVE_IDEA = { deletedAt: null, archivedAt: null, isScratch: false } as const
 
 /**
  * The same thing for a NESTED relation filter — `idea: { ... }` on a child table.
@@ -43,3 +43,6 @@ export const LIVE_IDEA_RELATION = { idea: LIVE_IDEA } as const
  * other reader uses `LIVE_IDEA`.
  */
 export const INCLUDING_ARCHIVED = { deletedAt: null } as const
+
+// ⚠ LEX 264: `isScratch` is in LIVE_IDEA so a scratch copy made to measure a price is in no list and no count. It is NOT in
+// INCLUDING_ARCHIVED: the admin surface still finds one, which is how a copy a killed run left behind gets seen.

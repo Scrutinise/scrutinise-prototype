@@ -140,6 +140,9 @@ async function partB() {
     await li2.locator('text=Edit title').click()
     ok('"Edit title" opens the title box with a counter ("… left")', (await li2.locator('input[aria-label^="Title of action"]').count()) === 1 && /\d+ left/.test(await text('li[data-action-id="a2"] [data-limit-counter]')))
     await li2.locator('button:has-text("Cancel")').first().click()
+    // 265 (24 Oct): every record section opens CLOSED; open the policy test and the step-1 tools by their lines, as a user does
+    ok('265: the record opened with its sections closed', (await li2.locator('details[data-record-section][open]').count()) === 0)
+    for (const key of ['policy', 'prune']) await li2.locator(`details[data-record-section="${key}"] > summary`).click()
     const verdictBox = await li2.locator('text=Policy test').first().locator('xpath=..').innerText()
     ok('the verdict box carries the reason only — no "From:"', /It matches the policy/.test(verdictBox) && !/From:/.test(verdictBox), verdictBox)
     const sources = await li2.locator('[data-record-sources]').innerText()

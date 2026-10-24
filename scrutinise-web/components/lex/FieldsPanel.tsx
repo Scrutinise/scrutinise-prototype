@@ -16,7 +16,7 @@ import ActionsSteps from './ActionsSteps'
 import BoundedInput from './BoundedInput'
 import { LIMITS } from '@/lib/lex/input-limits'
 import { plainFoldHeader, FOLD_HEADER } from '@/lib/lex/action-resort-pure'
-import { detailParts, DETAIL_LABEL } from '@/lib/lex/record-layout-pure'
+import { detailParts, detailState, DETAIL_LABEL } from '@/lib/lex/record-layout-pure'
 import { COST_LINE_LABEL, clampStep, type ActionsStep } from '@/lib/lex/action-steps'
 import GuidingPolicyScreen from './GuidingPolicyScreen'
 import DiagnosisGuideButton from './DiagnosisGuideModal'
@@ -54,7 +54,7 @@ export interface CausesApi {
 const MAX_CAUSE_DEPTH = 4
 // 237 (CCh 22 Oct (7)) — the action record's two box labels, verbatim.
 export const STATEMENT_LABEL = `The action, in up to ${LIMITS.actionStatement.toLocaleString('en-GB')} characters`
-export const COMMENTARY_LABEL = 'Detail, parts, tables — no limit'
+export const COMMENTARY_LABEL = 'Explanation — what this action does in full and why; parts, tables, no limit'
 
 // Page 3 policy-options loop + chosen-approach handlers.
 export interface PolicyApi {
@@ -1608,9 +1608,10 @@ function NoCostBox({ action, busy, api }: { action: CanonicalAction; busy: boole
 function DetailBox({ detail }: { detail: string | null | undefined }) {
   const { text, parts } = detailParts(plainFoldHeader(detail))
   return (
-    <div className="rounded border border-zinc-200 bg-zinc-50 p-1.5 scroll-mt-10" data-commentary data-record-section="detail">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">{DETAIL_LABEL}</p>
-      {text ? <p className="mt-0.5 text-xs text-zinc-800 whitespace-pre-wrap">{text}</p> : !parts.length && <p className="mt-0.5 text-xs text-zinc-500">No detail yet. Edit to add the intention, examples, dimensions or a table.</p>}
+    // 265 — closed by default like every record section; the summary carries the state the band shows
+    <details className="rounded border border-zinc-200 bg-zinc-50 p-1.5 scroll-mt-10" data-commentary data-record-section="detail">
+      <summary className="cursor-pointer text-[11px] text-zinc-700"><span className="font-semibold">{DETAIL_LABEL}</span> · <span data-section-state>{detailState(detail)}</span></summary>
+      {text ? <p className="mt-0.5 text-xs text-zinc-800 whitespace-pre-wrap">{text}</p> : !parts.length && <p className="mt-0.5 text-xs text-zinc-500">No explanation yet. Edit to say what this action does in full and why; examples, dimensions or a table.</p>}
       {parts.length > 0 && (
         <details className="mt-1 text-xs" data-quoted-parts={parts.length}>
           <summary className="cursor-pointer font-semibold text-zinc-800">{FOLD_HEADER} ({parts.length})</summary>
@@ -1622,7 +1623,7 @@ function DetailBox({ detail }: { detail: string | null | undefined }) {
           </ul>
         </details>
       )}
-    </div>
+    </details>
   )
 }
 
@@ -1646,7 +1647,7 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
   const patch = (p: Partial<ActionDraft>) => { setRefusal(null); setD((x) => ({ ...x, ...p })) }
   const save = () => {
     if (step === 1 && d.practicalStep.length > LIMITS.actionStatement) {
-      setRefusal(`Not saved: the statement is ${d.practicalStep.length.toLocaleString('en-GB')} characters; the limit is ${LIMITS.actionStatement.toLocaleString('en-GB')}. Move the extra into Detail or shorten.`)
+      setRefusal(`Not saved: the statement is ${d.practicalStep.length.toLocaleString('en-GB')} characters; the limit is ${LIMITS.actionStatement.toLocaleString('en-GB')}. Move the extra into the Explanation or shorten.`)
       return
     }
     api.update(action.id, d); setEditing(false)
@@ -1664,7 +1665,7 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
             <BoundedInput multiline rows={3} value={d.practicalStep} onChange={(v) => patch({ practicalStep: v })} max={LIMITS.actionStatement} placeholder="The action statement" aria-label={STATEMENT_LABEL}
               wrapperClassName="w-full" className="w-full text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
             <label className="block text-[11px] text-zinc-600"><span data-label="commentary">{COMMENTARY_LABEL}</span>
-              <RefTextarea value={d.commentary ?? ''} onChange={(e) => patch({ commentary: e.target.value })} rows={4} placeholder="Detail (optional)"
+              <RefTextarea value={d.commentary ?? ''} onChange={(e) => patch({ commentary: e.target.value })} rows={4} placeholder="Explanation (optional)"
                 className="mt-0.5 w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
               <span className="text-[10px] text-zinc-500">{(d.commentary ?? '').length.toLocaleString()} characters</span>
             </label>

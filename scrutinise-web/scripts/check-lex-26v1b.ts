@@ -37,6 +37,7 @@ import IdeaLawPanel from '../components/lex/IdeaLawPanel'
 import ActionsWorkspace from '../components/lex/ActionsWorkspace'
 import * as FP from '../components/lex/FieldsPanel'
 import { scratchCopy } from './lib/scratch-copy'
+import { LIVE_IDEA } from '../lib/lex/idea-visibility'
 // V1b-b
 import * as TA from '../lib/lex/textual-amendment-pure'
 import * as TO from '../lib/lex/action-touches'
@@ -128,6 +129,13 @@ const ins59 = (clause: string, extra: Partial<DraftInstruction> = {}): DraftInst
 async function partB(): Promise<{ copyId: string; userId: string; docId: string } | null> {
   section('B · on a scratch copy of 452c5ade — the real functions')
   const copy = await scratchCopy('452c5ade', '26v1b')
+  {
+    // 264 (24 Oct): the copy carries the flag, and the owner's own list and count — read through LIVE_IDEA, as My ideas reads — do not hold it
+    const flag = await prisma.idea.findUnique({ where: { id: copy.id }, select: { isScratch: true } })
+    const listed = await prisma.idea.findMany({ where: { creatorId: copy.userId, ...LIVE_IDEA }, select: { id: true } })
+    const real = await prisma.idea.count({ where: { creatorId: copy.userId, deletedAt: null, archivedAt: null } })
+    ok('264: a scratch copy is flagged and is in none of the owner’s lists or counts', flag?.isScratch === true && !listed.some((i) => i.id === copy.id) && real === listed.length + 1, `flag ${flag?.isScratch}; listed ${listed.length}; without the flag ${real}`)
+  }
   const a59 = await prisma.lexCoherentAction.findFirstOrThrow({ where: { ideaId: copy.id, number: 59, status: 'LIVE' }, select: { id: true } })
   const a202 = await prisma.lexCoherentAction.findFirstOrThrow({ where: { ideaId: copy.id, number: 202, status: 'LIVE' }, select: { id: true } })
   await prisma.lexCoherentAction.updateMany({ where: { id: { in: [a59.id, a202.id] } }, data: { avenue: 'LEGISLATIVE' } })
@@ -172,7 +180,16 @@ async function partB(): Promise<{ copyId: string; userId: string; docId: string 
   const order = [at(/data-statement/), at(/data-jump-band/), at(/data-record-section="policy"/), at(/data-record-section="detail"/), at(/data-record-section="documents"/), at(/data-record-section="law"/), at(/data-record-section="who"/), at(/data-record-section="costs"/), at(/data-record-section="order"/), at(/data-record-section="comments"/)]
   ok('Statement → jump band → policy test → Detail → Documents → Law → Who, how and against → Costs → Order → Comments', order.every((p, i) => p >= 0 && (i === 0 || p > order[i - 1])), order.join(','))
   ok('the band names each section with its state in words, the heading menu at its right', /data-band="documents"/.test(html) && /data-band="comments"/.test(html) && /Heading for action 59/.test(html.slice(at(/data-jump-band/), at(/data-record-section="policy"/))))
-  ok('"Detail" is the label, and "Commentary" is nowhere on the record (257)', />Detail<\/p>/.test(html) && !/Commentary/.test(textOf(html)))
+  ok('"Explanation" is the label, and "Commentary" is nowhere on the record (257, 266)', />Explanation<\/span>/.test(html) && !/Commentary/.test(textOf(html)))
+  {
+    // 265: every record section is CLOSED when the record opens (the Explanation too), and each closed line names its state in words
+    const sections = html.match(/<(?:details|div|section)[^>]*data-record-section="[a-z]+"[^>]*>/g) ?? []
+    // the comments wrapper is a <div> round ActionComments' own <details>, which is the thing that must be closed
+    const comments = /<details[^>]*data-action-comments[^>]*>/.exec(html)?.[0] ?? '<missing>'
+    const notClosed = [...sections.filter((t) => !/data-record-section="comments"/.test(t)), comments].filter((t) => !t.startsWith('<details') || /\sopen(?:=|\s|>)/.test(t))
+    ok('265: every record section opens closed — a <details> with no "open" — the Explanation included', sections.length >= 9 && notClosed.length === 0, `${sections.length} sections; not closed: ${notClosed.join(' | ').slice(0, 300)}`)
+    ok('265: the closed lines carry the states the band shows ("Explanation · 4 words"-style, "this step" on the current one)', /Explanation<\/span> · <span data-section-state="true">1 part</.test(html) && /Documents<\/span> · <span data-section-state="true">/.test(html) && /this step/.test(textOf(html)), (html.match(/.{50}data-section-state.{30}/g) ?? []).join(' | ').slice(0, 400) || 'no data-section-state at all')
+  }
   ok('2d: the quoted parts are one collapsible list, "Parts of this action, quoted (1)"', /Parts of this action, quoted \(1\)/.test(textOf(html)) && detailParts(act.commentary).parts[0].title === 'a component title')
   const facts = await actionDocuments(copy.id, a59.id)
   const docsRow = facts.ok ? facts.data : null

@@ -1,5 +1,30 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-24 08:16 UTC - LEX 24 Oct (2): 264 scratch copies flagged and hidden, 265 record sections closed, 266 "Explanation"; E1 answered
+
+- **264:**
+  - The two ZZ-scratch ideas (23 Oct 17:22 `1c6d4d3a`, 17:37 `fa63acf9`) were removed through `deleteIdeaForOwner` (soft) and read back: 0 left.
+  - New column `Idea.isScratch` (`prisma/lex_264_scratch.sql`, applied 07:47 UTC after whichdb showed Neon `ep-old-dust-aboxi69a`; read back). Set by `scratchCopy()`.
+  - `LIVE_IDEA` filters the flag, so a copy is in no list or count. A check can still open it by id; the admin's `INCLUDING_ARCHIVED` still sees it.
+  - A run that is killed leaves its flagged copy. The next `scratchCopy()` sweeps any copy older than 6 h and says so.
+- **265:** Every section of an opened action record is now a closed `<details>`, the current step's too. Each line carries the state the band shows; the current step's line ends "this step".
+- **266:**
+  - "Detail" is now "Explanation" in the action box only. The label reads "Explanation — what this action does in full and why; parts, tables, no limit".
+  - The pack, the Proposal and Lex's `set_action_detail` are unchanged. "Comments" is kept.
+- **E1** (`check:idea-law`, GRAPH's), read on 452c5ade:
+  - There are 27 live rows: 20 hand, plus 7 drafting-instruction rows, all from #38 v1. #202 has none, because no proposal of it is accepted.
+  - The three duplicates are relies_on ukpga/1983/44, relies_on ukpga/2023/54 and precedent ukpga/1972/70 s.151. Each is a hand row (action null) plus a #38 row.
+  - The merged line keeps both sources and both action ids in `sources`, and the panel draws each from there. Its top-level fields are the primary (hand) row's, and nothing reads them. So there is no bug.
+  - 27 rows less 3 merged = 24 lines: E1 compares lines with rows.
+  - `detectionOf()` does not recognise `caselaw-markup` (it returns null), which only affects `inboundFor`. Told GRAPH.
+- **Checks:**
+  - `check:lex-26v1b` 74/74, 10 controls; new for 264 and 265.
+  - `check:lex-26s2` 221/221, 40 controls, 0 dead; 4 not run (live spend).
+  - `check:lex-26u` 57/57, `check:lex-25o` 56/56, `check:lex-26s-browser` 93/93 (1 not run, `--db`), `check:lex-26s2-browser` 33/33, `check:lex-26s2-structure` 105/105.
+  - `check:lex-26v` 50/50, `check:lex-26q` 74/74, `verify:lex-26q-ui` 25/25.
+  - `check:prompt-examples` 0 leaks; `check:client-boundary` clean; `tsc` clean.
+  - `check:idea-law` 23/24: only E1, which is known. A trial merge change turned its hand-row case red, so it was reverted.
+
 ## 2026-10-24 00:00 UTC - GRAPH 8: the onward reader (`onwardFrom()`) and `statute_onward` — one step, typed by strength, walkable
 
 - **Report:** `docs/GRAPH_8_REPORT.md`. Brief: `docs/BRIEF_GRAPH_8_ONWARD.md`. Read-only, no schema change. **Not committed, not pushed.**

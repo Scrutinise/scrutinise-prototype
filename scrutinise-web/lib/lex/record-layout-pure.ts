@@ -3,16 +3,16 @@
 // Detail box cut into the owner's own text and the quoted parts below it.
 //
 // ⚠ PURE (CLAUDE.md §28). ⚠ Every state is a WORD (Charlie is colour blind; §21).
-// ⚠ 257 — "Commentary" is "Detail" on screen; the database column keeps its name (`commentary`).
+// ⚠ 257 — "Commentary" became "Detail" on screen; 266 (24 Oct) made it "Explanation", in the action box only. The column keeps its name (`commentary`).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { FOLD_HEADER, isImportedHeadLine } from './action-resort-pure'
 
-export const DETAIL_LABEL = 'Detail'
+export const DETAIL_LABEL = 'Explanation'
 
 /** 2a — top to bottom. The jump band names every section but the statement (it sits under it). */
 export const RECORD_SECTIONS = [
-  { key: 'detail', label: 'Detail' },
+  { key: 'detail', label: 'Explanation' },
   { key: 'documents', label: 'Documents' },
   { key: 'law', label: 'Law' },
   { key: 'who', label: 'Who, how and against' },
@@ -73,11 +73,16 @@ export interface BandInput {
   after: Array<number | null>
   comments: number | null
 }
-export function bandStates(b: BandInput): Record<RecordSection, string> {
-  const d = detailParts(b.detail)
+/** The Explanation's state in words: the band's and the closed box's own summary say the same thing (265). */
+export function detailState(detail: string | null | undefined): string {
+  const d = detailParts(detail)
   const words = d.text ? d.text.split(/\s+/).length : 0
+  return d.parts.length ? `${d.parts.length} part${d.parts.length === 1 ? '' : 's'}` : words ? `${words} words` : 'empty'
+}
+
+export function bandStates(b: BandInput): Record<RecordSection, string> {
   return {
-    detail: d.parts.length ? `${d.parts.length} part${d.parts.length === 1 ? '' : 's'}` : words ? `${words} words` : 'empty',
+    detail: detailState(b.detail),
     documents: !b.documents ? 'reading…' : b.documents.needed
       ? `${b.documents.needed} needed, ${b.documents.drafted} drafted${b.documents.accepted ? `, ${b.documents.accepted} accepted` : ''}`
       : b.documents.total ? `${b.documents.total} document${b.documents.total === 1 ? '' : 's'}` : 'none needed',
