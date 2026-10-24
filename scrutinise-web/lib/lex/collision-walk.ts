@@ -4,6 +4,7 @@
 // Under each provision the clause amends, repeals or modifies:
 //   "What depends on this" — made-under, walked until it ends; and the official record (amends / repeals / modifies / commences) at
 //                             steps 1 and 2, never 3 (GRAPH 8 §1: by step 3 it reaches thousands of instruments; the tool withholds it).
+//                             269 confirms the stop and puts the reason on screen (OFFICIAL_STOP_WHY); 267 amended accordingly.
 //   "Provisions that refer to this — for review" — cites at step 1 with the stored words, step 2 labelled weak, never step 3.
 // Judgments (case law) are not walked: interpretation, not drafting (GRAPH 8 §1.1).
 //
@@ -32,6 +33,12 @@ export const WALK_LIMITS = {
   /** Made-under walks until it ends; this only stops a cycle in the data, and is said when it fires. */
   madeUnderSafety: 8,
 } as const
+
+/**
+ * 269 (24 Oct (4)): the official record stops at step 2, by decision, and the report says why in plain words (267 amended: "walked until
+ * it ends" now applies to made-under only).
+ */
+export const OFFICIAL_STOP_WHY = 'Stopped at step 2 on purpose: by step 3 the official record reaches thousands of instruments, too many to check one by one, so changes to the changes are listed no further.'
 
 const CHANGE_WORD: Record<string, string> = { textual: 'changes the words', 'not-textual': 'does not change the words', unclassified: 'not classified' }
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`
@@ -106,7 +113,7 @@ export async function onwardRows(clause: EffectRow[], walk: Walker = onwardFrom 
     const opc = counted(op1, OPERATION)
     notes.push({
       from: c.i, part: 'depends',
-      line: `The official record: ${plural(opc.counted, 'row')} operate on it at step 1${opc.returned < opc.counted ? ` (${opc.returned} shown)` : ''}; step 2 walked from ${Math.min(opNodes.length, WALK_LIMITS.step2From)} of ${opNodes.length} (${plural(op2, 'row')}). Not walked past step 2: measured, the official record reaches thousands of instruments by step 3 (GRAPH 8 §1).`,
+      line: `The official record: ${plural(opc.counted, 'row')} operate on it at step 1${opc.returned < opc.counted ? ` (${opc.returned} shown)` : ''}; step 2 walked from ${Math.min(opNodes.length, WALK_LIMITS.step2From)} of ${opNodes.length} (${plural(op2, 'row')}). ${OFFICIAL_STOP_WHY}`,
     })
 
     // ── Provisions that refer to this — for review: step 1 with the words, step 2 weak, never step 3 ──

@@ -18,7 +18,7 @@ import * as DR from '../lib/lex/action-draft'
 import * as D from '../lib/lex/action-documents'
 import { checkReply, citesDNumberAsAuthority } from '../lib/lex/agent/honesty'
 import { scratchCopy, deleteScratch } from './lib/scratch-copy'
-import { onwardRows, type Walker } from '../lib/lex/collision-walk'
+import { onwardRows, OFFICIAL_STOP_WHY, type Walker } from '../lib/lex/collision-walk'
 import { CONSEQUENCE_WORDS } from '../lib/lex/onward-pure'
 
 let pass = 0, fail = 0, ran = 0, controls = 0, dead = 0, notRun = 0
@@ -107,7 +107,7 @@ async function partB(): Promise<{ copyId: string; userId: string; cleanup: () =>
   ok('…the review part never calls a reference a consequence, a knock-on or a schedule, in our own words (GRAPH 8 rule 1)', ourWords.length > 100 && !CONSEQUENCE_WORDS.test(ourWords), (CONSEQUENCE_WORDS.exec(ourWords) ?? [''])[0])
   control('the same guard, fed a note that calls a reference a knock-on (must be FALSE)', !CONSEQUENCE_WORDS.test(`${ourWords}\nthese are the knock-on changes`))
   ok('…every reference row is step 1 or step 2, and only step 2 is labelled weak; none at step 3', rows1.filter((r) => r.part === 'refers').every((r) => (r.step ?? 0) <= 2 && !!r.weak === (r.step === 2)))
-  ok('…and it counts what it walked and what it did not, in words (made-under, the official record, the references)', /Made under it: /.test(body1) && /The official record: /.test(body1) && /(references? at step 1|No marked-up citation of this provision is held)/.test(body1) && /Not walked past step 2/.test(body1))
+  ok('…and it counts what it walked and what it did not, in words (made-under, the official record, the references)', /Made under it: /.test(body1) && /The official record: /.test(body1) && /(references? at step 1|No marked-up citation of this provision is held)/.test(body1) && body1.includes(OFFICIAL_STOP_WHY))
   const g1b = await D.generateCollisionReport(copy.id, owner.id)
   ok('generating again with nothing changed writes nothing ("unchanged")', g1b.ok && g1b.data.unchanged && (await prisma.actionDocumentVersion.count({ where: { documentId: rep.id } })) === 1)
 
@@ -167,6 +167,7 @@ async function partB(): Promise<{ copyId: string; userId: string; cleanup: () =>
   ok('no avenue → nothing derived, and the line says so (not "needs nothing")', needs(null, null) === '' && /no avenue chosen/.test(D.needsDocuments({ avenue: null, instrument: null }).why))
   const spec = (avenue: string | null, headingName: string | null) => D.needsDocuments({ avenue, instrument: null, headingName })
   ok('26-V2 §4: under "The accountability platform" a specification is derived (alone with no avenue, beside a legislative action’s own), and says why', spec(null, 'The accountability platform').kinds.join('+') === 'SPECIFICATION' && spec('LEGISLATIVE', ' the accountability platform ').kinds.join('+') === 'DRAFT_CLAUSE+COLLISION_REPORT+SPECIFICATION' && spec(null, 'The accountability platform').why.includes('The accountability platform'))
+  ok('268: "The platform" (Charlie\'s heading) matches too — the word, any case — and the why names the heading as written', spec(null, 'The platform').kinds.join('+') === 'SPECIFICATION' && spec(null, 'THE PLATFORM').kinds.includes('SPECIFICATION') && spec(null, 'The platform').why === 'under “The platform”')
   ok('…anywhere else it is not derived (added by hand)', !spec(null, 'Primary legislation').kinds.includes('SPECIFICATION') && !spec('ORGANISATIONAL', 'Accountability platforms').kinds.includes('SPECIFICATION'))
   const noReason = await D.setNeeds(copy.id, owner.id, { mode: 'nothing', reason: ' ' }, copy.userId)
   ok('"needs nothing" without a reason is refused, in words', !noReason.ok && /Say why/.test((noReason as { error: string }).error))

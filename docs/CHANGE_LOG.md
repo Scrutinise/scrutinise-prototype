@@ -1,5 +1,12 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-24 15:37 UTC - LEX 268 + 269: specification under any "platform" heading; the official record's step-2 stop said in plain words
+
+- **268** (24 Oct (4)): a heading whose name contains the word "platform" (whole word, any case) now derives a specification for every action under it, so Charlie's "The platform" on 452c5ade gets one, before he presses "Draft what this heading needs". The why line names the heading as written ("under “The platform”"). Interim: V2c gives headings a kind (instrument type) and binds the rule to the kind.
+- **269**: official changes stop at step 2 by decision (267 amended: "walked until it ends" applies to made-under only). The collision report now says why in plain words (`OFFICIAL_STOP_WHY`, in place of "…(GRAPH 8 §1)"). Existing reports show the new line when regenerated.
+- **271** needs nothing from Lex: made-under rows already display GRAPH's returned rows with their stored words (28915cb).
+- Checks: `check:lex-26v` 60/60 (new 268 assertion; the stop line asserted by its constant); `check:lex-26v2b` 47/47; tsc clean.
+
 ## 2026-10-24 11:50 UTC - LEX: 959bd3a (26-V2b) verified live
 
 - Vercel health `959bd3a`. "Draft what this heading needs" and "Stop the waiting ones" are in live chunk `e31087ec0df28fab.js`.

@@ -75,10 +75,12 @@ export interface Needs { kinds: DocumentKind[]; why: string; overridden: boolean
 
 /**
  * 26-V2 §4 (24 Oct (3)): no avenue or instrument means "software", so a specification is derived from the HEADING: every action under
- * "The accountability platform" needs one. Anywhere else a specification is added by hand. Compared without case or surrounding space.
+ * a heading whose name has the word "platform" in it needs one (268, 24 Oct (4): Charlie's idea calls it "The platform", the seven-heading
+ * plan "The accountability platform"). Anywhere else a specification is added by hand. Matched as a whole word, without case.
+ * ⚠ Interim: V2c gives headings a kind (instrument type) and binds this rule to the kind, not the name.
  */
-export const SPECIFICATION_HEADING = 'The accountability platform'
-export const underSpecificationHeading = (name: string | null | undefined) => !!name && name.trim().toLowerCase() === SPECIFICATION_HEADING.toLowerCase()
+export const SPECIFICATION_HEADING_WORD = 'platform'
+export const underSpecificationHeading = (name: string | null | undefined) => !!name && new RegExp(`\\b${SPECIFICATION_HEADING_WORD}\\b`, 'i').test(name)
 
 export function needsDocuments(a: NeedsInput): Needs {
   if (a.override?.mode === 'nothing') return { kinds: [], why: `needs nothing: ${a.override.reason}`, overridden: true }
@@ -86,8 +88,8 @@ export function needsDocuments(a: NeedsInput): Needs {
   const base = derivedNeeds(a)
   if (!underSpecificationHeading(a.headingName)) return base
   return base.kinds.length
-    ? { kinds: [...base.kinds, 'SPECIFICATION'], why: `${base.why}, under “${SPECIFICATION_HEADING}”`, overridden: false }
-    : { kinds: ['SPECIFICATION'], why: `under “${SPECIFICATION_HEADING}”`, overridden: false }
+    ? { kinds: [...base.kinds, 'SPECIFICATION'], why: `${base.why}, under “${a.headingName!.trim()}”`, overridden: false }
+    : { kinds: ['SPECIFICATION'], why: `under “${a.headingName!.trim()}”`, overridden: false }
 }
 
 function derivedNeeds(a: NeedsInput): Needs {
