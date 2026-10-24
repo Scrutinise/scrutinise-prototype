@@ -49,7 +49,9 @@ export async function onwardRows(clause: EffectRow[], walk: Walker = onwardFrom 
     const r: EffectRow = {
       i: next++, depth: 1 + step, parent, relation: s.kind, docUri: s.act, provisionPath: pathOf(s), actTitle: s.actTitle, state: 'held',
       note: s.changeKind ? CHANGE_WORD[s.changeKind] ?? s.changeKind : '', effects: [], part, step, scope: s.scope,
-      words: part === 'refers' ? citingTextForDisplay(s.citingText) : null, weak: part === 'refers' && step >= 2,
+      // made-under rows carry their stored enacting words too: the extractor files a PROCEDURAL mention ("the requirements of section 20
+      // … have been complied with") as a power (GRAPH 8 §5, §7.4), and only the words let a reader see which it is
+      words: part === 'refers' || s.kind === 'made-under' ? citingTextForDisplay(s.citingText) : null, weak: part === 'refers' && step >= 2,
     }
     rows.push(r)
     return r

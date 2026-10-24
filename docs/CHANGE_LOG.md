@@ -1,5 +1,13 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-24 09:05 UTC - LEX 26-V2a follow-up (GRAPH 8's review): made-under rows show their stored words
+
+- GRAPH 8 reported that every CRaG s.20 "made-under" row is a procedural mention filed as a power (§5, §7.4). Its three asks, checked:
+  - **(a) the scope split:** already shown, in the note ("3 name this provision, 8 only the Act as a whole") and on each row.
+  - **(b) the stored words:** were shown for references only. Made-under rows now carry their enacting words, marked as cut. On s.20, all 11 have words; for the 3 that name s.20 they read "…the requirements of section 20 of the Constitutional Reform and Governance Act 2010".
+  - **(c) "would fall":** never said. Now asserted absent until Charlie decides the enabling-vs-procedural rule (GRAPH 8 §8, decision 2).
+- `check:lex-26v` 59/59 (two new assertions); `tsc` clean.
+
 ## 2026-10-24 08:55 UTC - LEX: a9680f0 and 9a8b79f verified live; GRAPH 8 (2030266) verified live; 452c5ade's schedule regenerated
 
 - **GRAPH 8 `2030266`** (joint commit, pushed by LEX): Vercel health `2030266`. build-worker `c56e579e` SUCCESS, `meta.commitHash` 2030266c1bd9, "retrieval configuration OK" 07:46:10.

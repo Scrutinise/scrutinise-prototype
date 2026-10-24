@@ -63,7 +63,7 @@ async function partA() {
 function fixtureWalker(calls: Array<{ node: string; kinds: string[]; depth: number }>): Walker {
   const step = (node: string, kind: string, k: number, act = `uksi/2020/${k}`) => ({
     provision: `${act}/article/${k}`, act, actTitle: `Fixture ${kind} ${k}`, kind, strength: 'x', subType: '', changeKind: kind === 'cites' ? null : 'textual',
-    changeReason: null, thisEndProvision: null, scope: 'provision' as const, citingText: kind === 'cites' ? `the fixture words before the reference ${k}` : null, citingTextState: null,
+    changeReason: null, thisEndProvision: null, scope: 'provision' as const, citingText: kind === 'cites' ? `the fixture words before the reference ${k}` : kind === 'made-under' ? `the requirements of the fixture section have been complied with ${k}` : null, citingTextState: null,
     citingTextOthers: 0, citedProvision: null, origin: null, source: `fixture from ${node}`,
   })
   return async (node, o) => {
@@ -134,6 +134,8 @@ async function partB(): Promise<{ copyId: string; userId: string; cleanup: () =>
   ok('made-under is walked until it ends: steps 1, 2 and 3, then a step-4 read that returns nothing', [1, 2, 3].map((k) => byPart('depends', k).filter((r) => r.relation === 'made-under').length).join(',') === '1,1,1' && calls.some((c) => c.kinds.includes('made-under') && c.depth === 4))
   ok('the official record: 2 rows at step 1, 2 under each at step 2, and NO read at step 3', byPart('depends', 1).filter((r) => r.relation === 'amends').length === 2 && byPart('depends', 2).filter((r) => r.relation === 'amends').length === 4 && !calls.some((c) => c.kinds.includes('amends') && c.depth >= 3))
   ok('references: 3 at step 1 with their words, 6 weak at step 2, and NO read at step 3', byPart('refers', 1).length === 3 && byPart('refers', 1).every((r) => /fixture words/.test(r.words ?? '') && !r.weak) && byPart('refers', 2).length === 6 && byPart('refers', 2).every((r) => r.weak) && !calls.some((c) => c.kinds.includes('cites') && c.depth >= 3))
+  ok('made-under rows show their stored words (a procedural mention filed as a power is visible as one: GRAPH 8 §5); official rows have none', byPart('depends').filter((r) => r.relation === 'made-under').every((r) => /complied with/.test(r.words ?? '')) && byPart('depends').filter((r) => r.relation === 'amends').every((r) => !r.words))
+  ok('no part of the report says an instrument "would fall" or "falls" (the enabling-vs-procedural rule is undecided: GRAPH 8 §8 decision 2)', !/would fall|falls? with/i.test(D.collisionBody([...fxClause, ...w.rows], { loadDate: null, caveat: w.caveat, notes: w.notes })))
   ok('a "relies on" line is not walked: the clause does not change it', !calls.some((c) => c.node.startsWith('ukpga/2000/2')) && w.rows.every((r) => r.parent !== 1))
   ok('every step-2 row hangs from a step-1 row of the same part', [...byPart('depends', 2).filter((r) => r.relation === 'amends'), ...byPart('refers', 2)].every((r) => { const p = w.rows.find((x) => x.i === r.parent); return !!p && p.part === r.part && p.step === 1 }))
   const fxBody = D.collisionBody([...fxClause, ...w.rows], { loadDate: '2026-07-05', caveat: w.caveat, notes: w.notes })
