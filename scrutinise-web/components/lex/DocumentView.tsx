@@ -28,6 +28,9 @@ import { Editor } from './ActionDraftSection'
 import BoundedInput from './BoundedInput'
 import AmendmentViews, { proposedLine } from './AmendmentViews'
 import { parseAmendments } from '@/lib/lex/textual-amendment-pure'
+import { PASSES } from '@/lib/lex/deepening-config'
+import { passOfReviewKey, producerWords, ISSUES_CHANGED_EVENT } from '@/lib/lex/document-review-pure'
+import type { ReviewPlan } from '@/lib/lex/document-review'
 
 type Tab = 'text' | 'instruction' | 'touches' | 'versions' | 'issues'
 const TAB_WORD: Record<Tab, string> = { text: 'Text', instruction: 'Instruction', touches: 'What it touches', versions: 'Versions', issues: 'Issues' }
@@ -42,6 +45,7 @@ export default function DocumentView({ ideaId, documentId, readOnly = false, onC
   const [tab, setTab] = useState<Tab>('text')
   const [editing, setEditing] = useState(false)
   const [askRedraft, setAskRedraft] = useState(false)
+  const [askReview, setAskReview] = useState(false)
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/ideas/${ideaId}/action-documents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ op: 'view', documentId }) })
@@ -116,8 +120,11 @@ export default function DocumentView({ ideaId, documentId, readOnly = false, onC
                 <button type="button" onClick={() => setAskRedraft(false)} className="underline">Not now</button></span>
             )}
             <button type="button" onClick={() => setTab('versions')} className="underline">Versions ({data.versions.length})</button>
+            {!askReview && <button type="button" disabled={busy} onClick={() => setAskReview(true)} data-review-open className="px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Review this document</button>}
           </div>
         )}
+        {!readOnly && askReview && <ReviewAsk ideaId={ideaId} documentId={documentId} busy={busy} onClose={() => setAskReview(false)}
+          onDone={(s) => { setSaid(s); setAskReview(false); setTab('issues'); void load().then(() => { onChanged?.(); window.dispatchEvent(new Event(ISSUES_CHANGED_EVENT)) }) }} />}
         {said && <p className="border border-zinc-300 rounded px-2 py-1" role="status" data-document-said>{said} <button type="button" className="underline ml-1" onClick={() => setSaid(null)}>OK</button></p>}
       </div>
 
@@ -310,22 +317,86 @@ function Block({ n, title, data, children }: { n: number; title: string; data?: 
   return <div data-touch-block={data ?? n}><p className="font-semibold">{n}. {title}</p><div className="ml-3">{children}</div></div>
 }
 
-// ── Issues (26-V2c, §7): the open issues attached to this document, by part ─────────────────────────────────────
+// ── Issues (26-V2c, 26-V2d §7): what the five review passes have read and raised, then the open issues by part ──────────────────────
 function IssuesTab({ data }: { data: DocumentViewData }) {
-  const { doc, issues } = data
-  if (!issues.length) return <p data-document-issues="0">No open issue is attached to {doc.d}. Issues raised on the proposal as a whole, or on the action, are in the Risks view and the action’s record.</p>
+  const { doc, issues, reviews } = data
   const where = (n: number | null) => (n == null ? `${doc.d} as a whole` : `part ${partNumber(doc.actionNumber, doc.number, n)}`)
+  const openBy = (passKey: string) => issues.filter((i) => passOfReviewKey(i.passKey)?.key === passKey).length
   return (
-    <ul className="space-y-1.5" data-document-issues={issues.length}>
-      {issues.map((i) => (
-        <li key={i.id} className="border border-zinc-200 rounded p-1.5" data-document-issue={i.partN ?? 'whole'}>
-          <p><span className="font-semibold">{i.title ?? 'An issue'}</span> · on {where(i.partN)}</p>
-          <p className="whitespace-pre-wrap">{i.text}</p>
-          <p className="text-zinc-600">{i.attachedBy === 'LEX' ? `Placed here by Lex${i.attachReason ? `: ${i.attachReason}` : ''}` : 'Placed here by you'}{i.sourceModel ? ` · raised by ${i.sourceModel}` : ''}</p>
-        </li>
-      ))}
-      <li className="text-zinc-600">Answer an issue in the Risks view, or by redrafting this document.</li>
-    </ul>
+    <div className="space-y-2">
+      {/* counts by pass (BRIEF_26V1b 3f): every pass named, read or not — a pass never run and a pass that raised nothing must not look the same */}
+      <ul className="space-y-0.5" data-document-reviews={reviews.length}>
+        {PASSES.map((p) => {
+          const r = reviews.find((x) => x.passKey === p.key)
+          return (
+            <li key={p.key} data-document-review={p.key} data-review-state={r ? r.status : 'none'}>
+              <span aria-hidden>{r?.status === 'RUN' ? '●' : r ? '⚠' : '○'}</span>{' '}
+              <span className="font-semibold">{p.label}</span>{' — '}
+              {!r ? 'not yet reviewed'
+                : r.status === 'FAILED' ? `review of version ${r.v} failed on ${day(r.at)}: ${r.failureReason}`
+                : <>read version {r.v} on {day(r.at)}{data.current && r.v !== data.current.v ? ` (the document is now at version ${data.current.v})` : ''}: {r.issues} issue{r.issues === 1 ? '' : 's'} raised, {openBy(p.key)} still open{r.heldUp ? <span className="text-zinc-600"> · held up: {r.heldUp}</span> : null}</>}
+            </li>
+          )
+        })}
+      </ul>
+      {!issues.length
+        ? <p data-document-issues="0">No open issue is attached to {doc.d}. Issues raised on the proposal as a whole, or on the action, are in the Risks view and the action’s record.</p>
+        : (
+          <ul className="space-y-1.5" data-document-issues={issues.length}>
+            {issues.map((i) => (
+              <li key={i.id} className="border border-zinc-200 rounded p-1.5" data-document-issue={i.partN ?? 'whole'}>
+                <p><span className="font-semibold">{i.title ?? 'An issue'}</span> · on {where(i.partN)}</p>
+                <p className="whitespace-pre-wrap">{i.text}</p>
+                <p className="text-zinc-600">{i.reviewId ? (i.attachReason ?? `Raised by ${producerWords(i.passKey)}`) : i.attachedBy === 'LEX' ? `Placed here by Lex${i.attachReason ? `: ${i.attachReason}` : ''}` : 'Placed here by you'}{i.sourceModel ? ` · raised by ${i.sourceModel}` : ''}</p>
+              </li>
+            ))}
+            <li className="text-zinc-600">Answer an issue in the Risks view, or by redrafting this document.</li>
+          </ul>
+        )}
+    </div>
+  )
+}
+
+// ── 26-V2d §7: "Review this document" — the five passes read the current version; asks first, at the measured price ───────────────────
+function ReviewAsk({ ideaId, documentId, busy, onDone, onClose }: { ideaId: string; documentId: string; busy: boolean; onDone: (said: string) => void; onClose: () => void }) {
+  const [plan, setPlan] = useState<ReviewPlan | null>(null)
+  const [err, setErr] = useState<string | null>(null)
+  const [running, setRunning] = useState(false)
+  useEffect(() => {
+    void (async () => {
+      const r = await fetch(`/api/ideas/${ideaId}/action-documents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ op: 'reviewPlan', documentId }) })
+      const b = await r.json().catch(() => null)
+      if (!r.ok) setErr(explainFailure(b, r.status, 'Pricing the review')); else setPlan((b as { data: ReviewPlan }).data)
+    })()
+  }, [ideaId, documentId])
+  const run = async (again: boolean) => {
+    setRunning(true)
+    try {
+      const r = await fetch(`/api/ideas/${ideaId}/action-documents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ op: 'review', documentId, again }) })
+      const b = await r.json().catch(() => null) as { data?: { d: string; v: number; outcomes: Array<{ words: string }>; pence: number | null } } | null
+      if (!r.ok || !b?.data) { onDone(`Not done: ${explainFailure(b, r.status, '“Review this document”')}`); return }
+      onDone(`Reviewed ${b.data.d}, version ${b.data.v}${b.data.pence != null ? ` — it cost ${b.data.pence.toFixed(1)}p` : ''}. ${b.data.outcomes.map((o) => o.words).join(' ')} The issues are in the Issues tab, by part.`)
+    } catch (e) { onDone(`Not done: “Review this document” could not reach the server (${e instanceof Error ? e.message : 'network error'}). Nothing was changed.`) }
+    finally { setRunning(false) }
+  }
+  if (err) return <p role="alert">Not priced: {err} <button type="button" className="underline" onClick={onClose}>OK</button></p>
+  if (!plan) return <p className="text-zinc-500">Reading what the five review passes have already read…</p>
+  if (plan.notReviewable) return <p data-review-ask="not-reviewable">{plan.notReviewable} <button type="button" className="underline" onClick={onClose}>OK</button></p>
+  const todo = plan.price.forPasses.length
+  const priceWords = (pence: number | null) => (pence != null ? `about ${pence}p (measured on a copy of a real idea, n=${plan.price.n}, scaled to this document’s length)` : 'not yet measured')
+  return (
+    <div className="border-2 border-zinc-900 rounded p-1.5 space-y-1" data-review-ask={todo ? 'todo' : 'all-read'}>
+      <p className="font-semibold">Review {plan.d}, version {plan.v}, with the five passes</p>
+      <ul>{plan.passes.map((p) => <li key={p.passKey}><span aria-hidden>{p.readThisVersion ? '●' : '○'}</span> {p.label} — {p.readThisVersion ? `already read version ${plan.v}` : 'will read it'}: <span className="text-zinc-600">{p.strapline}</span></li>)}</ul>
+      <p>Each pass reads the document part by part and raises issues on the part they concern; it searches nothing. Each is saved as it finishes. Nothing in the document changes.</p>
+      {todo
+        ? <p>{todo === 5 ? 'All five' : `The ${todo} that have not read this version`}: {priceWords(plan.price.pence)}.{' '}
+            <button type="button" disabled={busy || running} onClick={() => void run(false)} data-review-run className="px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">{running ? 'Reviewing… (about 15 seconds)' : 'Review it'}</button>{' '}
+            <button type="button" onClick={onClose} className="underline">Not now</button></p>
+        : <p>All five have read version {plan.v}. Reviewing again adds a second set of issues: {priceWords(plan.price.again.pence)}.{' '}
+            <button type="button" disabled={busy || running} onClick={() => void run(true)} data-review-again className="px-2 py-0.5 rounded border-2 border-zinc-900 disabled:opacity-40">{running ? 'Reviewing…' : 'Review again'}</button>{' '}
+            <button type="button" onClick={onClose} className="underline">Not now</button></p>}
+    </div>
   )
 }
 

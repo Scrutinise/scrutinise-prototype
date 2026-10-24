@@ -21,6 +21,7 @@ import { versionChange, changeWords, type VersionChange } from './document-view-
 import { provisionWords, instructionVersion, RELATION_WORD } from './law-panel-words'
 import type { LawRelation } from './idea-law-pure'
 import { issuesOn } from './issue-attach'
+import { reviewsOf, type ReviewRow } from './document-review'
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string }
 
@@ -62,7 +63,9 @@ export interface DocumentViewData {
    *  (the three views are computed from it on the screen; pure). `text` null with the reason in words when it is not held. */
   held: Record<string, { text: string | null; reason: string }>
   /** 26-V2c (§7) — the open issues attached to this document, in part order (partN null = the document as a whole). */
-  issues: Array<{ id: string; title: string | null; text: string; partN: number | null; attachedBy: string | null; attachReason: string | null; sourceModel: string | null }>
+  issues: Array<{ id: string; title: string | null; text: string; passKey: string; partN: number | null; attachedBy: string | null; attachReason: string | null; sourceModel: string | null; reviewId: string | null }>
+  /** 26-V2d (§7) — the latest review by each of the five passes, with the version it read; the Issues tab counts by pass from these. */
+  reviews: ReviewRow[]
 }
 
 async function titlesFor(uris: string[]): Promise<Record<string, string | null>> {
@@ -135,6 +138,7 @@ export async function documentView(ideaId: string, documentId: string): Promise<
       law: { live: live.filter((l) => l.relation !== 'precedent').map((l) => lawWords(l, titles)), precedents: live.filter((l) => l.relation === 'precedent').length },
       titles, held,
       issues: await issuesOn(ideaId, { documentId }),
+      reviews: await reviewsOf(documentId),
     },
   }
 }

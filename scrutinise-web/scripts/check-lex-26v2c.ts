@@ -97,6 +97,9 @@ async function partB() {
   const copy = await scratchCopy('452c5ade', '26v2c-check')
   const cleanup = () => deleteScratch(copy.id)
   try {
+    // The check owns its data (§25.4): 452c5ade's headings have had kinds since CCh 274 (25 Oct), so the COPY's are cleared here to give
+    // the proposal section headings with no kind to ask about. Only the scratch copy is touched.
+    await prisma.actionHeading.updateMany({ where: { ideaId: copy.id }, data: { kind: null, proposedKind: null, proposedKindReason: null } })
     // ── kinds ──
     const platform = await prisma.actionHeading.findFirst({ where: { ideaId: copy.id, name: 'The platform' } })
     if (!platform) { skip('the kinds section', 'the copy has no heading named "The platform"') } else {

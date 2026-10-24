@@ -655,8 +655,11 @@ export async function buildProposalSnapshot(
     // which belong to this build's set and the renderers choose. Filtering here would make
     // "archive, never delete" a lie one layer down — the archived ones must stay reachable
     // for the previous-drafts section that keeps them visible.
+    // ⚠ 26-V2d — EXCEPT a document review's issues ("review:<PASS>", runVersion 0: lib/lex/document-review-pure.ts REVIEW_PREFIX). They
+    // are not a build's challenges: they belong to a document's version and are shown there (its Issues tab, the Risks view). Read here,
+    // runVersion 0 is never the current build's, so every one would print as an EARLIER DRAFT's criticism still open — a false statement.
     prisma.deepeningIssue.findMany({
-      where: { ideaId },
+      where: { ideaId, NOT: { passKey: { startsWith: 'review:' } } },
       orderBy: [{ passKey: 'asc' }, { createdAt: 'asc' }],
     }),
     prisma.deepeningPass.findMany({ where: { ideaId }, orderBy: { passKey: 'asc' } }),

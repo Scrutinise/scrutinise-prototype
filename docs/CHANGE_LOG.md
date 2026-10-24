@@ -1,5 +1,32 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-24 23:20 UTC - LEX 274 + 26-V2d: the seven heading kinds set on 452c5ade; the five review passes read documents and parts; the Risks view, by document
+
+- **274 (set shortly after 22:48, read back):** 452c5ade's seven headings now have kinds. Lex's proposals accepted for Primary legislation, CS Code, CS Mgt Code, The platform, Rules & Standards (budget) and Training (guidance or pilot). Oversight set to **transparency**, per CCh, over Lex's "other". No proposal is left waiting. "The platform" is PLATFORM, so its actions now need a specification again.
+  - ⚠ Order note: 275 (placing the 176 issues) ran at 22:47, before the kinds were set. Placement does not read the kinds (it reads action titles), so it was not re-run.
+- **26-V2d (BRIEF_26V §7, 239), no new pass.** Each of the five PASSES reads one document's current version, part by part, using its own method and standing questions. It searches nothing and is told never to state an outside fact (`lib/lex/document-review{,-pure}.ts`).
+  - **What it writes:** one `document_review` row per pass (RUN with issues and what held up, or FAILED in words), and one issue per point raised, carrying action, document, part and `reviewId`.
+  - **How the issues are kept apart from build challenges:** they are keyed `review:<PASS>` at runVersion 0, so neither a kernel pass card nor a build reader picks them up. `proposal-snapshot.ts` now leaves them out too; otherwise the printed proposal would have listed them as an earlier draft's criticisms.
+  - **What is not reviewed:** a document with no version (only a proposal waiting), and a generated document with no rows. Five passes over 452c5ade's empty schedule raised 21 issues, almost all about how the platform builds schedules, so these are now refused in words.
+  - **Re-running:** a pass that has read this version is not run again unless asked. A new version is read afresh, and the older issues say which version they read. Undo of Lex's placements leaves review issues where they were raised.
+- **Screen:**
+  - "Review this document" in the document header asks first at the measured price, then runs the five in parallel (~15 s).
+  - The Issues tab counts by pass (read / not yet / failed, plus what held up) and says which review raised each issue.
+  - The tree shows ⚑ counts on parts and "reviewed by n of 5 passes at this version".
+  - **The Risks view (225) did not exist; it is built:** on the Deepening page under the tree. It groups every issue by document, then by action, then the proposal as a whole, and each issue is answered there (addressed with a note, deferred, dismissed with a reason, reopened). Answered issues stay listed. The tree and the Risks view refresh each other.
+  - The triage route's limits moved into `LIMITS`, and its rejections are now worded (§30).
+- **Schema:** `prisma/lex_26v2d_document_review.sql` (additive). Applied 23:05 after whichdb (ep-old-dust-aboxi69a / neondb) and read back. It was committed with schema.prisma in `949dd4b` before this code.
+- **Prices, measured** (`scripts/measure-26v2d.ts`; 452c5ade read-only, spend on a scratch copy, purpose measurement):
+  - D.38.1 (5,542 characters, 18 parts): 1.71–2.01p per pass, **9.16p for all five** (n=2).
+  - The empty schedule: about 0.8p a pass before it was made unreviewable.
+  - Measurement spend: 12.81p + 9.16p.
+- **Checks:**
+  - `check:lex-26v2d` (new) **62/62, 4 controls fired** (A pure, B scratch, C Chromium).
+  - **Mutation run: 9 of 9 mutations turned it red**, every file restored byte-identical.
+  - lex-26v 66/66; lex-26v1b 78/78; lex-26v2b 47/47; lex-26v2c 44/44. Its kinds section had gone red because 274 gave 452c5ade's headings kinds; the check now clears its scratch copy's kinds first.
+  - prompt-examples, deepening, llm-guards and client-boundary pass. tsc is clean. clean-build --fast passes.
+  - ⚠ Not run: lex-26u and check:scripts. The sequential sweep was stopped by Claude Code's memory-pressure reaper (system RAM) and was not restarted.
+
 ## 2026-10-24 22:47 UTC - LEX + GRAPH: 4d3479c verified live; 452c5ade's 176 issues placed (275, 16.98p)
 
 - **Live:** health `4d3479c7d191…`. build-worker `550eca1b` SUCCESS on `4d3479c7d191`, appeared unprompted at 22:40:22, and printed its retrieval-OK and "queue on" lines at 22:47:09. Clean build of HEAD at C:/cb2 (npm ci 0, tsc 0) passed before the push.

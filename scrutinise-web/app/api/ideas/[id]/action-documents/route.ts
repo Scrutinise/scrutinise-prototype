@@ -15,6 +15,10 @@
 //   POST { op: 'draftPlan' }   26-V2b §5: what a heading (or one action) needs, each with its MEASURED price — asks nothing, spends nothing
 //   POST { op: 'draftQueue' }  26-V2b §5: queue that plan for the worker once the owner agreed the price (re-reckoned; refused if higher)
 //   POST { op: 'draftRun' | 'draftStop' }  the run's progress in words; stop its waiting documents (the one drafting now finishes)
+//   POST { op: 'reviewPlan' }  26-V2d §7: can this document be reviewed, what each pass has already read, and the MEASURED price — spends nothing
+//   POST { op: 'review' }      26-V2d §7: the five passes (or those named) read the document's current version; each saved as it finishes (spends;
+//                              the screen asks first at the measured price). A pass that already read this version is not run again unless `again`.
+//   POST { op: 'risks' }       26-V2d (225): every issue on the idea grouped by document, then action, then the proposal as a whole
 
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -25,6 +29,8 @@ import * as D from '@/lib/lex/action-documents'
 import { documentView, actionDocuments } from '@/lib/lex/document-view'
 import { draftExplanatoryNote } from '@/lib/lex/explanatory-note'
 import { planFor, queueDrafting, draftRunView, stopDraftRun, type DraftScope } from '@/lib/lex/document-drafting'
+import { reviewDocument, reviewPlan, risksView } from '@/lib/lex/document-review'
+import { PASS_KEYS, type PassKey } from '@/lib/lex/deepening-config'
 
 export const maxDuration = 300
 type Params = { params: Promise<{ id: string }> }
@@ -48,6 +54,10 @@ const Body = z.discriminatedUnion('op', [
   z.object({ op: z.literal('draftQueue'), headingId: z.string().min(1).nullable().optional(), actionId: z.string().min(1).optional(), agreedPence: z.number().min(0).max(5000) }),
   z.object({ op: z.literal('draftRun'), runId: z.string().min(1).optional() }),
   z.object({ op: z.literal('draftStop'), runId: z.string().min(1) }),
+  // 26-V2d §7 — the five review passes over one document
+  z.object({ op: z.literal('reviewPlan'), documentId: z.string().min(1) }),
+  z.object({ op: z.literal('review'), documentId: z.string().min(1), passes: z.array(z.enum(PASS_KEYS as [PassKey, ...PassKey[]])).min(1).max(5).optional(), again: z.boolean().optional() }),
+  z.object({ op: z.literal('risks') }),
 ])
 const scopeOf = (b: { headingId?: string | null; actionId?: string }): DraftScope => (b.actionId ? { actionId: b.actionId } : { headingId: b.headingId ?? null })
 const OP_WORDS: Record<string, string> = {
@@ -55,8 +65,9 @@ const OP_WORDS: Record<string, string> = {
   setNeeds: 'Changing what that action needs', generate: 'Generating that document',
   draftNote: '“Draft the explanatory note”', useProposal: 'Using Lex’s proposal', setAsideProposal: 'Setting Lex’s proposal aside',
   draftPlan: 'Listing what needs drafting', draftQueue: 'Starting the drafting', draftRun: 'Reading the drafting run', draftStop: 'Stopping the drafting run',
+  reviewPlan: 'Pricing the review', review: '“Review this document”', risks: 'Reading the risks',
 }
-const INPUT_WORDS = { documentId: 'the document', actionId: 'the action', kind: 'the kind of document', title: 'the title', body: 'the text', mode: 'the choice', kinds: 'the kinds of document', reason: 'the reason', what: 'what to generate', headingId: 'the heading', agreedPence: 'the price you agreed', runId: 'the drafting run' }
+const INPUT_WORDS = { documentId: 'the document', actionId: 'the action', kind: 'the kind of document', title: 'the title', body: 'the text', mode: 'the choice', kinds: 'the kinds of document', reason: 'the reason', what: 'what to generate', headingId: 'the heading', agreedPence: 'the price you agreed', runId: 'the drafting run', passes: 'the review passes', again: 'whether to review again' }
 
 export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
@@ -110,6 +121,9 @@ export async function POST(req: Request, { params }: Params) {
       case 'draftQueue': result = await queueDrafting(id, scopeOf(b), uid, b.agreedPence); break
       case 'draftRun': result = { ok: true, data: await draftRunView(id, b.runId) }; break
       case 'draftStop': result = await stopDraftRun(id, b.runId); break
+      case 'reviewPlan': result = await reviewPlan(id, b.documentId); break
+      case 'review': result = await reviewDocument(id, b.documentId, { userId: uid, passes: b.passes, again: b.again }); break
+      case 'risks': result = { ok: true, data: await risksView(id) }; break
     }
   } catch (err) {
     console.error('[action-documents] failed', b.op, err)

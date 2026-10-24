@@ -37,6 +37,7 @@ import { installFaultCapture } from '@/lib/client-fault-capture'
 import DeepeningPanel from '@/components/lex/DeepeningPanel'
 import UpdatePassPanel from '@/components/lex/UpdatePassPanel'
 import DocumentsTree from '@/components/lex/DocumentsTree'
+import RisksView from '@/components/lex/RisksView'
 import DeepeningLawTable from '@/components/lex/DeepeningLawTable'
 import AgendaPanel from '@/components/lex/AgendaPanel'
 import ReportAdditions from '@/components/lex/ReportAdditions'
@@ -1287,6 +1288,11 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                   <section className="pt-3" data-deepening="documents">
                     <h3 className="text-sm font-bold uppercase tracking-wide text-zinc-800 mb-1">The documents</h3>
                     <DocumentsTree ideaId={state.ideaId} />
+                  </section>
+                  {/* 26-V2d (§7, 225): the Risks view — every issue, by document, answered here */}
+                  <section className="pt-3" data-deepening="risks">
+                    <h3 className="text-sm font-bold uppercase tracking-wide text-zinc-800 mb-1">Risks</h3>
+                    <RisksView ideaId={state.ideaId} />
                   </section>
                   <div className="pt-3">
                     <UpdatePassPanel ideaId={state.ideaId} canEdit showResearchAngle={false} />

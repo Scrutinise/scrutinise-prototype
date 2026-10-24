@@ -34,6 +34,9 @@ export const LIMITS = {
   documentText: 200000,
   /** 26-V1b §7b (262): why an action must come after another — "the Code must exist before the duty bites". Optional. */
   orderBecause: 300,
+  /** 26-V2d: answering an issue in the Risks view — how it was dealt with, and why it is dismissed (the triage route's own numbers since 19-E). */
+  issueNote: 4000,
+  issueDismissReason: 2000,
 } as const
 
 export type LimitKey = keyof typeof LIMITS

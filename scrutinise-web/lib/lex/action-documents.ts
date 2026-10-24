@@ -21,6 +21,7 @@ import { parseDraft, currentVersion, type ActionDraft, type DraftInstruction, ty
 import { touchesFor } from './action-touches'
 import { onwardRows, type Walker } from './collision-walk'
 import { effectsLoadDate } from './statutory-graph'
+import { reviewedCounts } from './document-review'
 import {
   GENERATED_KINDS, KIND_WORD, collisionBody, dNumber, needsDocuments, partsOf, scheduleBody, scheduleRows,
   type DocumentKind, type DocumentStatus, type EffectRow, type Needs, type NeedsOverride, type ScheduleRow,
@@ -343,9 +344,13 @@ export function staleWhy(kind: string, last: { effectsLoadDate: Date | null; pay
 
 export interface TreeDocument {
   id: string; number: number; d: string; kind: DocumentKind; title: string; status: DocumentStatus; acceptedV: number | null
-  current: { v: number; author: string; at: string } | null; versions: number; proposalWaiting: boolean; parts: Array<{ n: number; title: string }>; stale: string | null
+  current: { v: number; author: string; at: string } | null; versions: number; proposalWaiting: boolean
+  /** 26-V2d — `issues`: open issues on that part. */
+  parts: Array<{ n: number; title: string; issues: number }>; stale: string | null
   /** 26-V2c — open issues attached to this document (any of its parts). */
   issues: number
+  /** 26-V2d — how many of the five review passes have read the current version. */
+  reviewed: number
 }
 /** `issues`: open issues attached to the action itself, not to one of its documents (those are counted on the document). */
 export interface TreeActionRow { id: string; number: number | null; title: string | null; statement: string; headingId: string | null; avenue: string | null; needs: Needs; documents: TreeDocument[]; missing: DocumentKind[]; issues: number }
@@ -361,6 +366,11 @@ export async function documentTree(ideaId: string, opts: { recordStale?: boolean
   // 26-V2c — open issues per action and per document (§7: "shown in the tree as a count on the node")
   const attached = await prisma.deepeningIssue.groupBy({ by: ['actionId', 'documentId'], where: { ideaId, status: 'OPEN', actionId: { not: null } }, _count: true })
   const issuesOn = (actionId: string, documentId: string | null) => attached.find((g) => g.actionId === actionId && g.documentId === documentId)?._count ?? 0
+  // 26-V2d — the passes that have reviewed each document's current version
+  const currentV = new Map(docs.flatMap((d) => { const last = d.versions.filter((x) => x.role === 'VERSION').at(-1); return last ? [[d.id, last.v] as [string, number]] : [] }))
+  const reviewed = await reviewedCounts(ideaId, currentV)
+  const onParts = await prisma.deepeningIssue.groupBy({ by: ['documentId', 'partN'], where: { ideaId, status: 'OPEN', documentId: { not: null }, partN: { not: null } }, _count: true })
+  const issuesOnPart = (documentId: string, n: number) => onParts.find((g) => g.documentId === documentId && g.partN === n)?._count ?? 0
   const drafts = await draftsFor(actions.map((a) => a.id))
   const schedule = docs.some((d) => d.kind === 'CONSEQUENTIAL_SCHEDULE') ? scheduleRows(await acceptedInstructions(ideaId)) : undefined
   const headingOf = new Map(headings.map((h) => [h.id, h]))
@@ -378,7 +388,8 @@ export async function documentTree(ideaId: string, opts: { recordStale?: boolean
         id: d.id, number: d.number, d: dNumber(a.number, d.number), kind: d.kind as DocumentKind, title: d.title, status: d.status as DocumentStatus, acceptedV: d.acceptedV,
         current: last ? { v: last.v, author: last.author, at: last.createdAt.toISOString() } : null, versions: vs.length,
         proposalWaiting: d.versions.some((x) => x.role === 'PROPOSAL' && !x.answer),
-        parts: last ? partsOf(d.kind as DocumentKind, last.body).map((p) => ({ n: p.n, title: p.title })) : [], stale, issues: issuesOn(a.id, d.id),
+        parts: last ? partsOf(d.kind as DocumentKind, last.body).map((p) => ({ n: p.n, title: p.title, issues: issuesOnPart(d.id, p.n) })) : [], stale, issues: issuesOn(a.id, d.id),
+        reviewed: reviewed.get(d.id) ?? 0,
       }
     })
     const live = documents.filter((d) => d.status !== 'SUPERSEDED')

@@ -17,6 +17,7 @@ import { LIMITS } from '@/lib/lex/input-limits'
 import FocusDialog from './FocusDialog'
 import DocumentView from './DocumentView'
 import { statusWords } from '@/lib/lex/document-view-pure'
+import { reviewedWords, ISSUES_CHANGED_EVENT } from '@/lib/lex/document-review-pure'
 import BoundedInput from './BoundedInput'
 import { DraftPlanDialog, DraftRunLine, type DraftScopeInput } from './DraftNeedsPanel'
 
@@ -45,6 +46,12 @@ export default function DocumentsTree({ ideaId, readOnly = false }: { ideaId: st
     setTree(body as DocumentTree); setError(null)
   }, [ideaId])
   useEffect(() => { void load() }, [load])
+  // 26-V2d — an issue answered in the Risks view changes the counts on these nodes
+  useEffect(() => {
+    const on = () => void load()
+    window.addEventListener(ISSUES_CHANGED_EVENT, on)
+    return () => window.removeEventListener(ISSUES_CHANGED_EVENT, on)
+  }, [load])
 
   const post = useCallback(async (payload: Record<string, unknown>, label: string) => {
     setBusy(true); setSaid(null)
@@ -169,11 +176,12 @@ function ActionRow({ ideaId, a, readOnly, busy, opened, closed, toggle, onOpen, 
                 <span aria-hidden>●</span> <span className="font-semibold">{documentNumber(a.number, d.number)}</span> {d.title}
                 <span className="text-zinc-600"> — {KIND_WORD[d.kind]} · <span data-doc-status>{statusWords(d.status, d.acceptedV, d.current?.v ?? null)}</span>{d.stale ? ' · out of date' : ''}{d.proposalWaiting ? ' · Lex’s proposal waiting' : ''} · {d.d}</span>
                 {d.issues > 0 && <span className="font-semibold" data-tree-doc-issues={d.issues}> · ⚑ {d.issues} open issue{d.issues === 1 ? '' : 's'}</span>}
+                {d.current && <span className="text-zinc-600" data-tree-doc-reviewed={d.reviewed}> · {reviewedWords(d.reviewed)}</span>}
                 {opened === d.id && <span className="ml-1 font-semibold">open</span>}
               </button>
               {opened === d.id && <div className="ml-5 mt-1"><DocumentView ideaId={ideaId} documentId={d.id} readOnly={readOnly} onChanged={onChanged} /></div>}
               {opened !== d.id && d.parts.length > 1 && (
-                <ul className="ml-5 mt-0.5">{d.parts.map((p) => <li key={p.n} className="text-[11px] text-zinc-600"><span aria-hidden>▸</span> {partNumber(a.number, d.number, p.n)} {p.title}</li>)}</ul>
+                <ul className="ml-5 mt-0.5">{d.parts.map((p) => <li key={p.n} className="text-[11px] text-zinc-600" data-tree-part={partNumber(a.number, d.number, p.n)}><span aria-hidden>▸</span> {partNumber(a.number, d.number, p.n)} {p.title}{p.issues > 0 && <span className="font-semibold text-zinc-900" data-tree-part-issues={p.issues}> · ⚑ {p.issues}</span>}</li>)}</ul>
               )}
             </li>
           ))}

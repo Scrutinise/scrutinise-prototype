@@ -12,13 +12,16 @@ import { z } from 'zod'
 import { authorizeIdea } from '@/lib/lex/authz'
 import { enterSpendFor } from '@/lib/lex/build-context'
 import { triageIssue, DismissalNeedsAReason } from '@/lib/lex/deepening'
+import { describeIssues } from '@/lib/api-rejection'
+import { LIMITS } from '@/lib/lex/input-limits'
 
 type Params = { params: Promise<{ id: string; issueId: string }> }
 
 const BodySchema = z.object({
   action: z.enum(['address', 'defer', 'dismiss', 'reopen']),
-  note: z.string().max(4000).optional(),
-  reason: z.string().max(2000).optional(),
+  // 26-V2d: the numbers live in LIMITS, which the Risks view's counters read too (§30.1)
+  note: z.string().max(LIMITS.issueNote).optional(),
+  reason: z.string().max(LIMITS.issueDismissReason).optional(),
   /** An EvidenceItem the resolution rests on, when the user attaches one. */
   evidenceId: z.string().optional(),
 })
@@ -32,17 +35,20 @@ export async function PATCH(req: Request, { params }: Params) {
   let body: unknown
   try { body = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }
   const parsed = BodySchema.safeParse(body)
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
+  if (!parsed.success) {
+    const { message, rejected } = describeIssues(parsed.error.issues, { action: 'Answering that issue', labels: { action: 'the answer', note: 'how it was dealt with', reason: 'the reason for dismissing it', evidenceId: 'the evidence' } })
+    return NextResponse.json({ error: message, rejected }, { status: 422 })
+  }
 
   try {
     const updated = await triageIssue(id, issueId, parsed.data.action, {
       note: parsed.data.note, reason: parsed.data.reason, evidenceId: parsed.data.evidenceId,
     })
-    if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    if (!updated) return NextResponse.json({ error: 'That issue is not on this idea, so nothing was changed.' }, { status: 404 })
     return NextResponse.json(updated)
   } catch (err) {
     if (err instanceof DismissalNeedsAReason) {
-      return NextResponse.json({ error: 'Dismissing an issue requires a reason' }, { status: 422 })
+      return NextResponse.json({ error: 'Not dismissed: dismissing an issue needs a reason, and it stays on the record. Nothing was changed.' }, { status: 422 })
     }
     throw err
   }

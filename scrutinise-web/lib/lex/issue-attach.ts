@@ -101,7 +101,8 @@ export async function attachmentCounts(ideaId: string): Promise<{ open: number; 
 }
 
 export async function undoLexAttachments(ideaId: string): Promise<number> {
-  const r = await prisma.deepeningIssue.updateMany({ where: { ideaId, attachedBy: 'LEX' }, data: { actionId: null, documentId: null, partN: null, attachedBy: null, attachReason: null, attachedAt: null } })
+  // 26-V2d: an issue a document review raised (reviewId set) sits where it was raised — that is not a placement, so Undo leaves it.
+  const r = await prisma.deepeningIssue.updateMany({ where: { ideaId, attachedBy: 'LEX', reviewId: null }, data: { actionId: null, documentId: null, partN: null, attachedBy: null, attachReason: null, attachedAt: null } })
   return r.count
 }
 
@@ -118,7 +119,7 @@ export async function reattachIssues(ideaId: string, userId: string | null, opts
 export async function issuesOn(ideaId: string, where: { documentId: string } | { actionId: string; documentId: null }) {
   return prisma.deepeningIssue.findMany({
     where: { ideaId, status: 'OPEN', ...where },
-    select: { id: true, title: true, text: true, passKey: true, partN: true, attachedBy: true, attachReason: true, sourceModel: true },
+    select: { id: true, title: true, text: true, passKey: true, partN: true, attachedBy: true, attachReason: true, sourceModel: true, reviewId: true },
     orderBy: [{ partN: 'asc' }, { createdAt: 'asc' }],
   })
 }
