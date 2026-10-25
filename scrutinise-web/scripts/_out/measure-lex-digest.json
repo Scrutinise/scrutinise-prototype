@@ -1,0 +1,2740 @@
+{
+  "on": "452c5ade",
+  "at": "2026-10-18T23:26:35.732Z",
+  "live": 58,
+  "headings": [
+    {
+      "id": "86cef17a-8802-4c3d-a410-6391ef060185",
+      "name": "Legislation",
+      "n": 3
+    },
+    {
+      "id": "636ede06-3aea-4827-8b8c-0188c13994ca",
+      "name": "CS Code",
+      "n": 4
+    },
+    {
+      "id": "1cc461ed-c126-4da0-bf76-fba0b15ea968",
+      "name": "CS Mgt Code",
+      "n": 5
+    },
+    {
+      "id": "0f73821b-7302-4667-9cb9-2dc9a8d81f0c",
+      "name": "The platform",
+      "n": 22
+    },
+    {
+      "id": "e43b176d-5a19-470f-888c-5bc8ef92d660",
+      "name": "Rules & Standards",
+      "n": 8
+    },
+    {
+      "id": "79b96cb8-cb1c-4513-9f1d-1c537f8ab4d3",
+      "name": "Oversight",
+      "n": 8
+    },
+    {
+      "id": "80addaf8-952a-4024-abed-2e20836bb1d2",
+      "name": "Training",
+      "n": 8
+    }
+  ],
+  "heading": {
+    "id": "603e2423-3135-4fe5-b6a4-86901a3225d0",
+    "scope": "HEADING",
+    "status": "READY",
+    "pence": 45.184,
+    "unpriced": false,
+    "seconds": 266,
+    "stages": [
+      {
+        "stage": "RUNNING",
+        "seconds": 194
+      },
+      {
+        "stage": "MODELS_DONE",
+        "seconds": 71
+      }
+    ],
+    "actions": 8,
+    "models": [
+      {
+        "model": "claude-opus-5-5",
+        "status": "OK",
+        "pence": 12.386251999999999,
+        "dropped": {
+          "unknownRefs": [],
+          "badActionNumbers": 0,
+          "missingWhatFails": 0,
+          "badConditionNumbers": 0
+        }
+      },
+      {
+        "model": "gpt-6.1-sol",
+        "status": "OK",
+        "pence": 2.845896,
+        "dropped": {
+          "unknownRefs": [],
+          "badActionNumbers": 0,
+          "missingWhatFails": 0,
+          "badConditionNumbers": 0
+        }
+      },
+      {
+        "model": "gemini-3.1-pro-preview",
+        "status": "OK",
+        "pence": 3.6682860000000006,
+        "dropped": {
+          "unknownRefs": [],
+          "badActionNumbers": 0,
+          "missingWhatFails": 0,
+          "badConditionNumbers": 0
+        }
+      },
+      {
+        "model": "grok-4.7",
+        "status": "OK",
+        "pence": 7.761118,
+        "dropped": {
+          "unknownRefs": [],
+          "badActionNumbers": 0,
+          "missingWhatFails": 0,
+          "badConditionNumbers": 0
+        }
+      }
+    ],
+    "dropped": [
+      {
+        "model": "claude-opus-5-5",
+        "unknownRefs": [],
+        "badActionNumbers": 0,
+        "missingWhatFails": 0,
+        "badConditionNumbers": 0
+      },
+      {
+        "model": "gpt-6.1-sol",
+        "unknownRefs": [],
+        "badActionNumbers": 0,
+        "missingWhatFails": 0,
+        "badConditionNumbers": 0
+      },
+      {
+        "model": "gemini-3.1-pro-preview",
+        "unknownRefs": [],
+        "badActionNumbers": 0,
+        "missingWhatFails": 0,
+        "badConditionNumbers": 0
+      },
+      {
+        "model": "grok-4.7",
+        "unknownRefs": [],
+        "badActionNumbers": 0,
+        "missingWhatFails": 0,
+        "badConditionNumbers": 0
+      }
+    ],
+    "judge": {
+      "flags": {
+        "strayCites": [
+          104,
+          105,
+          169
+        ],
+        "unknownRefs": [],
+        "unnamedModels": 0,
+        "badActionNumbers": 0,
+        "missingWhatFails": 0
+      },
+      "digest": {
+        "gaps": [
+          {
+            "item": "A consequence (sanction, promotion or exit) tied to missing, soft, altered or failed pre-registered measures and benchmarks",
+            "namedBy": [
+              "claude-opus-5-5",
+              "gemini-3.1-pro-preview",
+              "grok-4.7",
+              "gpt-6.1-sol"
+            ],
+            "category": "organisational",
+            "whatFails": "Without it, the culture absorbs the rules as paperwork and continues to diffuse responsibility. Delay and poor delivery are untouched."
+          },
+          {
+            "item": "A named operator or enforcer and a compliance route for each standard (#45, #96, #101, #160, #166, #194)",
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol",
+              "grok-4.7"
+            ],
+            "category": "organisational",
+            "whatFails": "With nobody authorised to require registration, evidence and correction, the standards become optional practice. A rule with no operator is not applied, and the culture produces paper measures with nothing behind them."
+          },
+          {
+            "item": "The full text of #31: levels 2 to 4, worked examples and the benchmark rule",
+            "namedBy": [
+              "claude-opus-5-5",
+              "grok-4.7"
+            ],
+            "category": "organisational",
+            "whatFails": "Without it, Ministers cannot choose on a defined scale, any result can be argued to meet the level, and owners cannot be judged against a cost benchmark. Condition 9 cannot be applied consistently."
+          },
+          {
+            "item": "Funding for independent measurement of every task, for comparator data and for the 12- and 36-month evaluations",
+            "namedBy": [
+              "claude-opus-5-5",
+              "grok-4.7"
+            ],
+            "category": "financial",
+            "whatFails": "Without money, measurement falls back to those being measured, which defeats the anti-gaming control. Work below the 'major' threshold goes unchecked."
+          },
+          {
+            "item": "A hard brevity limit on goal and metric records, with a burden correction trigger",
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol"
+            ],
+            "category": "organisational",
+            "whatFails": "Without it, #96 only measures growing burden while #45, #101 and #194 keep adding metrics. Condition 10 fails and the regime becomes another reporting layer."
+          },
+          {
+            "item": "Statutory force for 'no registered measure, no work or spend'",
+            "namedBy": [
+              "claude-opus-5-5"
+            ],
+            "category": "legislative",
+            "whatFails": "Without it, #194 and #104 are guidance only, work can start without a measure, and condition 3 is not reliably met."
+          },
+          {
+            "item": "An appraisal deadline, a decision owner and an escalation rule for #160",
+            "namedBy": [
+              "gpt-6.1-sol"
+            ],
+            "category": "organisational",
+            "whatFails": "Without them, #160 cannot distinguish legitimate appraisal from obstruction or force a decision."
+          },
+          {
+            "item": "A standard-setting route for bodies independent by design, and a workable delegation rule under #31",
+            "namedBy": [
+              "gpt-6.1-sol"
+            ],
+            "category": "legislative",
+            "whatFails": "Without it, #31 either imposes ministerial control where the policy preserves independence or leaves those tasks with no valid route. Personal ministerial choice for every task also risks blocking work."
+          },
+          {
+            "item": "Operational safeguards for independent measurement and for reporting manipulation or suppressed evidence",
+            "namedBy": [
+              "gpt-6.1-sol"
+            ],
+            "category": "organisational",
+            "whatFails": "Without them, #101's independent measurement can become nominal and the counter-gaming safeguards can be bypassed."
+          },
+          {
+            "item": "Replacement of conflicting existing rules, including the Osmotherly Rules and the shield in ministerial responsibility",
+            "namedBy": [
+              "grok-4.7"
+            ],
+            "category": "legislative",
+            "whatFails": "Condition 8 requires replacement where rules conflict, and this set only reuses the Green Book. The new measurement rules sit beside rules that limit transparency, so the standards do not bite."
+          }
+        ],
+        "answers": [
+          {
+            "question": 1,
+            "reconciled": "All four reviewers agree that no action under this heading delivers condition 1 (one named owner), condition 2 (authority matched to resources), condition 4 (differentiated consequences), condition 5 (visibility up the line) or condition 7 (psychological safety). They read this as expected for the heading, not as a finding against the whole proposal. They also agree on condition 8 and condition 10. Condition 8 is met only by #160, through reuse of the Green Book. gpt-6.1-sol and grok-4.7 add that nothing here replaces a conflicting rule. Condition 10 is met only by #96. All four place #31 against conditions 3 and 9. claude-opus-5-5 and grok-4.7 call #31 the only action in which an elected Minister chooses the beneficiary's standard [Ref: 214]. The reviewers differ on which other actions count. For condition 3, three reviewers add #101 (through its folded registration rule) and #194; gpt-6.1-sol adds only #194. claude-opus-5-5 notes the owner also records #45 against condition 3 and rejects it. For condition 6, the lists range from #101 and #194 (gemini-3.1-pro-preview) to #31, #45, #101, #160 and #194 (grok-4.7). claude-opus-5-5 notes the owner records #160 against condition 6 and rejects it. For condition 9, the reviewers differ over whether #45 and #181 contribute; see disagreements. All agree that #45, #101, #181 and #194, wherever counted, serve only the measurement and cost half of condition 9, not the elected choice of standard."
+          },
+          {
+            "question": 2,
+            "reconciled": "All four agree that #166 delivers no condition directly. It publishes independent evaluations at 12 and 36 months and amends the Code or regulations [Ref: 213]. The record marks it as support. Two reviewers add a further action, each a different one. gpt-6.1-sol adds #181, because it assigns standard-setting to HM Treasury without specifying content or application. gemini-3.1-pro-preview adds #45, because its generic metrics conflict with the policy's requirement for task-specific measures. claude-opus-5-5 does not list either. It notes, as its own reasoning, that #45 and #181 deliver condition 9 only weakly and duplicate each other. grok-4.7 lists #166 only, and does not count #45 under condition 9."
+          },
+          {
+            "question": 3,
+            "reconciled": "All agree that the legislative avenue is carried by #31 and #166. Through #31 it carries conditions 3 and 9. #166 secures later review and amendment, not a condition. claude-opus-5-5 and gpt-6.1-sol caution that the record does not say whether 'laid before Parliament' means a statute, regulations or a laid document, and that an avenue label is not evidence of enactment. grok-4.7 additionally treats #31's cost cap as the legislative part of condition 6. Everything else is left to organisational practice: condition 6 through #45, #101 and #194 (and #160 per grok-4.7); condition 8 through #160; condition 10 through #96; and the measurement parts of conditions 3 and 9 through #101 and #194. #181 is labelled financial. gpt-6.1-sol and grok-4.7 note that its text assigns standard-setting, not money or an incentive. No action here is software. Conditions 1, 2, 4, 5 and 7 are delivered by no means in this set."
+          },
+          {
+            "question": 4,
+            "reconciled": "All four agree that the record is silent on how, incentive, skill, resistance and success test for these actions. They also agree that 'Who' is silent for most of them; gpt-6.1-sol notes the exception of HM Treasury in #181. gemini-3.1-pro-preview stops at that silence. The other three describe intended mechanisms from the statements and folded parts. On behaviour: pre-registration (#194, folded #104) prevents defining success after the event; benchmarking (#101) exposes the gap to comparators; #45 stops throughput being claimed without quality and whole-system cost; #96 keeps records short; #160 resists appraisal as delay. On measurement: #96's burden measure, the independent measurement owner folded into #101, and #166's evaluations. On enforcement, claude-opus-5-5, gpt-6.1-sol and grok-4.7 agree that no action names an enforcer or states a consequence for a measure that is missing, soft, flattering or changed. claude-opus-5-5 notes the sole written consequence is #104's recorded reason and version history for changes [Ref: 213]. gpt-6.1-sol adds that #96 lacks a burden limit and #160 lacks a deadline or escalation rule. Reviewers' conclusion (their reasoning): these are measurement rules without enforcement."
+          },
+          {
+            "question": 5,
+            "reconciled": "All four say no. Their shared reasoning is that the elements improve measurement but attach no reward or consequence, so the culture can produce paper compliance. claude-opus-5-5 and grok-4.7 add that the metric requirements of #45, #101 and #194 multiply reporting, while #96 measures burden without capping it. Strengthening measures raised: named owners or enforcers for each standard (claude-opus-5-5, gpt-6.1-sol, grok-4.7); linking measures and benchmarks to promotion or exit (claude-opus-5-5, gemini-3.1-pro-preview, grok-4.7); statutory force so there is no work or spend without a registered measure (claude-opus-5-5, and grok-4.7 in the form of a short statutory duty); a hard brevity cap (claude-opus-5-5, gpt-6.1-sol, grok-4.7); merging #45 and #181 into one standard (claude-opus-5-5, gpt-6.1-sol); removing the 'significant' and 'major' thresholds (claude-opus-5-5, and grok-4.7 by funding independent measurement for every task); a decision deadline and escalation route for #160 (gpt-6.1-sol); and completing #31's missing text (claude-opus-5-5). gpt-6.1-sol adds that this heading need not hold the consequence regime, but must route its evidence into it."
+          },
+          {
+            "question": 6,
+            "reconciled": "claude-opus-5-5, gpt-6.1-sol and grok-4.7 agree the main failure is paper compliance. That means soft or flattering comparators, metric sprawl, measures rewritten to fit results, appraisal used as delay under #160, and rival standards from #31, #45 and #181. claude-opus-5-5 and grok-4.7 add argument over the 'significant' and 'major' thresholds in #101's folds, and argument over #31's unrecovered levels 2 to 4. gpt-6.1-sol adds that cost limits could cut quality or shift costs elsewhere, and that ministerial choice for every task could create bottlenecks and intrude on bodies independent by design. gemini-3.1-pro-preview instead foresees a scapegoat machine and massive paperwork. On prevention the reviewers differ. gemini-3.1-pro-preview names #166's evaluations as what is in place. The other three list #104's version history, #101's independent measurer, #45's counter-gaming measures, #194's advance measures, #96's burden measure, #166's evaluations and, per grok-4.7 and gpt-6.1-sol, #31's parliamentary scale [Ref: 214]. They judge these to be detection, mostly after the event, with no sanction or named operator. grok-4.7 notes that nothing in the set prevents the central failure of no single owner holding the means to deliver."
+          }
+        ],
+        "conflicts": [
+          {
+            "what": "#45 imposes a generic metric suite, against the policy's requirement for task-specific success measures. The owner's own test records it as DOES_NOT_FIT.",
+            "actions": [
+              45
+            ],
+            "namedBy": [
+              "claude-opus-5-5",
+              "gemini-3.1-pro-preview",
+              "grok-4.7"
+            ]
+          },
+          {
+            "what": "#160 governs pre-decision appraisal, not accountability for work once begun, and leaves 'indefinite' undefined. The owner's own test records it as DOES_NOT_FIT.",
+            "actions": [
+              160
+            ],
+            "namedBy": [
+              "claude-opus-5-5",
+              "gemini-3.1-pro-preview"
+            ]
+          },
+          {
+            "what": "The cumulative metric requirements pull against #96's short records and condition 10, and nothing ranks brevity first. gpt-6.1-sol calls this an implementation tension, not an unavoidable contradiction.",
+            "actions": [
+              45,
+              96,
+              101,
+              194
+            ],
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol",
+              "grok-4.7"
+            ]
+          },
+          {
+            "what": "There are competing standard-setters and definitions: HM Treasury with the Cabinet Office, HM Treasury alone, and the Minister's five-level scale. No rule says which prevails, which risks sharing the measure sideways.",
+            "actions": [
+              31,
+              45,
+              181
+            ],
+            "namedBy": [
+              "claude-opus-5-5",
+              "grok-4.7"
+            ]
+          },
+          {
+            "what": "Folded parts limit comparator publication to 'significant recurring functions' and independent measurement to 'major responsibilities'. These are thresholds the policy rules out.",
+            "actions": [
+              101
+            ],
+            "namedBy": [
+              "claude-opus-5-5",
+              "grok-4.7"
+            ]
+          },
+          {
+            "what": "Requiring the responsible Minister to choose the standard for every public task cuts across the policy's preservation of bodies independent by design.",
+            "actions": [
+              31
+            ],
+            "namedBy": [
+              "gpt-6.1-sol"
+            ]
+          }
+        ],
+        "disagreements": [
+          {
+            "topic": "Which actions deliver condition 3",
+            "positions": [
+              {
+                "model": "claude-opus-5-5",
+                "position": "#31, #194 and #101 (via folded #104). Rejects the owner's attribution of #45."
+              },
+              {
+                "model": "gpt-6.1-sol",
+                "position": "#31 and #194 only."
+              },
+              {
+                "model": "gemini-3.1-pro-preview",
+                "position": "#31, #101 and #194."
+              },
+              {
+                "model": "grok-4.7",
+                "position": "#31, #101 and #194."
+              }
+            ]
+          },
+          {
+            "topic": "Which actions deliver condition 6 (safeguards against gaming)",
+            "positions": [
+              {
+                "model": "claude-opus-5-5",
+                "position": "#194, #101 and #45. Rejects the owner's attribution of #160 as an anti-delay rule, not an anti-gaming rule."
+              },
+              {
+                "model": "gpt-6.1-sol",
+                "position": "#45, #101 and #194."
+              },
+              {
+                "model": "gemini-3.1-pro-preview",
+                "position": "#101 and #194 only."
+              },
+              {
+                "model": "grok-4.7",
+                "position": "#31 (cost cap), #45, #101, #160 and #194."
+              }
+            ]
+          },
+          {
+            "topic": "Whether #45 and #181 contribute to condition 9",
+            "positions": [
+              {
+                "model": "claude-opus-5-5",
+                "position": "Both contribute, on the cost and measurement side, weakly and duplicatively."
+              },
+              {
+                "model": "gpt-6.1-sol",
+                "position": "#45 contributes; #181 does not and delivers no condition directly."
+              },
+              {
+                "model": "gemini-3.1-pro-preview",
+                "position": "#181 contributes; #45 does not and delivers no condition."
+              },
+              {
+                "model": "grok-4.7",
+                "position": "#181 contributes; #45 is excluded because the record's own test finds a generic suite does not fit."
+              }
+            ]
+          },
+          {
+            "topic": "Actions delivering no condition directly beyond #166",
+            "positions": [
+              {
+                "model": "claude-opus-5-5",
+                "position": "Only #166."
+              },
+              {
+                "model": "gpt-6.1-sol",
+                "position": "#166 and #181."
+              },
+              {
+                "model": "gemini-3.1-pro-preview",
+                "position": "#166 and #45."
+              },
+              {
+                "model": "grok-4.7",
+                "position": "Only #166."
+              }
+            ]
+          },
+          {
+            "topic": "Third weight-bearing action",
+            "positions": [
+              {
+                "model": "claude-opus-5-5",
+                "position": "#31, #194 and #101."
+              },
+              {
+                "model": "gpt-6.1-sol",
+                "position": "#31, #101 and #96. Names #96 as the protection against a new reporting layer, and does not name #194."
+              },
+              {
+                "model": "gemini-3.1-pro-preview",
+                "position": "#31, #101 and #194."
+              },
+              {
+                "model": "grok-4.7",
+                "position": "#31, #194 and #101."
+              }
+            ]
+          },
+          {
+            "topic": "Whether #160 conflicts with the policy",
+            "positions": [
+              {
+                "model": "claude-opus-5-5",
+                "position": "Conflicts: the owner's own test finds it DOES_NOT_FIT, being pre-decision appraisal with no limit on 'indefinite'."
+              },
+              {
+                "model": "gpt-6.1-sol",
+                "position": "No conflict flagged. Treats it as delivering compatibility (condition 8) but lacking a deadline and escalation rule."
+              },
+              {
+                "model": "gemini-3.1-pro-preview",
+                "position": "Conflicts: it concerns pre-decision appraisal, not accountability once work begins."
+              },
+              {
+                "model": "grok-4.7",
+                "position": "No conflict flagged. Counts it toward conditions 6 and 8."
+              }
+            ]
+          },
+          {
+            "topic": "What is in place to prevent failure (question 6)",
+            "positions": [
+              {
+                "model": "claude-opus-5-5",
+                "position": "Several detection mechanisms (#104, #105, #169, #96, #166), mostly after the event and without sanction."
+              },
+              {
+                "model": "gpt-6.1-sol",
+                "position": "Several protections across #31, #45, #101, #194, #96 and #166. Useful but incomplete: no breach remedies, and independence of measurement not secured."
+              },
+              {
+                "model": "gemini-3.1-pro-preview",
+                "position": "#166's 12- and 36-month evaluations, with no qualification of their sufficiency."
+              },
+              {
+                "model": "grok-4.7",
+                "position": "Several statements across #31, #101, #194, #45, #96, #160 and #166, with no operator or breach cost. The central failure has no preventer."
+              }
+            ]
+          },
+          {
+            "topic": "Category of the gap over #31's missing levels 2 to 4 and benchmark rule",
+            "positions": [
+              {
+                "model": "claude-opus-5-5",
+                "position": "Organisational."
+              },
+              {
+                "model": "grok-4.7",
+                "position": "Legislative."
+              }
+            ]
+          }
+        ],
+        "weightBearing": [
+          {
+            "why": "It is the only action that has an elected Minister choose the beneficiary's standard alongside a cost limit (condition 9) [Ref: 214]. It also fixes purpose and measure before work starts (condition 3), on the legislative avenue.",
+            "action": 31,
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol",
+              "gemini-3.1-pro-preview",
+              "grok-4.7"
+            ]
+          },
+          {
+            "why": "Benchmarking makes the taxpayer-cost test concrete. Its folded parts add pre-registration with version history and an independent measurement owner, which together form the main anti-gaming machinery.",
+            "action": 101,
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol",
+              "gemini-3.1-pro-preview",
+              "grok-4.7"
+            ]
+          },
+          {
+            "why": "It locks measures in before work starts, directly enforcing the rule that success cannot be defined retrospectively (conditions 3 and 6).",
+            "action": 194,
+            "namedBy": [
+              "claude-opus-5-5",
+              "gemini-3.1-pro-preview",
+              "grok-4.7"
+            ]
+          },
+          {
+            "why": "It is the direct protection against the standards becoming another reporting layer (condition 10).",
+            "action": 96,
+            "namedBy": [
+              "gpt-6.1-sol"
+            ]
+          }
+        ],
+        "noDirectCondition": [
+          {
+            "why": "It evaluates and amends the regime after 12 and 36 months, and the record marks it as support. It corrects the regime later but installs no condition itself.",
+            "action": 166,
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol",
+              "gemini-3.1-pro-preview",
+              "grok-4.7"
+            ]
+          },
+          {
+            "why": "Assigning the definition of a standard to HM Treasury specifies too little content or application to deliver a condition.",
+            "action": 181,
+            "namedBy": [
+              "gpt-6.1-sol"
+            ]
+          },
+          {
+            "why": "It imposes generic metrics, which conflict with the policy's requirement for task-specific measures.",
+            "action": 45,
+            "namedBy": [
+              "gemini-3.1-pro-preview"
+            ]
+          }
+        ],
+        "proposedConditions": [
+          {
+            "why": "The policy rules out thresholds, but no numbered condition says so, and the folded parts of #101 reintroduce them.",
+            "text": "No size, significance or major-only threshold exempts any task from the naming, measurement or independent-check rules.",
+            "namedBy": [
+              "claude-opus-5-5",
+              "grok-4.7"
+            ]
+          },
+          {
+            "why": "Most actions here have no 'Who' and none has a sanction, so the standards can be adopted on paper while practice is unchanged.",
+            "text": "Every mandatory rule or standard names its implementation owner or enforcer, an observable compliance test, and what follows a breach.",
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol"
+            ]
+          },
+          {
+            "why": "Condition 3 does not stop #45's generic suite being treated as compliance, which the policy test already rejects.",
+            "text": "Every success measure is specific to its task and nests under the goal above it; a generic metric catalogue is not a substitute.",
+            "namedBy": [
+              "grok-4.7"
+            ]
+          },
+          {
+            "why": "It would keep the chain intact so that it is not bypassed or diffused over time through informal practice.",
+            "text": "Regular independent audit of the accountability chain.",
+            "namedBy": [
+              "gemini-3.1-pro-preview"
+            ]
+          }
+        ]
+      },
+      "handled": {
+        "gaps": {},
+        "conditions": {
+          "0": "PROPOSED",
+          "1": "PROPOSED",
+          "2": "PROPOSED",
+          "3": "PROPOSED"
+        }
+      },
+      "commentaryMax": null,
+      "trimmedCommentaries": 0
+    },
+    "table": {
+      "rows": [
+        {
+          "condition": 1,
+          "conditionText": "One named owner per task",
+          "cells": [],
+          "nobody": true
+        },
+        {
+          "condition": 2,
+          "conditionText": "Authority and resources match the duty",
+          "cells": [],
+          "nobody": true
+        },
+        {
+          "condition": 3,
+          "conditionText": "Duty, purpose and measure stated before work starts",
+          "cells": [
+            {
+              "action": 31,
+              "named": 4,
+              "label": "all four",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview",
+                "grok-4.7"
+              ]
+            },
+            {
+              "action": 194,
+              "named": 4,
+              "label": "all four",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview",
+                "grok-4.7"
+              ]
+            },
+            {
+              "action": 101,
+              "named": 3,
+              "label": "3 of 4",
+              "models": [
+                "claude-opus-5-5",
+                "gemini-3.1-pro-preview",
+                "grok-4.7"
+              ]
+            }
+          ],
+          "nobody": false
+        },
+        {
+          "condition": 4,
+          "conditionText": "Consequences that tell honest error in a broken system from recklessness or negligence",
+          "cells": [],
+          "nobody": true
+        },
+        {
+          "condition": 5,
+          "conditionText": "Visibility to everyone above in the line",
+          "cells": [],
+          "nobody": true
+        },
+        {
+          "condition": 6,
+          "conditionText": "Safeguards against gaming",
+          "cells": [
+            {
+              "action": 101,
+              "named": 4,
+              "label": "all four",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview",
+                "grok-4.7"
+              ]
+            },
+            {
+              "action": 194,
+              "named": 4,
+              "label": "all four",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview",
+                "grok-4.7"
+              ]
+            },
+            {
+              "action": 45,
+              "named": 3,
+              "label": "3 of 4",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "grok-4.7"
+              ]
+            },
+            {
+              "action": 31,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "grok-4.7"
+              ]
+            },
+            {
+              "action": 160,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "grok-4.7"
+              ]
+            }
+          ],
+          "nobody": false
+        },
+        {
+          "condition": 7,
+          "conditionText": "Psychological safety, so bad news surfaces — blame-free investigation of system failure before individual fault",
+          "cells": [],
+          "nobody": true
+        },
+        {
+          "condition": 8,
+          "conditionText": "Fit with existing machinery if not in conflict, else replacement of conflicting existing rules, codes and legislation",
+          "cells": [
+            {
+              "action": 160,
+              "named": 4,
+              "label": "all four",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview",
+                "grok-4.7"
+              ]
+            }
+          ],
+          "nobody": false
+        },
+        {
+          "condition": 9,
+          "conditionText": "Success judged in two interests: the taxpayer's cost and the beneficiary's chosen standard; the standard decided by elected members or by delegated authority",
+          "cells": [
+            {
+              "action": 31,
+              "named": 4,
+              "label": "all four",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview",
+                "grok-4.7"
+              ]
+            },
+            {
+              "action": 101,
+              "named": 4,
+              "label": "all four",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview",
+                "grok-4.7"
+              ]
+            },
+            {
+              "action": 194,
+              "named": 4,
+              "label": "all four",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview",
+                "grok-4.7"
+              ]
+            },
+            {
+              "action": 181,
+              "named": 3,
+              "label": "3 of 4",
+              "models": [
+                "claude-opus-5-5",
+                "gemini-3.1-pro-preview",
+                "grok-4.7"
+              ]
+            },
+            {
+              "action": 45,
+              "named": 2,
+              "label": "disputed",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol"
+              ]
+            }
+          ],
+          "nobody": false
+        },
+        {
+          "condition": 10,
+          "conditionText": "Ruthless brevity in goals",
+          "cells": [
+            {
+              "action": 96,
+              "named": 4,
+              "label": "all four",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview",
+                "grok-4.7"
+              ]
+            }
+          ],
+          "nobody": false
+        }
+      ],
+      "answering": 4
+    }
+  },
+  "set": {
+    "id": "5aeee8f3-0081-4cd0-90c1-4929bab3cf89",
+    "scope": "SET",
+    "status": "READY",
+    "pence": 74.295,
+    "unpriced": false,
+    "seconds": 353,
+    "stages": [
+      {
+        "stage": "RUNNING",
+        "seconds": 266
+      },
+      {
+        "stage": "MODELS_DONE",
+        "seconds": 86
+      }
+    ],
+    "actions": 58,
+    "models": [
+      {
+        "model": "claude-opus-5-5",
+        "status": "OK",
+        "pence": 33.236564,
+        "dropped": {
+          "unknownRefs": [],
+          "badActionNumbers": 0,
+          "missingWhatFails": 0,
+          "badConditionNumbers": 0
+        }
+      },
+      {
+        "model": "gpt-6.1-sol",
+        "status": "OK",
+        "pence": 8.818454000000001,
+        "dropped": {
+          "unknownRefs": [],
+          "badActionNumbers": 0,
+          "missingWhatFails": 0,
+          "badConditionNumbers": 0
+        }
+      },
+      {
+        "model": "gemini-3.1-pro-preview",
+        "status": "OK",
+        "pence": 9.777040000000001,
+        "dropped": {
+          "unknownRefs": [],
+          "badActionNumbers": 0,
+          "missingWhatFails": 0,
+          "badConditionNumbers": 0
+        }
+      },
+      {
+        "model": "grok-4.7",
+        "status": "FAILED",
+        "error": "timeout: [action-digest:grok-4.7] timed out after 264995ms",
+        "pence": 0
+      }
+    ],
+    "dropped": [
+      {
+        "model": "claude-opus-5-5",
+        "unknownRefs": [],
+        "badActionNumbers": 0,
+        "missingWhatFails": 0,
+        "badConditionNumbers": 0
+      },
+      {
+        "model": "gpt-6.1-sol",
+        "unknownRefs": [],
+        "badActionNumbers": 0,
+        "missingWhatFails": 0,
+        "badConditionNumbers": 0
+      },
+      {
+        "model": "gemini-3.1-pro-preview",
+        "unknownRefs": [],
+        "badActionNumbers": 0,
+        "missingWhatFails": 0,
+        "badConditionNumbers": 0
+      }
+    ],
+    "judge": {
+      "flags": {
+        "strayCites": [
+          32
+        ],
+        "unknownRefs": [],
+        "unnamedModels": 0,
+        "badActionNumbers": 0,
+        "missingWhatFails": 0
+      },
+      "digest": {
+        "gaps": [
+          {
+            "item": "A named enforcer and a defined enforcement response, able to stop work with no recorded owner or measure and to act on withheld powers, ignored escalation deadlines and excess burden",
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol",
+              "gemini-3.1-pro-preview"
+            ],
+            "category": "organisational",
+            "whatFails": "#37's 'may not proceed' rule has nobody to apply it. Unowned work continues, and the codes are absorbed as mere guidelines."
+          },
+          {
+            "item": "A first, dated round of top appointments and goal validation: hard measures for heads of bodies, nested goals checked, and matching delegations checked before the tree below is built",
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol"
+            ],
+            "category": "organisational",
+            "whatFails": "Soft top goals cascade downward. #7 and #26 set or challenge goals but appoint and remove no one."
+          },
+          {
+            "item": "Training and implementation capability for managers below SCS and outside project-delivery groups",
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol"
+            ],
+            "category": "organisational",
+            "whatFails": "#24 and #186 do not reach most named owners, so mis-implementation becomes the default."
+          },
+          {
+            "item": "A funded delivery plan covering the tool, the independent body, training, evaluation and owners' resources",
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol"
+            ],
+            "category": "financial",
+            "whatFails": "#25, #141 and #24 may not be built, and the condition 2 promise of resources becomes an unfunded duty."
+          },
+          {
+            "item": "A blame-free, system-first investigation procedure, separate from dispute adjudication",
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol"
+            ],
+            "category": "organisational",
+            "whatFails": "Systemic causes are examined only once blame is contested. Fear of sanctions suppresses bad news despite #36's safe harbour."
+          },
+          {
+            "item": "Named owners, methods, commencement dependencies and success tests for each reform action",
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol"
+            ],
+            "category": "organisational",
+            "whatFails": "No one is answerable for delivering the reform itself, and its progress cannot be judged."
+          },
+          {
+            "item": "One coherent operating code and register, with the pilot sequence resolved",
+            "namedBy": [
+              "gpt-6.1-sol"
+            ],
+            "category": "organisational",
+            "whatFails": "#25 and #43, and #42, #59 and #71, become competing systems, and it is unclear what evidence must exist before the duties bind."
+          },
+          {
+            "item": "A reconciled legal scope with no materiality exemption from ownership, and a lawful route for independent bodies under #31",
+            "namedBy": [
+              "gpt-6.1-sol"
+            ],
+            "category": "legislative",
+            "whatFails": "The materiality limits in #38, #59 and #71 leave work outside the policy, and #31 applied literally overrides lawful independence."
+          },
+          {
+            "item": "Extension of the duty to every publicly funded body (local government, NHS, devolved and arm's-length bodies), with the necessary consents",
+            "namedBy": [
+              "claude-opus-5-5"
+            ],
+            "category": "legislative",
+            "whatFails": "#71 is limited to central government, so the policy's universal scope is not delivered."
+          },
+          {
+            "item": "Amendment of CRaG 2010, the Civil Service Order in Council and the merit rules to give managers the powers in #28",
+            "namedBy": [
+              "claude-opus-5-5"
+            ],
+            "category": "legislative",
+            "whatFails": "#157 keeps the merit framework, so managers lack the personnel power that #28 promises and condition 2 fails."
+          },
+          {
+            "item": "An explicit consequence (demotion or exit) for refusing or evading ownership, at every grade",
+            "namedBy": [
+              "claude-opus-5-5"
+            ],
+            "category": "organisational",
+            "whatFails": "Officials can decline ownership without penalty, so diffusion of responsibility survives."
+          },
+          {
+            "item": "Pay and recruitment measures addressing the soft-touch brand (cause 9)",
+            "namedBy": [
+              "claude-opus-5-5"
+            ],
+            "category": "financial",
+            "whatFails": "The pool of people willing to take named ownership stays as it is."
+          }
+        ],
+        "answers": [
+          {
+            "question": 1,
+            "reconciled": "Three reviews were received: claude-opus-5-5, gpt-6.1-sol and gemini-3.1-pro-preview. grok-4.7 timed out and gave no review. All three list the same ten conditions and broadly agree on the core carriers. Where they map the same actions, any difference in reach is noted below.\n\nCondition 1 (one named owner): all three name #25, #37, #38, #43, #112, #139, #176, #196 and #198. gpt-6.1-sol adds #35 and #71.\n\nCondition 2 (authority and resources match the duty): all three name #28, #36, #38, #44, #89 and #190. gpt-6.1-sol adds #41, #71, #133 and #192. gemini-3.1-pro-preview adds #198.\n\nCondition 3 (duty, purpose and measure stated first): all three name #7, #25, #26, #27, #31, #36, #133, #192 and #194. Each then adds its own: claude-opus-5-5 adds #37, #38, #43 and #101; gpt-6.1-sol adds #38, #71 and #101; gemini-3.1-pro-preview adds #37, #43, #45, #114 and #196.\n\nCondition 4 (honest error versus negligence): all three name #36, #47, #141, #174, #184 and #195. gpt-6.1-sol and gemini-3.1-pro-preview also count #98, #139 and #176. claude-opus-5-5 explicitly excludes #98 and #107, although it says the owner records them under condition 4.\n\nCondition 5 (visibility up the line): this is the thinnest. claude-opus-5-5 names only #25, #37 and #43, and gpt-6.1-sol names only #25 and #37. Both say #39 and #189 give visibility outward to Parliament, not up the line. gemini-3.1-pro-preview counts #39, #189, #190, #191 and #196 as well.\n\nCondition 6 (anti-gaming): coverage is broad in all three. Common ground is #27, #46, #110, #114, #139, #193 and #194. gpt-6.1-sol lists the widest set.\n\nCondition 7 (psychological safety): all three name #117, #141, #158, #174, #184 and #195. claude-opus-5-5 and gpt-6.1-sol both say no action sets up an explicit blame-free, system-first investigation; the review bodies adjudicate disputes instead.\n\nCondition 8 (fit with existing machinery): there is close agreement on #41, #42, #59, #71, #157, #158, #160, #162, #179, #183, #186 and #193. claude-opus-5-5 and gpt-6.1-sol add #38 and #39.\n\nCondition 9 (taxpayer cost and beneficiary's chosen standard): claude-opus-5-5 says only #31 delivers it properly, with #101 and #194 covering cost only. gpt-6.1-sol agrees #31 is the most direct, but still lists #45, #57, #101, #181 and #194. gemini-3.1-pro-preview also adds #7.\n\nCondition 10 (ruthless brevity): all three name #25, #96 and #168. claude-opus-5-5 and gpt-6.1-sol add #38, and gpt-6.1-sol adds #36. claude-opus-5-5 and gpt-6.1-sol both note that the A4 limit in #25 competes with the many record types added elsewhere."
+          },
+          {
+            "question": 2,
+            "reconciled": "All three reviewers agree that #24 (SCS training) and #164 (design and red-team phase) deliver no condition directly. Beyond that they differ.\n\n- claude-opus-5-5 adds #189, #98, #107, #57 and #181. It counts #35 and #166 under condition 6, because they are the only actions that actually check for gaming.\n- gpt-6.1-sol adds #166 and #189.\n- gemini-3.1-pro-preview adds #35 and #166, saying the record marks them as support only.\n\ngpt-6.1-sol stresses that these are supporting actions, not necessarily dispensable ones."
+          },
+          {
+            "question": 3,
+            "reconciled": "All three use the same list of actions recorded with a legislative avenue: #28, #31, #38, #57, #59, #71, #166, #179, #189, #190 and #193. They agree that #38 carries conditions 1, 2 and 3 in statute, #28 carries condition 2, and #31 carries conditions 3 and 9. They differ on condition 4 and condition 10.\n\n- gemini-3.1-pro-preview says both are left entirely to non-legislative actions.\n- claude-opus-5-5 says condition 10 has only the word 'concise' in #38. On condition 4, it says #36 is filed as organisational even though its safe harbour (#32) is called statutory, and the adjudication bodies are organisational.\n- gpt-6.1-sol says #38 contributes to both conditions, and that #36's folded statutory safe harbour contributes to conditions 4 and 7 [Ref: 213].\n\nOn what is left to practice, claude-opus-5-5 and gpt-6.1-sol agree:\n- condition 5 depends on software and publication (#25, #37);\n- condition 6 depends on manuals, records and evaluation;\n- condition 7 depends on codes, review bodies and management conduct;\n- condition 10 depends on tool design.\n\nclaude-opus-5-5 adds that #39 is filed as organisational, although widening select-committee and NAO powers would need Parliament.\n\nOn money, claude-opus-5-5 and gpt-6.1-sol agree that nothing is delivered through it. #181 is the only financial action and it is a definition, and no costed funding package exists."
+          },
+          {
+            "question": 4,
+            "reconciled": "All three agree that the record leaves the incentive, method, skill, resistance and success-test fields unanswered for every action. claude-opus-5-5 adds that 'Who' is also blank for most actions.\n\ngemini-3.1-pro-preview stops there: it says the record is silent.\n\nclaude-opus-5-5 and gpt-6.1-sol go further and read mechanisms from the action statements themselves:\n- Behaviour: career consequences under #36 and #174, upward visibility through #25, #37 and #43, personnel powers under #28, and escalation through #89 and #190.\n- Measurement: the pilot reviews in #35, the evaluations in #166, burden measurement in #96 and #168, and benchmarking in #101.\n- Enforcement: #36's career consequences, questioning by select committees and the NAO under #39, and #37's 'may not proceed' rule.\n\nBoth judge enforcement incomplete. claude-opus-5-5 says no one is named to check that unowned work has stopped, so enforcement rests on line managers formed by the old culture. gpt-6.1-sol says there is no universal response to missing records, ignored deadlines, hidden bad news or excess paperwork [Ref: 213]."
+          },
+          {
+            "question": 5,
+            "reconciled": "All three reviewers say the non-legislative elements are not strong enough as written. Their proposals for strengthening them overlap only in part.\n\nclaude-opus-5-5 and gpt-6.1-sol both call for:\n- a demanding first round at the top, which #7 and #26 do not supply;\n- training for all managers, not just SCS;\n- funding;\n- consolidating the overlapping records and codes.\n\nclaude-opus-5-5 also wants:\n- a consequence for refusing ownership;\n- register data feeding promotion and exit mechanically, for all grades;\n- named owners and success tests for each action;\n- the pilot's escalation-willingness measure (#35) turned into a culture indicator.\n\ngpt-6.1-sol also wants goals checked for nesting, delegations validated, and a system-first way of handling failures.\n\ngemini-3.1-pro-preview proposes tying budgets directly to the completion of named owners' tasks."
+          },
+          {
+            "question": 6,
+            "reconciled": "All three predict compliance on paper without real change. gemini-3.1-pro-preview calls it malicious compliance; gpt-6.1-sol calls it a scapegoat-and-paperwork system; claude-opus-5-5 sets out ten failure modes.\n\nclaude-opus-5-5 and gpt-6.1-sol share several further concerns:\n- Juniors named as scapegoats for duties they cannot deliver. Defences: the safe harbour in #36, Material Constraint Notices (#89, #190) and handover baselines (#139, #176, #198).\n- Soft or manipulated measures. Defences: #27, #45 and #101.\n- Records rewritten. Defences: #43, #114 and #117.\n- Materiality wording leaving work unowned.\n- Paperwork overload, only partly checked by #96 and #168.\n\nclaude-opus-5-5 adds:\n- litigation over thresholds;\n- forum-shopping across #47, #141, #184 and #195;\n- the dismissal powers in #28 used for patronage;\n- officials sheltering behind ministers, met by #39;\n- the whole programme stalling through the #35/#38 sequencing loop.\n\ngemini-3.1-pro-preview relies on the manuals (#46, #110) and adjudication (#47, #141) as the defence.\n\ngpt-6.1-sol says the defences do not enforce themselves. No action independently checks owner–authority pairings, sets a system-first investigation gate, or tests that goals nest [Ref: 213]."
+          }
+        ],
+        "conflicts": [
+          {
+            "what": "They set materiality thresholds for records, which the policy rules out. claude-opus-5-5 notes the record's own test flags all three as CONFLICTS.",
+            "actions": [
+              42,
+              59,
+              71
+            ],
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol",
+              "gemini-3.1-pro-preview"
+            ]
+          },
+          {
+            "what": "Words such as 'material' and 'significant' bring back threshold language and invite argument over scope. claude-opus-5-5 names #168, #37 and #196; gpt-6.1-sol names #38 and #168 and says #37's 'significant' scope cannot substitute for universal coverage.",
+            "actions": [
+              38,
+              168,
+              37,
+              196
+            ],
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol"
+            ]
+          },
+          {
+            "what": "The pilot runs after Royal Assent, but #38 says the Bill follows pilot evidence. The circular sequence can stall the programme.",
+            "actions": [
+              35,
+              38
+            ],
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol"
+            ]
+          },
+          {
+            "what": "#7 requires private-sector productivity levels, while #101 substitutes the best comparable benchmark.",
+            "actions": [
+              7,
+              101
+            ],
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol"
+            ]
+          },
+          {
+            "what": "Any manager's power to dismiss (#28) is not reconciled with tenure protection (#107) or the retained merit framework (#157).",
+            "actions": [
+              28,
+              107,
+              157
+            ],
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol"
+            ]
+          },
+          {
+            "what": "claude-opus-5-5: four overlapping bodies invite forum-shopping. gemini-3.1-pro-preview: external adjudication (#47, #141) breaks the single upward chain. gpt-6.1-sol disputes that this is a conflict.",
+            "actions": [
+              47,
+              141,
+              184,
+              195
+            ],
+            "namedBy": [
+              "claude-opus-5-5",
+              "gemini-3.1-pro-preview"
+            ]
+          },
+          {
+            "what": "Generic public-value standards cut against the policy's task-specific measures. gpt-6.1-sol disputes this.",
+            "actions": [
+              45,
+              57
+            ],
+            "namedBy": [
+              "claude-opus-5-5",
+              "gemini-3.1-pro-preview"
+            ]
+          },
+          {
+            "what": "#25's one-page limit is undermined by the many record types that #71 and related actions add.",
+            "actions": [
+              25,
+              71
+            ],
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol"
+            ]
+          },
+          {
+            "what": "Both are confined to senior officials, while the policy applies at every level.",
+            "actions": [
+              24,
+              98
+            ],
+            "namedBy": [
+              "claude-opus-5-5"
+            ]
+          },
+          {
+            "what": "Ministerial choice of standard for every task has no route for independent bodies, which conflicts with the policy's preservation of independence.",
+            "actions": [
+              31
+            ],
+            "namedBy": [
+              "gpt-6.1-sol"
+            ]
+          }
+        ],
+        "disagreements": [
+          {
+            "topic": "Which actions deliver no condition directly",
+            "positions": [
+              {
+                "model": "claude-opus-5-5",
+                "position": "#24, #164, #189, #98, #107, #57 and #181. #35 and #166 do count, under condition 6."
+              },
+              {
+                "model": "gpt-6.1-sol",
+                "position": "#24, #164, #166 and #189."
+              },
+              {
+                "model": "gemini-3.1-pro-preview",
+                "position": "#24, #35, #164 and #166, because the record marks them as support only."
+              }
+            ]
+          },
+          {
+            "topic": "Whether #39, #189 and similar actions deliver condition 5 (visibility up the line)",
+            "positions": [
+              {
+                "model": "claude-opus-5-5",
+                "position": "No. Only #25, #37 and #43 deliver it. #39 is outward to Parliament, and #189 oversees the programme, not individual tasks."
+              },
+              {
+                "model": "gpt-6.1-sol",
+                "position": "Only #25 and #37. #189 is parliamentary monitoring, not upward-line visibility."
+              },
+              {
+                "model": "gemini-3.1-pro-preview",
+                "position": "Yes. It counts #39, #189, #190, #191 and #196 as well as #25, #37 and #43."
+              }
+            ]
+          },
+          {
+            "topic": "Whether generic public-value and productivity standards (#45, #57, #181) deliver condition 9 or conflict with policy",
+            "positions": [
+              {
+                "model": "claude-opus-5-5",
+                "position": "#57 and #181 deliver no condition. #45 and #57 conflict with the policy's task-specific measures, as the record's own test marks them DOES_NOT_FIT. Only #31 delivers condition 9 properly."
+              },
+              {
+                "model": "gpt-6.1-sol",
+                "position": "It lists #45, #57 and #181 under condition 9, while noting they do not establish the authorised standard. Generic guidance need not conflict with task-specific measures."
+              },
+              {
+                "model": "gemini-3.1-pro-preview",
+                "position": "It lists #45, #57 and #181 under condition 9, yet also names #45 and #57 as conflicting with task-specific measures."
+              }
+            ]
+          },
+          {
+            "topic": "Whether independent adjudication bodies conflict with the policy",
+            "positions": [
+              {
+                "model": "claude-opus-5-5",
+                "position": "There are four overlapping bodies (#47, #141, #184, #195), which the record tests inconsistently. This invites forum-shopping and may bypass a chain that should end at the accountable head."
+              },
+              {
+                "model": "gpt-6.1-sol",
+                "position": "No conflict. Reviewing causal responsibility is not joint ownership of delivery."
+              },
+              {
+                "model": "gemini-3.1-pro-preview",
+                "position": "#47 and #141 conflict with the principle that accountability is resolved within one unbroken upward chain."
+              }
+            ]
+          },
+          {
+            "topic": "Whether conditions 4 and 10 have any legislative delivery",
+            "positions": [
+              {
+                "model": "claude-opus-5-5",
+                "position": "Condition 10 has only the word 'concise' in #38. Condition 4 is organisational through #36, even though its safe harbour (#32) is called statutory."
+              },
+              {
+                "model": "gpt-6.1-sol",
+                "position": "#38 contributes to both conditions. #36's folded statutory safe harbour also contributes to condition 4."
+              },
+              {
+                "model": "gemini-3.1-pro-preview",
+                "position": "Both are left entirely to non-legislative actions."
+              }
+            ]
+          },
+          {
+            "topic": "Whether the record says anything on behaviour change, measurement and enforcement (Q4)",
+            "positions": [
+              {
+                "model": "claude-opus-5-5",
+                "position": "The planning fields are unanswered, but the action statements imply mechanisms (#36, #25, #35, #166, #39). Enforcement is weak."
+              },
+              {
+                "model": "gpt-6.1-sol",
+                "position": "The record specifies several mechanisms (#36, #174, #89, #190, #141), but enforcement is incomplete."
+              },
+              {
+                "model": "gemini-3.1-pro-preview",
+                "position": "The record is silent."
+              }
+            ]
+          },
+          {
+            "topic": "Whether #98 and #107 deliver condition 4",
+            "positions": [
+              {
+                "model": "claude-opus-5-5",
+                "position": "No. #98 supplies evidence and #107 protects tenure; neither separates honest error from negligence."
+              },
+              {
+                "model": "gpt-6.1-sol",
+                "position": "#98 contributes to condition 4 and #107 to condition 7."
+              },
+              {
+                "model": "gemini-3.1-pro-preview",
+                "position": "Both contribute to condition 4."
+              }
+            ]
+          }
+        ],
+        "weightBearing": [
+          {
+            "why": "All three agree this is the statutory foundation: one named owner per task, tied to authority, the advance record and escalation. Without it the rest is voluntary.",
+            "action": 38,
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol",
+              "gemini-3.1-pro-preview"
+            ]
+          },
+          {
+            "why": "All three agree it is the only action that attaches career consequences (promotion, reward, sanction) together with an honest-error safe harbour, which is what addresses the incentive obstacle.",
+            "action": 36,
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol",
+              "gemini-3.1-pro-preview"
+            ]
+          },
+          {
+            "why": "All three agree the universal tool is the practical carrier of the one-page duty-and-measure record and of upward visibility.",
+            "action": 25,
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol",
+              "gemini-3.1-pro-preview"
+            ]
+          }
+        ],
+        "noDirectCondition": [
+          {
+            "why": "Training builds skill but delivers no condition itself, and covers SCS only.",
+            "action": 24,
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol",
+              "gemini-3.1-pro-preview"
+            ]
+          },
+          {
+            "why": "The design and red-team phase prepares the rules rather than delivering any condition.",
+            "action": 164,
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol",
+              "gemini-3.1-pro-preview"
+            ]
+          },
+          {
+            "why": "Evaluation and amendment support the regime but deliver no condition. claude-opus-5-5 dissents, counting it under condition 6.",
+            "action": 166,
+            "namedBy": [
+              "gpt-6.1-sol",
+              "gemini-3.1-pro-preview"
+            ]
+          },
+          {
+            "why": "Parliamentary review of programme reports is not upward-line visibility of individual duties. gemini-3.1-pro-preview dissents, mapping it to condition 5.",
+            "action": 189,
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol"
+            ]
+          },
+          {
+            "why": "The pilot is marked as support in the record. claude-opus-5-5 dissents, counting it under condition 6.",
+            "action": 35,
+            "namedBy": [
+              "gemini-3.1-pro-preview"
+            ]
+          },
+          {
+            "why": "The longitudinal record supplies evidence but attaches no consequence itself.",
+            "action": 98,
+            "namedBy": [
+              "claude-opus-5-5"
+            ]
+          },
+          {
+            "why": "Fixed tenure protects stability but does not distinguish honest error from negligence.",
+            "action": 107,
+            "namedBy": [
+              "claude-opus-5-5"
+            ]
+          },
+          {
+            "why": "A generic public-value duty that does not split taxpayer cost from the beneficiary's chosen standard.",
+            "action": 57,
+            "namedBy": [
+              "claude-opus-5-5"
+            ]
+          },
+          {
+            "why": "A generic Treasury definition with no two-interest test and no task-level measure.",
+            "action": 181,
+            "namedBy": [
+              "claude-opus-5-5"
+            ]
+          }
+        ],
+        "proposedConditions": [
+          {
+            "why": "The policy requires nesting, but no numbered condition tests for it.",
+            "text": "Every measure nests: it serves the goal above it, the chain ends at the appropriate accountable head, and a measure serving no higher goal is void.",
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol"
+            ]
+          },
+          {
+            "why": "The policy says that otherwise the tree below sets soft goals, and no condition requires this order.",
+            "text": "The chain is set top-down: the hard measures and proven capability of each body's accountable head are fixed and tested before any lower goals are set.",
+            "namedBy": [
+              "claude-opus-5-5",
+              "gpt-6.1-sol"
+            ]
+          },
+          {
+            "why": "The policy names demotion or exit for refusal as a binding point, while condition 4 covers only how failures are judged.",
+            "text": "Consequence attaches to refusing or evading ownership, not only to the result of owned work.",
+            "namedBy": [
+              "claude-opus-5-5"
+            ]
+          },
+          {
+            "why": "Several actions narrow scope, and a condition would make that drift testable.",
+            "text": "Scope is universal: every publicly funded body and every grade, with no materiality threshold.",
+            "namedBy": [
+              "claude-opus-5-5"
+            ]
+          },
+          {
+            "why": "Without such a condition, every action can be delivered on paper while unowned work continues.",
+            "text": "The duty is enforced: a named person or body can stop work that has no recorded owner and measure.",
+            "namedBy": [
+              "claude-opus-5-5"
+            ]
+          },
+          {
+            "why": "So that external blockers cannot be hidden internally and remain subject to democratic scrutiny.",
+            "text": "All unresolved material constraints are publicly reported.",
+            "namedBy": [
+              "gemini-3.1-pro-preview"
+            ]
+          }
+        ]
+      },
+      "handled": {
+        "gaps": {},
+        "conditions": {
+          "0": "PROPOSED",
+          "1": "PROPOSED",
+          "2": "PROPOSED",
+          "3": "PROPOSED",
+          "4": "PROPOSED",
+          "5": "PROPOSED"
+        }
+      },
+      "commentaryMax": null,
+      "trimmedCommentaries": 0
+    },
+    "table": {
+      "rows": [
+        {
+          "condition": 1,
+          "conditionText": "One named owner per task",
+          "cells": [
+            {
+              "action": 25,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 37,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 38,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 43,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 112,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 139,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 176,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 196,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 198,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 35,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 71,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gpt-6.1-sol"
+              ]
+            }
+          ],
+          "nobody": false
+        },
+        {
+          "condition": 2,
+          "conditionText": "Authority and resources match the duty",
+          "cells": [
+            {
+              "action": 28,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 36,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 38,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 44,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 89,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 190,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 41,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 71,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 133,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 192,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 198,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gemini-3.1-pro-preview"
+              ]
+            }
+          ],
+          "nobody": false
+        },
+        {
+          "condition": 3,
+          "conditionText": "Duty, purpose and measure stated before work starts",
+          "cells": [
+            {
+              "action": 7,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 25,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 26,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 27,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 31,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 36,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 133,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 192,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 194,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 37,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "claude-opus-5-5",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 38,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 43,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "claude-opus-5-5",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 101,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 45,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 71,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 114,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 196,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gemini-3.1-pro-preview"
+              ]
+            }
+          ],
+          "nobody": false
+        },
+        {
+          "condition": 4,
+          "conditionText": "Consequences that tell honest error in a broken system from recklessness or negligence",
+          "cells": [
+            {
+              "action": 36,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 47,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 141,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 174,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 184,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 195,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 98,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 139,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 176,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 38,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 71,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 107,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 134,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 191,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 192,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gemini-3.1-pro-preview"
+              ]
+            }
+          ],
+          "nobody": false
+        },
+        {
+          "condition": 5,
+          "conditionText": "Visibility to everyone above in the line",
+          "cells": [
+            {
+              "action": 25,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 37,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 43,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "claude-opus-5-5",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 39,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 189,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 190,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 191,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 196,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gemini-3.1-pro-preview"
+              ]
+            }
+          ],
+          "nobody": false
+        },
+        {
+          "condition": 6,
+          "conditionText": "Safeguards against gaming",
+          "cells": [
+            {
+              "action": 27,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 46,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 71,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 110,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 114,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 139,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 193,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 194,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 35,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 42,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 45,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 101,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 112,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 117,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 134,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 160,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 176,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 196,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 198,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 25,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 36,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 38,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 41,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 43,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 98,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 141,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 166,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "claude-opus-5-5"
+              ]
+            },
+            {
+              "action": 191,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 192,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gemini-3.1-pro-preview"
+              ]
+            }
+          ],
+          "nobody": false
+        },
+        {
+          "condition": 7,
+          "conditionText": "Psychological safety, so bad news surfaces — blame-free investigation of system failure before individual fault",
+          "cells": [
+            {
+              "action": 117,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 141,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 158,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 174,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 184,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 195,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 36,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 41,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "claude-opus-5-5",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 47,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 191,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "claude-opus-5-5",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 107,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 133,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 190,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 193,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gemini-3.1-pro-preview"
+              ]
+            }
+          ],
+          "nobody": false
+        },
+        {
+          "condition": 8,
+          "conditionText": "Fit with existing machinery if not in conflict, else replacement of conflicting existing rules, codes and legislation",
+          "cells": [
+            {
+              "action": 41,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 42,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 59,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 71,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 157,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 158,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 160,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 162,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 179,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 183,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 186,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 193,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 38,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 39,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 36,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gpt-6.1-sol"
+              ]
+            }
+          ],
+          "nobody": false
+        },
+        {
+          "condition": 9,
+          "conditionText": "Success judged in two interests: the taxpayer's cost and the beneficiary's chosen standard; the standard decided by elected members or by delegated authority",
+          "cells": [
+            {
+              "action": 31,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 101,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 194,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 45,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 57,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 181,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 7,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gemini-3.1-pro-preview"
+              ]
+            }
+          ],
+          "nobody": false
+        },
+        {
+          "condition": 10,
+          "conditionText": "Ruthless brevity in goals",
+          "cells": [
+            {
+              "action": 25,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 96,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 168,
+              "named": 3,
+              "label": "all three",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol",
+                "gemini-3.1-pro-preview"
+              ]
+            },
+            {
+              "action": 38,
+              "named": 2,
+              "label": "2 of 3",
+              "models": [
+                "claude-opus-5-5",
+                "gpt-6.1-sol"
+              ]
+            },
+            {
+              "action": 36,
+              "named": 1,
+              "label": "disputed",
+              "models": [
+                "gpt-6.1-sol"
+              ]
+            }
+          ],
+          "nobody": false
+        }
+      ],
+      "answering": 3
+    }
+  }
+}

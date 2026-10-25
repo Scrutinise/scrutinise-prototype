@@ -1,0 +1,1093 @@
+{
+  "takenAt": "2026-10-11T15:07:30.580Z",
+  "config": "[capabilities] QUERY_EXPANSION=ON QUERY_ROUTER=ON WEB_ORIENTATION=off SEARCH_VECTOR=ON SEARCH_RERANKER=ON SEARCH_GRAPH=off COHERENCE_CORPUS=off SEARCH_STUB=off TIER_FUSION=ON BUILD_PERSPECTIVES=off ROUTER_STREAMS_V2=off STATS_STREAM=ON FUSION_WEIGHTS=off SEARCH_JUDGED_MERGE=ON ROUTER_CONFIDENCE=off ROUTER_APPRAISAL=off SEARCH_GRAIN=off CHAT_WEB_SEARCH=off SEARCH_WITHIN_DOC=off ROUTER_BILL_VOCAB=ON | VECTOR_SEARCH_URL=set LEX_VECTOR_STREAMS=caselaw,committees,debates,guidance,legislation GEMINI_API_KEY=set",
+  "out": [
+    {
+      "n": 1,
+      "bill": "Illegal Migration Bill",
+      "billIds": [
+        "3429"
+      ],
+      "billRows": 47,
+      "typedRows": 35,
+      "types": {
+        "Amendment Paper": 35,
+        "Bill": 5,
+        "Impact Assessments": 3,
+        "Legislative Consent Motions-devolved legislatures": 1,
+        "Delegated Powers Memorandum": 2,
+        "Explanatory Notes": 1
+      },
+      "arms": {
+        "off": [
+          {
+            "failed": false,
+            "n": 180,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 19,
+            "topIds": [
+              "bills-api:3429:30",
+              "bills-api:3429:9",
+              "bills-api:3429:14"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 120,
+            "typedRank20": null,
+            "billRank20": null,
+            "typedRankAny": null,
+            "billRankAny": null,
+            "billsApiInTop20": 0,
+            "topIds": [
+              "committees-reports:publication:40298:196781-0126",
+              "committees-reports:publication:40298:196781-0058",
+              "committees-reports:publication:40298:196781-0116"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 240,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 11,
+            "topIds": [
+              "bills-api:3429:30",
+              "bills-api:3429:19",
+              "bills-api:3429:9"
+            ]
+          }
+        ],
+        "on": [
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 20,
+            "topIds": [
+              "bills-api:3429:30",
+              "bills-api:3429:14",
+              "bills-api:3429:9"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 20,
+            "topIds": [
+              "bills-api:3429:30",
+              "bills-api:3429:14",
+              "bills-api:3429:9"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 20,
+            "topIds": [
+              "bills-api:3429:30",
+              "bills-api:3429:14",
+              "bills-api:3429:9"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "n": 2,
+      "bill": "Nationality and Borders Bill",
+      "billIds": [
+        "3023"
+      ],
+      "billRows": 84,
+      "typedRows": 45,
+      "types": {
+        "Amendment Paper": 45,
+        "Delegated Powers Memorandum": 3,
+        "Bill": 5,
+        "Legislative Consent Motions-devolved legislatures": 1,
+        "Written evidence": 29,
+        "Explanatory Notes": 1
+      },
+      "arms": {
+        "off": [
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": null,
+            "billRank20": null,
+            "typedRankAny": null,
+            "billRankAny": null,
+            "billsApiInTop20": 0,
+            "topIds": [
+              "pwdata-lords:daylord2022-02-28c:174",
+              "pwdata-lords:daylord2022-03-14a:139",
+              "pwdata-lords:daylord2022-03-14a:138"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": null,
+            "billRank20": null,
+            "typedRankAny": null,
+            "billRankAny": null,
+            "billsApiInTop20": 0,
+            "topIds": [
+              "pwdata-lords:daylord2022-02-28c:174",
+              "pwdata-lords:daylord2022-03-14a:138",
+              "pwdata-lords:daylord2022-03-14a:139"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": null,
+            "billRank20": null,
+            "typedRankAny": null,
+            "billRankAny": null,
+            "billsApiInTop20": 0,
+            "topIds": [
+              "pwdata-lords:daylord2022-02-28c:174",
+              "pwdata-lords:daylord2022-03-14a:139",
+              "pwdata-lords:daylord2022-03-14a:138"
+            ]
+          }
+        ],
+        "on": [
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 20,
+            "topIds": [
+              "bills-api:3023:19",
+              "bills-api:3023:22",
+              "bills-api:3023:24"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 20,
+            "topIds": [
+              "bills-api:3023:19",
+              "bills-api:3023:22",
+              "bills-api:3023:24"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 20,
+            "topIds": [
+              "bills-api:3023:19",
+              "bills-api:3023:22",
+              "bills-api:3023:24"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "n": 3,
+      "bill": "Safety of Rwanda Bill",
+      "billIds": [
+        "3540"
+      ],
+      "billRows": 33,
+      "typedRows": 25,
+      "types": {
+        "Bill": 7,
+        "Amendment Paper": 24,
+        "Amendments agreed to on Third Reading": 1,
+        "Explanatory Notes": 1
+      },
+      "arms": {
+        "off": [
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": null,
+            "billRank20": null,
+            "typedRankAny": null,
+            "billRankAny": null,
+            "billsApiInTop20": 0,
+            "topIds": [
+              "pwdata-lords:daylord2024-04-17a:200",
+              "pwdata-lords:daylord2024-04-16a:143",
+              "pwdata-lords:daylord2024-03-20b:94"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": null,
+            "billRank20": null,
+            "typedRankAny": null,
+            "billRankAny": null,
+            "billsApiInTop20": 0,
+            "topIds": [
+              "pwdata-lords:daylord2024-04-17a:200",
+              "pwdata-lords:daylord2024-03-20b:94",
+              "pwdata-lords:daylord2024-04-16a:143"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": null,
+            "billRank20": null,
+            "typedRankAny": null,
+            "billRankAny": null,
+            "billsApiInTop20": 0,
+            "topIds": [
+              "pwdata-lords:daylord2024-04-17a:200",
+              "pwdata-lords:daylord2024-03-20b:94",
+              "pwdata-lords:daylord2024-04-16a:143"
+            ]
+          }
+        ],
+        "on": [
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 6,
+            "billRank20": 1,
+            "typedRankAny": 6,
+            "billRankAny": 1,
+            "billsApiInTop20": 17,
+            "topIds": [
+              "bills-api:3540:11",
+              "bills-api:3540:9",
+              "bills-api:3540:6"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 6,
+            "billRank20": 1,
+            "typedRankAny": 6,
+            "billRankAny": 1,
+            "billsApiInTop20": 17,
+            "topIds": [
+              "bills-api:3540:11",
+              "bills-api:3540:9",
+              "bills-api:3540:6"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 6,
+            "billRank20": 1,
+            "typedRankAny": 6,
+            "billRankAny": 1,
+            "billsApiInTop20": 20,
+            "topIds": [
+              "bills-api:3540:11",
+              "bills-api:3540:9",
+              "bills-api:3540:6"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "n": 4,
+      "bill": "Pension Schemes Bill",
+      "billIds": [
+        "3982",
+        "2907"
+      ],
+      "billRows": 109,
+      "typedRows": 53,
+      "types": {
+        "Amendment Paper": 45,
+        "Written evidence": 46,
+        "Bill": 8,
+        "Delegated Powers Memorandum": 4,
+        "Legislative Consent Motions-devolved legislatures": 3,
+        "Impact Assessments": 1,
+        "Explanatory Notes": 2
+      },
+      "arms": {
+        "off": [
+          {
+            "failed": false,
+            "n": 120,
+            "typedRank20": null,
+            "billRank20": null,
+            "typedRankAny": null,
+            "billRankAny": null,
+            "billsApiInTop20": 0,
+            "topIds": [
+              "pwdata-lords:daylord2017-04-05b:113",
+              "pwdata-lords:daylord2017-04-05b:105",
+              "pwdata-debates:debates2026-04-28d:390"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 156,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 12,
+            "topIds": [
+              "bills-api:3982:5",
+              "bills-api:3982:8",
+              "bills-api:3982:4"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 156,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 12,
+            "topIds": [
+              "bills-api:3982:5",
+              "bills-api:3982:8",
+              "bills-api:3982:4"
+            ]
+          }
+        ],
+        "on": [
+          {
+            "failed": false,
+            "n": 36,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 20,
+            "topIds": [
+              "bills-api:3982:5",
+              "bills-api:3982:8",
+              "bills-api:3982:4"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 36,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 20,
+            "topIds": [
+              "bills-api:3982:5",
+              "bills-api:3982:8",
+              "bills-api:3982:4"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 36,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 20,
+            "topIds": [
+              "bills-api:3982:5",
+              "bills-api:3982:8",
+              "bills-api:3982:4"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "n": 5,
+      "bill": "Mental Health Bill",
+      "billIds": [
+        "3874",
+        "3884",
+        "4149",
+        "3525"
+      ],
+      "billRows": 82,
+      "typedRows": 2,
+      "types": {
+        "Bill": 6,
+        "Written evidence": 25,
+        "Amendment Paper": 46,
+        "Explanatory Notes": 2,
+        "Keeling schedules": 1,
+        "Delegated Powers Memorandum": 1,
+        "Impact Assessments": 1
+      },
+      "arms": {
+        "off": [
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 11,
+            "topIds": [
+              "bills-api:3884:78",
+              "bills-api:3884:77",
+              "bills-api:3884:4"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 11,
+            "topIds": [
+              "bills-api:3884:78",
+              "bills-api:3884:4",
+              "bills-api:3884:77"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 11,
+            "topIds": [
+              "bills-api:3884:78",
+              "bills-api:3884:4",
+              "bills-api:3884:77"
+            ]
+          }
+        ],
+        "on": [
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 11,
+            "topIds": [
+              "bills-api:3884:78",
+              "bills-api:3884:4",
+              "bills-api:3884:77"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 11,
+            "topIds": [
+              "bills-api:3884:78",
+              "bills-api:3884:4",
+              "bills-api:3884:77"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 11,
+            "topIds": [
+              "bills-api:3884:78",
+              "bills-api:3884:77",
+              "bills-api:3884:4"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "n": 6,
+      "bill": "Institute for Apprenticeships Bill",
+      "billIds": [
+        "3772"
+      ],
+      "billRows": 31,
+      "typedRows": 1,
+      "types": {
+        "Amendment Paper": 20,
+        "Bill": 3,
+        "Explanatory Notes": 2,
+        "Select Committee report": 1,
+        "Written evidence": 3,
+        "Delegated Powers Memorandum": 1,
+        "Human rights memorandum": 1
+      },
+      "arms": {
+        "off": [
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": null,
+            "billRank20": null,
+            "typedRankAny": null,
+            "billRankAny": null,
+            "billsApiInTop20": 0,
+            "topIds": [
+              "committees-reports:publication:27127:arc-0004",
+              "committees-reports:publication:45432:arc-0001",
+              "committees-reports:publication:45544:225463"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": null,
+            "billRank20": null,
+            "typedRankAny": null,
+            "billRankAny": null,
+            "billsApiInTop20": 0,
+            "topIds": [
+              "committees-reports:publication:27127:arc-0004",
+              "committees-reports:publication:45432:arc-0001",
+              "committees-reports:publication:45544:225463"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": null,
+            "billRank20": null,
+            "typedRankAny": null,
+            "billRankAny": null,
+            "billsApiInTop20": 0,
+            "topIds": [
+              "committees-reports:publication:27127:arc-0004",
+              "committees-reports:publication:45432:arc-0001",
+              "committees-reports:publication:45544:225463"
+            ]
+          }
+        ],
+        "on": [
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 16,
+            "topIds": [
+              "bills-api:3772:30",
+              "bills-api:3772:13",
+              "bills-api:3772:8"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 16,
+            "topIds": [
+              "bills-api:3772:30",
+              "bills-api:3772:13",
+              "bills-api:3772:8"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 16,
+            "topIds": [
+              "bills-api:3772:30",
+              "bills-api:3772:13",
+              "bills-api:3772:8"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "n": 7,
+      "bill": "Border Security, Asylum and Immigration Bill",
+      "billIds": [
+        "3929"
+      ],
+      "billRows": 88,
+      "typedRows": 27,
+      "types": {
+        "Amendment Paper": 46,
+        "Human rights memorandum": 1,
+        "Impact Assessments": 3,
+        "Legislative Consent Motions-devolved legislatures": 4,
+        "Bill": 4,
+        "Select Committee report": 1,
+        "Delegated Powers Memorandum": 1,
+        "Explanatory Notes": 1,
+        "Written evidence": 27
+      },
+      "arms": {
+        "off": [
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": null,
+            "billRank20": null,
+            "typedRankAny": null,
+            "billRankAny": null,
+            "billsApiInTop20": 0,
+            "topIds": [
+              "committees-evidence:writtenevidence:139698:251234",
+              "committees-evidence:writtenevidence:140230:251242",
+              "committees-evidence:writtenevidence:140764:252996"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": null,
+            "billRank20": null,
+            "typedRankAny": null,
+            "billRankAny": null,
+            "billsApiInTop20": 0,
+            "topIds": [
+              "committees-evidence:writtenevidence:139698:251234",
+              "committees-evidence:writtenevidence:140230:251242",
+              "committees-evidence:writtenevidence:140764:252996"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": null,
+            "billRank20": null,
+            "typedRankAny": null,
+            "billRankAny": null,
+            "billsApiInTop20": 0,
+            "topIds": [
+              "committees-evidence:writtenevidence:140230:251242",
+              "committees-evidence:writtenevidence:140335:251252",
+              "committees-evidence:writtenevidence:139698:251234"
+            ]
+          }
+        ],
+        "on": [
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 20,
+            "topIds": [
+              "bills-api:3929:85",
+              "bills-api:3929:78",
+              "bills-api:3929:69"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 20,
+            "topIds": [
+              "bills-api:3929:85",
+              "bills-api:3929:78",
+              "bills-api:3929:69"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 20,
+            "topIds": [
+              "bills-api:3929:85",
+              "bills-api:3929:78",
+              "bills-api:3929:69"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "n": 8,
+      "bill": "Border Security, Asylum and Immigration Bill",
+      "billIds": [
+        "3929"
+      ],
+      "billRows": 88,
+      "typedRows": 1,
+      "types": {
+        "Amendment Paper": 46,
+        "Human rights memorandum": 1,
+        "Impact Assessments": 3,
+        "Legislative Consent Motions-devolved legislatures": 4,
+        "Bill": 4,
+        "Select Committee report": 1,
+        "Delegated Powers Memorandum": 1,
+        "Explanatory Notes": 1,
+        "Written evidence": 27
+      },
+      "arms": {
+        "off": [
+          {
+            "failed": false,
+            "n": 240,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 7,
+            "topIds": [
+              "bills-api:3929:16",
+              "bills-api:3929:52",
+              "bills-api:3929:60"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 240,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 7,
+            "topIds": [
+              "bills-api:3929:16",
+              "bills-api:3929:52",
+              "bills-api:3929:60"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 240,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 6,
+            "topIds": [
+              "bills-api:3929:16",
+              "bills-api:3929:52",
+              "bills-api:3929:60"
+            ]
+          }
+        ],
+        "on": [
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 20,
+            "topIds": [
+              "bills-api:3929:16",
+              "bills-api:3929:60",
+              "bills-api:3929:52"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 20,
+            "topIds": [
+              "bills-api:3929:16",
+              "bills-api:3929:60",
+              "bills-api:3929:52"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 20,
+            "topIds": [
+              "bills-api:3929:16",
+              "bills-api:3929:60",
+              "bills-api:3929:52"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "n": 9,
+      "bill": "Pension Schemes Bill",
+      "billIds": [
+        "3982",
+        "2907"
+      ],
+      "billRows": 109,
+      "typedRows": 1,
+      "types": {
+        "Amendment Paper": 45,
+        "Written evidence": 46,
+        "Bill": 8,
+        "Delegated Powers Memorandum": 4,
+        "Legislative Consent Motions-devolved legislatures": 3,
+        "Impact Assessments": 1,
+        "Explanatory Notes": 2
+      },
+      "arms": {
+        "off": [
+          {
+            "failed": false,
+            "n": 240,
+            "typedRank20": null,
+            "billRank20": null,
+            "typedRankAny": 169,
+            "billRankAny": 169,
+            "billsApiInTop20": 0,
+            "topIds": [
+              "pwdata-wrans:answers2026-07-20:343",
+              "pwdata-wrans:answers2025-05-07:414",
+              "pwdata-wrans:answers2025-07-23:360"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 240,
+            "typedRank20": null,
+            "billRank20": null,
+            "typedRankAny": 169,
+            "billRankAny": 169,
+            "billsApiInTop20": 0,
+            "topIds": [
+              "pwdata-wrans:answers2026-07-20:343",
+              "pwdata-wrans:answers2025-05-07:414",
+              "pwdata-lords:daylord2016-11-21a:106"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 240,
+            "typedRank20": null,
+            "billRank20": null,
+            "typedRankAny": 169,
+            "billRankAny": 169,
+            "billsApiInTop20": 0,
+            "topIds": [
+              "impact-assessments:2021-44:1",
+              "impact-assessments:2021-36:12",
+              "impact-assessments:2023-64:13"
+            ]
+          }
+        ],
+        "on": [
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 7,
+            "topIds": [
+              "bills-api:3982:57",
+              "bills-api:3982:74",
+              "bills-api:3982:102"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 7,
+            "topIds": [
+              "bills-api:3982:57",
+              "bills-api:3982:74",
+              "bills-api:3982:102"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 60,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 7,
+            "topIds": [
+              "bills-api:3982:57",
+              "bills-api:3982:74",
+              "bills-api:3982:102"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "n": 10,
+      "bill": "Mental Health Bill",
+      "billIds": [
+        "3874",
+        "3884",
+        "4149",
+        "3525"
+      ],
+      "billRows": 82,
+      "typedRows": 1,
+      "types": {
+        "Bill": 6,
+        "Written evidence": 25,
+        "Amendment Paper": 46,
+        "Explanatory Notes": 2,
+        "Keeling schedules": 1,
+        "Delegated Powers Memorandum": 1,
+        "Impact Assessments": 1
+      },
+      "arms": {
+        "off": [
+          {
+            "failed": false,
+            "n": 58,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 5,
+            "topIds": [
+              "bills-api:3884:66",
+              "bills-api:3884:77",
+              "bills-api:3884:52"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 58,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 5,
+            "topIds": [
+              "bills-api:3884:66",
+              "bills-api:3884:77",
+              "bills-api:3884:52"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 58,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 5,
+            "topIds": [
+              "bills-api:3884:66",
+              "bills-api:3884:77",
+              "bills-api:3884:52"
+            ]
+          }
+        ],
+        "on": [
+          {
+            "failed": false,
+            "n": 58,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 5,
+            "topIds": [
+              "bills-api:3884:66",
+              "bills-api:3884:77",
+              "bills-api:3884:52"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 58,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 5,
+            "topIds": [
+              "bills-api:3884:66",
+              "bills-api:3884:77",
+              "bills-api:3884:52"
+            ]
+          },
+          {
+            "failed": false,
+            "n": 58,
+            "typedRank20": 1,
+            "billRank20": 1,
+            "typedRankAny": 1,
+            "billRankAny": 1,
+            "billsApiInTop20": 5,
+            "topIds": [
+              "bills-api:3884:66",
+              "bills-api:3884:77",
+              "bills-api:3884:52"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

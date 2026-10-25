@@ -42,6 +42,15 @@ async function latest() {
   return d.deployments.edges[0]?.node
 }
 
+/** Deploy NAMED commit (origin/Main by default, or DEPLOY_SHA). serviceInstanceDeployV2 without the third argument builds a stale pinned commit and still returns SUCCESS (CLAUDE.md, 9 Sep),
+ *  and creating the service did not start a first build, so every run is an explicit deploy of an explicit sha, read back by `status` as meta.commitHash. */
+async function deploy() {
+  const { environmentId } = await ids()
+  const sha = process.env.DEPLOY_SHA ?? (await import('child_process')).execFileSync('git', ['rev-parse', 'origin/Main'], { encoding: 'utf8' }).trim()
+  console.log(`deploying commit ${sha.slice(0, 12)}`)
+  await gql(`mutation($s:String!,$e:String!,$c:String!){ serviceInstanceDeployV2(serviceId:$s, environmentId:$e, commitSha:$c) }`, { s: serviceId(), e: environmentId, c: sha })
+}
+
 const [mode, ...args] = process.argv.slice(2)
 async function main() {
   if (mode === 'setup') {
@@ -53,7 +62,7 @@ async function main() {
     const c = await gql(`mutation($i:ServiceCreateInput!){ serviceCreate(input:$i){ id } }`, { i: { projectId, environmentId, name: NAME, branch: 'Main', source: { repo: REPO }, variables } })
     fs.writeFileSync(STATE, c.serviceCreate.id)
     // park BEFORE the first build finishes: `true`, never restart, and only rebuild for changes to this job's own files
-    await update({ rootDirectory: 'scrutinise-web', builder: 'RAILPACK', startCommand: 'true', restartPolicyType: 'NEVER', numReplicas: 1,
+    await update({ rootDirectory: 'scrutinise-web', builder: 'RAILPACK', buildCommand: 'true', startCommand: 'true', restartPolicyType: 'NEVER', numReplicas: 1,
       watchPatterns: ['scrutinise-web/scripts/railway-measure-job.ts'] })
     console.log(`service ${c.serviceCreate.id} created and parked. Run \`status\` until the first deployment settles.`)
   } else if (mode === 'run') {
@@ -61,9 +70,14 @@ async function main() {
     if (!jobId || !script) throw new Error('run <jobId> <script.ts> [args...]')
     const cmd = `npx tsx --tsconfig tsconfig.json scripts/railway-measure-job.ts ${[jobId, script, ...rest].map((a) => `'${a.replace(/'/g, `'\\''`)}'`).join(' ')}`
     await update({ startCommand: `sh -c "${cmd.replace(/"/g, '\\"')}"`, restartPolicyType: 'NEVER' })
-    const { environmentId } = await ids()
-    await gql(`mutation($s:String!,$e:String!){ serviceInstanceRedeploy(serviceId:$s, environmentId:$e) }`, { s: serviceId(), e: environmentId })
-    console.log(`redeploying with: ${cmd}\n(returns now; poll with status / logs; results land in R2 at measure/${jobId}/)`)
+    await deploy()
+    console.log(`deploying with: ${cmd}\n(returns now; poll with status / logs; results land in R2 at measure/${jobId}/)`)
+  } else if (mode === 'nobuild') { await update({ buildCommand: 'true' }); console.log('buildCommand = true (Railpack otherwise runs `next build`, which fails here without Clerk keys and is not needed)')
+  } else if (mode === 'deploy') { await deploy()
+  } else if (mode === 'buildlogs') {
+    const d = await latest(); if (!d) return console.log('no deployment')
+    const l = await gql(`query($d:String!,$n:Int!){ buildLogs(deploymentId:$d, limit:$n){ message } }`, { d: d.id, n: 600 })
+    console.log((l.buildLogs as Array<{ message: string }>).slice(-Number(args[0] ?? 40)).map((r) => r.message.trimEnd().slice(0, 300)).join('\n'))
   } else if (mode === 'status') {
     const d = await latest(); console.log(d ? `${d.id.slice(0, 8)} ${d.status} ${d.createdAt} commit ${String(d.meta?.commitHash ?? '?').slice(0, 12)}` : 'no deployment')
   } else if (mode === 'logs') {

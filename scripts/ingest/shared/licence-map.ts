@@ -31,9 +31,14 @@
  *    1803–2004 bulk archive (historic-hansard).
  *  - eu-2011-833 (eur-lex): EUR-Lex legal notice is JS-rendered; instrument
  *    confirmed via legislation.gov.uk/contributors wording.
- *  - fca-restricted (fca-handbook): VERIFIED — fca.org.uk/legal: reproduction/
- *    storage in any retrieval system requires prior written permission; Handbook
- *    reproduction requires a licence agreement. Flagged to Charlie.
+ *  - ogl-3.0 (fca-handbook): UPDATED 25 Sep 2026 — was fca-restricted (V20:
+ *    fca.org.uk/legal required prior written permission + a licence agreement).
+ *    The Handbook Team confirmed by email that the Handbook now ships under
+ *    OGL v3.0 via the public "Handbook API"; verified independently against
+ *    handbook.fca.org.uk/footer-widget/terms-and-conditions clause 25 (OGL v3.0)
+ *    and clause 26 (attribution: source acknowledged or © FCA symbol). See
+ *    LICENCE_REGISTER.md "Settled" for the full record. ⚠️ Handbook-only —
+ *    fca-enforcement (final/decision notices) is untouched, still fca-restricted.
  *  - cc-by-nc-4.0 (oecd): V19 §3.4 — pre-Jul-2024 OECD content is CC BY-NC;
  *    post-Jul-2024 is CC BY 4.0 (code cc-by-4.0, use for any future OECD seed).
  *  - pending-verification: college-of-policing (CF 403 on T&Cs, 12 Jun 2026),
@@ -111,6 +116,7 @@ export const CORPUS_LICENCES: Record<string, LicenceInfo> = {
   'uk-treaties': OGL3,
   'et-decisions': OGL3,
   'govuk-core-docs': OGL3,
+  'departmental-accounts': OGL3, // INGEST_LEX_FIVE §2 — each ministerial department's own annual report and accounts
   'quangos-govuk': OGL3, // gov.uk-published ALB content rides gov.uk terms (V22 T1)
   'building-regs': OGL3,
   'planning-policy': OGL3,
@@ -136,8 +142,13 @@ export const CORPUS_LICENCES: Record<string, LicenceInfo> = {
   'tax-tribunals': { licence: 'pending-verification', attributionBoilerplate: null },
   // judiciaryni.uk: footer © Crown Copyright, no open licence stated (12 Jun 2026)
   'ni-judgments': { licence: 'pending-verification', attributionBoilerplate: null },
-  // Restricted sources — flagged to Charlie (V20 CHANGE_LOG)
-  'fca-handbook': { licence: 'fca-restricted', attributionBoilerplate: null },
+  // FCA Handbook — CLEAR since 25 Sep 2026 (see below and LICENCE_REGISTER.md
+  // "Settled"). Was 'fca-restricted' (V20); superseded when the FCA Handbook
+  // Team confirmed the Handbook moved to OGL v3.0 via its public "Handbook API".
+  'fca-handbook': {
+    licence: 'ogl-3.0',
+    attributionBoilerplate: 'Contains FCA Handbook material re-used under the Open Government Licence v3.0. Source acknowledged as © FCA.',
+  },
   'oecd': { licence: 'cc-by-nc-4.0', attributionBoilerplate: '© OECD. CC BY-NC 4.0 (pre-July-2024 content; non-commercial use).' },
   // NAO copyright statement (verified 12 Jun 2026): free NON-COMMERCIAL re-use
   // with attribution; commercial use needs express permission.
@@ -276,8 +287,11 @@ export const CORPUS_LICENCES: Record<string, LicenceInfo> = {
   // §1.3 FCA enforcement / final notices — NOT OPEN (verified at fca.org.uk/legal,
   // 24 Jun 2026): FCA asserts its own copyright; OGL applies only to "some
   // statistical outputs … where the UKOGL is expressly stated" — final/decision
-  // notices are not. Same posture as fca-handbook. NOT BUILT — V31 email
-  // (alongside BoE/PRA).
+  // notices are not. NOT BUILT — V31 email (alongside BoE/PRA).
+  // ⚠️ 25 Sep 2026: fca-handbook (above) moved to ogl-3.0 after the Handbook
+  // Team's reply — that reply was about Handbook content only and says nothing
+  // about final/decision notices. This row is UNCHANGED and still fca-restricted
+  // until it gets its own verification.
   'fca-enforcement': { licence: 'fca-restricted', attributionBoilerplate: null },
   // §3 Public-inquiry evidence — per-inquiry licence (licence-at-the-licence-page).
   // Post Office Horizon VERIFIED OGL v3.0 (postofficehorizoninquiry.org.uk/

@@ -1,0 +1,1338 @@
+{
+  "answerContextSummary": {
+    "questions": 10,
+    "documentInContext": {
+      "before": 2,
+      "after": 2,
+      "gains": [],
+      "losses": []
+    },
+    "sectionInContext": {
+      "before": 2,
+      "after": 2,
+      "gains": [],
+      "losses": []
+    },
+    "questionsWhereASourceWasMissingBefore": 6,
+    "questionsWhereTheContextChanged": 6
+  },
+  "termsFile": null,
+  "takenAt": "2026-10-23T01:09:51.834Z",
+  "setVersion": "S10 GOLD_CANDIDATES_S8 (validated 20 Aug) + GOLD_CANDIDATES_V2 (validated 22 Aug), pre-re-key",
+  "arms": [
+    "gateway"
+  ],
+  "depth": 500,
+  "denseDepth": 200,
+  "grainMap": null,
+  "localFlags": "[capabilities] QUERY_EXPANSION=ON QUERY_ROUTER=ON WEB_ORIENTATION=ON SEARCH_VECTOR=ON SEARCH_RERANKER=ON SEARCH_GRAPH=off COHERENCE_CORPUS=off SEARCH_STUB=off TIER_FUSION=ON BUILD_PERSPECTIVES=off ROUTER_STREAMS_V2=off STATS_STREAM=ON FUSION_WEIGHTS=off SEARCH_JUDGED_MERGE=ON ROUTER_CONFIDENCE=off ROUTER_APPRAISAL=off SEARCH_GRAIN=off CHAT_WEB_SEARCH=off SEARCH_WITHIN_DOC=off ROUTER_BILL_VOCAB=off ORIENTATION_V2=off ORIENTATION_TERMS=off ANSWER_STREAM_FLOOR=off | VECTOR_SEARCH_URL=set LEX_VECTOR_STREAMS=caselaw,committees,debates,guidance,legislation GEMINI_API_KEY=set",
+  "productionHealth": {
+    "status": "ok",
+    "commit": "ba49e10e026a7271a2bee84e01692904c2f6ea7f",
+    "env": "production",
+    "mail": true,
+    "capabilities": {
+      "LEX_QUERY_EXPANSION": true,
+      "LEX_QUERY_ROUTER": true,
+      "LEX_WEB_ORIENTATION": true,
+      "LEX_SEARCH_VECTOR": true,
+      "LEX_SEARCH_RERANKER": true,
+      "LEX_SEARCH_GRAPH": false,
+      "LEX_COHERENCE_CORPUS": false,
+      "LEX_SEARCH_STUB": false,
+      "LEX_TIER_FUSION": true,
+      "LEX_BUILD_PERSPECTIVES": false,
+      "LEX_ROUTER_STREAMS_V2": false,
+      "LEX_STATS_STREAM": true,
+      "LEX_FUSION_WEIGHTS": false,
+      "LEX_SEARCH_JUDGED_MERGE": true,
+      "LEX_ROUTER_CONFIDENCE": false,
+      "LEX_ROUTER_APPRAISAL": false,
+      "LEX_SEARCH_GRAIN": false,
+      "LEX_CHAT_WEB_SEARCH": false,
+      "LEX_SEARCH_WITHIN_DOC": false,
+      "LEX_ROUTER_BILL_VOCAB": false,
+      "LEX_ORIENTATION_V2": false,
+      "LEX_ORIENTATION_TERMS": false,
+      "LEX_ANSWER_STREAM_FLOOR": false
+    },
+    "retrieval": {
+      "vectorSearchUrl": true,
+      "ftsSearchUrl": true,
+      "geminiKey": true,
+      "xaiKey": true,
+      "vectorStreams": [
+        "caselaw",
+        "committees",
+        "debates",
+        "guidance",
+        "legislation"
+      ]
+    },
+    "build": {
+      "driver": "worker"
+    },
+    "lex": {
+      "agent": "all"
+    }
+  },
+  "flagNote": [
+    "gateway arm forced to production's flag string from /api/health (commit ba49e10); LEX_VECTOR_STREAMS=caselaw,committees,debates,guidance,legislation",
+    "grain policy OFF for this run (LEX_SEARCH_GRAIN cleared, not merely unset)"
+  ],
+  "chunkGrainNote": "no served surface returns a ranked chunk list; the dense leg scores chunks and collapses to sections before returning, so chunk-grain recall is measured as the dense arm and is bounded above by its section-grain recall",
+  "vectorServeBefore": {
+    "build": "S15-cancel-bounded-batch",
+    "served": 78,
+    "errors": 0,
+    "cold_ms": 93815,
+    "warm_p50_ms": 47738,
+    "warm_p95_ms": 93943,
+    "warm_n": 62,
+    "all_p50_ms": 44921,
+    "all_p95_ms": 93943,
+    "all_n": 78,
+    "embed_p50_ms": 251,
+    "embed_p95_ms": 349,
+    "stages": {
+      "queue_p50_ms": 0,
+      "queue_p95_ms": 0,
+      "ann_p50_ms": 36459,
+      "ann_p95_ms": 56472,
+      "snippet_p50_ms": 12611,
+      "snippet_p95_ms": 39346,
+      "cpu_p50_ms": 7614,
+      "cpu_p95_ms": 13761,
+      "cpu_over_wall": 0.15,
+      "n": 66
+    },
+    "concurrency": {
+      "max": 16,
+      "maxQueue": 32,
+      "inFlight": 0,
+      "queued": 0,
+      "queueHighWaterMark": 0,
+      "rejections": 0,
+      "abandoned": 3,
+      "liveKeys": 0
+    },
+    "host": {
+      "cpus": 48,
+      "loadavg": [
+        10.73,
+        9.65,
+        9.11
+      ]
+    },
+    "cache": {
+      "hits": 15,
+      "misses": 66,
+      "coalesced": 0,
+      "evictions": 0,
+      "expired": 2,
+      "size": 61,
+      "maxEntries": 500,
+      "ttlMs": 300000,
+      "hitRate": 0.185
+    },
+    "memory": {
+      "rss_mb": 1472,
+      "peak_rss_mb": 1472,
+      "peak_rss_at": "2026-10-22T21:30:35.428Z",
+      "heap_used_mb": 34,
+      "external_mb": 9,
+      "cap_mb": 7629,
+      "pct_of_cap": 19.3,
+      "peak_pct_of_cap": 19.3
+    },
+    "config": {
+      "nprobes": 64,
+      "chunkOverscan": 5,
+      "refineFactor": 2,
+      "distance": "cosine",
+      "model": "gemini-embedding-001",
+      "dims": 768
+    },
+    "uptime_s": 232798,
+    "started_at": "2026-10-20T08:15:57.196Z"
+  },
+  "vectorServeAfter": {
+    "build": "S15-cancel-bounded-batch",
+    "served": 103,
+    "errors": 0,
+    "cold_ms": 93815,
+    "warm_p50_ms": 47738,
+    "warm_p95_ms": 83875,
+    "warm_n": 86,
+    "all_p50_ms": 44921,
+    "all_p95_ms": 83875,
+    "all_n": 103,
+    "embed_p50_ms": 253,
+    "embed_p95_ms": 350,
+    "stages": {
+      "queue_p50_ms": 0,
+      "queue_p95_ms": 0,
+      "ann_p50_ms": 36541,
+      "ann_p95_ms": 56472,
+      "snippet_p50_ms": 12382,
+      "snippet_p95_ms": 37955,
+      "cpu_p50_ms": 6588,
+      "cpu_p95_ms": 13148,
+      "cpu_over_wall": 0.14,
+      "n": 90
+    },
+    "concurrency": {
+      "max": 16,
+      "maxQueue": 32,
+      "inFlight": 0,
+      "queued": 0,
+      "queueHighWaterMark": 0,
+      "rejections": 0,
+      "abandoned": 3,
+      "liveKeys": 0
+    },
+    "host": {
+      "cpus": 48,
+      "loadavg": [
+        8.41,
+        7.69,
+        8.1
+      ]
+    },
+    "cache": {
+      "hits": 15,
+      "misses": 90,
+      "coalesced": 1,
+      "evictions": 0,
+      "expired": 5,
+      "size": 82,
+      "maxEntries": 500,
+      "ttlMs": 300000,
+      "hitRate": 0.151
+    },
+    "memory": {
+      "rss_mb": 1783,
+      "peak_rss_mb": 1783,
+      "peak_rss_at": "2026-10-23T01:09:29.578Z",
+      "heap_used_mb": 42,
+      "external_mb": 13,
+      "cap_mb": 7629,
+      "pct_of_cap": 23.4,
+      "peak_pct_of_cap": 23.4
+    },
+    "config": {
+      "nprobes": 64,
+      "chunkOverscan": 5,
+      "refineFactor": 2,
+      "distance": "cosine",
+      "model": "gemini-embedding-001",
+      "dims": 768
+    },
+    "uptime_s": 233635,
+    "started_at": "2026-10-20T08:15:57.196Z"
+  },
+  "aborted": "vector-serve warm p95 83875ms exceeded --p95-abort 25000ms after 10 questions — STOPPING. Numbers taken off a degrading service are not numbers.",
+  "missingKeys": [],
+  "collectionShape": {
+    "committees-evidence": {
+      "sections": 142315,
+      "documents": 142315,
+      "perDoc": 1,
+      "collapses": true
+    },
+    "committees-reports": {
+      "sections": 344773,
+      "documents": 51000,
+      "perDoc": 6.760254901960784,
+      "collapses": false
+    }
+  },
+  "control": {
+    "questionsInCollapseCollections": 4,
+    "disagreements": 0,
+    "sortOrderChecked": 0,
+    "sortOrderDisagreements": 0
+  },
+  "unhydratedRetrievedIds": [
+    "oecd:-government-speeches-the-future-for-environmental-regulation-and-opportunities-for-the-uk-to-lead-internationally:1",
+    "pwdata-debates:debates2026-06-16e:213",
+    "pwdata-debates:debates2026-06-16e:156",
+    "pwdata-debates:debates2026-06-11c:312",
+    "oecd:-government-publications-international-climate-finance-supplementary-guidance-additionality-and-attribution:1"
+  ],
+  "summary": [
+    {
+      "arm": "gateway",
+      "collection": "committees",
+      "n": 10,
+      "notMeasured": 0,
+      "section20": 2,
+      "documentCollapse20": 2,
+      "documentMax20": null,
+      "documentSumTop3_20": null,
+      "scoreAggregationsValid": false,
+      "documentBestMember20": 1,
+      "documentInSectionSlots20": 2,
+      "sectionDepth": 6,
+      "documentCollapseDepth": 6,
+      "medianWordsOfTop20": 1130,
+      "under30Share": 0,
+      "over1500Share": 0.37185929648241206,
+      "top20Counted": 199
+    }
+  ],
+  "rows": [
+    {
+      "id": "S10-Q1",
+      "collection": "committees",
+      "question": "What did the Lords say about how badly water and sewage regulation was failing?",
+      "keys": [
+        "committees-reports:publication:34458:189872-0001",
+        "committees-reports:publication:34458:189872-0002"
+      ],
+      "set": "s10",
+      "corpora": [
+        "committees-reports"
+      ],
+      "keyShape": [
+        {
+          "key": "committees-reports:publication:34458:189872-0001",
+          "words": 491,
+          "chunks": 1
+        },
+        {
+          "key": "committees-reports:publication:34458:189872-0002",
+          "words": 505,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 300,
+          "returned": 300,
+          "section": 170,
+          "documentCollapse": 75,
+          "documentMax": 79,
+          "documentSumTop3": 16,
+          "documentBestMember": -1,
+          "documentInSectionSlots": 113,
+          "topWords": {
+            "n": 20,
+            "median": 843,
+            "p25": 504,
+            "under30": 0,
+            "under100": 2,
+            "over1500": 2
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "pwdata-lords:daylord2023-10-16b:77",
+          "pwdata-lords:daylord2025-04-28a:68",
+          "committees-reports:publication:40574:199980-0012",
+          "committees-reports:publication:31474:176552",
+          "pwdata-lords:daylord2022-01-19a:72",
+          "pwdata-lords:daylord2024-02-22a:117",
+          "pwdata-lords:daylord2024-02-22a:120",
+          "pwdata-lords:daylord2022-07-07b:113",
+          "pwdata-lords:daylord2022-07-07b:96",
+          "pwdata-lords:daylord2022-07-07b:95",
+          "pwdata-lords:daylord2024-02-29b:131",
+          "pwdata-lords:daylord2024-02-29b:148",
+          "pwdata-lords:daylord2024-10-09a:147",
+          "pwdata-lords:daylord2024-02-29b:140",
+          "pwdata-lords:daylord2022-07-07b:102",
+          "pwdata-lords:daylord2022-07-07b:105",
+          "pwdata-lords:daylord2022-07-07b:106",
+          "pwdata-westminster:westminster2021-11-15b:35",
+          "pwdata-lords:daylord2024-02-29b:139",
+          "pwdata-lords:daylord2026-06-17b:90"
+        ]
+      },
+      "answerContext": {
+        "routedStreams": [
+          "debates",
+          "committees",
+          "guidance"
+        ],
+        "eligible": 297,
+        "before": {
+          "section": false,
+          "document": false
+        },
+        "after": {
+          "section": false,
+          "document": false
+        },
+        "added": [
+          "quangos-govuk:government/publications/independent-water-commission-review-of-the-water-sector:5",
+          "nao-reports:regulating-for-investment-and-outcomes-in-the-water-sector:1"
+        ],
+        "displaced": [
+          "pwdata-lords:daylord2022-07-07b:102",
+          "pwdata-lords:daylord2022-07-07b:105"
+        ],
+        "floorApplied": 2,
+        "perStream": [
+          {
+            "stream": "debates",
+            "retrieved": 98,
+            "inContextBefore": 14,
+            "inContextAfter": 12
+          },
+          {
+            "stream": "committees",
+            "retrieved": 100,
+            "inContextBefore": 2,
+            "inContextAfter": 2
+          },
+          {
+            "stream": "guidance",
+            "retrieved": 99,
+            "inContextBefore": 0,
+            "inContextAfter": 2
+          }
+        ],
+        "streamsMissingBefore": [
+          "guidance"
+        ],
+        "extraTerms": 0
+      }
+    },
+    {
+      "id": "S10-Q2",
+      "collection": "committees",
+      "question": "Has a committee looked at the Post Office Horizon compensation scheme?",
+      "keys": [
+        "committees-reports:publication:48294:252814",
+        "committees-reports:publication:34605:190516"
+      ],
+      "set": "s10",
+      "corpora": [
+        "committees-reports"
+      ],
+      "keyShape": [
+        {
+          "key": "committees-reports:publication:48294:252814",
+          "words": 216,
+          "chunks": 1
+        },
+        {
+          "key": "committees-reports:publication:34605:190516",
+          "words": 967,
+          "chunks": 2
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 200,
+          "returned": 200,
+          "section": 73,
+          "documentCollapse": 38,
+          "documentMax": 30,
+          "documentSumTop3": 35,
+          "documentBestMember": 30,
+          "documentInSectionSlots": 73,
+          "topWords": {
+            "n": 20,
+            "median": 753,
+            "p25": 567,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 4
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "committees-reports:publication:8879:95841-0002",
+          "committees-reports:publication:8879:95841-0004",
+          "committees-reports:publication:8879:95841-0003",
+          "committees-reports:publication:8879:95841-0028",
+          "committees-reports:publication:8879:95841-0005",
+          "committees-reports:publication:8879:95841-0026",
+          "committees-reports:publication:8879:95841-0027",
+          "committees-reports:publication:8879:95841-0018",
+          "committees-reports:publication:8879:95841-0009",
+          "committees-reports:publication:43719:216940-0002",
+          "committees-reports:publication:52110:290159-0004",
+          "committees-evidence:writtenevidence:42173:85189",
+          "committees-reports:publication:8946:152415",
+          "committees-reports:publication:8879:95841-0024",
+          "committees-evidence:writtenevidence:43568:88360",
+          "committees-reports:publication:43532:216316",
+          "committees-reports:publication:8498:85892",
+          "committees-reports:publication:40736:198460",
+          "committees-reports:publication:8841:89132",
+          "committees-reports:publication:41513:204382"
+        ]
+      },
+      "answerContext": {
+        "routedStreams": [
+          "committees",
+          "guidance"
+        ],
+        "eligible": 200,
+        "before": {
+          "section": false,
+          "document": false
+        },
+        "after": {
+          "section": false,
+          "document": false
+        },
+        "added": [
+          "inquiry-evidence:rlit0000582-business-and-trade-committee-post-office-and-horizon-scandal-redress:1",
+          "inquiry-evidence:rlit0000580-post-office-horizon-financial-redress-data-28th-february-2025-updated-7th:1"
+        ],
+        "displaced": [
+          "committees-evidence:writtenevidence:43568:88360",
+          "committees-reports:publication:43532:216316"
+        ],
+        "floorApplied": 2,
+        "perStream": [
+          {
+            "stream": "committees",
+            "retrieved": 100,
+            "inContextBefore": 16,
+            "inContextAfter": 14
+          },
+          {
+            "stream": "guidance",
+            "retrieved": 100,
+            "inContextBefore": 0,
+            "inContextAfter": 2
+          }
+        ],
+        "streamsMissingBefore": [
+          "guidance"
+        ],
+        "extraTerms": 0
+      }
+    },
+    {
+      "id": "S10-Q3",
+      "collection": "committees",
+      "question": "What has Parliament been told about the government's response to the Grenfell Inquiry?",
+      "keys": [
+        "committees-reports:publication:46883:241779"
+      ],
+      "set": "s10",
+      "corpora": [
+        "committees-reports"
+      ],
+      "keyShape": [
+        {
+          "key": "committees-reports:publication:46883:241779",
+          "words": 773,
+          "chunks": 2
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 200,
+          "returned": 200,
+          "section": 68,
+          "documentCollapse": 59,
+          "documentMax": 62,
+          "documentSumTop3": 70,
+          "documentBestMember": 62,
+          "documentInSectionSlots": 68,
+          "topWords": {
+            "n": 19,
+            "median": 1130,
+            "p25": 151,
+            "under30": 0,
+            "under100": 1,
+            "over1500": 4
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "pwdata-lords:daylord2025-02-27a:161",
+          "pwdata-debates:debates2025-02-26c:139",
+          "pwdata-lords:daylord2025-02-27a:164",
+          "pwdata-lords:daylord2024-09-09b:74",
+          "pwdata-debates:debates2024-09-04c:129",
+          "pwdata-lordswms:lordswms2024-09-04:2",
+          "pwdata-wms:ministerial2024-09-04:3",
+          "pwdata-lords:daylord2025-02-27a:162",
+          "pwdata-debates:debates2026-06-11c:312",
+          "pwdata-wrans:answers2025-03-17:199",
+          "pwdata-wrans:answers2025-02-11:149",
+          "pwdata-wms:ministerial2024-12-02:3",
+          "pwdata-lordswms:lordswms2024-12-02:2",
+          "pwdata-lordswrans:lordswrans2022-02-08:14",
+          "pwdata-debates:debates2026-02-25c:238",
+          "pwdata-lordswms:lordswms2020-11-03:3",
+          "pwdata-lords:daylord2017-07-03b:134",
+          "pwdata-lords:daylord2018-06-11c:100",
+          "pwdata-debates:debates2018-06-11a:353",
+          "pwdata-lordswms:lordswms2018-11-29:5"
+        ]
+      },
+      "answerContext": {
+        "routedStreams": [
+          "debates",
+          "committees"
+        ],
+        "eligible": 199,
+        "before": {
+          "section": false,
+          "document": false
+        },
+        "after": {
+          "section": false,
+          "document": false
+        },
+        "added": [
+          "committees-reports:publication:47864:250397",
+          "committees-reports:publication:50290:271753"
+        ],
+        "displaced": [
+          "pwdata-lordswms:lordswms2020-11-03:3",
+          "pwdata-lords:daylord2017-07-03b:134"
+        ],
+        "floorApplied": 2,
+        "perStream": [
+          {
+            "stream": "debates",
+            "retrieved": 99,
+            "inContextBefore": 16,
+            "inContextAfter": 14
+          },
+          {
+            "stream": "committees",
+            "retrieved": 100,
+            "inContextBefore": 0,
+            "inContextAfter": 2
+          }
+        ],
+        "streamsMissingBefore": [
+          "committees"
+        ],
+        "extraTerms": 0
+      }
+    },
+    {
+      "id": "S10-Q4",
+      "collection": "committees",
+      "question": "What did the committee say about moving people onto Universal Credit?",
+      "keys": [
+        "committees-reports:publication:22289:164915",
+        "committees-reports:publication:22289:165036"
+      ],
+      "set": "s10",
+      "corpora": [
+        "committees-reports"
+      ],
+      "keyShape": [
+        {
+          "key": "committees-reports:publication:22289:164915",
+          "words": 2118,
+          "chunks": 5
+        },
+        {
+          "key": "committees-reports:publication:22289:165036",
+          "words": 1391,
+          "chunks": 3
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": 15,
+          "documentCollapse": 6,
+          "documentMax": 8,
+          "documentSumTop3": 10,
+          "documentBestMember": 8,
+          "documentInSectionSlots": 15,
+          "topWords": {
+            "n": 20,
+            "median": 572,
+            "p25": 502,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 3
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "committees-reports:publication:18217:arc-0020",
+          "committees-reports:publication:18217:arc-0003",
+          "committees-reports:publication:18217:arc-0002",
+          "committees-reports:publication:18217:arc-0007",
+          "committees-reports:publication:18217:arc-0021",
+          "committees-reports:publication:18217:arc-0022",
+          "committees-reports:publication:19856:arc-0003",
+          "committees-reports:publication:19856:arc-0005",
+          "committees-reports:publication:17961:arc-0029",
+          "committees-reports:publication:18475:arc-0035",
+          "committees-reports:publication:18475:arc-0008",
+          "committees-reports:publication:18475:arc-0005",
+          "committees-reports:publication:20715:arc-0036",
+          "committees-reports:publication:20715:arc-0010",
+          "committees-reports:publication:22289:164915",
+          "committees-reports:publication:22289:165036",
+          "committees-evidence:writtenevidence:128557:216723",
+          "committees-evidence:writtenevidence:128556:216801",
+          "committees-evidence:writtenevidence:128574:216751",
+          "committees-reports:publication:23222:169579-0003"
+        ]
+      },
+      "answerContext": {
+        "routedStreams": [
+          "committees"
+        ],
+        "eligible": 100,
+        "before": {
+          "section": true,
+          "document": true
+        },
+        "after": {
+          "section": true,
+          "document": true
+        },
+        "added": [],
+        "displaced": [],
+        "floorApplied": 2,
+        "perStream": [
+          {
+            "stream": "committees",
+            "retrieved": 100,
+            "inContextBefore": 16,
+            "inContextAfter": 16
+          }
+        ],
+        "streamsMissingBefore": [],
+        "extraTerms": 0
+      }
+    },
+    {
+      "id": "S10-Q5",
+      "collection": "committees",
+      "question": "Has anyone in Parliament raised leasehold reform with ministers?",
+      "keys": [
+        "committees-reports:publication:34123:187763",
+        "committees-reports:publication:255:1142",
+        "committees-reports:publication:257:1111"
+      ],
+      "set": "s10",
+      "corpora": [
+        "committees-reports"
+      ],
+      "keyShape": [
+        {
+          "key": "committees-reports:publication:34123:187763",
+          "words": 641,
+          "chunks": 1
+        },
+        {
+          "key": "committees-reports:publication:255:1142",
+          "words": 641,
+          "chunks": 1
+        },
+        {
+          "key": "committees-reports:publication:257:1111",
+          "words": 229,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 200,
+          "returned": 200,
+          "section": -1,
+          "documentCollapse": -1,
+          "documentMax": -1,
+          "documentSumTop3": -1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": -1,
+          "topWords": {
+            "n": 20,
+            "median": 119,
+            "p25": 101,
+            "under30": 0,
+            "under100": 5,
+            "over1500": 0
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "pwdata-wrans:answers2025-05-07:174",
+          "pwdata-wrans:answers2025-03-04:68",
+          "pwdata-wrans:answers2019-07-01:163",
+          "pwdata-wrans:answers2022-06-06:307",
+          "pwdata-wrans:answers2024-11-21:146",
+          "pwdata-wrans:answers2019-02-05:164",
+          "pwdata-wrans:answers2025-03-19:200",
+          "pwdata-wrans:answers2018-04-18:185",
+          "pwdata-wrans:answers2025-05-27:115",
+          "pwdata-wrans:answers2020-10-19:206",
+          "pwdata-lordswrans:lordswrans2025-09-30:2",
+          "pwdata-wrans:answers2023-04-24:760",
+          "pwdata-lordswrans:lordswrans2024-12-04:43",
+          "pwdata-wrans:answers2021-10-18:220",
+          "pwdata-lordswrans:lordswrans2025-01-15:7",
+          "pwdata-wrans:answers2021-01-20:222",
+          "pwdata-lordswrans:lordswrans2025-01-13:11",
+          "pwdata-wrans:answers2022-10-25:582",
+          "pwdata-wrans:answers2024-12-16:217",
+          "pwdata-wrans:answers2019-11-04:169"
+        ]
+      },
+      "answerContext": {
+        "routedStreams": [
+          "debates",
+          "committees"
+        ],
+        "eligible": 200,
+        "before": {
+          "section": false,
+          "document": false
+        },
+        "after": {
+          "section": false,
+          "document": false
+        },
+        "added": [
+          "committees-evidence:writtenevidence:93185:138695",
+          "committees-evidence:writtenevidence:93348:138796"
+        ],
+        "displaced": [
+          "pwdata-lordswrans:lordswrans2025-01-15:7",
+          "pwdata-wrans:answers2021-01-20:222"
+        ],
+        "floorApplied": 2,
+        "perStream": [
+          {
+            "stream": "debates",
+            "retrieved": 100,
+            "inContextBefore": 16,
+            "inContextAfter": 14
+          },
+          {
+            "stream": "committees",
+            "retrieved": 100,
+            "inContextBefore": 0,
+            "inContextAfter": 2
+          }
+        ],
+        "streamsMissingBefore": [
+          "committees"
+        ],
+        "extraTerms": 0
+      }
+    },
+    {
+      "id": "S10-Q6",
+      "collection": "committees",
+      "question": "What did people submitting evidence say about how AI should be governed?",
+      "keys": [
+        "committees-evidence:writtenevidence:112256:179384",
+        "committees-evidence:writtenevidence:112257:175552"
+      ],
+      "set": "s10",
+      "corpora": [
+        "committees-evidence"
+      ],
+      "keyShape": [
+        {
+          "key": "committees-evidence:writtenevidence:112256:179384",
+          "words": 763,
+          "chunks": 2
+        },
+        {
+          "key": "committees-evidence:writtenevidence:112257:175552",
+          "words": 789,
+          "chunks": 2
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": -1,
+          "documentCollapse": -1,
+          "documentMax": -1,
+          "documentSumTop3": -1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": -1,
+          "topWords": {
+            "n": 20,
+            "median": 3109,
+            "p25": 2659,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 19
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "committees-evidence:writtenevidence:113792:179432",
+          "committees-evidence:writtenevidence:113850:179508",
+          "committees-evidence:writtenevidence:113848:179509",
+          "committees-evidence:writtenevidence:113873:178624",
+          "committees-evidence:writtenevidence:113752:179396",
+          "committees-evidence:writtenevidence:113796:179439",
+          "committees-evidence:writtenevidence:113758:179410",
+          "committees-evidence:writtenevidence:113874:178627",
+          "committees-evidence:writtenevidence:113820:179472",
+          "committees-evidence:writtenevidence:113858:179517",
+          "committees-evidence:writtenevidence:113855:179519",
+          "committees-evidence:writtenevidence:113773:179424",
+          "committees-evidence:writtenevidence:114136:179408",
+          "committees-evidence:writtenevidence:113827:179486",
+          "committees-evidence:writtenevidence:113935:179103",
+          "committees-evidence:writtenevidence:113814:179466",
+          "committees-evidence:writtenevidence:113721:179394",
+          "committees-evidence:writtenevidence:113757:179409",
+          "committees-evidence:writtenevidence:113837:179490",
+          "committees-evidence:writtenevidence:113811:184583"
+        ]
+      },
+      "answerContext": {
+        "routedStreams": [
+          "committees"
+        ],
+        "eligible": 100,
+        "before": {
+          "section": false,
+          "document": false
+        },
+        "after": {
+          "section": false,
+          "document": false
+        },
+        "added": [],
+        "displaced": [],
+        "floorApplied": 2,
+        "perStream": [
+          {
+            "stream": "committees",
+            "retrieved": 100,
+            "inContextBefore": 16,
+            "inContextAfter": 16
+          }
+        ],
+        "streamsMissingBefore": [],
+        "extraTerms": 0
+      }
+    },
+    {
+      "id": "S10-Q7",
+      "collection": "committees",
+      "question": "What evidence was submitted about net zero and trade?",
+      "keys": [
+        "committees-evidence:writtenevidence:129871:220666",
+        "committees-evidence:writtenevidence:129872:220668"
+      ],
+      "set": "s10",
+      "corpora": [
+        "committees-evidence"
+      ],
+      "keyShape": [
+        {
+          "key": "committees-evidence:writtenevidence:129871:220666",
+          "words": 3075,
+          "chunks": 7
+        },
+        {
+          "key": "committees-evidence:writtenevidence:129872:220668",
+          "words": 4261,
+          "chunks": 8
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 200,
+          "returned": 200,
+          "section": 12,
+          "documentCollapse": 12,
+          "documentMax": 34,
+          "documentSumTop3": 39,
+          "documentBestMember": 34,
+          "documentInSectionSlots": 12,
+          "topWords": {
+            "n": 20,
+            "median": 2427,
+            "p25": 1583,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 16
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "committees-evidence:writtenevidence:130008:221220",
+          "committees-evidence:writtenevidence:129870:220664",
+          "committees-evidence:writtenevidence:129927:220733",
+          "committees-evidence:writtenevidence:129874:220672",
+          "committees-evidence:writtenevidence:129721:220091",
+          "committees-evidence:writtenevidence:129877:221044",
+          "committees-evidence:writtenevidence:129866:220663",
+          "committees-evidence:writtenevidence:129643:219935",
+          "committees-evidence:writtenevidence:129751:220212",
+          "committees-evidence:writtenevidence:129838:220660",
+          "committees-evidence:writtenevidence:129843:220661",
+          "committees-evidence:writtenevidence:129871:220666",
+          "committees-reports:publication:4978:49812",
+          "committees-evidence:writtenevidence:129526:219440",
+          "committees-evidence:writtenevidence:129004:219332",
+          "committees-evidence:writtenevidence:129880:220677",
+          "committees-evidence:writtenevidence:106726:161212",
+          "committees-evidence:writtenevidence:106710:161176",
+          "committees-reports:publication:51956:288307-0006",
+          "committees-reports:publication:48054:251274-0055"
+        ]
+      },
+      "answerContext": {
+        "routedStreams": [
+          "committees",
+          "guidance"
+        ],
+        "eligible": 199,
+        "before": {
+          "section": true,
+          "document": true
+        },
+        "after": {
+          "section": true,
+          "document": true
+        },
+        "added": [
+          "nao-reports:support-for-innovation-to-deliver-net-zero:1",
+          "nao-reports:support-for-innovation-to-deliver-net-zero:2"
+        ],
+        "displaced": [
+          "committees-evidence:writtenevidence:129004:219332",
+          "committees-evidence:writtenevidence:129880:220677"
+        ],
+        "floorApplied": 2,
+        "perStream": [
+          {
+            "stream": "committees",
+            "retrieved": 100,
+            "inContextBefore": 16,
+            "inContextAfter": 14
+          },
+          {
+            "stream": "guidance",
+            "retrieved": 99,
+            "inContextBefore": 0,
+            "inContextAfter": 2
+          }
+        ],
+        "streamsMissingBefore": [
+          "guidance"
+        ],
+        "extraTerms": 0
+      }
+    },
+    {
+      "id": "S10-Q8",
+      "collection": "committees",
+      "question": "What did witnesses tell the committee about special educational needs?",
+      "keys": [
+        "committees-evidence:writtenevidence:100004:146799",
+        "committees-evidence:writtenevidence:100008:145455"
+      ],
+      "set": "s10",
+      "corpora": [
+        "committees-evidence"
+      ],
+      "keyShape": [
+        {
+          "key": "committees-evidence:writtenevidence:100004:146799",
+          "words": 3648,
+          "chunks": 8
+        },
+        {
+          "key": "committees-evidence:writtenevidence:100008:145455",
+          "words": 137,
+          "chunks": 1
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": -1,
+          "documentCollapse": -1,
+          "documentMax": -1,
+          "documentSumTop3": -1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": -1,
+          "topWords": {
+            "n": 20,
+            "median": 12268,
+            "p25": 643,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 12
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "committees-reports:publication:24972:arc-0002",
+          "committees-reports:publication:24383:arc-0015",
+          "committees-reports:publication:24383:arc-0010",
+          "committees-evidence:oralevidence:17497:294353",
+          "committees-evidence:oralevidence:17498:294354",
+          "committees-evidence:oralevidence:15501:243483",
+          "committees-evidence:oralevidence:15502:243486",
+          "committees-evidence:oralevidence:9644:158847",
+          "committees-evidence:oralevidence:8202:157339",
+          "committees-evidence:oralevidence:8732:157943",
+          "committees-evidence:oralevidence:8626:157740",
+          "committees-evidence:oralevidence:8854:157968",
+          "committees-evidence:oralevidence:9083:158241",
+          "committees-evidence:oralevidence:9236:158411",
+          "committees-evidence:oralevidence:9299:158463",
+          "committees-reports:publication:21251:arc-0104",
+          "committees-reports:publication:941:7292-0014",
+          "committees-reports:publication:49545:265377-0140",
+          "committees-reports:publication:46238:231788-0022",
+          "committees-reports:publication:21251:arc-0103"
+        ]
+      },
+      "answerContext": {
+        "routedStreams": [
+          "committees"
+        ],
+        "eligible": 100,
+        "before": {
+          "section": false,
+          "document": false
+        },
+        "after": {
+          "section": false,
+          "document": false
+        },
+        "added": [],
+        "displaced": [],
+        "floorApplied": 2,
+        "perStream": [
+          {
+            "stream": "committees",
+            "retrieved": 100,
+            "inContextBefore": 16,
+            "inContextAfter": 16
+          }
+        ],
+        "streamsMissingBefore": [],
+        "extraTerms": 0
+      }
+    },
+    {
+      "id": "S10-Q9",
+      "collection": "committees",
+      "question": "What was the committee told about serious violence?",
+      "keys": [
+        "committees-evidence:writtenevidence:100005:145526"
+      ],
+      "set": "s10",
+      "corpora": [
+        "committees-evidence"
+      ],
+      "keyShape": [
+        {
+          "key": "committees-evidence:writtenevidence:100005:145526",
+          "words": 1738,
+          "chunks": 4
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 100,
+          "returned": 100,
+          "section": 96,
+          "documentCollapse": 72,
+          "documentMax": 72,
+          "documentSumTop3": 72,
+          "documentBestMember": 72,
+          "documentInSectionSlots": 96,
+          "topWords": {
+            "n": 20,
+            "median": 2064,
+            "p25": 660,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 11
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "committees-evidence:writtenevidence:93264:138235",
+          "committees-evidence:writtenevidence:93289:138252",
+          "committees-evidence:writtenevidence:93654:141537",
+          "committees-reports:publication:20800:arc-0002",
+          "committees-evidence:writtenevidence:93294:138254",
+          "committees-reports:publication:20800:arc-0049",
+          "committees-evidence:writtenevidence:103370:149023",
+          "committees-evidence:writtenevidence:93262:138334",
+          "committees-evidence:writtenevidence:93162:138217",
+          "committees-evidence:writtenevidence:99733:145161",
+          "committees-evidence:writtenevidence:93278:138246",
+          "committees-evidence:writtenevidence:93296:138255",
+          "committees-reports:publication:20800:arc-0070",
+          "committees-reports:publication:20800:arc-0012",
+          "committees-reports:publication:20800:arc-0061",
+          "committees-evidence:writtenevidence:93252:138231",
+          "committees-evidence:writtenevidence:93285:138249",
+          "committees-evidence:writtenevidence:93871:138465",
+          "committees-reports:publication:20800:arc-0065",
+          "committees-evidence:writtenevidence:94153:141538"
+        ]
+      },
+      "answerContext": {
+        "routedStreams": [
+          "committees"
+        ],
+        "eligible": 100,
+        "before": {
+          "section": false,
+          "document": false
+        },
+        "after": {
+          "section": false,
+          "document": false
+        },
+        "added": [],
+        "displaced": [],
+        "floorApplied": 2,
+        "perStream": [
+          {
+            "stream": "committees",
+            "retrieved": 100,
+            "inContextBefore": 16,
+            "inContextAfter": 16
+          }
+        ],
+        "streamsMissingBefore": [],
+        "extraTerms": 0
+      }
+    },
+    {
+      "id": "S10-Q10",
+      "collection": "committees",
+      "question": "Has Parliament examined NHS waiting times for planned operations?",
+      "keys": [
+        "committees-reports:publication:50376:272506",
+        "committees-reports:publication:22555:166025"
+      ],
+      "set": "s10",
+      "corpora": [
+        "committees-reports"
+      ],
+      "keyShape": [
+        {
+          "key": "committees-reports:publication:50376:272506",
+          "words": 156,
+          "chunks": 1
+        },
+        {
+          "key": "committees-reports:publication:22555:166025",
+          "words": 827,
+          "chunks": 2
+        }
+      ],
+      "arms": {
+        "gateway": {
+          "depth": 200,
+          "returned": 200,
+          "section": -1,
+          "documentCollapse": -1,
+          "documentMax": -1,
+          "documentSumTop3": -1,
+          "documentBestMember": -1,
+          "documentInSectionSlots": -1,
+          "topWords": {
+            "n": 20,
+            "median": 571,
+            "p25": 491,
+            "under30": 0,
+            "under100": 0,
+            "over1500": 3
+          }
+        }
+      },
+      "armTop20": {
+        "gateway": [
+          "committees-reports:publication:34131:187908-0012",
+          "committees-reports:publication:20216:arc-0013",
+          "committees-reports:publication:8352:85020-0002",
+          "committees-reports:publication:4310:43717-0001",
+          "committees-reports:publication:40172:195992-0001",
+          "committees-reports:publication:9266:160332-0013",
+          "committees-reports:publication:50242:271529-0013",
+          "committees-reports:publication:8352:85020-0009",
+          "committees-evidence:writtenevidence:38240:75503",
+          "committees-reports:publication:50242:271529-0008",
+          "committees-reports:publication:8352:85020-0003",
+          "committees-evidence:writtenevidence:38648:75276",
+          "committees-reports:publication:9266:160332-0002",
+          "committees-reports:publication:8352:85020-0020",
+          "committees-reports:publication:22460:165545-0001",
+          "committees-reports:publication:8352:85020-0008",
+          "committees-evidence:writtenevidence:41477:83730",
+          "committees-evidence:writtenevidence:41544:83725",
+          "committees-reports:publication:20216:arc-0003",
+          "committees-evidence:writtenevidence:102439:147659"
+        ]
+      },
+      "answerContext": {
+        "routedStreams": [
+          "debates",
+          "committees",
+          "statistics"
+        ],
+        "eligible": 200,
+        "before": {
+          "section": false,
+          "document": false
+        },
+        "after": {
+          "section": false,
+          "document": false
+        },
+        "added": [
+          "pwdata-wrans:answers2019-07-18:46",
+          "pwdata-westminster:westminster2021-04-20a:48"
+        ],
+        "displaced": [
+          "committees-reports:publication:22460:165545-0001",
+          "committees-reports:publication:8352:85020-0008"
+        ],
+        "floorApplied": 2,
+        "perStream": [
+          {
+            "stream": "debates",
+            "retrieved": 100,
+            "inContextBefore": 0,
+            "inContextAfter": 2
+          },
+          {
+            "stream": "committees",
+            "retrieved": 100,
+            "inContextBefore": 16,
+            "inContextAfter": 14
+          }
+        ],
+        "streamsMissingBefore": [
+          "debates"
+        ],
+        "extraTerms": 0
+      }
+    }
+  ]
+}

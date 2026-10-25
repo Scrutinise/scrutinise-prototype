@@ -74,7 +74,15 @@ serving code must exclude (or link-only) every corpus whose licence is in the NC
 
 | Corpus | Licence | Constraint |
 |---|---|---|
-| `fca-handbook` | `fca-restricted` | Reproduction/storage requires an FCA licence agreement. Do NOT serve Handbook text until that agreement is in place. (3,661 sections flagged.) |
+| *(none currently)* | | `fca-handbook` moved to open (§4) 25 Sep 2026 — see below. `fca-enforcement` (final/decision notices — a separate corpus, NOT the Handbook) remains `fca-restricted` but was never ingested, so it has no row here to move. |
+
+⚠ **`fca-handbook` was removed from this table 25 Sep 2026.** The FCA Handbook Team
+confirmed by email that the Handbook now ships under OGL v3.0 via the public "Handbook
+API" (`handbook.fca.org.uk/handbook-api`), verified against the site's Terms & Conditions
+clause 25/26. Full record: `docs/LICENCE_REGISTER.md` "Settled". The held 3,661 sections
+(and any future re-ingest) are now servable — see §4 for the attribution string that must
+travel with them. This does **not** extend to `fca-enforcement`, which asserts its own,
+separate, still-unverified copyright posture.
 
 ---
 
@@ -86,6 +94,10 @@ serving layer must surface the correct attribution string with any displayed sec
 that are non-standard:
 - `retained-eu` — dual OGL + Commission Decision 2011/833/EU.
 - `sentencing-council` — acknowledgement must name Crown copyright AND the source document title.
+- `fca-handbook` — OGL v3.0 since 25 Sep 2026 (was `fca-restricted`, §3 history above);
+  attribution: "Contains FCA Handbook material re-used under the Open Government Licence
+  v3.0. Source acknowledged as © FCA" per Terms & Conditions clause 26 (acknowledge by
+  appropriate words OR the © FCA symbol — either satisfies it).
 
 ---
 
