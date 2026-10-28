@@ -10,13 +10,15 @@ type A = Record<string, any> // eslint-disable-line @typescript-eslint/no-explic
 const hooks: A = { updates: [] as unknown[] }
 ;(window as A).__card = hooks
 
-;(window as A).__mountCard = (statement: string) => {
+let root: ReturnType<typeof createRoot> | null = null
+;(window as A).__mountCard = (statement: string, commentary?: string) => {
   const action: A = {
-    id: 'a38', number: 38, title: 'Legislate a single named-owner duty', practicalStep: statement, commentary: 'Parts of this action, quoted\n• [#34] “A part.”',
+    id: 'a38', number: 38, title: 'Legislate a single named-owner duty', practicalStep: statement, commentary: commentary ?? 'Parts of this action, quoted\n• [#34] “A part.”',
     mechanismType: null, targetOrganisation: null, wording: null, whoImplements: null, implementationCost: null, enforcementCost: null, regulatoryFriction: null,
   }
   const api: A = { update: (id: string, d: unknown) => { hooks.updates.push({ id, d }) } }
-  createRoot(document.getElementById('root')!).render(
+  root ??= createRoot(document.getElementById('root')!)
+  root.render(
     <ActionCard action={action as never} benchmarks={[]} costLines={[]} busy={false} api={api as never} costLinesApi={{ add: () => {}, remove: () => {} } as never} step={1} />,
   )
 }

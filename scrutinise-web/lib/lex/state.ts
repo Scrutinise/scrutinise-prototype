@@ -265,6 +265,7 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     avenue: a.avenue as CanonicalAction['avenue'], link: a.link, sequence: a.sequence as CanonicalAction['sequence'],
     beforeIds: a.beforeIds, facetProposal: (a.facetProposal as CanonicalAction['facetProposal']) ?? null,
     mergedFrom: a.mergedFrom, status: a.status as CanonicalAction['status'], ruleOutReason: a.ruleOutReason, mergedIntoId: a.mergedIntoId,
+    ...(a.status !== 'LIVE' ? { setAsideAt: a.updatedAt.toISOString() } : {}),
     // Decision 138 — the policy test, read off the ACTION (not off the `ActionIdea` behind it).
     policyTest: a.policyTestVerdict
       ? { verdict: a.policyTestVerdict as NonNullable<CanonicalAction['policyTest']>['verdict'], reason: a.policyTestReason, from: Array.isArray(a.policyTestFrom) ? (a.policyTestFrom as unknown[]).map(String) : [] }

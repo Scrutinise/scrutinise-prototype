@@ -459,6 +459,8 @@ export interface CanonicalAction {
   status: 'LIVE' | 'RULED_OUT' | 'ARCHIVED'
   ruleOutReason: string | null
   mergedIntoId: string | null
+  /** 284 - a set-aside row's last change (ISO), which for a row nobody has edited since is when it was merged or ruled out. Absent on live rows. */
+  setAsideAt?: string | null
   /**
    * Decision 138 — what the consolidation's policy test said about this action against the settled guiding policy, and where it
    * came from (in words). null = it never went through that test (the user's own, or from another route).

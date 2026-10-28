@@ -44,6 +44,7 @@ import {
   actionLabel, specificEnough, groupActions, coverageGrid, provenanceLine, NOT_TESTED_TITLE, type GroupMode,
 } from '@/lib/lex/action-facets'
 import { afterOf, afterWords } from '@/lib/lex/action-order-pure'
+import { findByNumber, findWords as findWordsOf, numberQuery, textMatches } from '@/lib/lex/action-find'
 import ActionsBoard from './ActionsBoard'
 import { OrderSection, OrderView, becauseFor } from './ActionsOrder'
 import {
@@ -225,12 +226,10 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   const filterKeys: Filter[] = step === 1 ? ['all', 'unreviewed', 'conflicts'] : ['all', 'unreviewed', 'conflicts', 'notSpecific']
   // 190 (UI B) - the FIND BOX: matches title, statement and commentary (and "#12"), every word of it, case-blind; filters the list live
   const [find, setFind] = useState('')
-  const findWords = useMemo(() => find.toLowerCase().split(/\s+/).filter(Boolean), [find])
-  const found = (a: CanonicalAction) => {
-    if (!findWords.length) return true
-    const hay = `#${a.number ?? ''} ${a.title ?? ''} ${a.practicalStep} ${a.commentary ?? ''}`.toLowerCase()
-    return findWords.every((w) => hay.includes(w))
-  }
+  const findWords = useMemo(() => findWordsOf(find), [find])
+  // 284 - "63" / "#63" is ACTION 63 first, from the list or the set-aside rows, with where it went; text matches come below
+  const numberHit = useMemo(() => { const n = numberQuery(find); return n == null ? null : findByNumber(n, actions, setAside) }, [find, actions, setAside])
+  const found = (a: CanonicalAction) => (numberHit?.action.id === a.id ? false : textMatches(a, findWords))
   const shown = useMemo(() => unparked.filter(matches[filter]).filter(found), [unparked, filter, step, findWords]) // eslint-disable-line react-hooks/exhaustive-deps
   // a heading reads `· n archived` after a rebuild or a merge archives one of its actions (they sit under `Ruled out and merged away`)
   const archivedByHeading = useMemo(() => { const m = new Map<string, number>(); for (const a of setAside) if (a.status === 'ARCHIVED' && a.headingId) m.set(a.headingId, (m.get(a.headingId) ?? 0) + 1); return m }, [setAside])
@@ -688,6 +687,21 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
               <button type="button" onClick={() => setFind('')} className="text-[11px] underline text-zinc-700" data-find-clear>Clear</button>
             </>
           )}
+          {/* 284 - the number itself first: action N wherever it is now, and where it went; the text matches are the list below */}
+          {find.trim() && numberQuery(find) != null && (
+            <div className="basis-full text-[11px] rounded border-2 border-zinc-700 bg-white px-2 py-1 flex flex-wrap items-start gap-2" data-find-number role="status">
+              {numberHit ? (
+                <>
+                  <span className="font-semibold">#{numberHit.action.number}</span>
+                  <span className="flex-1 min-w-0">{actionLabel(numberHit.action)} <span className="text-zinc-700" data-find-where>— {numberHit.where}</span></span>
+                  {numberHit.place === 'list' && <button type="button" className="underline font-medium" data-find-show onClick={() => openByNumber(numberHit.action.number!)}>Open it</button>}
+                  {numberHit.place === 'parked' && <button type="button" className="underline font-medium" data-find-show onClick={() => { setShowParked(true); setTimeout(() => document.querySelector(`[data-parked-id="${numberHit.action.id}"]`)?.scrollIntoView?.({ block: 'center' }), 50) }}>Show it in Later phase</button>}
+                  {numberHit.place === 'setAside' && step === 1 && <button type="button" className="underline font-medium" data-find-show onClick={() => { setShowSetAside(true); setTimeout(() => document.querySelector(`[data-set-aside-id="${numberHit.action.id}"]`)?.scrollIntoView?.({ block: 'center' }), 50) }}>Show it in Ruled out and merged away</button>}
+                  {numberHit.goTo?.number != null && <button type="button" className="underline font-medium" data-find-goto onClick={() => openByNumber(numberHit.goTo!.number!)}>Go to #{numberHit.goTo.number}</button>}
+                </>
+              ) : <span data-find-where>No action #{numberQuery(find)} on this idea — not in the list, Later phase, or the ruled-out and merged-away actions.</span>}
+            </div>
+          )}
         </div>
       )}
 
@@ -731,7 +745,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
           {step === 1 && parked.length > 0 && (
             <CollapsedBlock title="Later phase" count={parked.length} open={showParked} onToggle={() => setShowParked((v) => !v)} hint="Parked for later — still yours, still in the proposal.">
               <ul className="space-y-1">{parked.map((a) => (
-                <li key={a.id} className="flex items-start gap-2 text-[11px] rounded border border-zinc-200 bg-white px-2 py-1">
+                <li key={a.id} data-parked-id={a.id} className="flex items-start gap-2 text-[11px] rounded border border-zinc-200 bg-white px-2 py-1">
                   <span className="text-zinc-400">#{a.number}</span><span className="flex-1">{actionLabel(a)}{a.parkedReason ? <span className="text-zinc-500"> — {a.parkedReason}</span> : null}</span>
                   <button disabled={disabled} onClick={() => void ops.run('unpark', { ids: [a.id] }, undefined, () => `Saved: #${a.number ?? '?'} brought back into the list.`)} className="underline font-medium">Bring back</button>
                 </li>))}</ul>
@@ -761,7 +775,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       {step === 1 && setAside.length > 0 && (
         <CollapsedBlock id="set-aside-block" title="Ruled out and merged away" count={setAside.length} open={showSetAside} onToggle={() => setShowSetAside((v) => !v)} hint="Kept, with the reason. Nothing here is deleted.">
           <ul className="space-y-1">{setAside.map((a) => (
-            <li key={a.id} className="flex items-start gap-2 text-[11px] rounded border border-zinc-200 bg-white px-2 py-1">
+            <li key={a.id} data-set-aside-id={a.id} className="flex items-start gap-2 text-[11px] rounded border border-zinc-200 bg-white px-2 py-1">
               <span className="text-zinc-400">#{a.number}</span>
               <span className="flex-1">{actionLabel(a)}<span className="text-zinc-500"> — {a.foldedIntoId ? `part of #${byIdAll.get(a.foldedIntoId)?.number ?? '?'}` : a.status === 'ARCHIVED' ? 'merged away' : 'ruled out'}{a.ruleOutReason && !a.foldedIntoId ? `: ${a.ruleOutReason}` : ''}</span></span>
               <button disabled={disabled} onClick={() => void ops.run('restore', { ids: [a.id] }, undefined, () => a.foldedIntoId ? `Saved: #${a.number ?? '?'} restored as its own row; its quote is out of #${byIdAll.get(a.foldedIntoId)?.number ?? '?'}’s Detail.` : `Saved: #${a.number ?? '?'} restored to the list.`)} className="underline font-medium">Restore</button>

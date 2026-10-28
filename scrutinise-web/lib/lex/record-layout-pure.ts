@@ -61,7 +61,20 @@ export function detailParts(detail: string | null | undefined): { text: string; 
   return { text, parts }
 }
 
-// ── 2b: the jump band's states, in words ─────────────────────────────────────────────────────────────────────
+/**
+ * 285 (28 Oct) — "Edit the explanation" edits the owner's own text only: the new text replaces everything above the "Parts of
+ * this action, quoted" header, and the header and every part under it are kept exactly as stored. Empty text and no parts → null.
+ */
+export function withOwnText(detail: string | null | undefined, text: string): string | null {
+  const lines = (detail ?? '').replace(/\r\n/g, '\n').split('\n')
+  const at = lines.findIndex((l) => l.trim() === FOLD_HEADER || l.trim() === LEGACY_FOLD_HEADER)
+  const own = text.replace(/\r\n/g, '\n').trim()
+  if (at < 0) return own || null
+  const rest = lines.slice(at).join('\n')
+  return own ? `${own}\n\n${rest}` : rest
+}
+
+// ── 2b: the jump band's states, in words─────────────────────────────────────────────────────────────────────
 export interface BandInput {
   detail: string | null | undefined
   documents: { needed: number; drafted: number; accepted: number; total: number } | null
