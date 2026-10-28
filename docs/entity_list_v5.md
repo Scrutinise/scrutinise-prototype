@@ -1970,6 +1970,34 @@ A quote, a source and a comment. Every note cites a registry source (even "my ow
 
 **Per-field provenance, stated plainly (decision 177b):** before 18 Oct the database could not say who wrote any field of an action (`source` records who created the ROW only). `record.<slot>.by/at` and `record.who.by/at` are the first per-field provenance; they exist from the first write after 18 Oct, so older answers read "writer not recorded".
 
+### 26-V2d additions (24 Oct 2026) — document reviews. Written 28 Oct at Charlie's instruction ("go ahead with those outstanding items")
+
+*Applied by `prisma/lex_26v2d_document_review.sql` (24 Oct 23:05 UTC, read back), committed with `schema.prisma` in `949dd4b`. The foreign keys and CHECKs live in the SQL only — there is no Prisma relation on either side. Neither index is partial or an expression, so the CLAUDE.md §21 register is unchanged.*
+
+**DocumentReview** (`document_review`) — one of the five review passes read ONE version of ONE document. Written once, never updated: the record that a review RAN, including one that raised nothing or failed.
+
+| Field | Type | Notes |
+|---|---|---|
+| id | UUID PK | |
+| ideaId | String | `idea_id` |
+| documentId | String | `document_id` → ActionDocument |
+| v | Integer | The version of the document that was read |
+| passKey | String | `pass_key` — one of the five PASSES in `deepening-config.ts` (CHECK) |
+| status | String | `RUN` · `FAILED` (CHECK; FAILED ⇔ failureReason) |
+| issues | Integer, default 0 | How many issues the review raised |
+| heldUp | String nullable | `held_up` — why a RUN review raised nothing |
+| falls | String nullable | The corrections made to the model's answer, in words ("1 named a part the document does not have …") |
+| failureReason | String nullable | `failure_reason` — in words |
+| pence, seconds | Decimal nullable | What the review cost and took |
+| byUserId | String nullable | `by_user_id` — who asked for it |
+| createdAt | Timestamptz | |
+
+Indexes: `(documentId, passKey, v)` and `(ideaId)`.
+
+| Entity | Field | Type | Notes |
+|---|---|---|---|
+| **DeepeningIssue** | `reviewId` | String nullable, indexed | The DocumentReview that raised this issue (ON DELETE SET NULL). A review issue's `passKey` is `review:<PASS>` and its `runVersion` is 0, so a build's readers (which select by `runVersion = buildVersion`) never take one up. It carries `actionId`, `documentId` and the part as well |
+
 ***
 
 *entity_list_v5.md — Scrutinise — 13 April 2026* *v5.0 — V2 field additions: GuidingPolicy Rumelt fields (linkToDiagnosis, whatThisPolicyRulesOut, whyThisApproachNotOthers, conditionsForSuccess); CoherentAction benefit mirrors (benefitFinancial, benefitSocial, benefitOngoing, netCostOngoing, netCostOneOff); ResourcesCommitted human capital (humanCapitalCommitted, humanCapitalAnnualRequirement); TargetOrganisation type changed from String to TargetOrganisationType enum; Section 23 field labels added; Contents page added.* *CCh-only: never edited directly by CC without explicit Charlie instruction.*

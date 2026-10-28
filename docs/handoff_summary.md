@@ -1014,6 +1014,13 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-10-28 03:40 UTC (laptop): 287 and 28 Oct item 1 built and checked; item 2 reported; 282–286 sized.** See CHANGE_LOG 03:40 and `docs/LEX_28OCT_REPORT.md`.
+- **287:** the agent turn's output ceiling is 16,000; `add_explanation_section` builds a long Explanation a section per call; a cut-off names what was being written and what was saved, and "carry on" resumes from it. Charlie's three cut-off turns cost 47.21p.
+- **Item 1:** `stripViolations` flattened any reply it touched; now cuts sentences in place. Two stored replies stay flattened.
+- **Waiting on Charlie:** approval of the item 2 report before 283 (283 as written saves ≈1p a turn; the cost is cache writes on a ≈40k-token prefix); 286's move (73 actions on 15 ideas); a lock for the double-run turn.
+- **Next:** 282, 284, 285 (no schema). GRAPH 9's live read-back still owed (needs a case).
+- ⚠ **On this laptop, run `prisma generate` after a pull that changes the schema** — a stale client crashes checks with "Unknown argument".
+
 **▶ 2026-10-24 23:30 UTC: 274 + 26-V2d + 276 done. `8e2b281` is live and verified** (health; live chunks "Review this document" and the Risks view's "On an action, not on one of its documents"; build-worker `68c2fee1` SUCCESS on `8e2b2819df38`, with its retrieval-OK and queue-on lines at 23:26:25). The schema went first in `949dd4b` (`lex_26v2d_document_review.sql`, applied 23:05 and read back). Report: `docs/LEX_26V2d_REPORT.md`; CHANGE_LOG 23:20 and 23:30.
 - **274:** all seven kinds are set on 452c5ade (Oversight is TRANSPARENCY, Rules & Standards is BUDGET, the other five are Lex's). The platform is PLATFORM again.
 - **V2d:** the five passes each read a document's current version part by part. Each review writes a `document_review` row and issues keyed `review:<PASS>` at runVersion 0, carrying action, document, part and `reviewId`.

@@ -1,5 +1,35 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-28 03:40 UTC - LEX: 287 (cut-off replies) and 28 Oct item 1 (chat formatting); report on 283; handover items closed
+
+*Laptop session. CCh-Lex 28 Oct (1)–(3). Report: `docs/LEX_28OCT_REPORT.md`.*
+
+- **287 — "cut off at the length limit" three times on 452c5ade (02:55, 02:57, 02:58).** Confirmed: each turn's final call spent the
+  whole 4,096-token output ceiling writing a tool call and produced no text, so nothing ran or saved; "carry on" had nothing to resume and
+  repeated it. **47.21p** for the three. Built: (a) the agent turn's output ceiling is **16,000**; (b) `add_explanation_section` — one
+  `## heading` section per call, saved as it lands, ≤6,000 characters — and `set_action_detail` now refuses more than 8,000 characters in
+  one call, pointing to sections; (c) a cut-off says what Lex was writing, for which action, and what it saved first, and stores the same
+  as `cut` on the reply, which the next turn's platform record carries. `check:lex-287 --live` **15/15**, 2 controls.
+- **Item 1 — 235 on real replies.** Charlie's latest reply DOES hold `\n` (34). The loss was the honesty filter's last resort,
+  `stripViolations`, which rebuilt a reply from sentences joined with a space; 23 Oct 17:06 and 27 Oct 10:05 were stored flattened (not
+  restorable). Now `removeSentences` cuts the flagged sentences out in place, and the filter's note is said once.
+  `check:lex-chat-real-reply --live` **18/18**, 5 controls: Charlie's real stored replies through the real filter, and a real model
+  reply saved by `handleAgentTurn` and rendered by the real ChatPanel in Chromium.
+- **Item 2 — report, before 283:** history window 20 messages + Haiku summary; the store keeps only 200 messages; one call carries
+  ≈49,300 tokens before tools (tools 18,493); cache writes are 65–79% of a turn's cost; 396.5p = the stored running total after 27 Oct
+  10:05 (510.0p now; ledger 630.1p). 283 as written saves ≈1p a turn. **283 waits for Charlie's approval.**
+- **Found:** turn `6a06feb5` (28 Oct 02:33) ran twice concurrently and was charged twice (15.04p + 7.19p) — no in-flight lock per
+  `clientTurnId`. Not fixed; proposed.
+- **Handover (25 Oct) items:** check:lex-26u 57/57 (after `prisma generate` — the laptop's client predated the pull); check:scripts
+  green (3 type fixes: `check-graph-9.ts` L2 control's return type, `verify-lex-26q-ui.tsx` fixture's 274 fields); `entity_list_v5.md`
+  gains DocumentReview and `DeepeningIssue.reviewId` at Charlie's instruction. GRAPH 9's string is deployed (`b3d5748` ⊇ `4d3479c`) but
+  NOT read off the site — no live case found yet.
+- **Sized, not built:** 282 (½ day), 283 (1½–2 days, schema), 284 (½ day), 285 (1 day), 286 (½ day). 286 counts: Mechanism 61 actions on
+  15 ideas, Target organisation 12 (all 452c5ade), Intended wording 0 — the move waits for Charlie.
+- **Checks run:** lex-287 15/15 · lex-chat-real-reply 18/18 · lex-26u 57/57 · lex-26p 116/116 · lex-26v1b 78/78 · lex-235-chat-browser
+  24/24 · lex-25r 52/52 (2 not checked) · lex-26v2d 62/62 · lex-26s2 220/221 (the 1: a desktop ledger row from 24 Oct, not this work) · check:scripts 0 · tsc clean ·
+  clean-build --fast PASS. ≈162p spent on live checks, all on scratch copies.
+
 ## 2026-10-24 23:30 UTC - LEX: 8e2b281 (26-V2d) verified live; 276 run on 452c5ade (9.09p, 38 issues on D.38.1)
 
 - **Live:**
