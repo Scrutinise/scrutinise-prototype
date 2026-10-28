@@ -35,8 +35,11 @@ export const AGENT_MODEL = 'claude-sonnet-5-5'
 /** Anthropic's published rates for this model (cached 2026-09-25 in the claude-api reference): $/M tokens. ⚠ NOT verified against an invoice. */
 export const AGENT_RATES = { inPerM: 2.0, outPerM: 10.0, cacheReadPerM: 0.2, cacheWritePerM: 2.5 } as const
 
+/** 293 — the lifetime of the tools + system-prompt cache breakpoint. Set from the 28 Oct scratch measurement (see LEX_28OCT_REPORT). */
+export const PREFIX_CACHE_TTL: '5m' | '1h' = '5m'
+
 const MAX_ITERATIONS = 8
-// ⚠ 28 OCT: was 4096. Charlie's 02:55 turn on 452c5ade asked for a long Explanation to be drafted; the model ran out mid-call and
+// ⚠ 28 OCT: was 4096. Charlie's 02:55 turn on 452c5ade asked for long Action details to be drafted; the model ran out mid-call and
 // the reply he got was only the cut-off note, for 21.2p. Output is billed on what is generated, so a higher ceiling costs nothing
 // unless used (CLAUDE.md §18.5); MAX_TURN_PENCE still bounds the turn.
 const MAX_OUTPUT_TOKENS = 16000
@@ -74,6 +77,10 @@ export interface AgentTurnInput {
   maxOutputTokens?: number
   /** 26-P addendum §8c — the client turn id, so one turn's recorded calls read together. */
   turnId?: string | null
+  /** 293 measurement seam: the lifetime of the FIRST cache breakpoint (tools + system prompt). Default PREFIX_CACHE_TTL. */
+  prefixCacheTtl?: '5m' | '1h'
+  /** 293 measurement seam: offer only the tools this returns true for. Never set by a route. */
+  toolFilter?: (name: string) => boolean
 }
 
 export interface TurnCost {
@@ -95,6 +102,8 @@ export interface AgentTurnResult {
   outcomes: ToolOutcome[]
   violations: Violation[]
   retried: boolean
+  /** What the FIRST draft was flagged for (before any corrective retry); absent when it was clean. */
+  flagged?: Array<{ kind: Violation['kind']; sentence: string }>
   /** Why the loop ended: end_turn | max_tokens | refusal | iterations | budget | deadline | error. */
   ended: string
   tainted: boolean
@@ -117,7 +126,7 @@ export interface CutOff {
 }
 
 const WRITING_WORDS: Record<string, string> = {
-  add_explanation_section: 'a section of the Explanation', set_action_detail: 'the Explanation', add_action: 'a new action',
+  add_action_details_section: 'a section of the Action details', set_action_detail: 'the Action details', add_action: 'a new action',
   draft_field: 'a draft of a field', write_note: 'a note', set_action_slot: 'an answer in the action\'s record',
 }
 
@@ -126,8 +135,8 @@ export function cutOffRecord(last: Anthropic.Message | null, toolLog: ToolLogEnt
   const n = Number((block?.input as { action?: unknown } | undefined)?.action)
   const saved = toolLog.filter((t) => t.ok && !t.pending && ['file', 'draft', 'change', 'run'].includes(toolByName(t.name)?.category ?? '')).map((t) => {
     const i = (t.input ?? {}) as { action?: number; heading?: string }
-    return t.name === 'add_explanation_section' ? `the section “${i.heading ?? ''}” in the Explanation of #${i.action}`
-      : t.name === 'set_action_detail' ? `text in the Explanation of #${i.action}` : `${t.name} — ${t.summary.slice(0, 100)}`
+    return t.name === 'add_action_details_section' ? `the section “${i.heading ?? ''}” in the Action details of #${i.action}`
+      : t.name === 'set_action_detail' ? `text in the Action details of #${i.action}` : `${t.name} — ${t.summary.slice(0, 100)}`
   })
   return { writing: block?.name ?? null, action: Number.isInteger(n) && n > 0 ? n : null, saved }
 }
@@ -169,11 +178,13 @@ export function toolParams(readOnly = false): Anthropic.Tool[] {
 
 // ── cost ──────────────────────────────────────────────────────────────────────────────────────
 
-export function priceUsage(u: { input_tokens?: number; output_tokens?: number; cache_creation_input_tokens?: number | null; cache_read_input_tokens?: number | null }) {
+export function priceUsage(u: { input_tokens?: number; output_tokens?: number; cache_creation_input_tokens?: number | null; cache_read_input_tokens?: number | null; cache_creation?: { ephemeral_1h_input_tokens?: number | null } | null }) {
   const inT = u.input_tokens ?? 0, out = u.output_tokens ?? 0
   const cw = u.cache_creation_input_tokens ?? 0, cr = u.cache_read_input_tokens ?? 0
-  const usd = (inT * AGENT_RATES.inPerM + out * AGENT_RATES.outPerM + cw * AGENT_RATES.cacheWritePerM + cr * AGENT_RATES.cacheReadPerM) / 1_000_000
-  return { usd, tokensIn: inT, tokensCacheWrite: cw, tokensCacheRead: cr, tokensOut: out }
+  // 293 — a 1-hour cache write is billed at 2× input (a 5-minute one at 1.25×, AGENT_RATES.cacheWritePerM); the usage block splits them
+  const cw1h = Math.min(cw, u.cache_creation?.ephemeral_1h_input_tokens ?? 0)
+  const usd = (inT * AGENT_RATES.inPerM + out * AGENT_RATES.outPerM + (cw - cw1h) * AGENT_RATES.cacheWritePerM + cw1h * AGENT_RATES.inPerM * 2 + cr * AGENT_RATES.cacheReadPerM) / 1_000_000
+  return { usd, tokensIn: inT, tokensCacheWrite: cw, tokensCacheRead: cr, tokensOut: out, tokensCacheWrite1h: cw1h }
 }
 
 // ── history ───────────────────────────────────────────────────────────────────────────────────
@@ -286,8 +297,10 @@ export async function runAgentTurn(input: AgentTurnInput): Promise<AgentTurnResu
   const snap = await buildSnapshot(input.ideaId, input.ui)
   const labels = knownLabels()
 
+  const prefixTtl = input.prefixCacheTtl ?? PREFIX_CACHE_TTL
+  const tools = input.toolFilter ? toolParams(!!input.readOnly).filter((t) => input.toolFilter!(t.name)) : toolParams(!!input.readOnly)
   const system = [
-    { type: 'text' as const, text: SYSTEM_PREFIX, cache_control: { type: 'ephemeral' as const } },
+    { type: 'text' as const, text: SYSTEM_PREFIX, cache_control: { type: 'ephemeral' as const, ...(prefixTtl === '1h' ? { ttl: '1h' as const } : {}) } },
     {
       type: 'text' as const,
       text: `THE IDEA, AS IT STANDS\n${snap.stable}${input.summary?.trim() ? `\n\nEARLIER IN THIS CONVERSATION (summary of what came before the messages below)\n${input.summary.trim()}` : ''}`,
@@ -313,7 +326,7 @@ export async function runAgentTurn(input: AgentTurnInput): Promise<AgentTurnResu
     // ⚠ Fields the installed SDK types predate (`thinking: between_tools`, `output_config`) are passed
     // through the cast; the API, not the types, is the authority for Sonnet 5.5.
     const params = {
-      model: AGENT_MODEL, max_tokens: input.maxOutputTokens ?? MAX_OUTPUT_TOKENS, system, tools: toolParams(!!input.readOnly),
+      model: AGENT_MODEL, max_tokens: input.maxOutputTokens ?? MAX_OUTPUT_TOKENS, system, tools,
       tool_choice: { type: 'auto' }, messages,
       // Top-level auto-cache: caches the LAST cacheable block, so each call in the tool loop (and the next
       // turn's history) reads the growing conversation from cache. Measured: uncached input was the biggest
@@ -392,6 +405,10 @@ export async function runAgentTurn(input: AgentTurnInput): Promise<AgentTurnResu
     // §4b — claims checked against tool outcomes BEFORE the reply is shown. One corrective retry, then removal.
     const priorPending = priorPendingLive(input.history)
     let violations = last ? checkReply({ reply, outcomes, knownLabels: labels, userMessage: input.message, priorPending }) : []
+    // 28 Oct (5) — WHAT THE FIRST DRAFT WAS FLAGGED FOR. The log's `violations` is the count AFTER the retry, so a retry that worked read
+    // "retried: true, violations: 0" and looked like a retry on nothing (it was reported that way on 28 Oct). The retry fires only when
+    // the first draft had at least one; this keeps which, in the log and on the stored reply, so a doubled turn can be explained.
+    const flagged = violations.map((v) => ({ kind: v.kind, sentence: v.sentence.slice(0, 200) }))
     if (violations.length && last && ended === 'end_turn') {
       retried = true
       messages.push({ role: 'assistant', content: last.content })
@@ -427,9 +444,10 @@ export async function runAgentTurn(input: AgentTurnInput): Promise<AgentTurnResu
       ideaId: input.ideaId, ended, calls: cost.calls, pence: Number(cost.pence.toFixed(2)),
       cacheRead: cost.tokensCacheRead, cacheWrite: cost.tokensCacheWrite, uncachedIn: cost.tokensIn, out: cost.tokensOut,
       tools: toolLog.map((t) => `${t.name}${t.pending ? '(pending)' : t.ok ? '' : '(failed)'}`), retried, violations: violations.length, tainted: turn.tainted,
+      ...(flagged.length ? { firstDraftFlagged: flagged.map((f) => f.kind) } : {}),
     })
 
-    return { reply, ui: uiEffects, pending, undo, toolLog, outcomes, violations, retried, ended, tainted: turn.tainted, cost, snapshotCounts: snap.counts, ...(cut ? { cut } : {}) }
+    return { reply, ui: uiEffects, pending, undo, toolLog, outcomes, violations, retried, ...(flagged.length ? { flagged } : {}), ended, tainted: turn.tainted, cost, snapshotCounts: snap.counts, ...(cut ? { cut } : {}) }
   } catch (err) {
     // A failure announces itself with its cause (CLAUDE.md §18). It is not dressed up as an answer.
     const reason = err instanceof Error ? err.message : String(err)

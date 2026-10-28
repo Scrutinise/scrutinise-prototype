@@ -72,7 +72,7 @@ export function findWords(q: string): string[] {
 }
 
 /**
- * Text match: every word appears in the number, title, statement or Explanation. A word written "#63" matches the number 63
+ * Text match: every word appears in the number, title, statement or Action details. A word written "#63" matches the number 63
  * only — never #630 or #163.
  */
 export function textMatches(a: CanonicalAction, words: string[]): boolean {

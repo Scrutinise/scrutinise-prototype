@@ -679,7 +679,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       {(view === 'list' || view === 'board') && unparked.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5" data-find-box>
           <input type="search" value={find} onChange={(e) => setFind(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setFind('') }}
-            placeholder="Find in the actions — title, statement, Explanation" aria-label="Find in the actions"
+            placeholder="Find in the actions — title, statement, Action details" aria-label="Find in the actions"
             className="text-xs p-1.5 rounded border border-zinc-300 w-80 max-w-full focus:outline-none focus:border-blue-400" />
           {find.trim() && (
             <>
@@ -1187,7 +1187,7 @@ function PairPanel({ ideaId, a, b, mode, ops, onClose, byNumber }: { ideaId: str
               <input value={edited.title} onChange={(e) => setEdited({ ...edited, title: e.target.value })} className="w-full text-sm p-1.5 rounded border border-zinc-300" />
               <textarea value={edited.practicalStep} onChange={(e) => setEdited({ ...edited, practicalStep: e.target.value })} rows={3} className="w-full text-xs p-1.5 rounded border border-zinc-300" />
               <p className="text-[11px] text-zinc-700" data-statement-count>{edited.practicalStep.length > LIMITS.actionStatement
-                ? `${edited.practicalStep.length} characters: the statement keeps the first ${LIMITS.actionStatement}, and the whole wording is kept in the action’s Explanation — nothing is dropped.`
+                ? `${edited.practicalStep.length} characters: the statement keeps the first ${LIMITS.actionStatement}, and the whole wording is kept in its Action details — nothing is dropped.`
                 : `${LIMITS.actionStatement - edited.practicalStep.length} left of ${LIMITS.actionStatement}.`}</p>
             </div>
           )}

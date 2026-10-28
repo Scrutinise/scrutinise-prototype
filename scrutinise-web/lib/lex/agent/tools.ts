@@ -213,7 +213,8 @@ const listActionsTool: ToolDefinition = {
     const hn = new Map(heads.map((h) => [h.id, h.name])), cn = new Map(causes.map((c, i) => [c.id, c.number ?? i + 1])), an = new Map(rows.map((r) => [r.id, r.number]))
     return { ok: true, data: rows.map((a) => ({
       number: a.number, id: short(a.id), title: a.title, titleProposed: a.titleProposal, heading: a.headingId ? hn.get(a.headingId) ?? null : null,
-      practicalStep: a.practicalStep, whoImplements: a.whoImplements, targetOrganisation: a.targetOrganisation, wording: a.wording, source: a.source,
+      // 288 — Target organisation and Intended wording are retired (moved to Who / Action details); not offered to Lex any more
+      practicalStep: a.practicalStep, whoImplements: a.whoImplements, source: a.source,
       // 262: Now / Next / Later is retired from the screen, so it is not offered here either (the column keeps its old values, unshown).
       avenue: a.avenue, link: a.link, causesAttacked: a.targetCauseIds.map((c) => cn.get(c)).filter(Boolean),
       mustComeAfter: afterOf(rows, a.id, (later, earlier) => becauseOf(later === a.id ? a.record : null)[earlier] ?? null).map((x) => (x.because ? `#${x.number} (because ${x.because})` : `#${x.number}`)),
@@ -264,16 +265,32 @@ const listChallenges: ToolDefinition = {
   },
 }
 
-const readHistory: ToolDefinition = {
-  name: 'read_history', category: 'see', tier: 'free',
-  description: 'Read earlier messages in this idea’s chat. Optionally filter to those containing a word or phrase.',
-  schema: z.object({ query: z.string().optional(), limit: z.number().int().min(1).max(40).default(20) }),
+// 292 (28 Oct (5)) — the whole conversation, from the LexMessage table (never cut). These two replace read_history, which read
+// only the JSON copy (the last 200 messages) with a substring match.
+const READ_REPLY_MAX = 20_000
+const readReplyTool: ToolDefinition = {
+  name: 'read_reply', category: 'see', tier: 'free',
+  description: 'Read one of your earlier replies in full, by its number — the user sees each as "Reply N · <date>" — with the user’s message it answered. Use it when the user names a reply ("reply 31", "what you said in 12"), or after search_conversation finds one.',
+  schema: z.object({ n: z.number().int().min(1) }),
+  describe: (i) => `Read reply ${(i as { n?: number })?.n ?? '?'}`,
+  async run(ctx, { n }) {
+    const r = await readReply(ctx.ideaId, n)
+    if (!r) {
+      const last = await prisma.lexMessage.aggregate({ where: { ideaId: ctx.ideaId }, _max: { replyNo: true } })
+      return fail(`there is no reply ${n} on this idea${last._max.replyNo ? ` — the replies run from 1 to ${last._max.replyNo}` : ' yet'}.`)
+    }
+    return { ok: true, data: { reply: r.replyNo, at: r.at, text: clip(r.reply, READ_REPLY_MAX), answered: r.asked ? { at: r.askedAt, text: clip(r.asked, 4000) } : null } }
+  },
+}
+
+const searchConversationTool: ToolDefinition = {
+  name: 'search_conversation', category: 'see', tier: 'free',
+  description: 'Search the WHOLE of this idea’s conversation — every message from the start, not only the recent ones you can see. Words are matched with English stemming; a "quoted phrase" must appear as written. Returns the newest matches first, each with its reply number (open one in full with read_reply).',
+  schema: z.object({ query: z.string().min(1).max(200), limit: z.number().int().min(1).max(20).default(8) }),
+  describe: (i) => `Search the conversation for “${(i as { query?: string })?.query ?? ''}”`,
   async run(ctx, { query, limit }) {
-    const row = await prisma.idea.findUnique({ where: { id: ctx.ideaId }, select: { aiChatHistory: true } })
-    const all = (Array.isArray(row?.aiChatHistory) ? row!.aiChatHistory : []) as Array<{ role?: string; content?: string; timestamp?: string }>
-    const q = query ? norm(query) : ''
-    const hits = all.filter((m) => !q || norm(m.content ?? '').includes(q)).slice(-limit)
-    return { ok: true, data: hits.map((m) => ({ role: m.role === 'user' ? 'user' : 'lex', at: m.timestamp ?? null, text: clip(m.content, 600) })) }
+    const { hits, total } = await searchConversation(ctx.ideaId, query, limit)
+    return { ok: true, data: { matches: total, shown: hits.length, hits: hits.map((h) => ({ who: h.role === 'user' ? 'user' : 'lex', reply: h.replyNo, message: h.n, at: h.at, snippet: h.snippet })) } }
   },
 }
 
@@ -601,8 +618,7 @@ const addActionTool: ToolDefinition = {
     practicalStep: z.string().min(15).max(LIMITS.actionStatement, STATEMENT_TOO_LONG),
     detail: z.string().max(100000).optional().describe('the action’s Detail, unlimited: the intention, examples, dimensions, and any text the statement limit cut'),
     whoImplements: z.string().max(200).optional(),
-    targetOrganisation: z.string().max(200).optional(),
-    wording: z.string().max(1200).optional().describe('draft legislative or policy wording, if any'),
+    // 286/288 (28 Oct (5)) — Target organisation and Intended wording are retired: a target body goes in whoImplements, draft wording in detail.
     dictated: z.boolean().optional().describe('true ONLY when practicalStep is the user\'s own words, copied exactly from what they just wrote. Never for your own drafting or rewording.'),
     provenance: ProvenanceSchema,
   }),
@@ -614,8 +630,8 @@ const addActionTool: ToolDefinition = {
       const said = ctx.turn.userMessages.map(norm).join(' ')
       if (!said.includes(norm(input.practicalStep))) return fail('“dictated” means the statement is the user’s own words, and this is not word for word in anything they have written. Add it without dictated:true (it will be yours, marked as from Lex), or use their exact words.')
     }
-    const row = await addAction(ctx.ideaId, { practicalStep: input.practicalStep, commentary: input.detail, whoImplements: input.whoImplements, targetOrganisation: input.targetOrganisation, wording: input.wording, source: input.dictated ? 'USER' : 'LEX' })
-    await auditProvenance(ctx, `actions:${row.id}`, input.practicalStep, input.wording ?? input.practicalStep, prov)
+    const row = await addAction(ctx.ideaId, { practicalStep: input.practicalStep, commentary: input.detail, whoImplements: input.whoImplements, source: input.dictated ? 'USER' : 'LEX' })
+    await auditProvenance(ctx, `actions:${row.id}`, input.practicalStep, input.practicalStep, prov)
     return {
       ok: true,
       data: { number: row.number, id: short(row.id), source: input.dictated ? 'USER (the owner’s own action, written at their dictation)' : 'LEX', hasDetail: !!input.detail?.trim(), provenance: prov.line, say: `Added as #${row.number}.` },
@@ -628,11 +644,11 @@ const addActionTool: ToolDefinition = {
 export const DETAIL_CALL_MAX = 8000
 const setActionDetailTool: ToolDefinition = {
   name: 'set_action_detail', category: 'draft', tier: 'free',
-  description: `Put a SHORT text (at most ${DETAIL_CALL_MAX.toLocaleString('en-GB')} characters) in an action's DETAIL, which the screen calls the Explanation: the intention, examples, dimensions, or the wording a limit cut. mode "append" (default) adds to what is there; "replace" overwrites it — use replace only when the user asked. Anything longer goes in through add_explanation_section, a section per call. Never edit the statement itself with this.`,
+  description: `Put a SHORT text (at most ${DETAIL_CALL_MAX.toLocaleString('en-GB')} characters) in an action's DETAIL, which the screen calls Action details: the intention, examples, dimensions, or the wording a limit cut. mode "append" (default) adds to what is there; "replace" overwrites it — use replace only when the user asked. Anything longer goes in through add_action_details_section, a section per call. Never edit the statement itself with this.`,
   schema: z.object({
     action: z.number().int().describe('the action number, as in #31'),
     // 287 — ENFORCED, not only asked: on 28 Oct one huge call was cut off three times and saved nothing. A long text is built in sections.
-    detail: z.string().min(1).max(DETAIL_CALL_MAX, `at most ${DETAIL_CALL_MAX.toLocaleString('en-GB')} characters in one call — put a longer Explanation in through add_explanation_section, one section per call`),
+    detail: z.string().min(1).max(DETAIL_CALL_MAX, `at most ${DETAIL_CALL_MAX.toLocaleString('en-GB')} characters in one call — put longer Action details in through add_action_details_section, one section per call`),
     mode: z.enum(['append', 'replace']).default('append'),
     provenance: ProvenanceSchema,
   }),
@@ -648,22 +664,22 @@ const setActionDetailTool: ToolDefinition = {
   },
 }
 /**
- * 287 (b) — CCh-Lex 28 Oct (3). On 28 Oct Charlie asked for a long Explanation on 452c5ade three times; each turn spent its whole output
- * budget writing ONE set_action_detail call, was cut off before the call finished, and saved nothing (47.2p). A long Explanation is now
+ * 287 (b) — CCh-Lex 28 Oct (3). On 28 Oct Charlie asked for long Action details on 452c5ade three times; each turn spent its whole output
+ * budget writing ONE set_action_detail call, was cut off before the call finished, and saved nothing (47.2p). Long Action details are now
  * built a section per call: each section is saved the moment it lands, so a cut-off loses at most the section being written, and
  * "carry on" resumes after the last saved one.
  */
-export const EXPLANATION_SECTION_MAX = 6000
-const addExplanationSection: ToolDefinition = {
-  name: 'add_explanation_section', category: 'draft', tier: 'free',
-  description: `Append ONE section to an action's Explanation (the unlimited text beside its statement), under its own heading. Use this — not set_action_detail — for anything longer than about 800 words: write the Explanation as several sections, one call each, so each is saved as it lands. At most ${EXPLANATION_SECTION_MAX.toLocaleString('en-GB')} characters per call. It never touches the statement and never replaces what is there.`,
+export const ACTION_DETAILS_SECTION_MAX = 6000
+const addActionDetailsSection: ToolDefinition = {
+  name: 'add_action_details_section', category: 'draft', tier: 'free',
+  description: `Append ONE section to an action's Action details (the unlimited text beside its statement), under its own heading. Use this — not set_action_detail — for anything longer than about 800 words: write the Action details as several sections, one call each, so each is saved as it lands. At most ${ACTION_DETAILS_SECTION_MAX.toLocaleString('en-GB')} characters per call. It never touches the statement and never replaces what is there.`,
   schema: z.object({
     action: z.number().int().describe('the action number, as in #59'),
     heading: z.string().min(2).max(140).describe('the section heading, without "#"'),
-    text: z.string().min(1).max(EXPLANATION_SECTION_MAX, `a section is at most ${EXPLANATION_SECTION_MAX.toLocaleString('en-GB')} characters — split it into two sections`),
+    text: z.string().min(1).max(ACTION_DETAILS_SECTION_MAX, `a section is at most ${ACTION_DETAILS_SECTION_MAX.toLocaleString('en-GB')} characters — split it into two sections`),
     provenance: ProvenanceSchema,
   }),
-  describe: (i) => `Add the section “${(i as { heading?: string })?.heading ?? ''}” to the Explanation of #${(i as { action?: number })?.action ?? '?'}`,
+  describe: (i) => `Add the section “${(i as { heading?: string })?.heading ?? ''}” to the Action details of #${(i as { action?: number })?.action ?? '?'}`,
   async run(ctx, input) {
     const prov = await checkProvenance(ctx, input.provenance)
     if (provFailed(prov)) return fail(prov.error)
@@ -674,7 +690,7 @@ const addExplanationSection: ToolDefinition = {
     const next = cur?.commentary?.trim() ? `${cur.commentary.trim()}\n\n${section}` : section
     await prisma.lexCoherentAction.update({ where: { id: rows[0].id }, data: { commentary: next } })
     const sections = (next.match(/^## /gm) ?? []).length
-    return { ok: true, data: { number: rows[0].number, heading: input.heading, sectionChars: section.length, explanationLength: next.length, sectionsNow: sections, say: `Saved the section “${input.heading}” in the Explanation of #${rows[0].number}.` } }
+    return { ok: true, data: { number: rows[0].number, heading: input.heading, sectionChars: section.length, actionDetailsLength: next.length, sectionsNow: sections, say: `Saved the section “${input.heading}” in the Action details of #${rows[0].number}.` } }
   },
 }
 const writeNote: ToolDefinition = {
@@ -1081,6 +1097,7 @@ const setOrderTool: ToolDefinition = {
 import * as SL from '@/lib/lex/action-slots'
 import { ALL_SLOTS, SLOT_UI, parseRecord, slotAnswered, slotProposal, slotText, slotWriter, specificTag, answeredCount } from '@/lib/lex/action-record'
 import { withDrafts } from '@/lib/lex/action-documents'
+import { readReply, searchConversation } from './messages'
 
 const SLOT_ENUM = ALL_SLOTS as unknown as [string, ...string[]]
 
@@ -1704,10 +1721,10 @@ const summariseSourceTool: ToolDefinition = {
 
 /** The tools the MODEL is offered. The `undo_*` / `restore_*` inverses are reachable only through a signed undo token. */
 export const MODEL_TOOLS: ToolDefinition[] = [
-  readField, listCandidates, listActionsTool, listSources, readSource, listChallenges, readHistory, listNotes,
+  readField, listCandidates, listActionsTool, listSources, readSource, listChallenges, readReplyTool, searchConversationTool, listNotes,
   searchCorpus, searchWeb, searchMyDocuments, statuteEffects, statuteOnward, readSectionTool,
   fileUrl, fileText,
-  draftField, addCandidate, addActionTool, setActionDetailTool, addExplanationSection, writeNote,
+  draftField, addCandidate, addActionTool, setActionDetailTool, addActionDetailsSection, writeNote,
   explain,
   acceptFieldTool, editFieldTool, ruleOut, restoreCandidate, mergeCandidates, choosePolicy, unchoosePolicy, moveToActions,
   dismissProposalTool, skipFieldTool, reopenFieldTool, archiveSource,

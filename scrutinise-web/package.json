@@ -142,6 +142,7 @@
     "check:add-research-md-browser": "tsx --tsconfig tsconfig.json --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-add-research-md-browser.ts",
     "check:lex-287": "tsx --tsconfig tsconfig.json --env-file=.env scripts/check-lex-287.ts",
     "check:lex-284": "tsx --tsconfig tsconfig.json scripts/check-lex-284.ts",
+    "check:lex-292": "tsx --tsconfig tsconfig.json --env-file=.env scripts/check-lex-292.ts",
     "check:lex-chat-real-reply":"tsx --tsconfig tsconfig.json --env-file=.env scripts/check-lex-chat-real-reply.ts",
     "check:lex-26u":"tsx --tsconfig tsconfig.json --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-26u.ts",
     "check:lex-26v": "tsx --tsconfig tsconfig.json --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-26v.ts",

@@ -1,12 +1,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// check:lex-287 — CCh-Lex 28 Oct (3). Charlie's request on 452c5ade (02:55 UTC) for a long Explanation on #59 was cut off at the output
+// check:lex-287 — CCh-Lex 28 Oct (3). Charlie's request on 452c5ade (02:55 UTC) for long Action details on #59 was cut off at the output
 // limit three times in a row and saved nothing (47.2p): one set_action_detail call was being written when the 4,096-token ceiling hit.
 //
 // A · offline: the ceiling is 16,000; the cut-off sentence names what was being written and what was saved; the platform record carries
 //     the cut so the next turn sees it. Built from a real-shaped Anthropic message, not prose.
 // B · live (--live): CHARLIE'S OWN WORDS, read from his stored history, sent to a SCRATCH copy through handleAgentTurn with the ceiling
 //     forced low (the seam), then "carry on" with the stored history — exactly what he did. Asserted on the scratch action's saved
-//     Explanation (plain prisma): sections land before the cut, the cut names them, "carry on" ADDS sections and repeats none.
+//     Action details (plain prisma): sections land before the cut, the cut names them, "carry on" ADDS sections and repeats none.
 //     Then the same request at the real ceiling, to price it. Costs about 40–80p; prints every turn's cost.
 //
 //   npm run check:lex-287 [-- --live]
@@ -35,16 +35,16 @@ function partA() {
   section('A · offline — the ceiling, the sentence, the record')
   const src = readFileSync(join(__dirname, '../lib/lex/agent/loop.ts'), 'utf8')
   ok('the agent turn\'s output ceiling is 16,000', /const MAX_OUTPUT_TOKENS = 16000\b/.test(src))
-  ok('add_explanation_section is offered to the model', MODEL_TOOLS.some((t) => t.name === 'add_explanation_section'))
+  ok('add_action_details_section is offered to the model', MODEL_TOOLS.some((t) => t.name === 'add_action_details_section'))
 
-  const cutMsg = { content: [{ type: 'tool_use', id: 't1', name: 'add_explanation_section', input: { action: 59, heading: 'Point 4' } }] } as unknown as Anthropic.Message
+  const cutMsg = { content: [{ type: 'tool_use', id: 't1', name: 'add_action_details_section', input: { action: 59, heading: 'Point 4' } }] } as unknown as Anthropic.Message
   const log = [
     { name: 'get_action', input: { action: 59 }, ok: true, pending: false, summary: '{}', ms: 1 },
-    { name: 'add_explanation_section', input: { action: 59, heading: 'Points 1 to 3' }, ok: true, pending: false, summary: '{}', ms: 1 },
+    { name: 'add_action_details_section', input: { action: 59, heading: 'Points 1 to 3' }, ok: true, pending: false, summary: '{}', ms: 1 },
   ]
   const c = cutOffRecord(cutMsg, log as never)
   const s = cutOffSentence(c)
-  ok('the cut names what was being written and for which action', /a section of the Explanation for #59/.test(s), s)
+  ok('the cut names what was being written and for which action', /a section of the Action details for #59/.test(s), s)
   ok('…and what was saved before it', /Points 1 to 3/.test(s) && !/Nothing was saved/.test(s), s)
   ok('a read is not reported as saved', !c.saved.some((x) => /get_action/.test(x)), JSON.stringify(c.saved))
   const rec = platformRecord({ role: 'lex', content: s, cut: c } as ChatMsg)
@@ -82,7 +82,7 @@ async function partB() {
       console.log(`  turn "${message.slice(0, 30)}…" ceiling ${maxOutputTokens ?? 16000}: ended ${r.result?.ended}, ${r.result?.cost.pence.toFixed(2)}p, out ${r.result?.cost.tokensOut} tokens, ${r.result?.cost.calls} calls, ${r.result?.toolLog.length} tools`)
       // Every writing tool, with its target, size and result — so a failure says WHERE the text went.
       for (const t of r.result?.toolLog ?? []) {
-        if (['get_action', 'read_field', 'list_actions', 'read_history', 'explain'].includes(t.name)) continue
+        if (['get_action', 'read_field', 'list_actions', 'read_reply', 'search_conversation', 'explain'].includes(t.name)) continue
         const i = (t.input ?? {}) as Record<string, unknown>
         const size = ['detail', 'text', 'value', 'practicalStep'].map((k) => (typeof i[k] === 'string' ? `${k}=${(i[k] as string).length}ch` : '')).filter(Boolean).join(' ')
         console.log(`    ${t.name} action=${i.action ?? i.fieldKey ?? ''} ${i.heading ? `"${i.heading}" ` : ''}${size} mode=${i.mode ?? ''} → ${t.ok ? 'ok' : `FAILED: ${t.error}`}`)
@@ -101,14 +101,14 @@ async function partB() {
     const t1 = await turn(String(ask.content))
     total.real += t1.r.result?.cost.pence ?? 0
     ok('his request is no longer cut off at the length limit', t1.r.result?.ended !== 'max_tokens', `ended ${t1.r.result?.ended}`)
-    console.log(`    Explanations changed: ${diff(e0, await explanations()).join(', ') || 'none — Lex asked first'}`)
+    console.log(`    Action details changed: ${diff(e0, await explanations()).join(', ') || 'none — Lex asked first'}`)
 
     // B2 · the cut, forced: an explicit instruction to write, under a ceiling one section cannot fit in; then "carry on" at the real one.
     console.log('  B2 · a forced cut, then "carry on"')
     await prisma.lexCoherentAction.update({ where: { id: target!.id }, data: { commentary: before } })
     await prisma.idea.update({ where: { id: copy.id }, data: { aiChatHistory: prior as never, aiChatSummary: src.aiChatSummary } })
     history = prior
-    const t2 = await turn('Write the Explanation of #59 now, without asking me first: four sections, one per call, each about 400 words — the 13 points, the guiding policy\'s requirements, the legislation actions\' requirements, and guidance for the drafter.', 700)
+    const t2 = await turn('Write the Action details of #59 now, without asking me first: four sections, one per call, each about 400 words — the 13 points, the guiding policy\'s requirements, the legislation actions\' requirements, and guidance for the drafter.', 700)
     total.forced += t2.r.result?.cost.pence ?? 0
     const after2 = (await prisma.lexCoherentAction.findUnique({ where: { id: target!.id }, select: { commentary: true } }))?.commentary ?? ''
     if (t2.r.result?.ended !== 'max_tokens') skip('the cut-off message', `the forced turn ended ${t2.r.result?.ended}, not at the limit`)
@@ -121,7 +121,7 @@ async function partB() {
     const after3 = (await prisma.lexCoherentAction.findUnique({ where: { id: target!.id }, select: { commentary: true } }))?.commentary ?? ''
     const h2 = headings(after2), h3 = headings(after3)
     console.log(`    #59 sections: before ${headings(before).length}, after the cut ${h2.length}, after "carry on" ${h3.length} (${after3.length} chars)`)
-    ok('"carry on" built on #59\'s Explanation rather than ending without writing', h3.length > h2.length, `sections ${h2.length} → ${h3.length}`)
+    ok('"carry on" built on #59\'s Action details rather than ending without writing', h3.length > h2.length, `sections ${h2.length} → ${h3.length}`)
     ok('…keeping what was saved before the cut', after3.includes(after2.trim().slice(0, 300)))
     ok('…and not cut off itself', t3.r.result?.ended !== 'max_tokens', `ended ${t3.r.result?.ended}`)
     const dupes = h3.filter((h, i) => h3.indexOf(h) !== i)

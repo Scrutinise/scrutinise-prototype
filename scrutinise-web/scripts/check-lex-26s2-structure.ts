@@ -298,7 +298,7 @@ async function partE() {
     ok('195 the snapshot gives the mechanism its commentary and the folded component\'s cost line, labelled with the component number', !!sLead && (sLead.commentary ?? '').includes(q(c1)) && sLead.costLines.some((l) => l.label === 'ROLLUP-PROBE line' && l.fromNumber === c1.number))
     ok('…the folded component is not a row of its own in the document', !snap.actions.some((a) => a.id === c1.id))
     const proposalText = JSON.stringify(buildProposalDocument(snap).model)
-    ok('195/257 the Proposal prints "Detail" with the quoted component under its mechanism', proposalText.includes('"Detail"') && !proposalText.includes('Commentary') && proposalText.includes('Parts of this action, quoted') && !proposalText.includes('Components') && proposalText.includes('My own commentary on the lead.') && proposalText.includes(c1.practicalStep.replace(/\s+/g, ' ').trim().slice(0, 40)))
+    ok('195/257 the Proposal prints "Action details" with the quoted component under its mechanism', proposalText.includes('"Action details"') && !proposalText.includes('Commentary') && proposalText.includes('Parts of this action, quoted') && !proposalText.includes('Components') && proposalText.includes('My own commentary on the lead.') && proposalText.includes(c1.practicalStep.replace(/\s+/g, ' ').trim().slice(0, 40)))
     ok('…and the rolled-up cost line, saying which component it came from', proposalText.includes('ROLLUP-PROBE line') && proposalText.includes(`from part #${c1.number}, quoted in`))
     const packText = JSON.stringify(buildMeetingPackDocument(snap).model)
     ok('195 the Meeting Pack does NOT print the commentary', !packText.includes('Parts of this action, quoted') && !packText.includes('My own commentary on the lead.'))

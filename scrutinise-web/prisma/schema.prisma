@@ -1023,6 +1023,7 @@ model Idea {
   sourceDecisions           IdeaSourceDecision[]
   userMaterial              IdeaUserMaterial[]
   lexToolCalls              LexToolCall[]
+  lexMessages               LexMessage[]
   actionHeadings            ActionHeading[]
   /// 26-R — the numbered source registry and the research notebook. DDL: prisma/lex_26r_registry_notebook.sql.
   ideaSources               IdeaSource[]
@@ -5305,6 +5306,37 @@ model LexToolCall {
   confirmedVia  String?
   createdAt     DateTime @default(now())
 
+  @@index([ideaId, createdAt])
+}
+
+/// ══ 292/282/289 (CCh-Lex 28 Oct (5)) — THE WHOLE CONVERSATION, ONE ROW PER MESSAGE, NEVER CUT ══════════
+///
+/// `Idea.aiChatHistory` (JSON) is still what the chat draws and what the model's 20-message window reads, and it is cut
+/// to 200 messages; this table keeps every message for good, so `read_reply(n)` and `search_conversation` can reach
+/// what the JSON has dropped. Written beside the JSON by `handleAgentTurn` and `handleConfirm` (`lib/lex/agent/messages.ts`);
+/// an idea's existing JSON is copied in the first time a turn touches it. `lex_292_messages.sql`.
+/// ⚠ 289 — THE (ideaId, turnId, role) UNIQUE IS THE IN-FLIGHT LOCK: the user's row is inserted when the turn STARTS, so a
+/// retried POST of the same send fails that insert and waits for the first run's reply instead of running (and charging) twice.
+model LexMessage {
+  id        String   @id @default(uuid())
+  ideaId    String
+  idea      Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  /// Position in the idea's conversation, from 1, never reused.
+  n         Int
+  /// 282 — "Reply N": Lex's messages only, per idea, from 1, never reused.
+  replyNo   Int?
+  /// user | lex
+  role      String
+  content   String   @db.Text
+  /// The client's id for the send; null for a confirmation line or a copied-in message that had none.
+  turnId    String?
+  /// The rest of the stored chat message (tools, cost, cut, stage …), as the JSON held it.
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@unique([ideaId, n])
+  @@unique([ideaId, replyNo])
+  @@unique([ideaId, turnId, role])
   @@index([ideaId, createdAt])
 }
 

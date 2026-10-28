@@ -380,9 +380,10 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
       const res = await fetch(`/api/ideas/${ideaId}/lex-agent/confirm`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }),
       })
-      const data = (await res.json().catch(() => ({}))) as { error?: string; chatText?: string; state?: CanonicalState; agent?: AgentCardsState }
+      const data = (await res.json().catch(() => ({}))) as { error?: string; chatText?: string; state?: CanonicalState; agent?: AgentCardsState; reply?: { n: number | null; at: string | null } }
       const said = data.chatText ?? data.error ?? 'I could not do that, and I am not sure why.'
-      setMessages((prev) => [...prev, { role: 'lex', content: said, stage: data.state?.stage }])
+      const stamp = data.chatText && typeof data.reply?.n === 'number' && data.reply.at ? { replyNo: data.reply.n, timestamp: data.reply.at } : {}
+      setMessages((prev) => [...prev, { role: 'lex', content: said, stage: data.state?.stage, ...stamp }])
       if (data.state) applyState(data.state)
       // The pressed card is gone either way (done, refused or expired); what the server returned replaces it.
       setAgent((prev) => ({
@@ -460,7 +461,9 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
         // policy the conversation has moved past.
         setEditOffer(data.editOffer ?? null)
         if (data.chatText) {
-          setMessages((prev) => [...prev, { role: 'lex', content: data.chatText, stage: replyStage }])
+          // 282 — the reply's number and saved time, so the new bubble carries its stamp at once
+          const stamp = typeof data.reply?.n === 'number' && data.reply?.at ? { replyNo: data.reply.n as number, timestamp: data.reply.at as string } : {}
+          setMessages((prev) => [...prev, { role: 'lex', content: data.chatText, stage: replyStage, ...stamp }])
         }
         appendLex(data.messages, replyStage)
         if (data.state) applyState(data.state)

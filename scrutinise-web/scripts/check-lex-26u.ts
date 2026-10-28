@@ -65,8 +65,11 @@ async function part2() {
     await page.setContent('<!doctype html><html><body><div id="root"></div></body></html>')
     await page.addScriptTag({ content: bundle })
     await page.evaluate((s) => (window as never as { __mountCard: (s: string) => void }).__mountCard(s), FIXTURE)
-    // 285 (28 Oct) — the Explanation has its own editor ("Write one" / "Edit the explanation"); the statement's is "Edit the action".
-    await page.locator('[data-record-section="detail"] > summary').click()
+    // 285 (28 Oct) — the Action details has its own editor ("Write them" / "Edit the action details"); the statement's is "Edit the action".
+    // 290 (28 Oct (5)) — Action details OPENS OPEN (the one exception to 265), so the button is there without a click
+    const openAtStart = await page.locator('[data-record-section="detail"]').evaluate((d) => (d as HTMLDetailsElement).open)
+    ok('290: the Action details section is open when the record is drawn', openAtStart)
+    if (!openAtStart) await page.locator('[data-record-section="detail"] > summary').click()
     await page.locator('[data-edit-explanation]').click()
     const commentaryLabel = await page.locator('[data-label="commentary"]').innerText().catch(() => '')
     await page.locator('[data-explanation-editor] button:text-is("Cancel")').click()
@@ -74,7 +77,7 @@ async function part2() {
     // 237 (CCh 22 Oct (7)) — the two box labels, verbatim, as the browser draws them.
     const statementLabel = await page.locator('[data-label="statement"]').innerText().catch(() => '')
     ok('237: the statement box is labelled "The action, in up to 1,000 characters"', statementLabel === 'The action, in up to 1,000 characters', statementLabel)
-    ok('237/266: the Commentary box is labelled "Explanation — what this action does in full and why; parts, tables, no limit"', commentaryLabel === 'Explanation — what this action does in full and why; parts, tables, no limit', commentaryLabel)
+    ok('237/266: the Commentary box is labelled "Action details — what this action does in full and why; parts, tables, no limit"', commentaryLabel === 'Action details — what this action does in full and why; parts, tables, no limit', commentaryLabel)
     control('the old Commentary label still drawn (must be FALSE)', (await page.locator('text=the intention, examples, dimensions').count()) > 0)
     const box = page.locator('textarea[aria-label="The action, in up to 1,000 characters"]')
     ok('Edit opens the statement with ALL of it in the box (nothing cut on open)', (await box.inputValue()) === FIXTURE, `${(await box.inputValue()).length} of ${FIXTURE.length}`)
@@ -88,7 +91,7 @@ async function part2() {
     control('the box cutting to its first 1,000 characters on that edit (must be FALSE)', after.length === LIMITS.actionStatement)
     await page.locator('button:text-is("Save")').click()
     const refused = await page.locator('[data-save-refused]').innerText().catch(() => '')
-    ok('Save is REFUSED in words: "Not saved: the statement is N characters; the limit is 1,000. Move the extra into the Explanation or shorten."', refused.includes(`Not saved: the statement is ${minusWord.length.toLocaleString('en-GB')} characters; the limit is 1,000. Move the extra into the Explanation or shorten.`), refused)
+    ok('Save is REFUSED in words: "Not saved: the statement is N characters; the limit is 1,000. Move the extra into the Action details or shorten."', refused.includes(`Not saved: the statement is ${minusWord.length.toLocaleString('en-GB')} characters; the limit is 1,000. Move the extra into the Action details or shorten.`), refused)
     ok('…nothing reached the API, and the text is still exactly as typed', (await page.evaluate(() => (window as never as { __card: { updates: unknown[] } }).__card.updates.length)) === 0 && (await box.inputValue()) === minusWord)
     await page.locator('button:text-is("Cancel")').click()
     ok('Cancel restores the record as it was', ((await page.locator('[data-statement]').innerText()).replace(/\s+/g, ' ')) === FIXTURE.replace(/\s+/g, ' '))
@@ -97,15 +100,15 @@ async function part2() {
     await page.locator('button:text-is("Save")').click()
     const ups = await page.evaluate(() => (window as never as { __card: { updates: Array<{ d: { practicalStep: string } }> } }).__card.updates)
     ok('a statement within the limit saves', ups.length === 1 && ups[0].d.practicalStep === MINE)
-    // ── 285 (28 Oct) — the Explanation section: empty state, its own labelled edit, set out, resizable, the parts kept ──
+    // ── 285 (28 Oct) — the Action details section: empty state, its own labelled edit, set out, resizable, the parts kept ──
     const detail = page.locator('[data-record-section="detail"]')
     if (!(await detail.evaluate((d) => (d as HTMLDetailsElement).open))) await detail.locator('> summary').click()
     const empty = (await detail.locator('[data-explanation-empty]').innerText().catch(() => '')).replace(/\s+/g, ' ').trim()
-    ok('285: with no text of the owner\'s own the box says "No explanation written yet — Write one"', empty === 'No explanation written yet — Write one', empty)
+    ok('285: with no text of the owner\'s own the box says "No action details written yet — Write them"', empty === 'No action details written yet — Write them', empty)
     ok('285: …and the quoted part is still listed below it', /Parts of this action, quoted \(1\)/.test(await detail.innerText()))
     ok('285: the statement has its own labelled button, "Edit the action", beside it', (await page.locator('[data-edit-action]').innerText()) === 'Edit the action')
     control('the old unlabelled "Edit" still drawn on step 1 (must be FALSE)', (await page.locator('button:text-is("Edit")').count()) > 0)
-    await detail.locator('button:text-is("Write one")').click()
+    await detail.locator('button:text-is("Write them")').click()
     const MD = '## Why a single owner\n\nToday **three** bodies share the duty.\n\n- one register\n- one deadline'
     await detail.locator('[data-explanation-editor] textarea').fill(MD)
     const h0 = (await detail.locator('[data-explanation-editor] textarea').boundingBox())!.height
@@ -114,19 +117,21 @@ async function part2() {
     const h1 = (await detail.locator('[data-explanation-editor] textarea').boundingBox())!.height
     ok('285: the box is resizable by its drag handle (dragged down 120px, the box grew)', h1 > h0 + 80, `${Math.round(h0)} → ${Math.round(h1)}px`)
     control('the drag doing nothing (must be FALSE)', Math.abs(h1 - h0) < 5)
-    await detail.locator('button:text-is("Save the explanation")').click()
+    await detail.locator('button:text-is("Save the action details")').click()
     const ups2 = await page.evaluate(() => (window as never as { __card: { updates: Array<{ d: { commentary?: string | null } }> } }).__card.updates)
     const saved = ups2[ups2.length - 1]?.d.commentary ?? ''
-    ok('285: "Save the explanation" sends ONLY the Explanation, the owner\'s text above the quoted part, the part kept exactly', ups2.length === 2 && Object.keys(ups2[1].d).join() === 'commentary' && saved === `${MD}\n\nParts of this action, quoted\n• [#34] “A part.”`, JSON.stringify(saved))
+    ok('285: "Save the action details" sends ONLY the Action details, the owner\'s text above the quoted part, the part kept exactly', ups2.length === 2 && Object.keys(ups2[1].d).join() === 'commentary' && saved === `${MD}\n\nParts of this action, quoted\n• [#34] “A part.”`, JSON.stringify(saved))
     // the harness does not re-read; mount the saved text as the record and read how it is set out
     await page.evaluate((c) => (window as never as { __mountCard: (s: string, c?: string) => void }).__mountCard('Short.', c), saved)
     const d2 = page.locator('[data-record-section="detail"]')
     if (!(await d2.evaluate((d) => (d as HTMLDetailsElement).open))) await d2.locator('> summary').click()
     const shown = d2.locator('[data-explanation-text]')
-    ok('285: the owner\'s text is SET OUT — a heading, bold, a two-item list — not raw marks', (await shown.locator('[data-md="heading"]').count()) === 1 && (await shown.locator('strong').innerText()) === 'three' && (await shown.locator('[data-md="list"] li').count()) === 2 && !(await shown.innerText()).includes('##'), (await shown.innerText()).slice(0, 200))
+    // the re-mount renders asynchronously; before 290 the click that opened the section gave it time. Wait for the render, not a clock.
+    await shown.locator('[data-md="heading"]').first().waitFor({ timeout: 5000 }).catch(() => {})
+    ok('285: the owner\'s text is SET OUT — a heading, bold, a two-item list — not raw marks', (await shown.locator('[data-md="heading"]').count()) === 1 && (await shown.locator('strong').innerText()) === 'three' && (await shown.locator('[data-md="list"] li').count()) === 2 && !(await shown.innerText()).includes('##'), `headings ${await shown.locator('[data-md="heading"]').count()}, strong ${await shown.locator('strong').count()}, list items ${await shown.locator('[data-md="list"] li').count()}: ${(await shown.innerHTML()).slice(0, 400)}`)
     const order = await d2.evaluate((el) => { const t = el.querySelector('[data-explanation-text]'); const p = el.querySelector('[data-quoted-parts]'); return !!t && !!p && !!(t.compareDocumentPosition(p) & Node.DOCUMENT_POSITION_FOLLOWING) })
     ok('285: the owner\'s text sits ABOVE "Parts of this action, quoted"', order)
-    ok('285: "Edit the explanation" is beside the text, labelled', (await d2.locator('[data-edit-explanation]').innerText()) === 'Edit the explanation')
+    ok('285: "Edit the action details" is beside the text, labelled', (await d2.locator('[data-edit-explanation]').innerText()) === 'Edit the action details')
     ok('285: the shown text has a drag handle too', (await d2.locator('[data-resize-handle]').count()) === 1)
     ok('no uncaught page error', errors.length === 0, errors.join(' | ').slice(0, 300))
   } finally { await browser.close() }

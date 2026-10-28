@@ -1,5 +1,50 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-28 23:20 UTC - LEX: 288 (retired fields), 289 (one turn, one run), 290, 291 (Action details), 292 + 282 (the whole conversation, numbered replies)
+
+*Laptop session. CCh-Lex 28 Oct (4) and (5); (5) replaced (4) on 288. **Schema: `LexMessage`, applied to Neon first (whichdb: ep-old-dust-aboxi69a), committed with its code.** Report: `docs/LEX_28OCT_REPORT.md` § "28 Oct (4)–(5)".*
+
+- **288 — data, all 15 of Charlie's ideas (73 actions), every write with a `FieldRevision` first.** (4)'s run (moving Mechanism and Target
+  organisation into the Explanation) was applied first and then **undone** under (5) from its own revisions. (5)'s rule: **Target
+  organisation → Who where Who is empty, else Action details** under "## Moved from the old fields on 28 Oct"; **Mechanism not moved**
+  (hidden, column kept); Intended wording held nothing. Counts per idea (put back from (4) · Target → Who · Target → Action details):
+  452c5ade civil service accountability 18 · 0 · 12; 282806fe Equality Act 4 · 0 · 0; 2ef5358b deportation 4 · 0 · 0; 31055aef quango
+  transparency 4 · 0 · 0; 3e797bad judicial review 4 · 0 · 0; 5c7287d2 Bank of England 4 · 0 · 0; 6aa6d116 Great Repeal 4 · 0 · 0; 72a29705
+  HRA/ECHR 4 · 0 · 0; 8c216e8e permanent civil service 4 · 0 · 0; 9209fd61 gender self-identification 4 · 0 · 0; a379e439 Sentencing
+  Council 3 · 0 · 0; a6473880 publicly funded charities 4 · 0 · 0; b9628162 arm's-length bodies 4 · 0 · 0; e4ece7d7 Supreme Court
+  4 · 0 · 0; f73f3928 DEI in the civil service 4 · 0 · 0. **Total 73 put back; 12 Target organisations into Action details (all 12 actions
+  already had a Who); 0 into Who.** Read back: 73/73 as written, 0 Explanations still carrying a moved Mechanism line; a second run
+  changes nothing. Columns untouched. `scripts/migrate-288-old-fields.ts`.
+- **288 — screen:** the three fields are gone from the "Edit the action" form and the card's "Mechanism: … · Target: …" line; Lex's
+  `add_action` no longer takes them and `list_actions` no longer returns them.
+- **289 — one turn, one run.** `LexMessage`'s unique (idea, clientTurnId, role) is the in-flight lock: the user's row is written when the
+  turn STARTS; a retried POST of the same send waits for the first run's reply and returns it (`replayed`), instead of running and
+  charging again. A run that throws releases its claim. **Ledger search for other doubled turns: only 6a06feb5 (28 Oct 02:33)** — by
+  tool sequences restarting within a turn id (44 turns with recorded calls) and by turns charged with no stored reply near a stored one.
+- **290:** Action details opens OPEN — the one exception to 265.
+- **291:** "Explanation" → **"Action details"** in the action box, its box label, buttons, empty state ("No action details written yet —
+  Write them"), Lex's prompt and tools (`add_explanation_section` → `add_action_details_section`), the drafting prompt, the Proposal
+  ("Detail" → "Action details") and the checks. Data attributes and the `commentary` column keep their names.
+- **292 + 282 — the whole conversation.** New table `LexMessage` (`prisma/lex_292_messages.sql`): every message, never cut, numbered
+  (`n`), Lex's replies numbered per idea (`replyNo`). The JSON (`aiChatHistory`) still draws the chat and feeds the 20-message window,
+  unchanged. An idea's JSON is copied in the first time a turn touches it; `scripts/backfill-292-messages.ts` copies the rest (76 ideas,
+  1,093 messages — run AFTER this deploy). New tools **`read_reply(n)`** and **`search_conversation(query)`** (Postgres text search over
+  the whole conversation) replace `read_history`. **282:** each Lex bubble is stamped "Reply 31 · Wed 28 Oct 26, 02:31 GMT" in the
+  browser's own time zone.
+- **Honesty retry "with zero violations" — my 28 Oct misreading.** The log's `violations` is the count AFTER the corrective retry; the
+  retry fires only when the first draft had one. The first draft's flags are now logged (`firstDraftFlagged`) and kept on the reply
+  (`honestyRetry`).
+- **293 seams (no behaviour change):** `prefixCacheTtl` and `toolFilter` on a turn, a 1-hour cache write priced at 2× input,
+  `scripts/measure-293.ts`. Measurement running at commit time; result in the next entry.
+- **Checks:** new `check:lex-292` **17/17**, 4 controls, 0 dead (real `handleAgentTurn`, stub model, scratch copy: copy-in, numbering,
+  the same send twice runs once, read_reply/search, the stamp in GMT/BST). lex-26u **67/67** (290 assertion added; a render race in the
+  check fixed — it counted before the re-mount had rendered); lex-26v1b **79/79** (265 kept for every section but Action details; 290
+  asserted); lex-284 **23/23**; lex-287 **7/7** (live part not run); lex-chat-real-reply **5/5** (live part not run); lex-26s-browser
+  **93/93** (`--db` not run); lex-26s2 **220/221** (ledger row 9900, the desktop's, as before); **lex-26s2-structure 104/105** — "the
+  old headings that are now empty are archived" finds 3 archived where it expects 2. The re-sort code is not in this diff; the source
+  idea's "Accountability Code" heading now holds one live action, which the re-sort empties. Not proved at HEAD; left for the stream.
+  Web tsc, check:scripts clean; check-clean-build --fast PASS.
+
 ## 2026-10-28 16:58 UTC - LEX: 284 (find an action by its number, wherever it went) and 285 (the Explanation section)
 
 *Laptop session. CCh-Lex 28 Oct (2) items 5 and 6. No schema. Report: `docs/LEX_28OCT_REPORT.md` § "284 and 285".*

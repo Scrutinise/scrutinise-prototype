@@ -181,15 +181,20 @@ async function partB(): Promise<{ copyId: string; userId: string; docId: string 
   const order = [at(/data-statement/), at(/data-jump-band/), at(/data-record-section="policy"/), at(/data-record-section="detail"/), at(/data-record-section="documents"/), at(/data-record-section="law"/), at(/data-record-section="who"/), at(/data-record-section="costs"/), at(/data-record-section="order"/), at(/data-record-section="comments"/)]
   ok('Statement → jump band → policy test → Detail → Documents → Law → Who, how and against → Costs → Order → Comments', order.every((p, i) => p >= 0 && (i === 0 || p > order[i - 1])), order.join(','))
   ok('the band names each section with its state in words, the heading menu at its right', /data-band="documents"/.test(html) && /data-band="comments"/.test(html) && /Heading for action 59/.test(html.slice(at(/data-jump-band/), at(/data-record-section="policy"/))))
-  ok('"Explanation" is the label, and "Commentary" is nowhere on the record (257, 266)', />Explanation<\/span>/.test(html) && !/Commentary/.test(textOf(html)))
+  ok('"Action details" is the label, and "Commentary" is nowhere on the record (257, 266)', />Action details<\/span>/.test(html) && !/Commentary/.test(textOf(html)))
   {
-    // 265: every record section is CLOSED when the record opens (the Explanation too), and each closed line names its state in words
+    // 265: every record section is CLOSED when the record opens, and each closed line names its state in words.
+    // 290 (28 Oct (5)): the ONE exception — Action details opens OPEN.
     const sections = html.match(/<(?:details|div|section)[^>]*data-record-section="[a-z]+"[^>]*>/g) ?? []
     // the comments wrapper is a <div> round ActionComments' own <details>, which is the thing that must be closed
     const comments = /<details[^>]*data-action-comments[^>]*>/.exec(html)?.[0] ?? '<missing>'
-    const notClosed = [...sections.filter((t) => !/data-record-section="comments"/.test(t)), comments].filter((t) => !t.startsWith('<details') || /\sopen(?:=|\s|>)/.test(t))
-    ok('265: every record section opens closed — a <details> with no "open" — the Explanation included', sections.length >= 9 && notClosed.length === 0, `${sections.length} sections; not closed: ${notClosed.join(' | ').slice(0, 300)}`)
-    ok('265: the closed lines carry the states the band shows ("Explanation · 4 words"-style, "this step" on the current one)', /Explanation<\/span> · <span data-section-state="true">1 part</.test(html) && /Documents<\/span> · <span data-section-state="true">/.test(html) && /this step/.test(textOf(html)), (html.match(/.{50}data-section-state.{30}/g) ?? []).join(' | ').slice(0, 400) || 'no data-section-state at all')
+    const isOpen = (t: string) => /\sopen(?:=|\s|>)/.test(t)
+    const others = sections.filter((t) => !/data-record-section="(?:comments|detail)"/.test(t))
+    const notClosed = [...others, comments].filter((t) => !t.startsWith('<details') || isOpen(t))
+    const detail = sections.find((t) => /data-record-section="detail"/.test(t)) ?? '<missing>'
+    ok('265: every record section but Action details opens closed — a <details> with no "open"', sections.length >= 9 && notClosed.length === 0, `${sections.length} sections; not closed: ${notClosed.join(' | ').slice(0, 300)}`)
+    ok('290: Action details opens OPEN — a <details> carrying "open"', detail.startsWith('<details') && isOpen(detail), detail.slice(0, 200))
+    ok('265: the closed lines carry the states the band shows ("Action details · 4 words"-style, "this step" on the current one)', /Action details<\/span> · <span data-section-state="true">1 part</.test(html) && /Documents<\/span> · <span data-section-state="true">/.test(html) && /this step/.test(textOf(html)), (html.match(/.{50}data-section-state.{30}/g) ?? []).join(' | ').slice(0, 400) || 'no data-section-state at all')
   }
   ok('2d: the quoted parts are one collapsible list, "Parts of this action, quoted (1)"', /Parts of this action, quoted \(1\)/.test(textOf(html)) && detailParts(act.commentary).parts[0].title === 'a component title')
   const facts = await actionDocuments(copy.id, a59.id)

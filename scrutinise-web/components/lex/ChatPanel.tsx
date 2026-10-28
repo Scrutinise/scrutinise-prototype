@@ -17,6 +17,22 @@ export interface ChatMessage {
   timestamp?: string
   /** A2: the Lex stage (page key) this message belongs to, for stage-collapse. */
   stage?: string
+  /** 282 — Lex's reply number on this idea (from the conversation table); absent on a bubble the platform wrote. */
+  replyNo?: number
+}
+
+/**
+ * 282 (28 Oct (5)) — "Reply 31 · Wed 28 Oct 26, 02:31 GMT": the stored time in the BROWSER's time zone (no user time zone is
+ * stored anywhere), with that zone's own short name. Exported for the check.
+ */
+export function replyStamp(n: number, at: string, timeZone?: string): string {
+  const d = new Date(at)
+  if (Number.isNaN(d.getTime())) return `Reply ${n}`
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    weekday: 'short', day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZoneName: 'short', ...(timeZone ? { timeZone } : {}),
+  }).formatToParts(d)
+  const p = (t: Intl.DateTimeFormatPartTypes) => parts.find((x) => x.type === t)?.value ?? ''
+  return `Reply ${n} · ${p('weekday')} ${p('day')} ${p('month')} ${p('year')}, ${p('hour')}:${p('minute')} ${p('timeZoneName')}`
 }
 
 // One chat bubble.
@@ -26,10 +42,15 @@ function Bubble({ m }: { m: ChatMessage }) {
       {m.role === 'lex' && (
         <div className="w-7 h-7 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center text-white text-xs font-bold mr-2 mt-1">L</div>
       )}
-      <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-        m.role === 'lex' ? 'bg-zinc-100 text-zinc-900' : 'bg-blue-600 text-white whitespace-pre-wrap'
-      }`}>
-        {m.role === 'lex' ? <ChatMarkdown text={m.content} /> : m.content}
+      <div className="max-w-[80%] min-w-0">
+        {m.role === 'lex' && typeof m.replyNo === 'number' && m.timestamp && (
+          <p className="text-[10px] text-zinc-500 mb-0.5 ml-1" data-reply-stamp={m.replyNo} suppressHydrationWarning>{replyStamp(m.replyNo, m.timestamp)}</p>
+        )}
+        <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+          m.role === 'lex' ? 'bg-zinc-100 text-zinc-900' : 'bg-blue-600 text-white whitespace-pre-wrap'
+        }`}>
+          {m.role === 'lex' ? <ChatMarkdown text={m.content} /> : m.content}
+        </div>
       </div>
     </div>
   )

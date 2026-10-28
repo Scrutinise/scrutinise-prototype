@@ -2,7 +2,7 @@
 // check:lex-284 (28 Oct 2026, CCh-Lex 28 Oct (2) items 5 and 6)
 //   284 — the actions find box: "63" or "#63" finds ACTION 63 first, wherever it is now (the list, Later phase, ruled out, merged
 //         away), and says where it went ("merged into #207 on 12 Oct 2026"); text matches come below. "#63" never matches #630.
-//   285 — the pure half of the Explanation edit: `withOwnText` replaces the owner's text and keeps the quoted parts exactly.
+//   285 — the pure half of the Action details edit: `withOwnText` replaces the owner's text and keeps the quoted parts exactly.
 //         (285's screen — the labelled buttons, the set-out text, the drag handle — is read in Chromium by check:lex-26u §2.)
 // Part A is offline and pure. Part B mounts the REAL ActionsWorkspace in Chromium (scripts/fixtures/actions-harness-entry.tsx) with
 // a store holding a merged-away, a ruled-out and a parked action, and types into the find box. No database, no model, no cost.
@@ -38,7 +38,7 @@ const ACTIONS: Array<Record<string, unknown>> = [
 ]
 
 function partA() {
-  section('A · offline — the number, where it went, text matches, the Explanation edit')
+  section('A · offline — the number, where it went, text matches, the Action details edit')
   const all = ACTIONS.map((x) => mk(x.n as number, x.extra as Partial<CanonicalAction>))
   const live = all.filter((a) => a.status === 'LIVE'), setAside = all.filter((a) => a.status !== 'LIVE')
   ok('"63", "#63", " # 63 " are the number 63; "63 fees", "6.3" and "sixty" are not', numberQuery('63') === 63 && numberQuery('#63') === 63 && numberQuery(' # 63 ') === 63 && numberQuery('63 fees') === null && numberQuery('6.3') === null && numberQuery('sixty') === null)
@@ -58,12 +58,12 @@ function partA() {
   const oldHay = (a: CanonicalAction) => `#${a.number ?? ''} ${a.title ?? ''} ${a.practicalStep}`.toLowerCase().includes('#63')
   control('the old matcher keeping #630 out of "#63" (must be FALSE)', !all.filter(oldHay).some((a) => a.number === 630))
 
-  // 285 — the Explanation edit keeps the quoted parts
+  // 285 — the Action details edit keeps the quoted parts
   const stored = 'Old words.\n\nParts of this action, quoted\n• [#34] “A part.” (its title) — why'
   ok('withOwnText replaces the owner\'s text and keeps the header and the part byte for byte', withOwnText(stored, '## New\n\nNew words.') === '## New\n\nNew words.\n\nParts of this action, quoted\n• [#34] “A part.” (its title) — why')
   ok('…emptying the text leaves the parts alone', withOwnText(stored, '  ') === 'Parts of this action, quoted\n• [#34] “A part.” (its title) — why' && detailParts(withOwnText(stored, '')).parts.length === 1)
   ok('…with no parts, the text alone; empty → null', withOwnText('x', 'y') === 'y' && withOwnText(null, '') === null)
-  control('a plain replace of the whole Explanation keeping the part (must be FALSE)', '## New'.includes('[#34]'))
+  control('a plain replace of the whole Action details keeping the part (must be FALSE)', '## New'.includes('[#34]'))
 }
 
 async function partB() {

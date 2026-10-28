@@ -55,7 +55,7 @@ export interface CausesApi {
 const MAX_CAUSE_DEPTH = 4
 // 237 (CCh 22 Oct (7)) — the action record's two box labels, verbatim.
 export const STATEMENT_LABEL = `The action, in up to ${LIMITS.actionStatement.toLocaleString('en-GB')} characters`
-export const COMMENTARY_LABEL = 'Explanation — what this action does in full and why; parts, tables, no limit'
+export const COMMENTARY_LABEL = 'Action details — what this action does in full and why; parts, tables, no limit'
 
 // Page 3 policy-options loop + chosen-approach handlers.
 export interface PolicyApi {
@@ -1629,7 +1629,7 @@ function ResizeHandle({ height, setHeight, min = 80, label }: { height: number; 
 /**
  * 26-V1b §2c–2d — the Detail box: the owner's own text, then "Parts of this action, quoted (N)", one line per part, each opening to its quote.
  * 285 (28 Oct) — the owner's text is SET OUT (headings, paragraphs, lists, tables: the chat's own renderer), in a box with a drag handle,
- * with its own "Edit the explanation" beside it. That edit changes the owner's text only; the quoted parts below are kept as stored.
+ * with its own "Edit the action details" beside it. That edit changes the owner's text only; the quoted parts below are kept as stored.
  */
 function DetailBox({ detail, busy = false, onSave }: { detail: string | null | undefined; busy?: boolean; onSave?: (commentary: string | null) => void }) {
   const { text, parts } = detailParts(plainFoldHeader(detail))
@@ -1639,8 +1639,9 @@ function DetailBox({ detail, busy = false, onSave }: { detail: string | null | u
   const write = () => { setDraft(text); setEditing(true) }
   const editBtn = 'text-[11px] font-medium underline text-zinc-700 disabled:opacity-40 shrink-0'
   return (
-    // 265 — closed by default like every record section; the summary carries the state the band shows
-    <details className="rounded border border-zinc-200 bg-zinc-50 p-1.5 scroll-mt-10" data-commentary data-record-section="detail">
+    // 290 (28 Oct (5)) — OPEN by default: the one exception to 265 (every other record section opens closed). `open` is set once at
+    // mount; React leaves it alone after that, so the user can still close it. The summary carries the state the band shows.
+    <details open className="rounded border border-zinc-200 bg-zinc-50 p-1.5 scroll-mt-10" data-commentary data-record-section="detail">
       <summary className="cursor-pointer text-[11px] text-zinc-700"><span className="font-semibold">{DETAIL_LABEL}</span> · <span data-section-state>{detailState(detail)}</span></summary>
       {editing ? (
         <div className="mt-1 space-y-1" data-explanation-editor>
@@ -1648,9 +1649,9 @@ function DetailBox({ detail, busy = false, onSave }: { detail: string | null | u
             <RefTextarea value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="What this action does in full and why" style={{ height }}
               className="mt-0.5 w-full text-xs p-1.5 rounded-t border border-zinc-300 resize-none focus:outline-none focus:border-blue-400 block" />
           </label>
-          <ResizeHandle height={height} setHeight={setHeight} label="Resize the explanation box" />
+          <ResizeHandle height={height} setHeight={setHeight} label="Resize the action details box" />
           <div className="flex flex-wrap items-center gap-2">
-            <button type="button" disabled={busy} onClick={() => { onSave?.(withOwnText(detail, draft)); setEditing(false) }} className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40" data-explanation-save>Save the explanation</button>
+            <button type="button" disabled={busy} onClick={() => { onSave?.(withOwnText(detail, draft)); setEditing(false) }} className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40" data-explanation-save>Save the action details</button>
             <button type="button" onClick={() => setEditing(false)} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-600">Cancel</button>
             <span className="text-[10px] text-zinc-500">{draft.length.toLocaleString('en-GB')} characters · no limit{parts.length ? ` · the ${parts.length} quoted part${parts.length === 1 ? '' : 's'} below ${parts.length === 1 ? 'is' : 'are'} kept as they are` : ''}</span>
           </div>
@@ -1661,12 +1662,12 @@ function DetailBox({ detail, busy = false, onSave }: { detail: string | null | u
             <div className="overflow-auto rounded-t border border-zinc-300 bg-white p-1.5 text-xs text-zinc-800 space-y-1.5" style={{ maxHeight: height }} data-explanation-text>
               <ChatMarkdown text={text} />
             </div>
-            <ResizeHandle height={height} setHeight={setHeight} label="Resize the explanation" />
+            <ResizeHandle height={height} setHeight={setHeight} label="Resize the action details" />
           </div>
-          {onSave && <button type="button" disabled={busy} onClick={write} className={editBtn} data-edit-explanation>Edit the explanation</button>}
+          {onSave && <button type="button" disabled={busy} onClick={write} className={editBtn} data-edit-explanation>Edit the action details</button>}
         </div>
       ) : (
-        <p className="mt-0.5 text-xs text-zinc-600" data-explanation-empty>No explanation written yet{onSave ? <> — <button type="button" disabled={busy} onClick={write} className="underline font-medium text-zinc-800 disabled:opacity-40" data-edit-explanation>Write one</button></> : '.'}</p>
+        <p className="mt-0.5 text-xs text-zinc-600" data-explanation-empty>No action details written yet{onSave ? <> — <button type="button" disabled={busy} onClick={write} className="underline font-medium text-zinc-800 disabled:opacity-40" data-edit-explanation>Write them</button></> : '.'}</p>
       )}
       {parts.length > 0 && (
         <details className="mt-1 text-xs" data-quoted-parts={parts.length}>
@@ -1703,7 +1704,7 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
   const patch = (p: Partial<ActionDraft>) => { setRefusal(null); setD((x) => ({ ...x, ...p })) }
   const save = () => {
     if (step === 1 && d.practicalStep.length > LIMITS.actionStatement) {
-      setRefusal(`Not saved: the statement is ${d.practicalStep.length.toLocaleString('en-GB')} characters; the limit is ${LIMITS.actionStatement.toLocaleString('en-GB')}. Move the extra into the Explanation or shorten.`)
+      setRefusal(`Not saved: the statement is ${d.practicalStep.length.toLocaleString('en-GB')} characters; the limit is ${LIMITS.actionStatement.toLocaleString('en-GB')}. Move the extra into the Action details or shorten.`)
       return
     }
     api.update(action.id, d); setEditing(false)
@@ -1720,13 +1721,9 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
             <p className="text-[11px] text-zinc-600" data-label="statement">{STATEMENT_LABEL}</p>
             <BoundedInput multiline rows={3} value={d.practicalStep} onChange={(v) => patch({ practicalStep: v })} max={LIMITS.actionStatement} placeholder="The action statement" aria-label={STATEMENT_LABEL}
               wrapperClassName="w-full" className="w-full text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
-            {/* 285 (28 Oct) — the Explanation is no longer edited here: it has its own "Edit the explanation" in its section. */}
-            <input value={d.mechanismType ?? ''} onChange={(e) => patch({ mechanismType: e.target.value })} placeholder="Mechanism"
-              className="w-40 text-xs p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
-            <input value={d.targetOrganisation ?? ''} onChange={(e) => patch({ targetOrganisation: e.target.value })} placeholder="Target organisation (legislative)"
-              className="w-full text-xs p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
-            <RefTextarea value={d.wording ?? ''} onChange={(e) => patch({ wording: e.target.value })} rows={2} placeholder="Intended wording (legislative)"
-              className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
+            {/* 285 (28 Oct) — the Action details are no longer edited here: it has its own "Edit the action details" in its section. */}
+            {/* 286/288 (28 Oct) — Mechanism, Target organisation and Intended wording are retired: their text was moved into the
+                Action details under "Moved from the old fields on 28 Oct". The columns keep their values; nothing here edits them. */}
           </>
         )}
         {step === 2 && (
@@ -1762,7 +1759,7 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
       {step === 1 && (
         <div className="space-y-2">
           {/* 18 Oct (CCh B) - the FULL statement first; then what the workspace hands in; then the Commentary (181/185, unlimited, rendered whenever it exists). */}
-          {/* 285 (28 Oct) — each part of the record has its own labelled edit beside what it edits: the statement here, the Explanation in its box */}
+          {/* 285 (28 Oct) — each part of the record has its own labelled edit beside what it edits: the statement here, the Action details in its box */}
           <div className="flex items-start gap-2">
             <p className="flex-1 min-w-0 text-sm text-zinc-800 whitespace-pre-wrap" data-statement>{action.practicalStep}</p>
             <button type="button" disabled={busy} onClick={() => setEditing(true)} className="text-[11px] font-medium underline text-zinc-700 disabled:opacity-40 shrink-0" data-edit-action>Edit the action</button>
@@ -1770,10 +1767,6 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
           {between}
           {/* 26-V1b 257 — "Detail" (the column keeps its name); 2d — the quoted parts collapse to one line each, with their source */}
           <DetailBox detail={action.commentary} busy={busy} onSave={(commentary) => api.update(action.id, { commentary })} />
-          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-zinc-500">
-            {action.mechanismType && <span>Mechanism: {action.mechanismType}</span>}
-            {action.targetOrganisation && <span>Target: {action.targetOrganisation}</span>}
-          </div>
         </div>
       )}
       {step === 2 && (

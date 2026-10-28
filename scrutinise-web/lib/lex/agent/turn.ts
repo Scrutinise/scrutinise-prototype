@@ -10,6 +10,7 @@ import { verifyConfirm } from './confirm-token'
 import { recordToolCall } from './tool-log'
 import { runAgentTurn, olderHistory, priceUsage, type ChatMsg, type AgentTurnResult } from './loop'
 import { execute, toolByName } from './tools'
+import { ensureCopied, startTurn, waitForReply, addReply } from './messages'
 import type { ToolCtx, UiEffect, PendingConfirmation, UndoOffer } from './types'
 import type { UiContext } from './snapshot'
 import Anthropic from '@anthropic-ai/sdk'
@@ -86,17 +87,20 @@ export interface AgentTurnArgs {
   client?: Anthropic
   /** Test seam (287) — see AgentTurnInput.maxOutputTokens. */
   maxOutputTokens?: number
+  /** Measurement seams (293) — see AgentTurnInput. Never set by a route. */
+  prefixCacheTtl?: '5m' | '1h'
+  toolFilter?: (name: string) => boolean
 }
 
 export async function handleAgentTurn(a: AgentTurnArgs): Promise<AgentHttpResult & { result?: AgentTurnResult }> {
   if (!isOwner(a.user, a.idea)) return { status: 403, body: { error: 'Lex acts only on your own ideas.' } }
 
-  const history = asHistory(a.idea.aiChatHistory)
+  let history = asHistory(a.idea.aiChatHistory)
 
   // Idempotency: the client retries a failed POST once, and every tool here can write.
   if (a.clientTurnId) {
     const done = history.find((m) => m.role === 'lex' && m.turnId === a.clientTurnId)
-    if (done) return { status: 200, body: { chatText: done.content, agent: agentPayload(done as never), replayed: true, state: await computeCanonicalState(a.ideaId) } }
+    if (done) return { status: 200, body: { chatText: done.content, agent: agentPayload(done as never), replayed: true, reply: replyStamp(done), state: await computeCanonicalState(a.ideaId) } }
   }
 
   // A long paste is HELD OUT of the conversation (§4c): the model sees a note, the platform holds the text,
@@ -109,11 +113,34 @@ export async function handleAgentTurn(a: AgentTurnArgs): Promise<AgentHttpResult
     message = `[The user pasted ${message.length.toLocaleString('en-GB')} characters of text. It is held by the platform, not shown to you. If they want it kept, file it with file_text (fromPaste=true).]`
   }
 
-  const summary = await maybeSummarise(a.ideaId, a.user.id, history, a.client)
-  const result = await runAgentTurn({
-    ideaId: a.ideaId, userId: a.user.id, message, ui: a.ui, history, summary: summary.text, pastedText,
-    thinking: a.thinking, readOnly: a.readOnly, client: a.client, turnId: a.clientTurnId ?? null, maxOutputTokens: a.maxOutputTokens,
-  })
+  // 292 — the conversation table: an idea's existing JSON is copied in the first time a turn touches it.
+  history = (await ensureCopied(a.ideaId, history)).history
+
+  // 289 — CLAIM THE SEND BEFORE RUNNING IT. A second request for the same clientTurnId (the client's retry while the first run
+  // is still going) does not run the turn again: it waits for the first run's reply and returns that.
+  const claim = await startTurn(a.ideaId, a.clientTurnId ?? null, message, { stage: a.ui?.stage ?? null })
+  if (!claim.ok) {
+    const r = await waitForReply(a.ideaId, a.clientTurnId!)
+    console.log('[lex-agent] 289 duplicate send held', { ideaId: a.ideaId, turnId: a.clientTurnId, answered: !!r })
+    if (!r) return { status: 409, body: { error: 'That message is still being answered from your first send. Reload the page in a minute to see the reply — it will not run twice.' } }
+    const stored = asHistory((await prisma.idea.findUnique({ where: { id: a.ideaId }, select: { aiChatHistory: true } }))?.aiChatHistory)
+      .find((m) => m.role === 'lex' && m.turnId === a.clientTurnId)
+    return { status: 200, body: { chatText: r.content, agent: agentPayload((stored ?? {}) as never), replayed: true, reply: { n: r.replyNo, at: r.createdAt.toISOString() }, state: await computeCanonicalState(a.ideaId) } }
+  }
+
+  let result: AgentTurnResult
+  try {
+    const summary = await maybeSummarise(a.ideaId, a.user.id, history, a.client)
+    result = await runAgentTurn({
+      ideaId: a.ideaId, userId: a.user.id, message, ui: a.ui, history, summary: summary.text, pastedText,
+      thinking: a.thinking, readOnly: a.readOnly, client: a.client, turnId: a.clientTurnId ?? null, maxOutputTokens: a.maxOutputTokens,
+      prefixCacheTtl: a.prefixCacheTtl, toolFilter: a.toolFilter,
+    })
+  } catch (err) {
+    // A run that failed outright releases its claim, so the user's resend runs (as it did before 289); nothing was saved.
+    if (a.clientTurnId) await prisma.lexMessage.deleteMany({ where: { ideaId: a.ideaId, turnId: a.clientTurnId, role: 'user' } }).catch(() => {})
+    throw err
+  }
 
   const now = new Date().toISOString()
   const state = await computeCanonicalState(a.ideaId)
@@ -124,14 +151,22 @@ export async function handleAgentTurn(a: AgentTurnArgs): Promise<AgentHttpResult
     tools: result.toolLog, pending: result.pending, undo: result.undo, ui: result.ui,
     costPence: Number(result.cost.pence.toFixed(3)), ended: result.ended,
     ...(result.cut ? { cut: result.cut } : {}),
+    // 28 Oct (5) — a corrective retry roughly doubles a turn's cost; the reply now records why it happened
+    ...(result.retried ? { honestyRetry: { flagged: result.flagged ?? [], after: result.violations.length } } : {}),
   }
+  lexMsg.replyNo = await addReply(a.ideaId, lexMsg)
   const next = [...history, { role: 'user', content: message, timestamp: now, stage }, lexMsg].slice(-KEEP_MESSAGES)
   await prisma.idea.update({ where: { id: a.ideaId }, data: { aiChatHistory: next as never } })
 
   return {
     status: 200, result,
-    body: { chatText: result.reply, state, agent: agentPayload(lexMsg as never, result) },
+    body: { chatText: result.reply, state, agent: agentPayload(lexMsg as never, result), reply: replyStamp(lexMsg) },
   }
+}
+
+/** 282 — what the chat needs to stamp a reply: its number and when it was saved. */
+function replyStamp(m: ChatMsg): { n: number | null; at: string | null } {
+  return { n: typeof m.replyNo === 'number' ? m.replyNo : null, at: typeof m.timestamp === 'string' ? m.timestamp : null }
 }
 
 function agentPayload(m: { pending?: PendingConfirmation[]; undo?: UndoOffer[]; ui?: UiEffect[]; costPence?: number; tools?: unknown }, r?: AgentTurnResult) {
@@ -210,14 +245,15 @@ export async function handleConfirm(a: { ideaId: string; user: Owner; idea: Idea
     failureReason: r.ok ? null : (r.error ?? 'no reason was given'), confirmedVia: 'button',
   })
   const line = r.ok ? `Done — ${summary}` : `That could not be done: ${r.error ?? 'no reason was given'}`
-  const after = asHistory((await prisma.idea.findUnique({ where: { id: a.ideaId }, select: { aiChatHistory: true } }))?.aiChatHistory)
+  const after = (await ensureCopied(a.ideaId, asHistory((await prisma.idea.findUnique({ where: { id: a.ideaId }, select: { aiChatHistory: true } }))?.aiChatHistory))).history
   const lexMsg: ChatMsg = { role: 'lex', content: line, timestamp: new Date().toISOString(), undo: r.undo ? [r.undo] : [], ui: r.ui ?? [], confirmedTool: def.name, confirmedOk: r.ok }
+  lexMsg.replyNo = await addReply(a.ideaId, lexMsg) // 292/282 — the confirmation line is a reply in the table too
   await prisma.idea.update({ where: { id: a.ideaId }, data: { aiChatHistory: [...after, lexMsg].slice(-KEEP_MESSAGES) as never } })
   console.log('[lex-agent] confirmed', { ideaId: a.ideaId, tool: def.name, ok: r.ok, error: r.error })
 
   const state = await computeCanonicalState(a.ideaId)
   return {
     status: r.ok ? 200 : 422,
-    body: { ok: r.ok, chatText: line, state, agent: { pending: [], undo: r.undo ? [r.undo] : [], ui: r.ui ?? [], costPence: 0, tools: [] } },
+    body: { ok: r.ok, chatText: line, state, reply: replyStamp(lexMsg), agent: { pending: [], undo: r.undo ? [r.undo] : [], ui: r.ui ?? [], costPence: 0, tools: [] } },
   }
 }

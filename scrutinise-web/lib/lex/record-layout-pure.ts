@@ -3,16 +3,16 @@
 // Detail box cut into the owner's own text and the quoted parts below it.
 //
 // ⚠ PURE (CLAUDE.md §28). ⚠ Every state is a WORD (Charlie is colour blind; §21).
-// ⚠ 257 — "Commentary" became "Detail" on screen; 266 (24 Oct) made it "Explanation", in the action box only. The column keeps its name (`commentary`).
+// ⚠ 257 — "Commentary" became "Detail" on screen; 266 (24 Oct) made it "Explanation" and 291 (28 Oct) "Action details", in the action box only. The column keeps its name (`commentary`).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { FOLD_HEADER, isImportedHeadLine } from './action-resort-pure'
 
-export const DETAIL_LABEL = 'Explanation'
+export const DETAIL_LABEL = 'Action details'
 
 /** 2a — top to bottom. The jump band names every section but the statement (it sits under it). */
 export const RECORD_SECTIONS = [
-  { key: 'detail', label: 'Explanation' },
+  { key: 'detail', label: 'Action details' },
   { key: 'documents', label: 'Documents' },
   { key: 'law', label: 'Law' },
   { key: 'who', label: 'Who, how and against' },
@@ -62,7 +62,7 @@ export function detailParts(detail: string | null | undefined): { text: string; 
 }
 
 /**
- * 285 (28 Oct) — "Edit the explanation" edits the owner's own text only: the new text replaces everything above the "Parts of
+ * 285 (28 Oct) — "Edit the action details" edits the owner's own text only: the new text replaces everything above the "Parts of
  * this action, quoted" header, and the header and every part under it are kept exactly as stored. Empty text and no parts → null.
  */
 export function withOwnText(detail: string | null | undefined, text: string): string | null {
@@ -86,7 +86,7 @@ export interface BandInput {
   after: Array<number | null>
   comments: number | null
 }
-/** The Explanation's state in words: the band's and the closed box's own summary say the same thing (265). */
+/** The Action details' state in words: the band's and the closed box's own summary say the same thing (265). */
 export function detailState(detail: string | null | undefined): string {
   const d = detailParts(detail)
   const words = d.text ? d.text.split(/\s+/).length : 0

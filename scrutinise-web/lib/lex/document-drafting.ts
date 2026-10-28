@@ -51,7 +51,7 @@ export interface KindInput {
 }
 export interface KindRun { body: string; reason: string; pence: number | null; seconds: number; dropped: number[]; missing: string[] }
 
-/** What Lex reads for one action: the action, its Explanation and slots, the guiding policy, its instruction, cost lines, cited sources. */
+/** What Lex reads for one action: the action, its Action details and slots, the guiding policy, its instruction, cost lines, cited sources. */
 export async function kindInput(ideaId: string, actionId: string): Promise<KindInput | null> {
   const a = await prisma.lexCoherentAction.findFirst({
     where: { id: actionId, ideaId, status: 'LIVE' },
@@ -79,7 +79,7 @@ export async function kindInput(ideaId: string, actionId: string): Promise<KindI
 /** The model call and the checks for one template kind, writing nothing. */
 export async function composeKindDocument(kind: TemplateKind, input: KindInput, ctx: { ideaId: string; userId: string | null; call?: Call }): Promise<Result<KindRun>> {
   const started = Date.now()
-  if (kind === 'BACKGROUND_NOTE' && !input.sources.length) return fail(`#${input.number ?? '?'}’s Explanation cites no source, so a background note has nothing to draw on. Nothing was drafted.`)
+  if (kind === 'BACKGROUND_NOTE' && !input.sources.length) return fail(`#${input.number ?? '?'}’s Action details cite no source, so a background note has nothing to draw on. Nothing was drafted.`)
   const user = [
     `THE GUIDING POLICY:\n${clip(input.policy ?? '(not settled)', 3000)}`,
     `<action>\nAction #${input.number ?? '?'}${input.title ? ` — ${input.title}` : ''} (avenue: ${input.avenue ?? 'not set'}${input.heading ? `; heading: ${input.heading}` : ''})\nSTATEMENT:\n${input.statement}\n${input.detail?.trim() ? `EXPLANATION:\n${clip(input.detail, 8000)}\n` : 'EXPLANATION: none written.\n'}${input.who ? `Who: ${clip(input.who, 300)}\n` : ''}${input.slots.join('\n')}\n</action>`,
@@ -102,7 +102,7 @@ export async function composeKindDocument(kind: TemplateKind, input: KindInput, 
   const reason = [
     clip(res.value.reason, 1500),
     missing.length ? `Lex wrote nothing under ${missing.map((m) => `“${m}”`).join(', ')}; the document says so there.` : '',
-    dropped.length ? `Taken out because neither the Explanation nor the sources cite them: ${dropped.map((n) => `[Ref: ${n}]`).join(', ')}.` : '',
+    dropped.length ? `Taken out because neither the Action details nor the sources cite them: ${dropped.map((n) => `[Ref: ${n}]`).join(', ')}.` : '',
     dNumbers ? `Taken out: ${dNumbers} document number${dNumbers === 1 ? '' : 's'} cited as if evidence (a D-number is never a source).` : '',
   ].filter(Boolean).join(' ')
   return { ok: true, data: { body, reason, pence: priced.pence ?? null, seconds: Math.round((Date.now() - started) / 100) / 10, dropped, missing } }
