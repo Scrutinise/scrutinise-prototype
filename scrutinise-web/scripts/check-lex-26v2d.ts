@@ -273,6 +273,9 @@ async function partC(b: { copyId: string; userId: string; docId: string; d: stri
     const said = await page.locator('[data-document-said]').innerText()
     ok('after it runs, it says what each pass did, in words', /Reviewed D\.\d+\.\d+, version 2/.test(said) && /Legal: 2 issues raised/.test(said) && /Financial: 0 issues raised/.test(said), said.slice(0, 400))
     await page.waitForSelector('[data-document-reviews]', { timeout: 15_000 })
+    // ⚠ 28 Oct: the reviews list is ALREADY on screen (part B's version-1 reviews), so waiting for the selector read the tab before it
+    // refetched — green on the desktop, red on the slower laptop. Wait for the new version's words, as the tree and Risks waits below do.
+    await page.waitForFunction(() => /read version 2/.test(document.querySelector('[data-document-panel="issues"]')?.textContent ?? ''), undefined, { timeout: 15_000 }).catch(() => {})
     const tab = await page.locator('[data-document-panel="issues"]').innerText()
     ok('the Issues tab counts by pass: each read version 2, with what it raised and held up', PASSES.every((p) => new RegExp(`${p.label} — read version 2`).test(tab)) && /held up: Nothing here costs anything\./.test(tab), tab.slice(0, 500))
     ok('…and lists each issue on its part, saying which review raised it', tab.includes(`part ${b.d.replace(/^D\./, '')}.2`) && /Raised by Lex’s legal review of D\.\d+\.\d+, version 2/.test(tab))

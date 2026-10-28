@@ -58,15 +58,15 @@ const CLAIMS: Array<{ re: RegExp; tools: string[]; label: string }> = [
   { re: /\b(?:I(?:[’']ve| have)?|we(?:[’']ve| have)?)\s+(?:\w+ly\s+|now\s+)*(?:filed|attached|uploaded|logged)\b|\b(?:has|have|was|were|is|are)\s+(?:\w+ly\s+|now\s+|been\s+|also\s+|just\s+)*(?:filed|attached|uploaded)\b|\bfiled (?:it|them|that|both|all|the)\b/i,
     tools: ['file_url', 'file_text'], label: 'filed something' },
   { re: /\b(?:I(?:[’']ve| have)?|we(?:[’']ve| have)?)\s+(?:\w+ly\s+|now\s+)*added\b|\b(?:has|have|was|were|is|are)\s+(?:\w+ly\s+|now\s+|been\s+|also\s+|just\s+)*added\b|\badded (?:it|them|that|this|both|all|the|a|an)\b|\bnow (?:added|in your sources|on your list)\b/i,
-    tools: ['file_url', 'file_text', 'add_candidate', 'add_action', 'set_action_detail', 'set_action_slot', 'write_note', 'draft_field'], label: 'added something' },
+    tools: ['file_url', 'file_text', 'add_candidate', 'add_action', 'set_action_detail', 'add_explanation_section', 'set_action_slot', 'write_note', 'draft_field'], label: 'added something' },
   { re: /\byou(?:[’']ll| will| should| can| ought to)\s+(?:now\s+)?(?:see|find)\b[^.?!]{0,60}\b(?:added|there|in (?:your|the)|appear|listed|filed|saved)\b/i,
-    tools: ['file_url', 'file_text', 'add_candidate', 'add_action', 'set_action_detail', 'set_action_slot', 'write_note', 'draft_field'], label: 'said the user will now see it' },
+    tools: ['file_url', 'file_text', 'add_candidate', 'add_action', 'set_action_detail', 'add_explanation_section', 'set_action_slot', 'write_note', 'draft_field'], label: 'said the user will now see it' },
   { re: /\b(?:I(?:[’']ve| have)?)\s+(?:now\s+)?(?:drafted|written|put (?:that|it|this) in|put together|composed|proposed)\b|\b(?:has|have|was|were) (?:now |been )?drafted\b|\bdrafted (?:it|that|this|a|the)\b/i,
-    tools: ['draft_field', 'add_candidate', 'add_action', 'set_action_detail', 'set_action_slot', 'write_note'], label: 'drafted something' },
+    tools: ['draft_field', 'add_candidate', 'add_action', 'set_action_detail', 'add_explanation_section', 'set_action_slot', 'write_note'], label: 'drafted something' },
   // ⚠ "noted" is deliberately NOT here: "I've noted your point" is conversation, not a write, and flagging it
   // would repair correct replies. A claim of SAVING is what a write has to back.
   { re: /\b(?:I(?:[’']ve| have)?)\s+(?:now\s+)?(?:saved|recorded|stored)\b|\b(?:has|have|was|were|is|are) (?:now |been )?(?:saved|recorded|stored)\b/i,
-    tools: ['file_url', 'file_text', 'draft_field', 'add_candidate', 'add_action', 'set_action_detail', 'set_action_slot', 'write_note'], label: 'saved something' },
+    tools: ['file_url', 'file_text', 'draft_field', 'add_candidate', 'add_action', 'set_action_detail', 'add_explanation_section', 'set_action_slot', 'write_note'], label: 'saved something' },
   { re: /\b(?:I(?:[’']ve| have)?)\s+(?:now\s+)?(?:edited|changed|updated|rewritten|rewrote|reworded|replaced|amended)\b|\b(?:has|have|was|were) (?:now |been )?(?:edited|changed|updated|rewritten|reworded|replaced|amended)\b/i,
     tools: ['edit_field'], label: 'edited something' },
   { re: /\b(?:I(?:[’']ve| have)?)\s+(?:now\s+)?(?:accepted|approved|confirmed|chosen|settled)\b|\b(?:has|have|was|were) (?:now |been )?(?:accepted|approved|chosen|settled)\b/i,
@@ -214,8 +214,7 @@ export function correctionMessage(violations: Violation[]): string {
  * ⚠ It never rewrites a claim into a different claim — it removes it and adds a platform sentence.
  */
 export function stripViolations(reply: string, violations: Violation[], outcomes: ToolOutcome[]): string {
-  const bad = new Set(violations.map((v) => v.sentence))
-  const kept = splitSentences(reply).filter((s) => !bad.has(s)).join(' ').trim()
+  const kept = removeSentences(reply, violations.map((v) => v.sentence))
   const anyChange = outcomes.some((o) => o.ok && (o.category === 'file' || o.category === 'draft' || o.category === 'change' || o.category === 'run'))
   const pending = outcomes.some((o) => o.pending)
   const note = pending
@@ -223,5 +222,26 @@ export function stripViolations(reply: string, violations: Violation[], outcomes
     : anyChange
       ? 'I removed part of that reply because I could not confirm it; the record of what was actually done this turn is in the action list.'
       : 'Nothing was changed on your idea this turn.'
-  return [kept, note].filter(Boolean).join('\n\n')
+  // The model has copied this note out of earlier history before (27 Oct 10:05 carried it twice); say it once.
+  return kept.endsWith(note) ? kept : [kept, note].filter(Boolean).join('\n\n')
+}
+
+/**
+ * ⚠ FOUND 28 OCT (CCh-Lex 28 Oct (1) item 1). This used to rebuild the reply from `splitSentences(...)` joined with a
+ * SPACE — and `splitSentences` splits on every line break, so a reply that tripped one violation lost every heading,
+ * list and table and reached the chat as one paragraph with "## " mid-line. Two of Charlie's replies on 452c5ade
+ * (23 Oct 17:06, 27 Oct 10:05) were stored that way. The sentences are now cut out of the text where they stand,
+ * so the layout around them survives.
+ */
+export function removeSentences(reply: string, sentences: string[]): string {
+  let out = reply
+  for (const s of new Set(sentences)) if (s) out = out.replace(s, () => '')
+  return out
+    .split('\n')
+    .map((l) => l.replace(/(\S)[ \t]{2,}/g, '$1 ').replace(/[ \t]+$/, ''))
+    // A bullet or numbered item whose only sentence was removed is removed with it, not left as a bare marker.
+    .filter((l) => !/^\s*(?:[-*•]|\d+[.)])\s*$/.test(l))
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 }

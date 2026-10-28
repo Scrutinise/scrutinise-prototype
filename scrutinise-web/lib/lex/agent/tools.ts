@@ -624,12 +624,15 @@ const addActionTool: ToolDefinition = {
   },
 }
 
+// 8,000 characters ≈ 2,000 tokens — far inside the 16,000-token ceiling, and above the 5,000-character replace check:lex-26s2 asserts.
+export const DETAIL_CALL_MAX = 8000
 const setActionDetailTool: ToolDefinition = {
   name: 'set_action_detail', category: 'draft', tier: 'free',
-  description: `Put text in an action's DETAIL (unlimited; beside its ${LIMITS.actionStatement}-character statement): the intention, examples, dimensions, or the full wording a limit cut. mode "append" (default) adds to what is there; "replace" overwrites it — use replace only when the user asked. Never edit the statement itself with this.`,
+  description: `Put a SHORT text (at most ${DETAIL_CALL_MAX.toLocaleString('en-GB')} characters) in an action's DETAIL, which the screen calls the Explanation: the intention, examples, dimensions, or the wording a limit cut. mode "append" (default) adds to what is there; "replace" overwrites it — use replace only when the user asked. Anything longer goes in through add_explanation_section, a section per call. Never edit the statement itself with this.`,
   schema: z.object({
     action: z.number().int().describe('the action number, as in #31'),
-    detail: z.string().min(1).max(100000),
+    // 287 — ENFORCED, not only asked: on 28 Oct one huge call was cut off three times and saved nothing. A long text is built in sections.
+    detail: z.string().min(1).max(DETAIL_CALL_MAX, `at most ${DETAIL_CALL_MAX.toLocaleString('en-GB')} characters in one call — put a longer Explanation in through add_explanation_section, one section per call`),
     mode: z.enum(['append', 'replace']).default('append'),
     provenance: ProvenanceSchema,
   }),
@@ -642,6 +645,36 @@ const setActionDetailTool: ToolDefinition = {
     const next = input.mode === 'replace' || !cur?.commentary?.trim() ? input.detail.trim() : `${cur.commentary.trim()}\n\n${input.detail.trim()}`
     await prisma.lexCoherentAction.update({ where: { id: rows[0].id }, data: { commentary: next } })
     return { ok: true, data: { number: rows[0].number, detailLength: next.length, mode: input.mode, say: `Put it in the Detail of #${rows[0].number}.` } }
+  },
+}
+/**
+ * 287 (b) — CCh-Lex 28 Oct (3). On 28 Oct Charlie asked for a long Explanation on 452c5ade three times; each turn spent its whole output
+ * budget writing ONE set_action_detail call, was cut off before the call finished, and saved nothing (47.2p). A long Explanation is now
+ * built a section per call: each section is saved the moment it lands, so a cut-off loses at most the section being written, and
+ * "carry on" resumes after the last saved one.
+ */
+export const EXPLANATION_SECTION_MAX = 6000
+const addExplanationSection: ToolDefinition = {
+  name: 'add_explanation_section', category: 'draft', tier: 'free',
+  description: `Append ONE section to an action's Explanation (the unlimited text beside its statement), under its own heading. Use this — not set_action_detail — for anything longer than about 800 words: write the Explanation as several sections, one call each, so each is saved as it lands. At most ${EXPLANATION_SECTION_MAX.toLocaleString('en-GB')} characters per call. It never touches the statement and never replaces what is there.`,
+  schema: z.object({
+    action: z.number().int().describe('the action number, as in #59'),
+    heading: z.string().min(2).max(140).describe('the section heading, without "#"'),
+    text: z.string().min(1).max(EXPLANATION_SECTION_MAX, `a section is at most ${EXPLANATION_SECTION_MAX.toLocaleString('en-GB')} characters — split it into two sections`),
+    provenance: ProvenanceSchema,
+  }),
+  describe: (i) => `Add the section “${(i as { heading?: string })?.heading ?? ''}” to the Explanation of #${(i as { action?: number })?.action ?? '?'}`,
+  async run(ctx, input) {
+    const prov = await checkProvenance(ctx, input.provenance)
+    if (provFailed(prov)) return fail(prov.error)
+    const { rows } = await actionsByNumbers(ctx, [input.action])
+    if (!rows.length) return fail(`there is no live action #${input.action} on this idea.`)
+    const cur = await prisma.lexCoherentAction.findUnique({ where: { id: rows[0].id }, select: { commentary: true } })
+    const section = `## ${input.heading.replace(/^#+\s*/, '').trim()}\n\n${input.text.trim()}`
+    const next = cur?.commentary?.trim() ? `${cur.commentary.trim()}\n\n${section}` : section
+    await prisma.lexCoherentAction.update({ where: { id: rows[0].id }, data: { commentary: next } })
+    const sections = (next.match(/^## /gm) ?? []).length
+    return { ok: true, data: { number: rows[0].number, heading: input.heading, sectionChars: section.length, explanationLength: next.length, sectionsNow: sections, say: `Saved the section “${input.heading}” in the Explanation of #${rows[0].number}.` } }
   },
 }
 const writeNote: ToolDefinition = {
@@ -1674,7 +1707,7 @@ export const MODEL_TOOLS: ToolDefinition[] = [
   readField, listCandidates, listActionsTool, listSources, readSource, listChallenges, readHistory, listNotes,
   searchCorpus, searchWeb, searchMyDocuments, statuteEffects, statuteOnward, readSectionTool,
   fileUrl, fileText,
-  draftField, addCandidate, addActionTool, setActionDetailTool, writeNote,
+  draftField, addCandidate, addActionTool, setActionDetailTool, addExplanationSection, writeNote,
   explain,
   acceptFieldTool, editFieldTool, ruleOut, restoreCandidate, mergeCandidates, choosePolicy, unchoosePolicy, moveToActions,
   dismissProposalTool, skipFieldTool, reopenFieldTool, archiveSource,

@@ -267,7 +267,7 @@ control('L1 âš  a procedural mention classified as a power is caught (the briefâ
   return broken('mention', 'section-20', 'none') === 'enacting-mention' && broken('mention', null, null) === 'enacting-mention'
 })
 control('L2 words-power on a provision that confers none, kept as made-under, is caught', () => {
-  const broken = (role: any, _ref: string | null, _st: any) => (role === 'power' ? 'made-under' : 'enacting-mention')
+  const broken = (role: any, _ref: string | null, _st: any): string => (role === 'power' ? 'made-under' : 'enacting-mention')
   return broken('power', 'section-20', 'none') === 'enacting-unresolved'
 })
 control('L3 the provision promoting a mention to a power is caught', () => {

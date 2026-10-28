@@ -26,8 +26,8 @@ const act = (n: number, over: Partial<CanonicalAction> = {}): CanonicalAction =>
   record: null, noCostReason: null, conditionIds: [], supportOnly: false, foldedIntoId: null, headingReason: null, ...over,
 })
 const heads: CanonicalActionHeading[] = [
-  { id: 'h1', name: 'Legislation', colourKey: 'navy', hidden: false, orderIndex: 0 },
-  { id: 'h2', name: 'Practical steps', colourKey: 'olive', hidden: true, orderIndex: 1 },
+  { id: 'h1', name: 'Legislation', colourKey: 'navy', hidden: false, orderIndex: 0, kind: null, proposedKind: null, proposedKindReason: null },
+  { id: 'h2', name: 'Practical steps', colourKey: 'olive', hidden: true, orderIndex: 1, kind: null, proposedKind: null, proposedKindReason: null },
 ]
 const causes = [
   { id: 'c1', number: 1, cause: 'Responsibility is spread across committees' }, { id: 'c2', number: 2, cause: 'Nobody measures delivery' },

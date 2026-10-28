@@ -36,7 +36,10 @@ export const AGENT_MODEL = 'claude-sonnet-5-5'
 export const AGENT_RATES = { inPerM: 2.0, outPerM: 10.0, cacheReadPerM: 0.2, cacheWritePerM: 2.5 } as const
 
 const MAX_ITERATIONS = 8
-const MAX_OUTPUT_TOKENS = 4096
+// ⚠ 28 OCT: was 4096. Charlie's 02:55 turn on 452c5ade asked for a long Explanation to be drafted; the model ran out mid-call and
+// the reply he got was only the cut-off note, for 21.2p. Output is billed on what is generated, so a higher ceiling costs nothing
+// unless used (CLAUDE.md §18.5); MAX_TURN_PENCE still bounds the turn.
+const MAX_OUTPUT_TOKENS = 16000
 /** Past this, the loop stops and says so — a turn must not be able to spend without limit. */
 const MAX_TURN_PENCE = 40
 const TURN_DEADLINE_MS = 240_000
@@ -67,6 +70,8 @@ export interface AgentTurnInput {
   readOnly?: boolean
   /** Test seam: supply a client. */
   client?: Anthropic
+  /** Test seam (287): a lower output ceiling, so a check can force the cut-off path cheaply. Never set by a route. */
+  maxOutputTokens?: number
   /** 26-P addendum §8c — the client turn id, so one turn's recorded calls read together. */
   turnId?: string | null
 }
@@ -95,6 +100,43 @@ export interface AgentTurnResult {
   tainted: boolean
   cost: TurnCost
   snapshotCounts: Record<string, number>
+  /** 287 (c) — present only when the turn was cut off at the output limit. */
+  cut?: CutOff
+}
+
+// ── the cut-off (287 c) ───────────────────────────────────────────────────────────────────────
+
+/** What a turn cut off at the length limit was doing, and what it had saved before the cut. Stored on the reply; read by `platformRecord`. */
+export interface CutOff {
+  /** The tool the model was still writing when it ran out, if any — it was NOT run. */
+  writing: string | null
+  /** The action that tool was for, when the partial input names one. */
+  action: number | null
+  /** What did land this turn, in words, in order. */
+  saved: string[]
+}
+
+const WRITING_WORDS: Record<string, string> = {
+  add_explanation_section: 'a section of the Explanation', set_action_detail: 'the Explanation', add_action: 'a new action',
+  draft_field: 'a draft of a field', write_note: 'a note', set_action_slot: 'an answer in the action\'s record',
+}
+
+export function cutOffRecord(last: Anthropic.Message | null, toolLog: ToolLogEntry[]): CutOff {
+  const block = last?.content.find((b): b is Anthropic.ToolUseBlock => b.type === 'tool_use')
+  const n = Number((block?.input as { action?: unknown } | undefined)?.action)
+  const saved = toolLog.filter((t) => t.ok && !t.pending && ['file', 'draft', 'change', 'run'].includes(toolByName(t.name)?.category ?? '')).map((t) => {
+    const i = (t.input ?? {}) as { action?: number; heading?: string }
+    return t.name === 'add_explanation_section' ? `the section “${i.heading ?? ''}” in the Explanation of #${i.action}`
+      : t.name === 'set_action_detail' ? `text in the Explanation of #${i.action}` : `${t.name} — ${t.summary.slice(0, 100)}`
+  })
+  return { writing: block?.name ?? null, action: Number.isInteger(n) && n > 0 ? n : null, saved }
+}
+
+export function cutOffSentence(c: CutOff): string {
+  const what = c.writing ? `while writing ${WRITING_WORDS[c.writing] ?? c.writing}${c.action ? ` for #${c.action}` : ''}` : 'while writing this reply'
+  const done = c.saved.length ? `Saved before the cut: ${c.saved.join('; ')}.` : 'Nothing was saved this turn.'
+  const lost = c.writing ? ' The part I was writing when I ran out was not saved.' : ''
+  return `I was cut off at the length limit ${what}. ${done}${lost} Say “carry on” and I will continue from there${c.saved.length ? ', without redoing what is saved' : ''}.`
 }
 
 // ── tool definitions as the API wants them ────────────────────────────────────────────────────
@@ -149,6 +191,9 @@ export function platformRecord(m: ChatMsg): string {
   const lines = acting.map((t) => t.pending ? `${t.name} — NOT DONE, was waiting for the user's confirm button`
     : t.ok ? `${t.name} — done (${(t.summary ?? '').slice(0, 140)})` : `${t.name} — FAILED (${(t.error ?? t.summary ?? '').slice(0, 140)})`)
   if (m.confirmedTool) lines.push(`${m.confirmedTool} — the user pressed the button; ${m.confirmedOk ? 'done' : 'it did not succeed'}`)
+  // 287 (c) — so "carry on" knows where it stopped.
+  const c = m.cut as CutOff | undefined
+  if (c) lines.push(`THAT TURN WAS CUT OFF at the length limit${c.writing ? ` while you were writing ${c.writing}${c.action ? ` for #${c.action}` : ''} (not run, not saved)` : ''}; saved before the cut: ${c.saved.length ? c.saved.join('; ') : 'nothing'}`)
   if (!lines.length) return ''
   return `\n\n[Platform record of the actions in that turn — written by the platform from the tool results, not by you: ${lines.join('; ')}]`
 }
@@ -262,12 +307,13 @@ export async function runAgentTurn(input: AgentTurnInput): Promise<AgentTurnResu
   const undo: UndoOffer[] = []
   let ended = 'end_turn'
   let retried = false
+  let cut: CutOff | undefined
 
   async function call(): Promise<Anthropic.Message> {
     // ⚠ Fields the installed SDK types predate (`thinking: between_tools`, `output_config`) are passed
     // through the cast; the API, not the types, is the authority for Sonnet 5.5.
     const params = {
-      model: AGENT_MODEL, max_tokens: MAX_OUTPUT_TOKENS, system, tools: toolParams(!!input.readOnly),
+      model: AGENT_MODEL, max_tokens: input.maxOutputTokens ?? MAX_OUTPUT_TOKENS, system, tools: toolParams(!!input.readOnly),
       tool_choice: { type: 'auto' }, messages,
       // Top-level auto-cache: caches the LAST cacheable block, so each call in the tool loop (and the next
       // turn's history) reads the growing conversation from cache. Measured: uncached input was the biggest
@@ -362,7 +408,11 @@ export async function runAgentTurn(input: AgentTurnInput): Promise<AgentTurnResu
     if (violations.length) reply = stripViolations(reply, violations, outcomes)
 
     // §18 — a stop that is not a clean end names itself.
-    if (ended === 'max_tokens') reply = `${reply}\n\n(That reply was cut off at the length limit — ask me to carry on.)`.trim()
+    // 287 (c) — a cut-off says what Lex was doing and how far it got, and the same facts ride in the platform record so "carry on" resumes.
+    if (ended === 'max_tokens') {
+      cut = cutOffRecord(last, toolLog)
+      reply = `${reply}\n\n(${cutOffSentence(cut)})`.trim()
+    }
     else if (ended === 'refusal') reply = reply || 'I was not able to help with that request.'
     else if (ended === 'iterations') reply = `${reply}\n\nI stopped after ${MAX_ITERATIONS} steps without finishing — what is done is listed below.`.trim()
     else if (ended === 'budget') reply = `${reply}\n\nI stopped because this one request had already cost more than ${MAX_TURN_PENCE}p. What is done is listed below.`.trim()
@@ -379,7 +429,7 @@ export async function runAgentTurn(input: AgentTurnInput): Promise<AgentTurnResu
       tools: toolLog.map((t) => `${t.name}${t.pending ? '(pending)' : t.ok ? '' : '(failed)'}`), retried, violations: violations.length, tainted: turn.tainted,
     })
 
-    return { reply, ui: uiEffects, pending, undo, toolLog, outcomes, violations, retried, ended, tainted: turn.tainted, cost, snapshotCounts: snap.counts }
+    return { reply, ui: uiEffects, pending, undo, toolLog, outcomes, violations, retried, ended, tainted: turn.tainted, cost, snapshotCounts: snap.counts, ...(cut ? { cut } : {}) }
   } catch (err) {
     // A failure announces itself with its cause (CLAUDE.md §18). It is not dressed up as an answer.
     const reason = err instanceof Error ? err.message : String(err)

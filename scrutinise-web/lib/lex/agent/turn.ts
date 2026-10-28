@@ -84,6 +84,8 @@ export interface AgentTurnArgs {
   /** The first stage's "Ask" chat — answers only. */
   readOnly?: boolean
   client?: Anthropic
+  /** Test seam (287) — see AgentTurnInput.maxOutputTokens. */
+  maxOutputTokens?: number
 }
 
 export async function handleAgentTurn(a: AgentTurnArgs): Promise<AgentHttpResult & { result?: AgentTurnResult }> {
@@ -110,7 +112,7 @@ export async function handleAgentTurn(a: AgentTurnArgs): Promise<AgentHttpResult
   const summary = await maybeSummarise(a.ideaId, a.user.id, history, a.client)
   const result = await runAgentTurn({
     ideaId: a.ideaId, userId: a.user.id, message, ui: a.ui, history, summary: summary.text, pastedText,
-    thinking: a.thinking, readOnly: a.readOnly, client: a.client, turnId: a.clientTurnId ?? null,
+    thinking: a.thinking, readOnly: a.readOnly, client: a.client, turnId: a.clientTurnId ?? null, maxOutputTokens: a.maxOutputTokens,
   })
 
   const now = new Date().toISOString()
@@ -121,6 +123,7 @@ export async function handleAgentTurn(a: AgentTurnArgs): Promise<AgentHttpResult
     turnId: a.clientTurnId ?? null,
     tools: result.toolLog, pending: result.pending, undo: result.undo, ui: result.ui,
     costPence: Number(result.cost.pence.toFixed(3)), ended: result.ended,
+    ...(result.cut ? { cut: result.cut } : {}),
   }
   const next = [...history, { role: 'user', content: message, timestamp: now, stage }, lexMsg].slice(-KEEP_MESSAGES)
   await prisma.idea.update({ where: { id: a.ideaId }, data: { aiChatHistory: next as never } })
