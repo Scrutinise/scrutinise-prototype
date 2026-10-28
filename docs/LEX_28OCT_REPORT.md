@@ -167,6 +167,38 @@ asking before it runs.
 
 ---
 
+## 284 and 285 — built 28 Oct afternoon (no schema)
+
+**284 — "63" / "#63" finds action 63 first.** `lib/lex/action-find.ts` (pure). A find-box entry that is only a number (with or without
+`#`) shows a card above the list: `#63 <title> — merged into #207 on 12 Oct 2026`, with **Show it in Ruled out and merged away** and
+**Go to #207**. It searches the live list, Later phase and the set-aside rows (before, set-aside rows were never searched, so a merged
+action could not be found by its own number). A chain is followed ("merged into #71 on 14 Oct 2026; #71 was later merged into #207").
+Ruled out reads "ruled out on 20 Oct 2026: <reason>"; parked reads "in Later phase (<reason>)"; a number nobody has says so. Text matches
+are listed below the card as before, and a `#63` word no longer matches `#630`.
+- ⚠ **The date is the set-aside row's last change** (`updatedAt`, now sent to the screen as `setAsideAt`). No column records the moment of
+  a merge. For a row nobody edited after it was set aside, that is the merge date; if one was edited later, the date is the later edit.
+- The card is shown in the browser's time zone (the same rule as 282).
+
+**285 — the Explanation section.** In the opened record:
+- the statement has its own labelled **Edit the action** beside it (the old bare "Edit" is gone on step 1);
+- the Explanation shows the owner's own text **set out** — headings, bold, lists, tables, through the chat's own renderer — above
+  "Parts of this action, quoted", with **Edit the explanation** beside it; **Edit title** is as it was;
+- the text box and the editor are resizable with a visible drag handle ("═ drag to resize ═"; Up/Down arrows work too);
+- empty: **"No explanation written yet — Write one"**;
+- "Edit the explanation" changes the owner's text only. The quoted parts below are kept exactly as stored (`withOwnText`), and only
+  `commentary` is sent. The Explanation box has left the "Edit the action" form.
+- ⚠ **One reading to confirm:** the Explanation section itself still opens closed, like every record section (265, your 24 Oct rule).
+  "Always shows" is built as: inside the section, the owner's text is always shown set out, never behind a further click. If you meant
+  the section should open by itself, that is a one-line change, but it reverses 265 for this one section, so I have not made it.
+
+**Checks:** check:lex-284 **23/23**, 4 controls fired, 0 dead (Part B types into the real ActionsWorkspace in Chromium);
+check:lex-26u **66/66** (9 new 285 assertions in Chromium: the empty state, the labelled buttons, a 120px drag that grows the box, Save
+sending only the Explanation with the quoted part kept byte for byte, the text set out above the parts); lex-26v1b **78/78**;
+lex-26s-browser **93/93** (1 not run: its `--db` part); lex-26s2 **220/221** (the same ledger row 9900 as this morning); web tsc clean;
+check:scripts clean; check-clean-build --fast PASS.
+
+**Still not built:** 282 (best on 283's table), 283 (waits on your reading of item 2), 286 (waits on your yes to move 73 actions on 15 ideas).
+
 ## The outstanding items from the desktop handover (25 Oct)
 
 - **check:lex-26u: 57/57, 9 controls, 0 dead.** It first crashed on this laptop because the generated Prisma client predated the pull

@@ -1014,6 +1014,12 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-10-28 16:58 UTC (laptop): 284 and 285 built, checked and pushed.** See CHANGE_LOG 16:58 and `docs/LEX_28OCT_REPORT.md` § "284 and 285".
+- **284:** typing a number in the actions find box finds that action first, wherever it went, and says where ("merged into #207 on 12 Oct 2026").
+- **285:** "Edit the action" / "Edit the explanation" / "Edit title"; the Explanation set out, resizable, empty state "No explanation written yet — Write one".
+- **Waiting on Charlie (unchanged):** item 2 report before 283; 286's move; the double-run lock; and one reading of 285 (the section still opens closed per 265).
+- **Next:** 282 after 283. The laptop handover folder (`C:\Dropbox\GitHub\Desktop-Laptop handover`) holds the memory files and settings for the move back to the desktop.
+
 **▶ 2026-10-28 03:40 UTC (laptop): 287 and 28 Oct item 1 built and checked; item 2 reported; 282–286 sized.** See CHANGE_LOG 03:40 and `docs/LEX_28OCT_REPORT.md`.
 - **287:** the agent turn's output ceiling is 16,000; `add_explanation_section` builds a long Explanation a section per call; a cut-off names what was being written and what was saved, and "carry on" resumes from it. Charlie's three cut-off turns cost 47.21p.
 - **Item 1:** `stripViolations` flattened any reply it touched; now cuts sentences in place. Two stored replies stay flattened.

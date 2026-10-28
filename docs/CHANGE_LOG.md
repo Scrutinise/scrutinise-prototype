@@ -1,5 +1,21 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-28 16:58 UTC - LEX: 284 (find an action by its number, wherever it went) and 285 (the Explanation section)
+
+*Laptop session. CCh-Lex 28 Oct (2) items 5 and 6. No schema. Report: `docs/LEX_28OCT_REPORT.md` § "284 and 285".*
+
+- **284:** `lib/lex/action-find.ts` (new, pure). "63" or "#63" in the actions find box shows action 63 first, from the live list, Later phase
+  or the set-aside rows, saying where it is or went ("merged into #207 on 12 Oct 2026", chains followed, "ruled out on … : reason"), with
+  buttons to show it or go to the action it went into. Text matches below; "#63" no longer matches #630. `CanonicalAction.setAsideAt`
+  (optional; a set-aside row's `updatedAt`) carries the date. ⚠ It is the row's last change, not a recorded merge time.
+- **285:** `components/lex/FieldsPanel.tsx`. "Edit the action" beside the statement; the Explanation set out with the chat's markdown
+  renderer above "Parts of this action, quoted", with "Edit the explanation" beside it; a drag handle on the text and the editor; empty
+  state "No explanation written yet — Write one". `withOwnText` (record-layout-pure) keeps the quoted parts when the owner's text is
+  edited. The Explanation box has left the action editor.
+- **Checks:** new `check:lex-284` 23/23 (Chromium); `check:lex-26u` 66/66 (its card harness gained a re-mount with a given Explanation);
+  `check:lex-26s2` control text updated to the new empty state, 220/221 (ledger row 9900, the desktop's); lex-26v1b 78/78;
+  lex-26s-browser 93/93; web tsc and check:scripts clean; clean-build --fast PASS.
+
 ## 2026-10-28 03:40 UTC - LEX: 287 (cut-off replies) and 28 Oct item 1 (chat formatting); report on 283; handover items closed
 
 *Laptop session. CCh-Lex 28 Oct (1)–(3). Report: `docs/LEX_28OCT_REPORT.md`.*
