@@ -35,8 +35,15 @@ export const AGENT_MODEL = 'claude-sonnet-5-5'
 /** Anthropic's published rates for this model (cached 2026-09-25 in the claude-api reference): $/M tokens. ⚠ NOT verified against an invoice. */
 export const AGENT_RATES = { inPerM: 2.0, outPerM: 10.0, cacheReadPerM: 0.2, cacheWritePerM: 2.5 } as const
 
-/** 293 — the lifetime of the tools + system-prompt cache breakpoint. Set from the 28 Oct scratch measurement (see LEX_28OCT_REPORT). */
-export const PREFIX_CACHE_TTL: '5m' | '1h' = '5m'
+/**
+ * 293 (28 Oct (5)) — the lifetime of the tools + system-prompt cache breakpoint: ONE HOUR. Measured on a scratch copy of 452c5ade with
+ * Charlie's conversation: a turn 6 minutes after the last cost 12.96p with the 5-minute cache (it rewrote 61k cached tokens) and 7.76p
+ * with the 1-hour one (it read them). Of his 55 turns since 1 Oct, 19 came 5–60 minutes after the previous (each ≈5p cheaper) and 22
+ * after more than an hour or first (each ≈3p dearer: a 1-hour write is 2× input, a 5-minute one 1.25×); net ≈0.5p a turn cheaper, and the
+ * typical (median) turn falls in the 5–60 minute band. The snapshot and conversation breakpoints stay at 5 minutes (they change per turn).
+ * ⚠ A 1-hour breakpoint must come before any 5-minute one — it is the first, so it does.
+ */
+export const PREFIX_CACHE_TTL: '5m' | '1h' = '1h'
 
 const MAX_ITERATIONS = 8
 // ⚠ 28 OCT: was 4096. Charlie's 02:55 turn on 452c5ade asked for long Action details to be drafted; the model ran out mid-call and

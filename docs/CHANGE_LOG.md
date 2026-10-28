@@ -1,5 +1,25 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-28 23:32 UTC - LEX: 293 measured and (a) adopted — the tools + system prompt cached for 1 hour; 292 backfilled; cf58c735 verified live
+
+*Laptop session. CCh-Lex 28 Oct (5). Report: `docs/LEX_28OCT_REPORT.md` § "293".*
+
+- **293 measured on a scratch copy of 452c5ade with Charlie's conversation** (`scripts/measure-293.ts`; two read-only turns 6 minutes
+  apart per arm; 59.04p, `purpose = measurement`). Second turn: **5-minute cache 12.96p** (rewrote 61,242 cached tokens) · **1-hour cache
+  7.76p** (read 72,939) · step-1 tools only, 5-minute cache 7.14p (one call; rewrote 35,502 — ≈10,000 fewer than the full list). Tools
+  are 19,267 tokens of 71 (token counter). Against Charlie's 55 turns since 1 Oct: 19 come 5–60 min after the previous (≈5p cheaper
+  each with 1 hour), 22 after >1 hour or first (≈3p dearer: a 1-hour write is 2× input), 14 within 5 min (no change): ≈0.5p a turn
+  cheaper on average, ≈5p on the typical turn.
+- **Adopted (a):** `PREFIX_CACHE_TTL = '1h'` in `lib/lex/agent/loop.ts` (the first breakpoint only; snapshot and conversation stay 5
+  minutes). **Not adopted (b):** per-step tool lists split the cached prefix by step (working against (a)), the chat does not tell Lex
+  the screen or step, and after (a) the saving is ≈0.15p a cached call. Reasons in the report.
+- **292 backfill** (after cf58c735 went live at 23:28): **1,093 messages on 76 ideas** copied into `LexMessage`; read back 76/76 match
+  their JSON message for message, replies numbered 1..N.
+- **§20:** cf58c735 is what production serves (`/api/health` 23:28:42, env production); the live `/ideas/create` script
+  `8452743bbb425bd9.js` carries "No action details written yet", "Save the action details" and the `data-reply-stamp` stamp; "No
+  explanation written yet" and "Save the explanation" are absent from all 21 of its chunks.
+- Checks after the change: web tsc clean; check:lex-287 offline 7/7.
+
 ## 2026-10-28 23:20 UTC - LEX: 288 (retired fields), 289 (one turn, one run), 290, 291 (Action details), 292 + 282 (the whole conversation, numbered replies)
 
 *Laptop session. CCh-Lex 28 Oct (4) and (5); (5) replaced (4) on 288. **Schema: `LexMessage`, applied to Neon first (whichdb: ep-old-dust-aboxi69a), committed with its code.** Report: `docs/LEX_28OCT_REPORT.md` § "28 Oct (4)–(5)".*

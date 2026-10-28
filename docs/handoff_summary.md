@@ -1014,6 +1014,14 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-10-28 23:32 UTC (laptop): CCh-Lex 28 Oct (4)–(5) done — 288, 289, 290, 291, 292 + 282, 293 (a).** cf58c735 live and read back; see
+CHANGE_LOG 23:20 and 23:32 and `docs/LEX_28OCT_REPORT.md` § "28 Oct (4)–(5)" and § "293".
+- **288:** Target organisation → Action details on 12 actions (452c5ade; all had a Who); Mechanism hidden, not moved; the (4) run put back from its revisions on 73.
+- **289:** `LexMessage` (idea, clientTurnId, role) unique = the in-flight lock. No other doubled turn in the ledger.
+- **290/291:** "Action details" (was Explanation), opens open. **292/282:** `LexMessage` (backfilled: 1,093 messages, 76 ideas), `read_reply`, `search_conversation`, "Reply N · <date>" stamps.
+- **293:** 1-hour cache on tools + system prompt adopted; per-step tools not (reasons in the report).
+- **Open for Charlie:** Proposal / Meeting Pack still print Mechanism / Target; `entity_list_v5.md` lacks `LexMessage`; lex-26s2-structure 104/105 (archived-headings count, not this work's code, not proved at HEAD).
+
 **▶ 2026-10-28 16:58 UTC (laptop): 284 and 285 built, checked and pushed.** See CHANGE_LOG 16:58 and `docs/LEX_28OCT_REPORT.md` § "284 and 285".
 - **284:** typing a number in the actions find box finds that action first, wherever it went, and says where ("merged into #207 on 12 Oct 2026").
 - **285:** "Edit the action" / "Edit the explanation" / "Edit title"; the Explanation set out, resizable, empty state "No explanation written yet — Write one".

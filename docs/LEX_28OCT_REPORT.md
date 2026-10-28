@@ -199,6 +199,108 @@ check:scripts clean; check-clean-build --fast PASS.
 
 **Still not built:** 282 (best on 283's table), 283 (waits on your reading of item 2), 286 (waits on your yes to move 73 actions on 15 ideas).
 
+## 28 Oct (4)–(5) — built and run 28 Oct evening
+
+**287 — status, as (4) asked:** built and live since `1171349c` (16,000-token ceiling, `add_action_details_section`, the cut-off record);
+`check:lex-287 --live` 15/15 this morning. Nothing of it waits; it does not hold up 283.
+
+**288 — the retired fields (all 15 ideas are yours).** (4)'s instruction ran first: Mechanism and Target organisation copied into the
+Explanation of 73 actions, each with a `FieldRevision`. (5) then changed the rule, so that run was **put back from its own revisions**
+(another revision first, each time) and (5)'s rule applied:
+- **Target organisation → Who where Who is empty, otherwise Action details** under "## Moved from the old fields on 28 Oct". All 12
+  actions holding one (all on 452c5ade) already had a Who, so **all 12 went into Action details; 0 into Who.**
+- **Mechanism: not moved.** Hidden from the screen; the column keeps its value (gap-check still reads it to classify).
+- **Intended wording:** nothing held any.
+- Per idea: 452c5ade 18 put back, 12 Target → Action details; the other 14 ideas 4 put back each (Sentencing Council 3), nothing else.
+  Read back 73/73; no Explanation still carries a moved Mechanism line; a second run changes nothing.
+- Off the screen: the three inputs in "Edit the action", and the card's "Mechanism: … Target: …" line. Lex's `add_action` no longer
+  takes them and `list_actions` no longer returns them.
+- ⚠ Not changed: the **Proposal** still prints "Mechanism: …" in an action's line and a "Legislative annex" with "Target: …"; for the
+  12 on 452c5ade the Target now also appears in Action details, so it prints twice there. The **Meeting Pack** prints the target beside
+  each action. Say if those should go too.
+
+**289 — one turn, one run.** The fix is the 292 table's unique (idea, clientTurnId, role): the user's row is written when a turn
+**starts**, so a retried POST of the same send cannot start a second run; it waits (up to 270 s) for the first run's reply and returns
+it. A run that throws releases its claim; a model failure is stored as a reply, as before. `check:lex-292` B proves it: the same send
+twice at once → **one** model run, the same reply to both; control: two different sends → two runs.
+**Other doubled turns in the ledger: none.** Two independent searches — a turn id whose tool sequence starts over (44 turns carry tool
+records), and a charged turn with no stored reply within 4 minutes of one that has one (every idea's stored history) — both find only
+`6a06feb5` (28 Oct 02:33, 15.04p + 7.19p). ⚠ Their reach: turns before tool records carried a turn id, and turns older than an idea's
+200-message store, cannot be examined either way.
+
+**290** — Action details opens open: the one exception to 265, asserted in lex-26v1b (every other section still opens closed).
+
+**291** — "Explanation" → **"Action details"**: section title, box label ("Action details — what this action does in full and why; parts,
+tables, no limit"), "Edit the action details", "Save the action details", "No action details written yet — Write them", the find box,
+Lex's prompt and `add_action_details_section`, the drafting prompt, the Proposal's heading over it, and the checks by name. Action box
+only; the column stays `commentary`.
+
+**292 (with 282) — the whole conversation.**
+- `LexMessage`: one row per message, **never cut**; `n` is its place in the conversation, `replyNo` Lex's reply number. Schema and SQL
+  in one commit, applied to Neon first.
+- The JSON history is unchanged and still drives the chat and **the 20-message window** (as (5) said). The table is written beside it by
+  both writers (a turn and a confirmation).
+- Backfill: an idea is copied in the first time a turn touches it; `scripts/backfill-292-messages.ts` copied the rest after the deploy
+  (figures below). Your 452c5ade: every stored message, replies numbered from the oldest kept (17 Oct). ⚠ The turns before 17 Oct are not
+  in the JSON (the 200-message cut, and before), so the table cannot have them either.
+- `read_reply(n)` returns reply N in full with the message it answered; `search_conversation(query)` searches every message (Postgres
+  text search, English stemming, "quoted phrase"), newest first. They replace `read_history`, which read only the JSON.
+- **282:** each Lex reply is stamped **"Reply 31 · Wed 28 Oct 26, 02:31 GMT"** in the browser's time zone (BST in summer, the zone's own
+  name elsewhere). New replies carry the stamp at once; old ones from their stored time.
+
+**The honesty retry "with 0 violations" — I misread it this morning.** The log's `violations` is counted **after** the corrective retry,
+and the retry only fires when the first draft had at least one (`loop.ts`). "retried: true, violations: 0" is a retry that worked. The
+doubled cost is real but it is the check doing its job; what was missing is any record of WHAT the first draft said. Now logged
+(`firstDraftFlagged`) and stored on the reply (`honestyRetry`), so the next one can be read from the database.
+
+**293** — see the next section.
+
+**The desktop memory question.** Asked of the desktop; I am on the laptop, so this is the laptop's answer and the handover asks you to
+run the same two commands there. Laptop: `wsl -l -v` → **WSL is not installed**, so the Claude app's VM is not a WSL distro and a
+`.wslconfig` cap cannot apply; it is the app's own Hyper-V VM. **vmmem starts with a Cowork task, not with the app**: the app's processes
+started at 00:55; at **01:15:51** the app wrote `claude-code-vm\.sdk-version` and `vm_bundles\claudevm.bundle\.cowork-adopted` and mounted
+the VM's disk — the same second vmmem's host process started. It then stays up (4.1 GB at 23:00) until the app is quit.
+
+## 293 — measured on scratch: the 1-hour cache, and offering only the current step's tools
+
+`scripts/measure-293.ts`: a scratch copy of 452c5ade carrying your conversation; two read-only questions ("In two sentences, what is
+action #59 for?", "Which of my live actions do not yet say who implements them?"), the second **6 minutes** after the first (most of your
+turns are further apart than the 5-minute cache), each arm starting 6 minutes after the last so none reads another's cache.
+
+| arm | turn 1 | turn 2 (6 min later) | what turn 2 did with the cached prefix |
+|---|---|---|---|
+| A · today (5-minute cache) | 11.51p (3 calls) | **12.96p** (2 calls) | wrote 61,242 tokens again |
+| B · 1-hour cache on tools + system prompt | 12.46p (1 call) | **7.76p** (2 calls) | read 72,939 tokens from cache |
+| C · 5-minute cache, only step 1's tools | 7.21p (1 call) | **7.14p** (1 call) | wrote 35,502 tokens again — about 10,000 fewer than a full tool list |
+
+⚠ One turn per cell: the model chose different tools in different arms (A1 called get_action three times, B1 answered without a tool),
+so a single cell is not a precise price. The cache effect itself is not in doubt: B2 read what A2 had to rewrite.
+
+**What the tools cost (Anthropic token counter, free):** the 71 tools are **19,267 tokens** — the largest block in every call. Step 1's
+own action tools 3,818; step 2's 1,645; step 4's 324; the policy-candidate tools 1,708; the kernel-field tools 1,538; the research
+notebook 2,799; the 24 used everywhere 7,435.
+
+**Against your real turns** (55 since 1 Oct on live ideas, 12.50p average): 14 came within 5 minutes of the previous one (cache read
+either way), **19 came 5–60 minutes after** (each ≈5p cheaper with the 1-hour cache) and **22 after more than an hour or first** (each ≈3p
+dearer: a 1-hour write costs 2× input against 1.25×). Net ≈26p over the 55, **≈0.5p a turn**; the typical (median) turn is in the 5–60
+minute band, where it saves ≈5p.
+
+**Adopted: (a), the 1-hour cache** on the first breakpoint (tools + system prompt) — `PREFIX_CACHE_TTL = '1h'` in `loop.ts`. The snapshot
+and conversation stay at 5 minutes (they change every turn).
+**Not adopted: (b)**, and here is why, so you can overrule it.
+- **What it saves:** on step 1 it drops ≈8,000 of the 19,267 tool tokens (steps 2 and 4, the policy candidates, the kernel fields, the
+  notebook). Measured: a one-call turn that rewrote the prefix wrote 35,502 tokens with step 1's tools against 45,487 with all of them —
+  **≈2p on a turn that rewrites the prefix**, ≈0.15p on a call that reads it.
+- **Why not now:** (1) with (a) adopted, the prefix is rewritten far less often, so (b)'s saving shrinks to the ≈0.15p-a-call case;
+  (2) a different tool list per step is a **different cached prefix per step**, so moving between steps rewrites the 1-hour cache —
+  (b) works against (a); (3) the chat does not tell Lex which screen or step you are on (it sends only the stage: idea / strategy /
+  deepening), so a step filter would also take, say, the policy tools away while you are on the policy page. Doing it properly needs the
+  client to send the screen and step first.
+- ⚠ Single turns per cell, and in C the model answered both questions without a tool (one call each) where A and B called one, so the
+  totals in the table are not like for like; the per-call write sizes are.
+
+**Spent:** 59.04p (A 24.47p, B 20.22p, C 14.35p), on a scratch copy deleted afterwards, labelled `purpose = measurement` in the ledger.
+
 ## The outstanding items from the desktop handover (25 Oct)
 
 - **check:lex-26u: 57/57, 9 controls, 0 dead.** It first crashed on this laptop because the generated Prisma client predated the pull
