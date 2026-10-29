@@ -255,7 +255,7 @@ export function buildMeetingPackDocument(
         kind: 'bullets',
         items: snapshot.actions.map((a): Run[] => [
           { text: a.practicalStep, bold: true },
-          { text: a.targetOrganisation ? ` — ${a.targetOrganisation}` : '' },
+          // 294 (29 Oct) - Target organisation is retired (288); it now lives in Action details
           // 26-S2 §5 - the same three answers, "not yet stated" when not
           { text: ` Who: ${a.whoImplements?.trim() || 'not yet stated'}. How: ${a.how?.trim() || 'not yet stated'}. Against: ${a.against?.trim() || 'not yet stated'}.` },
         ]),

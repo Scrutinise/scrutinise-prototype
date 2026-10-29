@@ -1014,6 +1014,11 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-10-29 02:49 UTC (laptop): CCh-Lex 29 Oct (1) done — 294, LexMessage in entity_list_v5, lex-26s2-structure green.** See CHANGE_LOG 02:49.
+- **294:** Proposal / one-pager / Meeting Pack print neither Mechanism nor Target; `legislative` = wording only.
+- **lex-26s2-structure 107/107:** the red was Charlie's 28 Oct 01:01 rename "CS Code" → "Accountability Code" meeting the check's plan fixture; fixed in the fixture.
+- **Open:** desktop memory checks (handover § 5) when Charlie is on the desktop.
+
 **▶ 2026-10-28 23:32 UTC (laptop): CCh-Lex 28 Oct (4)–(5) done — 288, 289, 290, 291, 292 + 282, 293 (a).** cf58c735 live and read back; see
 CHANGE_LOG 23:20 and 23:32 and `docs/LEX_28OCT_REPORT.md` § "28 Oct (4)–(5)" and § "293".
 - **288:** Target organisation → Action details on 12 actions (452c5ade; all had a Who); Mechanism hidden, not moved; the (4) run put back from its revisions on 73.

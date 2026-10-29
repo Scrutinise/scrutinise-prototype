@@ -301,6 +301,23 @@ and conversation stay at 5 minutes (they change every turn).
 
 **Spent:** 59.04p (A 24.47p, B 20.22p, C 14.35p), on a scratch copy deleted afterwards, labelled `purpose = measurement` in the ledger.
 
+## 29 Oct (1) — built 2026-10-29 02:49 UTC
+
+**294.** The Proposal, its one-page summary and the Meeting Pack stop printing Mechanism and Target organisation. Target organisation
+prints only where 288 put it, inside Action details. The Legislative annex is now opened by drafting wording alone; a Target on its own
+used to open one, which would now have printed nothing but its note.
+
+**entity_list_v5.md** lists LexMessage (at Charlie's instruction).
+
+**lex-26s2-structure: pre-existing, and the cause is the data, not the code.** The check copies 452c5ade and re-sorts it under the
+seven-heading plan, which names that heading "CS Code". Charlie renamed it "Accountability Code" on 28 Oct 01:01 UTC (message n 87), so
+the copy treated it as an old theme, moved its one live action (#207) and archived it — the third archived heading. The commit before
+4bc2a530 is cf58c735; 4bc2a530 changed only `loop.ts` (the cache lifetime), and the re-sort code (`action-resort*.ts`) last changed on
+22 Oct, so that commit runs the same code on the same data and is red the same way. The check's fixture now puts the short name back on
+its copy, as it already did for "Primary legislation". 107/107.
+
+**Desktop memory checks:** waiting for Charlie on the desktop (handover note § 5).
+
 ## The outstanding items from the desktop handover (25 Oct)
 
 - **check:lex-26u: 57/57, 9 controls, 0 dead.** It first crashed on this laptop because the generated Prisma client predated the pull

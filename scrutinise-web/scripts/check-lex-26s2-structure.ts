@@ -25,7 +25,7 @@ import * as F from '../lib/lex/action-facets'
 import { computeCanonicalState } from '../lib/lex/state'
 import { computeCostSummary } from '../lib/lex/field-machine'
 import { buildProposalSnapshot } from '../lib/documents/proposal-snapshot'
-import { buildProposalDocument } from '../lib/documents/build-proposal'
+import { buildProposalDocument, buildSummaryDocument } from '../lib/documents/build-proposal'
 import { buildMeetingPackDocument } from '../lib/documents/build-meeting-pack'
 import { toolByName, execute } from '../lib/lex/agent/tools'
 import { FAQ_MARKDOWN } from '../lib/faq-content'
@@ -203,6 +203,9 @@ async function partE() {
     // this case exists to rename in place. The copy is this check's own fixture: put the short name back on it, so "renamed in place —
     // same id, not a new heading" is still what is tested.
     await prisma.actionHeading.updateMany({ where: { ideaId: id, name: 'Primary legislation' }, data: { name: 'Legislation' } })
+    // ⚠ Likewise Charlie renamed "CS Code" to "Accountability Code" on 28 Oct 01:01 UTC (his message n 87). The plan knows it only as
+    // "CS Code", so on the copy it read as an old theme, the re-sort emptied it and it was archived: a third archived heading.
+    await prisma.actionHeading.updateMany({ where: { ideaId: id, name: 'Accountability Code' }, data: { name: 'CS Code' } })
     const before = await prisma.lexCoherentAction.findMany({ where: { ideaId: id }, select: { id: true, status: true, headingId: true, number: true, practicalStep: true, commentary: true } })
     const total0 = before.length
     const live0 = before.filter((b) => b.status === 'LIVE')
@@ -234,7 +237,7 @@ async function partE() {
     ok('each moved action remembers the heading it was on', mid.filter((m) => m.headingWasId).length === moved)
     const fin = await RS.resortFinish(id)
     const afterFin = await prisma.actionHeading.findMany({ where: { ideaId: id, archivedAt: { not: null } }, select: { id: true, name: true } })
-    ok('the old headings that are now empty are ARCHIVED (kept), the plan\'s seven are not', fin.ok && afterFin.length === fin.data.archived.length && JSON.stringify(afterFin.map((h) => h.name).sort()) === '["Old theme A","Old theme B"]' && !afterFin.some((h) => targets.includes(h.name)), fin.ok ? `${fin.data.archived.length} archived, still holding ${JSON.stringify(fin.data.stillHolding)}` : '')
+    ok('the old headings that are now empty are ARCHIVED (kept), the plan\'s seven are not', fin.ok && afterFin.length === fin.data.archived.length && JSON.stringify(afterFin.map((h) => h.name).sort()) === '["Old theme A","Old theme B"]' && !afterFin.some((h) => targets.includes(h.name)), fin.ok ? `${fin.data.archived.length} archived ${JSON.stringify(afterFin.map((h) => h.name).sort())}, still holding ${JSON.stringify(fin.data.stillHolding)}` : '')
     ok('a heading that still holds a live action (C: the one the model left out) is NOT archived, and is named as still holding', fin.ok && fin.data.stillHolding.length === 1 && fin.data.stillHolding[0].name === 'Old theme C' && fin.data.stillHolding[0].live === 1 && !afterFin.some((h) => h.name === 'Old theme C'))
     const st = (await computeCanonicalState(id))!
     ok('the screen\'s state hides archived headings and lists them as retired, restorable', !st.actionHeadings.some((h) => afterFin.some((a) => a.id === h.id)) && st.archivedHeadings.length === afterFin.length && st.resortUndoable === moved)
@@ -293,6 +296,8 @@ async function partE() {
     // ── 195 - the Proposal prints the commentary as "Components and detail"; the Meeting Pack does not; the folded component's cost line rolls up
     const cl = await prisma.costLine.create({ data: { actionId: c1.id, label: 'ROLLUP-PROBE line', category: 'IMPLEMENTATION', low: 1000, high: 2000, unit: 'GBP', basis: 'probe' } })
     const withLine = await computeCostSummary(id)
+    // 294 (29 Oct) - give the lead a Mechanism and a Target organisation the documents must NOT print (both retired by 288)
+    await prisma.lexCoherentAction.update({ where: { id: lead.id }, data: { mechanismType: 'MECHPROBE', targetOrganisation: 'TARGET-PROBE organisation' } })
     const snap = await buildProposalSnapshot(id)
     const sLead = snap.actions.find((a) => a.id === lead.id)
     ok('195 the snapshot gives the mechanism its commentary and the folded component\'s cost line, labelled with the component number', !!sLead && (sLead.commentary ?? '').includes(q(c1)) && sLead.costLines.some((l) => l.label === 'ROLLUP-PROBE line' && l.fromNumber === c1.number))
@@ -303,6 +308,10 @@ async function partE() {
     const packText = JSON.stringify(buildMeetingPackDocument(snap).model)
     ok('195 the Meeting Pack does NOT print the commentary', !packText.includes('Parts of this action, quoted') && !packText.includes('My own commentary on the lead.'))
     control('the Meeting Pack carrying the quoted parts (must be FALSE)', packText.includes('Parts of this action, quoted'))
+    const onePagerText = JSON.stringify(buildSummaryDocument(snap).model)
+    ok('294 the snapshot still carries the lead\'s Mechanism and Target organisation (the columns are kept)', sLead?.mechanismType === 'MECHPROBE' && sLead?.targetOrganisation === 'TARGET-PROBE organisation')
+    ok('294 the Proposal and the Meeting Pack (and the one-page summary) print neither: no "Mechanism:", no "Target:", not the target\'s name', [proposalText, packText, onePagerText].every((t) => !t.includes('MECHPROBE') && !t.includes('TARGET-PROBE') && !t.includes('Mechanism: ') && !t.includes('"Target: "')))
+    control('the Proposal printing the probe target (must be FALSE)', proposalText.includes('TARGET-PROBE'))
     await prisma.costLine.delete({ where: { id: cl.id } })
     const withoutLine = await computeCostSummary(id)
     ok('195 the cost summary counts the folded component\'s line (the total moves when the line goes)', JSON.stringify(withLine.totals) !== JSON.stringify(withoutLine.totals))

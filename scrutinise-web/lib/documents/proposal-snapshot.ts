@@ -793,9 +793,9 @@ export async function buildProposalSnapshot(
       targetOrganisation: a.targetOrganisation,
       wording: a.wording,
       // §20.4 — "where the instrument is legislative". Derived from what is
-      // stored (a named target or captured drafting intent), never guessed from
-      // the prose.
-      legislative: Boolean((a.wording && a.wording.trim()) || (a.targetOrganisation && a.targetOrganisation.trim())),
+      // stored (captured drafting intent), never guessed from the prose.
+      // 294 (29 Oct) - a Target organisation alone no longer makes an annex: it is retired (288) and not printed.
+      legislative: Boolean(a.wording && a.wording.trim()),
       benefits: (a.benefits as Record<string, unknown> | null) ?? null,
       implementationCost: figure(a.implementationCost),
       enforcementCost: figure(a.enforcementCost),
@@ -1073,7 +1073,7 @@ const SCAFFOLDED: SnapshotScaffold[] = [
   {
     key: 'LEGISLATIVE_ANNEX',
     label: 'The Legislative Annex (standalone)',
-    readsFrom: ['actions where legislative === true (targetOrganisation, wording)'],
+    readsFrom: ['actions where legislative === true (wording)'],
     status: 'scaffolded',
     why: 'It renders INSIDE the Proposal today. Standalone is §20-E and its substance — target section, operation, linked case law — waits on the AMENDABLE_SECTION search intent, which has not landed.',
   },

@@ -697,7 +697,7 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
     meta.push({ text: 'Who: ', bold: true }, { text: `${a.whoImplements?.trim() || 'not yet stated'}. `, italic: !a.whoImplements?.trim() })
     meta.push({ text: 'How: ', bold: true }, { text: `${a.how?.trim() || 'not yet stated'}. `, italic: !a.how?.trim() })
     meta.push({ text: 'Against: ', bold: true }, { text: `${a.against?.trim() || 'not yet stated'}. `, italic: !a.against?.trim() })
-    if (a.mechanismType) meta.push({ text: `Mechanism: ${a.mechanismType}. ` })
+    // 294 (29 Oct) - Mechanism is retired (288: hidden, not moved); the documents no longer print it
     meta.push({
       // ⚠ 25-V §3b — WAS "Drafted by Lex from the toolkit.", 36 times. It named our assistant and
       // our internal mechanism list to a reader who knows neither. The provenance is what matters
@@ -749,9 +749,7 @@ export function buildProposalDocument(snapshot: ProposalSnapshot): ProposalBuild
     // inline under its action. Standalone is §20-E and is scaffolded, not built.
     if (a.legislative) {
       blocks.push({ kind: 'heading', level: 3, runs: text('Legislative annex') })
-      if (a.targetOrganisation) {
-        blocks.push({ kind: 'paragraph', runs: [{ text: 'Target: ', bold: true }, { text: a.targetOrganisation }] })
-      }
+      // 294 (29 Oct) - no "Target:" line: 288 moved Target organisation into Action details, which prints above
       if (a.wording) {
         blocks.push({ kind: 'paragraph', runs: [{ text: 'Drafting intent: ', bold: true }, { text: a.wording }] })
       }
@@ -1225,7 +1223,6 @@ export function buildSummaryDocument(
       kind: 'bullets',
       items: shownActions.slice(0, 4).map((a): Run[] => [
         { text: a.practicalStep, bold: true },
-        { text: a.targetOrganisation ? ` — ${a.targetOrganisation}` : '' },
       ]),
     })
     if (shownActions.length > 4) {

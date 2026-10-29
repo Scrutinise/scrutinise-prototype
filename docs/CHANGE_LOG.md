@@ -1,5 +1,26 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-10-29 02:49 UTC - LEX: 294 the documents stop printing Mechanism and Target; LexMessage in entity_list_v5; lex-26s2-structure's red explained and fixed
+
+*Laptop session. CCh-Lex 29 Oct (1). Report: `docs/LEX_28OCT_REPORT.md` § "29 Oct (1)".*
+
+- **294:** the Proposal no longer prints "Mechanism: …" under an action, nor "Target: …" in the Legislative annex; the one-page summary and
+  the Meeting Pack no longer print " — <target organisation>" after an action. Target now prints only inside Action details (288).
+  The snapshot keeps both fields (columns kept). `legislative` is now derived from the drafting wording alone, so a Target on its own no
+  longer opens an empty annex. Read back: 0 live actions hold wording; 54 live actions hold a Target, 9 on 452c5ade (all 9 carry it
+  in Action details) and 45 on deleted scratch copies, so no real idea loses a printed Target. Files: `build-proposal.ts`, `build-meeting-pack.ts`,
+  `proposal-snapshot.ts`.
+- **entity_list_v5.md:** LexMessage added (section "292 additions") at Charlie's instruction.
+- **lex-26s2-structure 104/105 → 107/107. Pre-existing, not ours, and not code:** the check re-sorts a scratch copy of 452c5ade with the
+  seven-heading plan, which knows that heading as "CS Code". Charlie renamed it "Accountability Code" on 28 Oct 01:01 UTC (his message
+  n 87, before cf58c735), so on the copy it read as an old theme, the fake model moved its one live action (#207) out, and it was
+  archived: three archived where the check expects two. The re-sort code is unchanged since 22 Oct, and 4bc2a530 changed only
+  `loop.ts`, so the commit before 4bc2a530 runs identical code on the same data. Fixed in the check's fixture, as it already does for
+  "Primary legislation"; the failure line now names the archived headings.
+- New assertions (294): the snapshot still carries a probe Mechanism and Target; the Proposal, Meeting Pack and one-page summary print
+  neither (+1 control).
+- Checks: lex-26s2-structure 107/107 (18 controls, 0 dead); 20bd 47/47; lex-284 23/23; web tsc clean.
+
 ## 2026-10-28 23:32 UTC - LEX: 293 measured and (a) adopted — the tools + system prompt cached for 1 hour; 292 backfilled; cf58c735 verified live
 
 *Laptop session. CCh-Lex 28 Oct (5). Report: `docs/LEX_28OCT_REPORT.md` § "293".*

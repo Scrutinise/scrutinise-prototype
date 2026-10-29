@@ -1998,6 +1998,31 @@ Indexes: `(documentId, passKey, v)` and `(ideaId)`.
 |---|---|---|---|
 | **DeepeningIssue** | `reviewId` | String nullable, indexed | The DocumentReview that raised this issue (ON DELETE SET NULL). A review issue's `passKey` is `review:<PASS>` and its `runVersion` is 0, so a build's readers (which select by `runVersion = buildVersion`) never take one up. It carries `actionId`, `documentId` and the part as well |
 
+
+### 292 additions (28 Oct 2026) — the whole Lex conversation. Written 29 Oct at Charlie's instruction (CCh-Lex, 29 Oct (1))
+
+*Applied by `prisma/lex_292_messages.sql` (28 Oct, read back), committed with `schema.prisma` in `cf58c735`. Filled from `Idea.aiChatHistory` by `scripts/backfill-292-messages.ts` (1,093 messages on 76 ideas, read back 76/76). The JSON `aiChatHistory` still drives the chat screen and Lex's 20-message window; this table is the full history and is never cut.*
+
+**LexMessage** (`LexMessage`) — one message of an idea's conversation with Lex, kept for good. Lex reads earlier ones with `read_reply(n)` and `search_conversation(query)`.
+
+| Field | Type | Notes |
+|---|---|---|
+| id | UUID PK | |
+| ideaId | String | → Idea (ON DELETE CASCADE) |
+| n | Integer | Position in the idea's conversation, from 1, never reused |
+| replyNo | Integer nullable | 282 — "Reply N": Lex's messages only, per idea, from 1, never reused; null on the user's messages |
+| role | String | `user` · `lex` |
+| content | Text | The message as sent or shown |
+| turnId | String nullable | The client's id for the send (289's in-flight lock); null for a confirmation line or a copied-in message that had none |
+| meta | Json nullable | The rest of the stored chat message (tools, cost, cut, stage, `honestyRetry` …) |
+| createdAt | Timestamptz, default now() | |
+
+Uniques: `(ideaId, n)`, `(ideaId, replyNo)`, `(ideaId, turnId, role)` — the last is 289's lock: a second request for the same send cannot start a second run. Index: `(ideaId, createdAt)`.
+
+| Entity | Field | Type | Notes |
+|---|---|---|---|
+| **Idea** | `lexMessages` | relation | LexMessage[] (Prisma relation only; no column) |
+
 ***
 
 *entity_list_v5.md — Scrutinise — 13 April 2026* *v5.0 — V2 field additions: GuidingPolicy Rumelt fields (linkToDiagnosis, whatThisPolicyRulesOut, whyThisApproachNotOthers, conditionsForSuccess); CoherentAction benefit mirrors (benefitFinancial, benefitSocial, benefitOngoing, netCostOngoing, netCostOneOff); ResourcesCommitted human capital (humanCapitalCommitted, humanCapitalAnnualRequirement); TargetOrganisation type changed from String to TargetOrganisationType enum; Section 23 field labels added; Contents page added.* *CCh-only: never edited directly by CC without explicit Charlie instruction.*
