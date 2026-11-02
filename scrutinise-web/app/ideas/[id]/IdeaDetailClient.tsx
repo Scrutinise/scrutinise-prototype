@@ -1469,7 +1469,8 @@ function IdeaTab({
     { key: 'actions', label: 'Coherent Actions' },
     // 26-V1 §6 (decision 244): beside Coherent Actions — the law this idea concerns, and the documents on its actions.
     { key: 'law', label: 'Law' },
-    { key: 'documents', label: 'Documents' },
+    // 300 (CCh-Lex 2 Nov (1), agreed by Charlie 2 Nov): what we write for actions are "Drafts"; "Documents" means uploaded files only. The key stays.
+    { key: 'documents', label: 'Drafts' },
   ]
 
   const IDEA_TYPE_LABELS: Record<string, string> = {
@@ -1635,7 +1636,7 @@ function IdeaTab({
       {/* 26-V1 §6 — the documents tree, read-only here; it is worked on in the Deepening. */}
       {subTab === 'documents' && (
         <div data-subtab="documents" className="space-y-2">
-          <p className="text-xs text-zinc-600">The documents on this idea’s actions — read here; drafted and accepted in The Deepening.</p>
+          <p className="text-xs text-zinc-600">The drafts on this idea’s actions — read here; drafted and accepted in The Deepening.</p>
           <DocumentsTree ideaId={idea.id} readOnly />
         </div>
       )}

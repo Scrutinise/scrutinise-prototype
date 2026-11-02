@@ -1014,6 +1014,14 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-11-02 ~01:30 UTC (desktop): CCh-Lex 2 Nov (1) — A reported; 298, 299 and "Output Reports" LIVE (4f5c25d); 297 waits on the joint commit with 26-W; 300 built.**
+See CHANGE_LOG 01:00 and `docs/LEX_2NOV_REPORT.md`.
+- **A:** the corpus holds only the gov.uk SUMMARIES of the Civil Service Code (42 words) and Management Code (54 words); the full texts are Charlie's [Ref: 218] (the Code's page) and [Ref: 217] (the Management Code), filed 1 Nov.
+- **297** (honesty `bare-not-found` + prompt rule, check:lex-297 18/18) sits in `honesty.ts` / `system-prompt.ts` / `package.json`, which LEX 26-W also edited. **26-W commits those four shared files (with CHANGE_LOG) once its own files are in**, naming 297 — agreed by message on 2 Nov. Do not split their hunks.
+- **298/299** live and read back from the bundles: Add research (Title, "Already added as [Ref: N]", the further-note picker, "+" sections); the Sources list's pills, filters, Bears on #N, Possible duplicates (452c5ade: 21 groups; true copies 12+13 and 189+217; nothing merged), sort, search of held text.
+- **300** ("Drafts" for what we write for actions; "Documents" = uploaded files only): built in this session's own files; Lex's words ("Documents on actions…", `review_document`'s "Review this document") are 26-W's to reword in its commit.
+- **Open for Charlie:** read 298/299 and 300 on your own screen (§20's last check).
+
 **▶ 2026-10-29 02:49 UTC (laptop): CCh-Lex 29 Oct (1) done — 294, LexMessage in entity_list_v5, lex-26s2-structure green.** See CHANGE_LOG 02:49.
 - **294:** Proposal / one-pager / Meeting Pack print neither Mechanism nor Target; `legislative` = wording only.
 - **lex-26s2-structure 107/107:** the red was Charlie's 28 Oct 01:01 rename "CS Code" → "Accountability Code" meeting the check's plan fixture; fixed in the fixture.

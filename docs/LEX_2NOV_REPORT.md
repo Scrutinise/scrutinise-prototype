@@ -55,9 +55,22 @@ for findings**, which is why 26-W §4c (`read_source`) exists — that is the ot
 
 - The right-hand panel's **"Outputs"** and the idea page's top tab **"Reports"** are both **"Output Reports"** (`QuestionPanel.tsx`,
   `IdeaDetailClient.tsx`). Lex's controls list names neither, so nothing else moved.
-- **300 — NOT BUILT.** The brief makes it conditional ("if Charlie agrees"): "Drafts" for the things written for actions (Overview tab
-  "Drafts", Deepening tree "Drafts on actions", "Draft D.38.1"), and "Documents" meaning uploaded files only. ⚠ 26-W is building the document
-  tools and the field guide (302) on those same labels right now, so the rename should land after it or with it.
+- **300 — agreed by Charlie on 2 Nov ("build it now"), built.** What we write for an action is a **Draft**; "Document" now means an uploaded
+  file only (the Sources list's "Documents" pill). Words only — every identifier, route, data attribute and D-number format is unchanged:
+  - Overview sub-tab **"Drafts"** (was "Documents"); the Deepening's section **"Drafts on actions"** (was "The documents"); the action
+    record's section and jump band **"Drafts"** ("N drafts"); the header strip, tree row, record list and Risks view say **"Draft D.38.1"**.
+  - "Review this draft", "Add a draft", "Save the draft", "Find in the drafts", "Needs no draft", "no draft yet", "needs N drafts", "N need
+    drafts", "By draft", "the whole draft".
+  - The printed Actions pack: paragraph 14 is **"Drafts"** (same number, so a reviewer's "B.3.14" still means the same paragraph); the list is
+    headed **DRAFTS**; the key line says "A draft on an action has a D-number (D.38.2 = action 38, draft 2)".
+  - **Lex's words were reworded by 26-W** (agreed by message, done 2 Nov ~01:15 UTC, in 26-W's files): the prompt says "Drafts on actions
+    have D-numbers (D.<action>.<draft> …)" and "the screen shows "Draft D.207.1""; `review_document` quotes "Review this draft"; 26-W's
+    parity table names "Review this draft" and "Add a draft". ⚠ They reach production only with 26-W's commit (`system-prompt.ts` is one of
+    the four shared files); until then Lex says "document" where the screen says "draft".
+  - Sweep with 300 in place: 26v 66/66 · 26v2c 44/44 · 26v2d 62/62 · 26s2-browser 33/33 · 298-299 50/50 · client-boundary clean · tsc clean.
+    ⚠ Red, not 300's: **26v2b 45/47** (`templateBody` / the drafting plan in `document-drafting-pure.ts`, which 26-W is rewriting for its §4a);
+    **26v1b 78/79** (264: "real === listed + 1" counts the owner's ideas, and 26-W's checks were making scratch copies at the same time). Neither
+    assertion reads a word 300 changed.
 
 ## D — 298: Add research, simplified
 

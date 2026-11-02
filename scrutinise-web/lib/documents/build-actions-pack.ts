@@ -35,13 +35,14 @@ export const PACK_SECTIONS = [
   // 26-U — appended, never inserted: 1-11 keep their numbers on every printing (a reviewer's "B.3.6" must still mean the same paragraph).
   'Draft text', 'What this touches',
   // 26-V1 §2e/§6 — appended the same way: the action's documents, in number order, each with its D-number and its status.
-  'Documents',
+  // 300 (2 Nov): printed as "Drafts" — what we write for an action is a draft; "document" means an uploaded file. Still paragraph 14.
+  'Drafts',
 ] as const
 
 export const PACK_KEY_LINE =
-  'How the paragraphs are numbered: H.A.S - H is the heading’s letter, A is the action’s place in this printing under that heading, S is the section (1 What it is … 11 The owner’s notes, 12 Draft text, 13 What this touches, 14 Documents). '
+  'How the paragraphs are numbered: H.A.S - H is the heading’s letter, A is the action’s place in this printing under that heading, S is the section (1 What it is … 11 The owner’s notes, 12 Draft text, 13 What this touches, 14 Drafts). '
   + 'To say a paragraph is wrong, quote its number, for example “B.2.3”. 0.n are the Guiding Policy and the conditions; D is a digest; INC.n and NOT.n are the Incentives and the Considered, not taken sections. '
-  + 'A document on an action has a D-number (D.38.2 = action 38, document 2) and is printed with its status: a D-number is our own output, never a source, so it is never in the [Ref: n] list.'
+  + 'A draft on an action has a D-number (D.38.2 = action 38, draft 2) and is printed with its status: a D-number is our own output, never a source, so it is never in the [Ref: n] list.'
 
 const NOT_ANSWERED = 'not yet answered'
 const AVENUE: Record<string, string> = { LEGISLATIVE: 'legislative', ORGANISATIONAL: 'organisational', FINANCIAL: 'financial' }
@@ -201,8 +202,8 @@ function orderBlocks(actions: PackAction[]): Block[] {
 /** §2e — the Documents list, beside Sources and never merged into it: every document on the printed actions, with its status. */
 function documentListBlocks(actions: PackAction[]): Block[] {
   const all = actions.flatMap((a) => (a.documents ?? []).map((d) => ({ a, d })))
-  const blocks: Block[] = [{ kind: 'section', title: 'DOCUMENTS' }]
-  if (!all.length) { blocks.push({ kind: 'paragraph', runs: text('No document is recorded on the actions in this printing.') }); return blocks }
+  const blocks: Block[] = [{ kind: 'section', title: 'DRAFTS' }]
+  if (!all.length) { blocks.push({ kind: 'paragraph', runs: text('No draft is recorded on the actions in this printing.') }); return blocks }
   blocks.push({ kind: 'paragraph', runs: [{ text: 'Our own outputs on the actions, in number order. None of them is evidence: the evidence is the Sources list.', italic: true }] })
   blocks.push({ kind: 'bullets', items: all.map(({ a, d }): Run[] => [{ text: dNumberWords({ action: a.number, number: d.number, status: d.status, stale: !!d.stale }), bold: true }, { text: ` — ${d.title} (${KIND_WORD[d.kind]})` }]) })
   return blocks

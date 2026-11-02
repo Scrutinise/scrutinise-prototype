@@ -13,7 +13,7 @@ export const DETAIL_LABEL = 'Action details'
 /** 2a — top to bottom. The jump band names every section but the statement (it sits under it). */
 export const RECORD_SECTIONS = [
   { key: 'detail', label: 'Action details' },
-  { key: 'documents', label: 'Documents' },
+  { key: 'documents', label: 'Drafts' }, // 300 (2 Nov): what we write for an action is a "Draft"; the key stays
   { key: 'law', label: 'Law' },
   { key: 'who', label: 'Who, how and against' },
   { key: 'costs', label: 'Costs' },
@@ -98,7 +98,7 @@ export function bandStates(b: BandInput): Record<RecordSection, string> {
     detail: detailState(b.detail),
     documents: !b.documents ? 'reading…' : b.documents.needed
       ? `${b.documents.needed} needed, ${b.documents.drafted} drafted${b.documents.accepted ? `, ${b.documents.accepted} accepted` : ''}`
-      : b.documents.total ? `${b.documents.total} document${b.documents.total === 1 ? '' : 's'}` : 'none needed',
+      : b.documents.total ? `${b.documents.total} draft${b.documents.total === 1 ? '' : 's'}` : 'none needed',
     law: b.lawRows == null ? 'reading…' : `${b.lawRows} row${b.lawRows === 1 ? '' : 's'}`,
     who: b.whoAnswered ? `${b.whoAnswered} of ${b.whoOf}` : 'not answered',
     costs: b.costs,

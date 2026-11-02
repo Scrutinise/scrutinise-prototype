@@ -194,7 +194,7 @@ async function partB(): Promise<{ copyId: string; userId: string; docId: string 
     const detail = sections.find((t) => /data-record-section="detail"/.test(t)) ?? '<missing>'
     ok('265: every record section but Action details opens closed — a <details> with no "open"', sections.length >= 9 && notClosed.length === 0, `${sections.length} sections; not closed: ${notClosed.join(' | ').slice(0, 300)}`)
     ok('290: Action details opens OPEN — a <details> carrying "open"', detail.startsWith('<details') && isOpen(detail), detail.slice(0, 200))
-    ok('265: the closed lines carry the states the band shows ("Action details · 4 words"-style, "this step" on the current one)', /Action details<\/span> · <span data-section-state="true">1 part</.test(html) && /Documents<\/span> · <span data-section-state="true">/.test(html) && /this step/.test(textOf(html)), (html.match(/.{50}data-section-state.{30}/g) ?? []).join(' | ').slice(0, 400) || 'no data-section-state at all')
+    ok('265: the closed lines carry the states the band shows ("Action details · 4 words"-style, "this step" on the current one)', /Action details<\/span> · <span data-section-state="true">1 part</.test(html) && /Drafts<\/span> · <span data-section-state="true">/.test(html) && /this step/.test(textOf(html)), (html.match(/.{50}data-section-state.{30}/g) ?? []).join(' | ').slice(0, 400) || 'no data-section-state at all')
   }
   ok('2d: the quoted parts are one collapsible list, "Parts of this action, quoted (1)"', /Parts of this action, quoted \(1\)/.test(textOf(html)) && detailParts(act.commentary).parts[0].title === 'a component title')
   const facts = await actionDocuments(copy.id, a59.id)

@@ -267,7 +267,7 @@ async function partC(b: { copyId: string; userId: string; docId: string; d: stri
     await page.locator('[data-review-open]').click()
     await page.waitForSelector('[data-review-ask="todo"]', { timeout: 15_000 })
     const ask = await page.locator('[data-review-ask]').innerText()
-    ok('“Review this document” asks first, naming the five passes and the measured price', /All five: about [\d.]+p \(measured on a copy of a real idea, n=\d+/.test(ask) && PASSES.every((p) => ask.includes(p.label)) && reviewRequests === 0, ask.slice(0, 400))
+    ok('“Review this draft” (300; was “Review this document”) asks first, naming the five passes and the measured price', /All five: about [\d.]+p \(measured on a copy of a real idea, n=\d+/.test(ask) && PASSES.every((p) => ask.includes(p.label)) && reviewRequests === 0, ask.slice(0, 400))
     await page.locator('[data-review-run]').click()
     await page.waitForSelector('[data-document-said]', { timeout: 30_000 })
     const said = await page.locator('[data-document-said]').innerText()

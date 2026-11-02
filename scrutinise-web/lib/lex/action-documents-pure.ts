@@ -6,7 +6,8 @@
 //   D-number: D.38.2 = action 38, document 2 (241). Outputs, never evidence: never in the [Ref: n] series, never cited as authority, and
 //     wherever one appears in prose it carries its status ("D.38.1, drafted, not accepted") so a draft is never read as settled.
 //   Consequential effects are ROWS with a depth, never nested documents (245); the report is two parts by strength (267; 246 withdrawn).
-// ⚠ Plain words on screen (§0): "document", "part", "kind", "drafted / accepted / no document yet". Never "artifact", "node", "entity".
+// ⚠ Plain words on screen (§0): "draft" (300, 2 Nov: what we write for an action is a DRAFT; "document" now means an uploaded file only), "part",
+//   "kind", "drafted / accepted / no draft yet". Never "artifact", "node", "entity". The code keeps its names (DocumentKind, documents, D-numbers).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { DraftInstruction } from './action-draft-pure'
@@ -25,7 +26,7 @@ export const NOTE_CAVEAT = 'Drafted by Lex from the clause; not settled; not the
 export const GENERATED_KINDS: ReadonlySet<DocumentKind> = new Set(['COLLISION_REPORT', 'CONSEQUENTIAL_SCHEDULE'])
 
 export type DocumentStatus = 'DRAFTED' | 'ACCEPTED' | 'SUPERSEDED'
-export const STATUS_WORD: Record<DocumentStatus | 'NONE', string> = { NONE: 'no document yet', DRAFTED: 'drafted, not accepted', ACCEPTED: 'accepted', SUPERSEDED: 'superseded' }
+export const STATUS_WORD: Record<DocumentStatus | 'NONE', string> = { NONE: 'no draft yet', DRAFTED: 'drafted, not accepted', ACCEPTED: 'accepted', SUPERSEDED: 'superseded' }
 
 // ── numbers ──────────────────────────────────────────────────────────────────────────────────────────────────
 export const documentNumber = (action: number | null, doc: number) => `${action ?? '?'}.${doc}`
@@ -59,7 +60,7 @@ export function partsOf(kind: DocumentKind, body: string): DocumentPart[] {
     ? split(/^\((\d+)\)\s/gm, (m) => `subsection (${m[1]})`)
     : split(/^##\s+(.+)$/gm, (m) => m[1].trim())
   const fallback = parts.length ? parts : kind === 'DRAFT_CLAUSE' ? [] : split(/^(\d+)\.\s+(.*)$/gm, (m) => `paragraph ${m[1]}`)
-  return fallback.length ? fallback : [{ n: 1, title: 'the whole document', text }]
+  return fallback.length ? fallback : [{ n: 1, title: 'the whole draft', text }]
 }
 
 // ── "needs a document": derived from avenue and instrument (240, 2d), overridable with a reason ────────────────
@@ -117,8 +118,8 @@ function derivedNeeds(a: NeedsInput): Needs {
 
 /** The checklist line per action: "needs 2 documents: 0 drafted". */
 export function needsLine(needed: number, drafted: number, accepted: number): string {
-  if (!needed) return 'needs no document'
-  return `needs ${needed} document${needed === 1 ? '' : 's'}: ${drafted} drafted${accepted ? `, ${accepted} accepted` : ''}`
+  if (!needed) return 'needs no draft'
+  return `needs ${needed} draft${needed === 1 ? '' : 's'}: ${drafted} drafted${accepted ? `, ${accepted} accepted` : ''}`
 }
 
 // ── the collision report: the clause's own rows, then TWO PARTS per provision, never merged (245, 267) ──────────────
@@ -256,5 +257,5 @@ export function treeCounts(actions: TreeAction[]) {
     accepted += live.filter((d) => d.status === 'ACCEPTED').length
     missing += a.needs.kinds.filter((k) => !live.some((d) => d.kind === k)).length
   }
-  return { actions: actions.length, needDocs, drafted, accepted, missing, line: `${actions.length} actions · ${needDocs} need documents · ${drafted} drafted · ${accepted} accepted · ${missing} missing` }
+  return { actions: actions.length, needDocs, drafted, accepted, missing, line: `${actions.length} actions · ${needDocs} need drafts · ${drafted} drafted · ${accepted} accepted · ${missing} missing` }
 }
