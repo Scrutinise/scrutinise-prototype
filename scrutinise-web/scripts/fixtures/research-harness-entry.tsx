@@ -8,8 +8,10 @@ import React from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import QuestionPanel from '@/components/lex/QuestionPanel'
 import ActionImport from '@/components/lex/ActionImport'
+import AddResearch from '@/components/lex/AddResearch'
 import { QUESTION_HEADINGS, HEADING_ORDER } from '@/lib/lex/question-headings'
 import { ownDocumentCaveat } from '@/lib/lex/evidence-date'
+import { facetOf } from '@/lib/lex/source-list'
 
 type A = Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -46,14 +48,26 @@ window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   if (url.includes('/panel') && method === 'GET') return json(200, panelBody())
   if (url.includes('/research-notebook?lex=0')) return json(200, { notes: [] })
   if (url.includes('/research-notebook?options=1')) return json(200, { bearsOnOptions: [] })
-  if (url.includes('/source-registry') && method === 'GET') return json(200, { sources: store.sources.filter((s: A) => !s.archived) })
+  // 299: ?detail=1 carries each source's kind (by the REAL facetOf — imported, never restated), the actions it bears on, its text hash and note count;
+  // ?q= searches titles and held text (the stand-in holds no text, so it searches titles and snippets — said in its own reply).
+  if (url.includes('/source-registry?q=') && method === 'GET') {
+    const words = decodeURIComponent(url.split('?q=')[1]).toLowerCase().split(/\s+/).filter((w) => w.length >= 2)
+    const live = store.sources.filter((s: A) => !s.archived)
+    const matches = live.filter((s: A) => words.every((w) => `${s.title} ${s.snippet ?? ''} ${s.heldText ?? ''}`.toLowerCase().includes(w))).map((s: A) => ({ id: s.id, where: ['title'] }))
+    return json(200, { matches, searchedText: live.filter((s: A) => s.heldText).length, notHeld: live.filter((s: A) => !s.heldText).length })
+  }
+  if (url.includes('/source-registry') && method === 'GET') {
+    return json(200, { sources: store.sources.filter((s: A) => !s.archived).map((s: A) => ({ bearsOn: [], textHash: null, noteCount: 0, addedBy: 'u1', ...s, facet: facetOf({ kind: s.kind, sourceType: s.sourceType, addedBy: s.addedBy === undefined ? 'u1' : s.addedBy, materialId: s.materialId }) })) })
+  }
+  // 298: a check that sets `__r.extractReply` gets it back for a file (check:lex-298-299-browser); otherwise it goes to the network as before.
+  if (url.includes('/research-notebook/extract') && hooks.extractReply) return json(200, hooks.extractReply)
   // `/research-notebook/extract` is a file upload, not a note: it goes to the network (check:add-research-md-browser serves it with the real route).
   if (url.includes('/research-notebook') && !url.includes('/extract') && method === 'POST') {
     const body = JSON.parse(String(init!.body))
     let ref: number
     if (body.newSource) {
       ref = Math.max(...store.sources.map((s: A) => s.number)) + 1
-      store.sources.push({ id: `s${ref}`, number: ref, kind: body.newSource.kind, title: body.newSource.title, url: body.newSource.url ?? null, citation: null, sourceType: null, author: null, publishedAt: null, snippet: null, readStatus: body.newSource.fullText ? 'READ' : 'NOT_READ', readNote: null, corpusKey: null, materialId: null, archived: false, createdAt: new Date().toISOString() })
+      store.sources.push({ id: `s${ref}`, number: ref, kind: body.newSource.kind, title: body.newSource.title, url: body.newSource.url ?? null, citation: null, sourceType: body.newSource.sourceType ?? null, author: null, publishedAt: null, snippet: null, readStatus: body.newSource.fullText ? 'READ' : 'NOT_READ', readNote: null, corpusKey: null, materialId: null, archived: false, createdAt: new Date().toISOString() })
     } else ref = store.sources.find((s: A) => s.id === body.sourceId)?.number ?? 1
     hooks.lastSave = body
     return json(200, { ok: true, result: { ref, noteId: 'n1', status: 'IN_RECORD' }, error: null })
@@ -70,9 +84,9 @@ window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
 }) as typeof window.fetch
 
 let root: Root | null = null
-;(window as A).__mountResearch = (what: 'panel' | 'import') => {
+;(window as A).__mountResearch = (what: 'panel' | 'import' | 'add') => {
   const el = document.getElementById('root')!
   root?.unmount(); root = createRoot(el)
-  root.render(what === 'panel' ? <QuestionPanel ideaId="x" /> : <ActionImport ideaId="x" />)
+  root.render(what === 'panel' ? <QuestionPanel ideaId="x" /> : what === 'add' ? <AddResearch ideaId="x" /> : <ActionImport ideaId="x" />)
 }
 ;(window as A).__r = hooks

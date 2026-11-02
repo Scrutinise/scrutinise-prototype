@@ -187,7 +187,9 @@ async function resolveSource(ideaId: string, userId: string, input: Add, opts: {
     await syncRegistry(ideaId)
     const reg = await prisma.ideaSource.findFirst({ where: { ideaId, materialId: material.id } })
     if (reg) {
-      await prisma.ideaSource.update({ where: { id: reg.id }, data: { author: ns.author ?? null, publishedAt: ns.publishedAt ?? null } })
+      // 299: the client's sourceType says whether this was a FILE ("document") or PASTED text ("pasted text") — both are stored as the same
+      // text/plain material, so without it the Sources list could not tell them apart. Only the registry row's label changes; notes do not.
+      await prisma.ideaSource.update({ where: { id: reg.id }, data: { author: ns.author ?? null, publishedAt: ns.publishedAt ?? null, ...(ns.sourceType ? { sourceType: ns.sourceType.slice(0, 60) } : {}) } })
       if (opts.readIntoFindings) { try { await runMaterialFindings(material.id) } catch (err) { console.error('[research-notes] findings pass failed', err instanceof Error ? err.message : err) } }
       const all = await listRegistry(ideaId, { includeArchived: true })
       return { ok: true, data: all.find((s) => s.id === reg.id)! }

@@ -20,15 +20,29 @@
 // ⚠ FILING A DOCUMENT IS AN ASSERTION: the "I may share this" box is the user's, never defaulted on.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+// ── 298 (CCh-Lex 2 Nov (1) D) — SIMPLIFIED. In this order:
+//   1 · what: a file, a web address, text, or just a thought (as before);
+//   2 · Title — prefilled from the file's name or the page's title, editable;
+//   3 · a DUPLICATE CHECK on the held text's hash (a file, a fetched page) or the web address: "Already added as [Ref: N] — add this as a
+//       further note to it?";
+//   4 · the source drop-down is gone: a link, "This is a further note on a source I've already added", opens a type-to-search picker — the
+//       Sources list's own component (SourceBrowser, 299);
+//   5 · Quote, Comment and More are behind "+ Add a quote", "+ Add your comment", "+ More details".
+// A thought on its own (no file, address, text or chosen source) is filed against "My own observation", as choosing it did before.
+// ⚠ NOTHING ABOUT HOW NOTES ARE STORED CHANGES: the request is the same NotebookRequest; only the registry row's sourceType now says
+//   "document" or "pasted text", so the Sources list can tell a filed file from pasted text.
+
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   STANCES, STANCE_LABEL, STANCE_GLYPH, BEARS_ON_LABEL, type Stance, type BearsOnRef, type NotebookRequest,
 } from '@/lib/lex/research-notebook-schema'
+import { alreadyAdded, PASTED_SOURCE_TYPE, type ListedSource } from '@/lib/lex/source-list'
 import { explainFailure } from '@/lib/api-rejection'
 import FocusDialog from './FocusDialog'
+import SourceBrowser from './SourceBrowser'
 
-interface SourceOption { id: string; number: number; title: string; kind: string }
 interface Initial { url?: string; title?: string; text?: string }
+const looksLikeUrl = (u: string) => /^https?:\/\/\S+\.\S+/i.test(u.trim())
 
 export default function AddResearch({
   ideaId, onSaved, initial, defaultOpen = false, label = 'Add research', compact = false, bare = false,
@@ -44,8 +58,14 @@ export default function AddResearch({
   bare?: boolean
 }) {
   const [open, setOpen] = useState(defaultOpen || bare)
-  const [sources, setSources] = useState<SourceOption[]>([])
+  const [sources, setSources] = useState<ListedSource[]>([])
   const [bearsOptions, setBearsOptions] = useState<BearsOnRef[]>([])
+  const [textHash, setTextHash] = useState<string | null>(null) // of a file read or a page fetched, as the server would keep it
+  const [dupDismissed, setDupDismissed] = useState<string | null>(null) // the duplicate the user said "no, a new source" to
+  const [picking, setPicking] = useState(false)
+  const [showQuote, setShowQuote] = useState(!!initial?.text)
+  const [showComment, setShowComment] = useState(false)
+  const [showMore, setShowMore] = useState(false)
 
   // what is being added
   const [url, setUrl] = useState(initial?.url ?? '')
@@ -66,16 +86,23 @@ export default function AddResearch({
   const [tags, setTags] = useState('')
   const [bears, setBears] = useState<BearsOnRef[]>([])
   const [mineOnly, setMineOnly] = useState(false)
-  const [pick, setPick] = useState<string>('') // '' = decide below, 'own' = my own observation, else a registry source id
+  const [pick, setPick] = useState<string>('') // '' = a new source (or, with nothing to file, "My own observation"); else a registry source id
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [saved, setSaved] = useState<{ ref: number; title: string; status: string; noNote?: boolean } | null>(null)
+  const [saved, setSaved] = useState<{ ref: number; title: string; status: string; noNote?: boolean; further?: boolean } | null>(null)
   const textRef = useRef<HTMLTextAreaElement | null>(null)
   const fileRef = useRef<HTMLInputElement | null>(null)
 
   const hasDocument = !!(sourceText.trim() || url.trim() || fileName)
   const wantsNewSource = !pick && (hasDocument || !!title.trim())
+  const picked = pick ? sources.find((s) => s.id === pick) ?? null : null
+  // 298 §3 — already a source? By the held text's hash (a file read, a page fetched) or by the web address.
+  const dup = useMemo(() => {
+    if (pick) return null
+    const d = alreadyAdded(sources, { url: looksLikeUrl(url) ? url : null, textHash })
+    return d && d.source.id !== dupDismissed ? d : null
+  }, [sources, url, textHash, pick, dupDismissed])
 
   useEffect(() => {
     if (!open) return
@@ -83,11 +110,11 @@ export default function AddResearch({
     void (async () => {
       try {
         const [s, n] = await Promise.all([
-          fetch(`/api/ideas/${ideaId}/source-registry`).then((r) => r.json()),
+          fetch(`/api/ideas/${ideaId}/source-registry?detail=1`).then((r) => r.json()),
           fetch(`/api/ideas/${ideaId}/research-notebook?options=1`).then((r) => r.json()),
         ])
         if (cancelled) return
-        setSources(Array.isArray(s.sources) ? s.sources.filter((x: SourceOption & { kind: string }) => x.kind !== 'OWN_OBSERVATION') : [])
+        setSources(Array.isArray(s.sources) ? (s.sources as ListedSource[]).filter((x) => x.kind !== 'OWN_OBSERVATION') : [])
         setBearsOptions(Array.isArray(n.bearsOnOptions) ? n.bearsOnOptions : [])
       } catch { /* the form still works without the lists; the server words any problem */ }
     })()
@@ -97,6 +124,7 @@ export default function AddResearch({
   const reset = useCallback(() => {
     setUrl(''); setFileName(null); setSourceText(''); setTextLocked(false); setTitle(''); setAuthor(''); setPublishedAt(''); setFetchNote(null)
     setRights(false); setQuote(''); setLocation(''); setComment(''); setStance('UNDECIDED'); setTags(''); setBears([]); setMineOnly(false); setPick(''); setError(null)
+    setTextHash(null); setDupDismissed(null); setPicking(false); setShowQuote(false); setShowComment(false); setShowMore(false)
   }, [])
 
   async function fetchPage() {
@@ -107,7 +135,7 @@ export default function AddResearch({
       const j = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(explainFailure(j, res.status, 'Fetching the page'))
       if (j.refused) { setFetchNote({ ok: false, text: String(j.message) }); return }
-      setSourceText(String(j.text ?? '')); setTextLocked(true)
+      setSourceText(String(j.text ?? '')); setTextLocked(true); setTextHash(j.textHash ? String(j.textHash) : null)
       if (!title.trim() && j.title) setTitle(String(j.title))
       if (j.finalUrl) setUrl(String(j.finalUrl))
       setFetchNote({ ok: true, text: `Fetched a readable view${j.truncated ? ' (shortened — the page was longer than we keep)' : ''}. Select the passage you want as the quote.` })
@@ -123,8 +151,9 @@ export default function AddResearch({
       const j = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(explainFailure(j, res.status, `Reading “${f.name}”`))
       if (j.refused) { setFetchNote({ ok: false, text: String(j.message) }); setFileName(null); return }
-      setSourceText(String(j.text ?? '')); setTextLocked(true)
-      if (!title.trim()) setTitle(String(j.title ?? f.name))
+      setSourceText(String(j.text ?? '')); setTextLocked(true); setTextHash(j.textHash ? String(j.textHash) : null)
+      // 298 §2 — the title is prefilled from the FILE'S NAME (without its extension), editable; a document's own title wins where it states one.
+      if (!title.trim()) setTitle(String(j.title && j.title !== f.name ? j.title : f.name.replace(/\.[A-Za-z0-9]{1,5}$/, '')))
       setFetchNote({ ok: true, text: `Read “${f.name}”${j.truncated ? ' (shortened — it was longer than we keep)' : ''}. Select the passage you want as the quote.` })
     } catch (e) { setError(e instanceof Error ? e.message : 'The file could not be read.'); setFileName(null) } finally { setFetching(false) }
   }
@@ -145,17 +174,18 @@ export default function AddResearch({
         quote: quote.trim() || null, quoteLocation: location.trim() || null, comment: comment.trim() || null, stance,
         bearsOn: bears, tags: tags.split(/[,;\n]/).map((t) => t.trim()).filter(Boolean), mineOnly,
       }
-      const req: NotebookRequest = pick === 'own'
-        ? { op: 'addNote', ownObservation: true, ...base }
-        : pick
-          ? { op: 'addNote', sourceId: pick, ...base }
+      // A further note on a source already added · a new source · or, with nothing to file and no title, a thought ("My own observation").
+      const req: NotebookRequest = pick
+        ? { op: 'addNote', sourceId: pick, ...base }
+        : !wantsNewSource
+          ? { op: 'addNote', ownObservation: true, ...base }
           : {
               op: 'addNote',
               newSource: {
                 kind: fileName || (!url.trim() && sourceText.trim()) ? 'DOCUMENT' : url.trim() ? 'URL' : 'OWN_OBSERVATION',
                 title: title.trim() || (url.trim() ? url.trim() : 'Untitled'),
                 url: url.trim() || null, author: author.trim() || null, publishedAt: publishedAt.trim() || null,
-                sourceType: fileName ? 'document' : url.trim() ? 'web page' : null,
+                sourceType: fileName ? 'document' : url.trim() ? 'web page' : sourceText.trim() ? PASTED_SOURCE_TYPE : null,
                 ...(sourceText.trim() ? { fullText: sourceText, rightsConfirmed: rights, readStatus: 'READ' as const } : {}),
               },
               ...base,
@@ -164,7 +194,7 @@ export default function AddResearch({
       const j = await res.json().catch(() => ({}))
       if (!res.ok || !j.ok) { setError(explainFailure(j, res.status, 'Saving the research')); return }
       const sel = sources.find((s) => s.id === pick)
-      setSaved({ ref: j.result.ref, title: pick === 'own' ? 'My own observation' : sel?.title ?? (title.trim() || url.trim() || 'your source'), status: j.result.status, noNote: !j.result.noteId })
+      setSaved({ ref: j.result.ref, title: !pick && !wantsNewSource ? 'My own observation' : sel?.title ?? (title.trim() || url.trim() || 'your source'), status: j.result.status, noNote: !j.result.noteId, further: !!pick })
       reset()
       if (!bare) setOpen(false) // 26-S2 sec 9d: on save the dialog closes; the new card is highlighted with its number
       onSaved?.({ ref: j.result.ref })
@@ -225,35 +255,78 @@ export default function AddResearch({
         )}
       </fieldset>
 
+      {/* 298 §3 — ALREADY ADDED? Said before the title, so nobody names a second copy first. Yes = a further note on it; No = a new source anyway. */}
+      {dup && (
+        <div role="status" className="rounded-lg border-2 border-zinc-800 bg-zinc-50 px-2.5 py-2 text-xs space-y-1.5" data-already-added={dup.source.number}>
+          <p className="text-zinc-900"><span aria-hidden>⧉ </span><strong>Already added as [Ref: {dup.source.number}]</strong> {dup.source.title} <span className="text-zinc-600">(the same {dup.by})</span> — add this as a further note to it?</p>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => { setPick(dup.source.id); setPicking(false) }} className="text-xs font-medium px-2.5 py-1 rounded bg-zinc-900 text-white" data-dup-yes>
+              Yes — a further note on [Ref: {dup.source.number}]
+            </button>
+            <button type="button" onClick={() => setDupDismissed(dup.source.id)} className="text-xs font-medium px-2.5 py-1 rounded border border-zinc-400 bg-white" data-dup-no>
+              No — add it as a new source
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 298 §2 + §4 — the title of a NEW source (prefilled from the file's name or the page's title, editable); or the source this note is
+          a further note on, chosen from the Sources list's own picker. */}
       <fieldset className="space-y-1.5">
-        <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">2 · The source (every note has one)</legend>
-        <select value={pick} onChange={(e) => setPick(e.target.value)} aria-label="Which source" className="w-full border border-zinc-300 rounded px-2 py-1 text-xs">
-          <option value="">{hasDocument || title.trim() ? 'A new source — named below' : 'Choose…'}</option>
-          <option value="own">My own observation</option>
-          {sources.map((s) => <option key={s.id} value={s.id}>[Ref: {s.number}] {s.title.slice(0, 90)}</option>)}
-        </select>
-        {!pick && (
-          <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={300} placeholder="Title of the source" aria-label="Title" className="w-full border border-zinc-300 rounded px-2 py-1 text-xs" />
+        <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">2 · {picked ? 'The source' : 'Title'}</legend>
+        {picked ? (
+          <p className="text-xs text-zinc-900 rounded border-2 border-zinc-800 px-2 py-1.5" data-further-note-on={picked.number}>
+            A further note on <strong>[Ref: {picked.number}]</strong> {picked.title}{' '}
+            <button type="button" onClick={() => { setPick(''); setPicking(false) }} className="underline text-zinc-600 ml-1">Change</button>
+          </p>
+        ) : (
+          <>
+            {(hasDocument || title.trim()) ? (
+              <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={300} placeholder="Title — what is this?" aria-label="Title" className="w-full border border-zinc-300 rounded px-2 py-1 text-xs" data-title />
+            ) : (
+              <p className="text-[11px] text-zinc-500">Nothing to file? A thought on its own is kept as <strong>My own observation</strong> — write it under “+ Add your comment”.</p>
+            )}
+            <button type="button" onClick={() => setPicking((p) => !p)} aria-expanded={picking} className="text-xs underline text-zinc-800" data-further-note-link>
+              This is a further note on a source I’ve already added
+            </button>
+            {picking && (
+              <div className="rounded-lg border border-zinc-300 p-2" data-further-note-picker>
+                <SourceBrowser ideaId={ideaId} mode="pick" autoFocus exclude={(s) => s.kind === 'OWN_OBSERVATION'}
+                  onPick={(s) => { setPick(s.id); setPicking(false); if (!sources.some((x) => x.id === s.id)) setSources((cur) => [...cur, s]) }} />
+              </div>
+            )}
+          </>
         )}
       </fieldset>
 
-      <fieldset className="space-y-1.5">
-        <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">3 · The quote — optional</legend>
-        <textarea value={quote} onChange={(e) => setQuote(e.target.value)} rows={3} maxLength={8000} placeholder="The quote — word for word, from the source" aria-label="Quote"
-          className="w-full border border-zinc-300 rounded px-2 py-1.5 text-xs" />
-        <input value={location} onChange={(e) => setLocation(e.target.value)} maxLength={200} placeholder="Where in the source (page, paragraph, section, timestamp)" aria-label="Where the quote is from"
-          className="w-full border border-zinc-300 rounded px-2 py-1 text-xs" />
-      </fieldset>
+      {/* 298 §5 — Quote, Comment and More, each behind its own "+". Open by itself when it already holds something. */}
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Optional parts">
+        {!showQuote && <button type="button" onClick={() => setShowQuote(true)} className="text-xs font-medium px-2.5 py-1 rounded-full border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50" data-add-quote>+ Add a quote</button>}
+        {!showComment && <button type="button" onClick={() => setShowComment(true)} className="text-xs font-medium px-2.5 py-1 rounded-full border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50" data-add-comment>+ Add your comment</button>}
+        {!showMore && <button type="button" onClick={() => setShowMore(true)} className="text-xs font-medium px-2.5 py-1 rounded-full border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50" data-more-details>+ More details</button>}
+      </div>
 
-      <fieldset className="space-y-1.5">
-        <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">4 · Your comment — optional</legend>
-        <textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={3} maxLength={8000} placeholder="Your comment — in your own words" aria-label="Comment"
-          className="w-full border border-zinc-300 rounded px-2 py-1.5 text-xs" />
-      </fieldset>
+      {(showQuote || quote.trim()) && (
+        <fieldset className="space-y-1.5">
+          <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">The quote</legend>
+          <textarea value={quote} onChange={(e) => setQuote(e.target.value)} rows={3} maxLength={8000} placeholder="The quote — word for word, from the source" aria-label="Quote"
+            className="w-full border border-zinc-300 rounded px-2 py-1.5 text-xs" />
+          <input value={location} onChange={(e) => setLocation(e.target.value)} maxLength={200} placeholder="Where in the source (page, paragraph, section, timestamp)" aria-label="Where the quote is from"
+            className="w-full border border-zinc-300 rounded px-2 py-1 text-xs" />
+        </fieldset>
+      )}
+
+      {(showComment || comment.trim()) && (
+        <fieldset className="space-y-1.5">
+          <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">Your comment</legend>
+          <textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={3} maxLength={8000} autoFocus={showComment && !comment} placeholder="Your comment — in your own words" aria-label="Comment"
+            className="w-full border border-zinc-300 rounded px-2 py-1.5 text-xs" />
+        </fieldset>
+      )}
 
       {!pick && sourceText.trim() && (
         <fieldset>
-          <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">5 · Permission</legend>
+          <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">Permission</legend>
           <label className="mt-1 flex items-start gap-1.5 text-xs text-zinc-700">
             <input type="checkbox" checked={rights} onChange={(e) => setRights(e.target.checked)} className="mt-0.5 accent-zinc-900" />
             <span>I may share this. <span className="text-zinc-500">(Keeping a document’s text is your assertion that you are allowed to. It is never ticked for you.)</span></span>
@@ -261,8 +334,9 @@ export default function AddResearch({
         </fieldset>
       )}
 
-      <details className="rounded border border-zinc-200 px-2 py-1.5">
-        <summary className="cursor-pointer text-xs text-zinc-700 font-medium">More — author, date, stance, tags, what it bears on (all optional, all addable later)</summary>
+      {showMore && (
+      <div className="rounded border border-zinc-200 px-2 py-1.5" data-more-panel>
+        <p className="text-xs text-zinc-700 font-medium">More details — author, date, stance, tags, what it bears on (all optional, all addable later)</p>
         <div className="mt-2 space-y-1.5">
           {!pick && (
             <div className="grid gap-1.5 sm:grid-cols-2">
@@ -299,18 +373,23 @@ export default function AddResearch({
             <input type="checkbox" checked={mineOnly} onChange={(e) => setMineOnly(e.target.checked)} className="accent-zinc-900" /> Mine only until I share it
           </label>
         </div>
-      </details>
+      </div>
+      )}
     </div>
   )
 
-  const saveDisabled = saving || (!quote.trim() && !comment.trim() && !(wantsNewSource && !pick)) || (!pick && !wantsNewSource && !title.trim())
+  // A quote is words FROM a source, so it needs one: a new one (a file, address, text or title) or one chosen. A thought alone needs none.
+  const quoteWithoutSource = !!quote.trim() && !pick && !wantsNewSource
+  const saveDisabled = saving || (!quote.trim() && !comment.trim() && !wantsNewSource) || quoteWithoutSource
   const footer = (
     <>
       <button type="button" onClick={() => void save()} disabled={saveDisabled} data-save
         className="text-sm font-medium px-4 py-1.5 rounded-lg bg-zinc-900 text-white disabled:opacity-40">
         {saving ? 'Saving…' : 'Save'}
       </button>
-      <span className="text-[11px] text-zinc-500">{!quote.trim() && !comment.trim() && !wantsNewSource ? 'Add a quote, a comment, or a file, link or text to save.' : ''}</span>
+      <span className="text-[11px] text-zinc-500" data-save-hint>{quoteWithoutSource
+        ? 'A quote needs its source: give the file, address, text or a title — or choose a source you’ve already added.'
+        : !quote.trim() && !comment.trim() && !wantsNewSource ? 'Add a file, link or text, a quote, or a comment to save.' : ''}</span>
       <button type="button" onClick={() => { reset(); setSaved(null) }} className="text-xs underline text-zinc-500 ml-auto">Start again</button>
     </>
   )
@@ -335,10 +414,10 @@ export default function AddResearch({
   )
 }
 
-function SavedLine({ s }: { s: { ref: number; title: string; status: string; noNote?: boolean } }) {
+function SavedLine({ s }: { s: { ref: number; title: string; status: string; noNote?: boolean; further?: boolean } }) {
   return (
-    <p role="status" className="mt-2 text-xs font-medium text-zinc-900 border-2 border-zinc-800 rounded px-2 py-1.5 bg-zinc-50">
-      ✓ Saved — cited as <strong>[Ref: {s.ref}]</strong> {s.title}.{' '}
+    <p role="status" className="mt-2 text-xs font-medium text-zinc-900 border-2 border-zinc-800 rounded px-2 py-1.5 bg-zinc-50" data-saved-ref={s.ref}>
+      ✓ Saved — {s.further ? 'a further note on' : 'cited as'} <strong>[Ref: {s.ref}]</strong> {s.title}.{' '}
       <span className="font-normal text-zinc-600">
         {s.noNote ? 'The source is on the list; no note was written (you can add one any time).' : s.status === 'UNREVIEWED' ? 'The note is waiting for the idea’s owner to put it in the record.' : 'The note is in the record.'}
       </span>

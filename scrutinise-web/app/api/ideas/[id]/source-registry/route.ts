@@ -7,7 +7,7 @@ import { authorizeIdea } from '@/lib/lex/authz'
 import { enterSpendFor } from '@/lib/lex/build-context'
 import { describeIssues } from '@/lib/api-rejection'
 import { RegistryBody, REGISTRY_OP_WORDS, REGISTRY_INPUT_WORDS, type RegistryOp } from '@/lib/lex/research-notebook-schema'
-import { syncRegistry, listRegistry, addSource, archiveSource, updateSnippet } from '@/lib/lex/source-registry'
+import { syncRegistry, listRegistry, listRegistryDetail, searchRegistry, addSource, archiveSource, updateSnippet } from '@/lib/lex/source-registry'
 import { writeSnippet } from '@/lib/lex/source-snippet'
 import { extractUrl, MaterialRejected } from '@/lib/lex/user-material'
 import { prisma } from '@/lib/prisma'
@@ -15,11 +15,20 @@ import { prisma } from '@/lib/prisma'
 export const maxDuration = 120
 type Params = { params: Promise<{ id: string }> }
 
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(req: Request, { params }: Params) {
   const { id } = await params
   const authz = await authorizeIdea(id)
   if (authz.error) return authz.error
+  const sp = new URL(req.url).searchParams
+  // 299 — ?q= searches titles and held text (no sync: it searches what is already numbered).
+  const q = sp.get('q')
+  if (q != null) {
+    if (q.length > 200) return NextResponse.json({ error: 'Searching the sources was not done: the search was longer than 200 characters. Nothing was changed.' }, { status: 422 })
+    return NextResponse.json(await searchRegistry(id, q))
+  }
   await syncRegistry(id)
+  // 299 — ?detail=1: each source with its kind, the actions it bears on, its text's hash and its note count (the Sources list and 298's picker).
+  if (sp.get('detail') === '1') return NextResponse.json({ sources: await listRegistryDetail(id) })
   return NextResponse.json({ sources: await listRegistry(id, { includeArchived: false }) })
 }
 

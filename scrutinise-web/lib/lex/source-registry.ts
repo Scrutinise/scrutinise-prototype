@@ -17,7 +17,10 @@
 //   says why not.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { createHash } from 'node:crypto'
 import { prisma } from '@/lib/prisma'
+import { r2Get } from '@/lib/r2'
+import { facetOf, type ListedSource } from '@/lib/lex/source-list'
 
 export const refToken = (n: number): string => `[Ref: ${n}]`
 export const REF_PATTERN = /\[Ref:\s*(\d+)\s*\]/g
@@ -230,6 +233,108 @@ export async function addSource(ideaId: string, userId: string, input: AddSource
     },
   })
   return { source: toSource(row), existed: false }
+}
+
+/**
+ * 299 — the list as the Sources list and 298's picker need it: each live source with its KIND for the filter, the ACTIONS it bears on, the hash of
+ * its held text (298's duplicate check) and how many notes cite it. Read-only; one query per table, no R2.
+ * "Bears on #N": a note on the source bears on action N, or action N's own words cite the source's [Ref: n].
+ */
+export async function listRegistryDetail(ideaId: string): Promise<ListedSource[]> {
+  const [rows, mats, notes, actions] = await Promise.all([
+    prisma.ideaSource.findMany({ where: { ideaId, archivedAt: null }, orderBy: [{ number: 'asc' }] }),
+    prisma.ideaUserMaterial.findMany({ where: { ideaId, archivedAt: null, text: { not: null } }, select: { id: true, text: true } }),
+    prisma.researchNote.findMany({ where: { ideaId, status: { not: 'SET_ASIDE' } }, select: { sourceId: true, bearsOn: true } }),
+    prisma.lexCoherentAction.findMany({ where: { ideaId, status: 'LIVE' }, select: { id: true, number: true, title: true, practicalStep: true, commentary: true, wording: true, record: true } }),
+  ])
+  const hash = new Map(mats.map((m) => [m.id, createHash('sha256').update(m.text ?? '').digest('hex')]))
+  const actionNo = new Map(actions.filter((a) => a.number != null).map((a) => [a.id, a.number as number]))
+  const bears = new Map<string, Set<number>>()
+  const add = (sourceId: string, n: number) => bears.set(sourceId, (bears.get(sourceId) ?? new Set()).add(n))
+  const noteCount = new Map<string, number>()
+  for (const n of notes) {
+    noteCount.set(n.sourceId, (noteCount.get(n.sourceId) ?? 0) + 1)
+    for (const b of (Array.isArray(n.bearsOn) ? n.bearsOn : []) as Array<{ kind?: string; id?: string }>) {
+      const no = b.kind === 'action' && b.id ? actionNo.get(b.id) : undefined
+      if (no != null) add(n.sourceId, no)
+    }
+  }
+  const byNumber = new Map(rows.map((r) => [r.number, r.id]))
+  for (const a of actions) {
+    if (a.number == null) continue
+    const words = [a.title, a.practicalStep, a.commentary, a.wording, a.record ? JSON.stringify(a.record) : null].filter(Boolean).join('\n')
+    for (const n of parseRefs(words)) { const sid = byNumber.get(n); if (sid) add(sid, a.number) }
+  }
+  return rows.map((r) => {
+    const s = toSource(r)
+    return {
+      id: s.id, number: s.number, kind: s.kind, title: s.title, url: s.url, sourceType: s.sourceType, author: s.author, publishedAt: s.publishedAt,
+      snippet: s.snippet, readStatus: s.readStatus, readNote: s.readNote, corpusKey: s.corpusKey, materialId: s.materialId, createdAt: s.createdAt,
+      addedBy: r.addedBy, facet: facetOf({ kind: s.kind, sourceType: s.sourceType, addedBy: r.addedBy, materialId: s.materialId }),
+      bearsOn: [...(bears.get(r.id) ?? [])].sort((x, y) => x - y),
+      textHash: s.materialId ? hash.get(s.materialId) ?? null : null,
+      noteCount: noteCount.get(r.id) ?? 0,
+    }
+  })
+}
+
+/**
+ * 298 — the sha-256 of a text as it would be KEPT: the same normalise and cap `research-notes.ts` applies when it stores a filed text, so the hash of a
+ * file read for the form equals the hash `listRegistryDetail` computes for the same file once filed. (Imported lazily: user-material imports this module.)
+ */
+export async function heldTextHash(text: string): Promise<string> {
+  const { normalise, MAX_TEXT_CHARS } = await import('@/lib/lex/user-material')
+  return createHash('sha256').update(normalise(text).slice(0, MAX_TEXT_CHARS)).digest('hex')
+}
+
+/** The corpus text of one passage (R2), cached for the life of the server instance: corpus text does not change under a key. */
+const corpusTextCache = new Map<string, string>()
+async function corpusText(corpusKey: string): Promise<string> {
+  const hit = corpusTextCache.get(corpusKey)
+  if (hit != null) return hit
+  const row = await prisma.$queryRaw<Array<{ r2Key: string | null }>>`SELECT "r2Key" FROM corpus_sections WHERE id = ${corpusKey} LIMIT 1`
+  const text = row[0]?.r2Key ? String(await r2Get(row[0].r2Key).catch(() => '')) : ''
+  if (corpusTextCache.size > 5000) corpusTextCache.clear()
+  corpusTextCache.set(corpusKey, text)
+  return text
+}
+
+/**
+ * 299 — search the idea's sources: their titles, and the text we HOLD for them (a document's or page's kept text, the snippet, the notes'
+ * quotes and comments, and a corpus passage's text). Every word must appear (case-insensitive). Returns the matching source ids and, for each,
+ * WHERE it matched, so the list can say "in the held text" rather than look as if the title matched.
+ * ⚠ What is not held cannot be searched: a web address saved without its page is matched on its title and snippet only — the result says so.
+ */
+export async function searchRegistry(ideaId: string, q: string): Promise<{ matches: Array<{ id: string; where: string[] }>; searchedText: number; notHeld: number }> {
+  const words = q.toLowerCase().split(/\s+/).map((w) => w.trim()).filter((w) => w.length >= 2).slice(0, 8)
+  if (!words.length) return { matches: [], searchedText: 0, notHeld: 0 }
+  const [rows, mats, notes] = await Promise.all([
+    prisma.ideaSource.findMany({ where: { ideaId, archivedAt: null }, select: { id: true, title: true, snippet: true, url: true, corpusKey: true, materialId: true, kind: true } }),
+    prisma.ideaUserMaterial.findMany({ where: { ideaId, archivedAt: null }, select: { id: true, text: true } }),
+    prisma.researchNote.findMany({ where: { ideaId }, select: { sourceId: true, quote: true, comment: true } }),
+  ])
+  const matText = new Map(mats.map((m) => [m.id, (m.text ?? '').toLowerCase()]))
+  const noteText = new Map<string, string>()
+  for (const n of notes) noteText.set(n.sourceId, `${noteText.get(n.sourceId) ?? ''}\n${n.quote ?? ''}\n${n.comment ?? ''}`.toLowerCase())
+  const corpus = rows.filter((r) => r.kind === 'CORPUS' && r.corpusKey && !r.corpusKey.startsWith('url:'))
+  const corpusTexts = new Map<string, string>()
+  for (let i = 0; i < corpus.length; i += 16) {
+    await Promise.all(corpus.slice(i, i + 16).map(async (r) => { corpusTexts.set(r.id, (await corpusText(r.corpusKey!)).toLowerCase()) }))
+  }
+  const all = (hay: string) => words.every((w) => hay.includes(w))
+  const matches: Array<{ id: string; where: string[] }> = []
+  let searchedText = 0, notHeld = 0
+  for (const r of rows) {
+    const held = (r.materialId ? matText.get(r.materialId) : undefined) ?? corpusTexts.get(r.id) ?? ''
+    if (held) searchedText++; else if (r.kind !== 'OWN_OBSERVATION') notHeld++
+    const where: string[] = []
+    if (all(r.title.toLowerCase())) where.push('title')
+    if (held && all(held)) where.push('held text')
+    if (r.snippet && all(r.snippet.toLowerCase())) where.push('snippet')
+    if (noteText.has(r.id) && all(noteText.get(r.id)!)) where.push('notes')
+    if (where.length) matches.push({ id: r.id, where })
+  }
+  return { matches, searchedText, notHeld }
 }
 
 /** "Delete" archives. The number stays taken. */

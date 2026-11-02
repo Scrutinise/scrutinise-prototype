@@ -2572,7 +2572,8 @@ export default function IdeaDetailClient({
     { key: 'amendments', label: 'Amendments' },
     // §8.2 — generated documents live outside the three Lex panels.
     // 26-V1 decision 250: the generated outputs are "Reports"; "Documents" now means the documents on actions (the Idea tab's sub-tab).
-    { key: 'exports', label: 'Reports' },
+    // CCh-Lex 2 Nov (1) C: "Output Reports", the same name as the right-hand panel's item (was "Reports" here and "Outputs" there).
+    { key: 'exports', label: 'Output Reports' },
     { key: 'team', label: 'Team' },
     ...(['STAGE_4', 'STAGE_5'].includes(idea.stage) ? [{ key: 'campaign' as Tab, label: 'Campaign' }] : []),
     ...(isOwner ? [{ key: 'privacy-log' as Tab, label: 'Privacy Log & Lex activity' }] : []),

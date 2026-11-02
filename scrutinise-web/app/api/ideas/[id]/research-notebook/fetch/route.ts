@@ -14,6 +14,7 @@ import { authorizeIdea } from '@/lib/lex/authz'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { describeIssues } from '@/lib/api-rejection'
 import { extractUrl, MaterialRejected } from '@/lib/lex/user-material'
+import { heldTextHash } from '@/lib/lex/source-registry'
 
 export const maxDuration = 60
 type Params = { params: Promise<{ id: string }> }
@@ -41,7 +42,7 @@ export async function POST(req: Request, { params }: Params) {
   try {
     const out = await extractUrl(parsed.data.url)
     return NextResponse.json({
-      ok: true, refused: false, title: out.title, finalUrl: out.finalUrl, text: out.text, truncated: out.truncated,
+      ok: true, refused: false, title: out.title, finalUrl: out.finalUrl, text: out.text, truncated: out.truncated, textHash: await heldTextHash(out.text), // 298
       // The form shows these as editable fields; the page rarely states them, and a blank is honest.
       author: null, publishedAt: null,
     })

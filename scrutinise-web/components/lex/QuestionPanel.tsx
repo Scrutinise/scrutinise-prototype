@@ -83,7 +83,7 @@ const GAP_STYLE: Record<string, string> = {
  * a reasonable place for the answer.
  */
 const SPECIAL_TITLES: Record<string, string> = {
-  __outputs: 'Outputs',
+  __outputs: 'Output Reports', // CCh-Lex 2 Nov (1) C — one name with the idea page's tab
   __notebook: 'Research notebook', // 26-R
   __decisions: 'Decisions',
   // ⚠ 25-Z §3 — renamed. See AgendaPanel's heading; both read from a decision, not a copy.
@@ -712,7 +712,7 @@ export default function QuestionPanel({
                 onClick={() => setOpenKey('__outputs')}
                 className="w-full flex items-baseline gap-2 rounded-lg border-2 border-zinc-300 bg-white px-3 py-2 text-left hover:border-zinc-500 hover:bg-zinc-50"
               >
-                <span className="text-sm font-semibold text-zinc-900 flex-1">Outputs</span>
+                <span className="text-sm font-semibold text-zinc-900 flex-1">Output Reports</span>
                 <span className="text-[11px] text-zinc-500">what you can take away</span>
                 <span aria-hidden className="text-zinc-300 text-xs">›</span>
               </button>

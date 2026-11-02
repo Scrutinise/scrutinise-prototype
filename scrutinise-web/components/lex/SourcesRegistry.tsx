@@ -15,9 +15,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { explainFailure } from '@/lib/api-rejection'
 import { REGISTRY_OP_WORDS, type RegistryRequest } from '@/lib/lex/research-notebook-schema'
-import type { RegistrySource } from '@/lib/lex/source-registry'
+import { FACET_LABEL, type ListedSource } from '@/lib/lex/source-list'
 import type { PanelEntry } from '@/lib/lex/question-panel'
 import { useMaterialViewer } from './YourMaterial'
+import SourceBrowser from './SourceBrowser'
 
 /**
  * 26-S2 sec 9a (decision 173) - ONE LIST. A document the user filed used to show twice on the research panel: as a Sources card (number, read status, the caveat,
@@ -37,22 +38,16 @@ export interface DocumentCards {
 
 export default function SourcesRegistry({ ideaId, onChanged, documents, highlightRef, reloadKey }: { ideaId: string; onChanged?: () => void; documents?: DocumentCards; highlightRef?: number | null; reloadKey?: number }) {
   const viewer = useMaterialViewer(ideaId)
-  const [sources, setSources] = useState<RegistrySource[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
   const [showAll, setShowAll] = useState(false)
-
-  const load = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/ideas/${ideaId}/source-registry`)
-      const j = await res.json().catch(() => ({}))
-      if (!res.ok) { setError(explainFailure(j, res.status, 'Loading the sources')); return }
-      setSources(j.sources as RegistrySource[]); setError(null)
-    } catch (e) { setError(`Loading the sources could not reach the server (${e instanceof Error ? e.message : 'network error'}).`) }
-  }, [ideaId])
-  // reloadKey: the panel bumps it when research was added from OUTSIDE this list ("+ Add research" on the contents home), so the new card is here to be found
-  useEffect(() => { void load() }, [load, reloadKey])
+  // 299: the list is SourceBrowser's (filters, sort, search, possible duplicates — the same component 298's picker uses). It loads the
+  // sources; this file draws the cards. `bump` re-reads after a change made here; reloadKey after a change made OUTSIDE this list
+  // ("+ Add research" on the contents home), so the new card is here to be found.
+  const [localKey, setLocalKey] = useState(0)
+  const bump = useCallback(() => setLocalKey((k) => k + 1), [])
+  const [loaded, setLoaded] = useState<ListedSource[] | null>(null)
 
   const call = useCallback(async (req: RegistryRequest): Promise<{ ok: boolean; result?: any }> => {
     setBusy(REGISTRY_OP_WORDS[req.op]); setError(null)
@@ -66,18 +61,17 @@ export default function SourcesRegistry({ ideaId, onChanged, documents, highligh
 
   const scrolled = useRef<number | null>(null)
   useEffect(() => {
-    if (highlightRef == null || scrolled.current === highlightRef || !sources) return
+    if (highlightRef == null || scrolled.current === highlightRef || !loaded) return
     const el = document.getElementById(`source-${highlightRef}`)
     if (el) { scrolled.current = highlightRef; el.scrollIntoView?.({ block: 'center', behavior: 'smooth' }) }
-  }, [highlightRef, sources])
+  }, [highlightRef, loaded])
 
-  if (!sources) return <p className="text-xs text-zinc-500">{error ?? 'Loading the sources…'}</p>
-  const shown = showAll ? sources : sources.slice(0, 25)
+  const sources = loaded ?? []
 
   return (
     <div className="space-y-2">
       <p className="text-[11px] text-zinc-500">
-        {sources.length} source{sources.length === 1 ? '' : 's'}, each with a number. Anything in your draft that rests on one shows <strong>[Ref: n]</strong>. Removing a source archives it — its number is never reused.
+        {loaded ? `${sources.length} source${sources.length === 1 ? '' : 's'}, each with a number. ` : ''}Anything in your draft that rests on one shows <strong>[Ref: n]</strong>. Removing a source archives it — its number is never reused.
       </p>
       {error && <p role="alert" className="text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1">⚠ {error}</p>}
       {busy && <p role="status" className="text-[11px] text-zinc-600">Working: {busy}…</p>}
@@ -86,38 +80,56 @@ export default function SourcesRegistry({ ideaId, onChanged, documents, highligh
         className={`text-xs font-medium px-3 py-1 rounded-full border-2 ${adding ? 'bg-zinc-900 border-zinc-900 text-white' : 'bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-50'}`}>
         {adding ? '− Close' : '+ Add source'}
       </button>
-      {adding && <AddSource ideaId={ideaId} call={call} onAdded={() => { setAdding(false); void load(); onChanged?.() }} />}
+      {adding && <AddSource ideaId={ideaId} call={call} onAdded={() => { setAdding(false); bump(); onChanged?.() }} />}
 
       {viewer.node}
-      <ol className="space-y-1.5">
-        {shown.map((s) => {
-          const doc = s.materialId ? documents?.entries.find((e) => e.id === s.materialId) : undefined
-          const fresh = highlightRef != null && s.number === highlightRef
+      <SourceBrowser ideaId={ideaId} reloadKey={(reloadKey ?? 0) * 1000 + localKey} mode="list" onLoaded={setLoaded}>
+        {(shownAll, ctx) => {
+          // The just-added card is never hidden by the 25-row cap.
+          const capped = showAll ? shownAll : shownAll.slice(0, 25)
+          const fresh0 = highlightRef != null ? shownAll.find((s) => s.number === highlightRef) : undefined
+          const shown = fresh0 && !capped.includes(fresh0) ? [fresh0, ...capped] : capped
           return (
-          <li key={s.id} id={`source-${s.number}`} data-source-number={s.number} data-just-added={fresh ? 'true' : undefined}
-            className={`rounded-lg bg-white px-2.5 py-1.5 text-xs ${fresh ? 'border-2 border-zinc-900' : 'border border-zinc-200'}`}>
-            <div className="flex items-start gap-2">
-              <span className="font-semibold text-zinc-900 shrink-0">[Ref: {s.number}]</span>
-              <div className="flex-1 min-w-0">
-                {s.url ? <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-zinc-900 underline break-words">{s.title}</a> : <span className="text-zinc-900 break-words">{s.title}</span>}
-                <div className="text-[11px] text-zinc-500">
-                  {[s.sourceType, s.author, s.publishedAt].filter(Boolean).join(' · ')}
-                  {s.readStatus === 'NOT_READ' && <span className="font-semibold text-zinc-700">{[s.sourceType, s.author, s.publishedAt].some(Boolean) ? ' · ' : ''}not read{s.readNote ? ` — ${s.readNote}` : ''}</span>}
-                </div>
-                {s.snippet && <p className="mt-0.5 text-[11px] italic text-zinc-600">{s.snippet}</p>}
-                {fresh && <p className="mt-0.5 text-[11px] font-semibold text-zinc-900" role="status">✓ Just added — this is [Ref: {s.number}]</p>}
-                {doc && <DocumentLine doc={doc} cards={documents!} onOpen={() => void viewer.open(doc.id)} openBusy={viewer.busy} />}
-              </div>
-              {s.kind !== 'OWN_OBSERVATION' && !doc && (
-                <button type="button" disabled={!!busy} onClick={() => void call({ op: 'archiveSource', sourceId: s.id }).then((r) => { if (r.ok) { void load(); onChanged?.() } })} className="text-[11px] text-zinc-400 hover:text-zinc-700 shrink-0">Remove</button>
-              )}
-            </div>
-          </li>
+            <>
+              <ol className="space-y-1.5" data-sources-list>
+                {shown.map((s) => {
+                  const doc = s.materialId ? documents?.entries.find((e) => e.id === s.materialId) : undefined
+                  const fresh = highlightRef != null && s.number === highlightRef
+                  const dup = ctx.dupOf.get(s.number)
+                  const where = ctx.matchedWhere.get(s.id)
+                  return (
+                  <li key={s.id} id={`source-${s.number}`} data-source-number={s.number} data-just-added={fresh ? 'true' : undefined}
+                    className={`rounded-lg bg-white px-2.5 py-1.5 text-xs ${fresh ? 'border-2 border-zinc-900' : 'border border-zinc-200'}`}>
+                    <div className="flex items-start gap-2">
+                      <span className="font-semibold text-zinc-900 shrink-0">[Ref: {s.number}]</span>
+                      <div className="flex-1 min-w-0">
+                        {s.url ? <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-zinc-900 underline break-words">{s.title}</a> : <span className="text-zinc-900 break-words">{s.title}</span>}
+                        <div className="text-[11px] text-zinc-500">
+                          {[FACET_LABEL[s.facet], s.sourceType && s.facet !== 'pasted' ? s.sourceType : null, s.author, s.publishedAt].filter(Boolean).join(' · ')}
+                          {s.readStatus === 'NOT_READ' && <span className="font-semibold text-zinc-700"> · not read{s.readNote ? ` — ${s.readNote}` : ''}</span>}
+                          {s.bearsOn.length > 0 && <span> · bears on {s.bearsOn.map((n) => `#${n}`).join(', ')}</span>}
+                          {where && <span className="text-zinc-700"> · found in the {where.join(', ')}</span>}
+                        </div>
+                        {dup && <p className="text-[11px] text-zinc-700" data-possible-duplicate>⧉ Possible duplicate of {dup.others.map((n) => `[Ref: ${n}]`).join(', ')} — {dup.reasons.join(', ')}</p>}
+                        {s.snippet && <p className="mt-0.5 text-[11px] italic text-zinc-600">{s.snippet}</p>}
+                        {fresh && <p className="mt-0.5 text-[11px] font-semibold text-zinc-900" role="status">✓ Just added — this is [Ref: {s.number}]</p>}
+                        {doc && <DocumentLine doc={doc} cards={documents!} onOpen={() => void viewer.open(doc.id)} openBusy={viewer.busy} />}
+                      </div>
+                      {s.kind !== 'OWN_OBSERVATION' && !doc && (
+                        <button type="button" disabled={!!busy} onClick={() => void call({ op: 'archiveSource', sourceId: s.id }).then((r) => { if (r.ok) { bump(); onChanged?.() } })} className="text-[11px] text-zinc-400 hover:text-zinc-700 shrink-0">Remove</button>
+                      )}
+                    </div>
+                  </li>
+                  )
+                })}
+              </ol>
+              {shownAll.length > 25 && !showAll && <button type="button" onClick={() => setShowAll(true)} className="text-xs underline text-zinc-600">Show all {shownAll.length}</button>}
+            </>
           )
-        })}
-      </ol>
+        }}
+      </SourceBrowser>
       {/* A document that has no numbered source yet (it was filed a moment ago and the list has not been re-read) is still shown, once, here. */}
-      {documents && (() => {
+      {documents && loaded && (() => {
         const numbered = new Set(sources.map((x) => x.materialId).filter(Boolean))
         const loose = documents.entries.filter((e) => !numbered.has(e.id))
         return loose.length ? (
@@ -131,7 +143,6 @@ export default function SourcesRegistry({ ideaId, onChanged, documents, highligh
           </ul>
         ) : null
       })()}
-      {sources.length > 25 && !showAll && <button type="button" onClick={() => setShowAll(true)} className="text-xs underline text-zinc-600">Show all {sources.length}</button>}
     </div>
   )
 }

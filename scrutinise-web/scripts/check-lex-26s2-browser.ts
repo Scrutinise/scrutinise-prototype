@@ -125,7 +125,9 @@ async function partB() {
     ok('the rest of the page is DIMMED behind the dialog (an overlay, not a colour change in place) and nothing behind it scrolls', overlayAlpha >= 0.3 && overlayAlpha < 1 && (await page.evaluate(() => document.body.style.overflow)) === 'hidden', `alpha ${overlayAlpha}`)
     ok('"Choose a file" is a BUTTON, not a link-like file control', (await dlg.locator('button[data-choose-file]').count()) === 1 && (await dlg.locator('button[data-choose-file]').innerText()) === 'Choose a file')
     const legends = await dlg.locator('legend').allInnerTexts()
-    ok('the fields are in order: 1 file / address / text · 2 the source · 3 the quote · 4 the comment (· 5 permission only when there is text)', legends.length >= 4 && /^1 ·/.test(legends[0]) && /^2 ·/.test(legends[1]) && /^3 ·.*optional/i.test(legends[2]) && /^4 ·.*optional/i.test(legends[3]), legends.join(' | '))
+    // 298 (2 Nov) superseded 26-S2's four numbered fields: 1 what · 2 Title; Quote, Comment and More behind their own "+" (check:lex-298-299-browser asserts the rest).
+    ok('the fields are in order: 1 file / address / text · 2 Title; the quote, the comment and More each behind its own "+" (298)', legends.length === 2 && /^1 ·/.test(legends[0]) && /^2 · Title/i.test(legends[1])
+      && (await dlg.locator('[data-add-quote]').innerText()) === '+ Add a quote' && (await dlg.locator('[data-add-comment]').innerText()) === '+ Add your comment' && (await dlg.locator('[data-more-details]').innerText()) === '+ More details', legends.join(' | '))
     ok('ONE Save, at the foot (inside the fixed foot, outside the scrolling body)', (await dlg.locator('button:text-is("Save")').count()) === 1 && (await dlg.locator('[data-focus-dialog-foot] button:text-is("Save")').count()) === 1)
     ok('"I may share this" is not there until there is text to keep — and when it is, it is NOT ticked', (await dlg.locator('text=I may share this').count()) === 0)
     await dlg.locator('textarea[placeholder^="Paste an article"]').fill('A pasted report: every department must publish the name of the owner of each target.')

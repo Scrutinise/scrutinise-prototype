@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server'
 import { authorizeIdea } from '@/lib/lex/authz'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { extractFile, MaterialRejected, MAX_UPLOAD_BYTES } from '@/lib/lex/user-material'
+import { heldTextHash } from '@/lib/lex/source-registry'
 
 export const maxDuration = 60
 type Params = { params: Promise<{ id: string }> }
@@ -24,7 +25,8 @@ export async function POST(req: Request, { params }: Params) {
   if (file.size > MAX_UPLOAD_BYTES) return NextResponse.json({ error: `“${file.name}” is ${(file.size / 1048576).toFixed(1)} MB; the limit is ${(MAX_UPLOAD_BYTES / 1048576).toFixed(0)} MB. Nothing was stored.` }, { status: 413 })
   try {
     const out = await extractFile(Buffer.from(await file.arrayBuffer()), file.type, file.name)
-    return NextResponse.json({ ok: true, title: out.title ?? file.name, text: out.text, truncated: out.truncated, filename: file.name })
+    // 298: the hash of the text AS IT WOULD BE KEPT (the same normalise + cap the save applies), so the form can say "Already added as [Ref: N]".
+    return NextResponse.json({ ok: true, title: out.title ?? file.name, text: out.text, truncated: out.truncated, filename: file.name, textHash: await heldTextHash(out.text) })
   } catch (err) {
     if (err instanceof MaterialRejected) return NextResponse.json({ ok: false, refused: true, kind: (err as MaterialRejected).kind, message: `${err.message} The file was not read — paste its text instead.` })
     throw err
