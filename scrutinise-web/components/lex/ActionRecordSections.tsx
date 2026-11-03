@@ -23,6 +23,7 @@ import { RELATION_WORD } from '@/lib/lex/law-panel-words'
 import { RECORD_SECTIONS, bandFits, type RecordSection } from '@/lib/lex/record-layout-pure'
 import { draftPrice, DRAFT_CONFIRM_ABOVE_PENCE, EMPTY_INSTRUCTION } from '@/lib/lex/action-draft-pure'
 import { explainFailure } from '@/lib/api-rejection'
+import { COMMON_UI, RECORD_UI } from '@/lib/lex/screen-labels'
 import DocumentView, { noteAskWords } from './DocumentView'
 import { notePrice } from '@/lib/lex/explanatory-note-pure'
 import { AddDialog } from './DocumentsTree'
@@ -73,7 +74,7 @@ export function JumpBand({ states, onJump, headingSelect }: { states: Record<Rec
       {shown.map((s) => button(s))}
       {rest.length > 0 && (
         <div className="relative">
-          <button type="button" onClick={() => setMore(!more)} aria-expanded={more} data-band-more className="text-[11px] px-2 py-0.5 rounded border border-zinc-300 bg-white font-semibold">≡ More ({rest.length})</button>
+          <button type="button" onClick={() => setMore(!more)} aria-expanded={more} data-band-more className="text-[11px] px-2 py-0.5 rounded border border-zinc-300 bg-white font-semibold">{RECORD_UI.bandMore(rest.length)}</button>
           {more && <div className="absolute left-0 mt-1 z-20 w-64 bg-white border-2 border-zinc-900 rounded p-1 space-y-1" data-band-menu>{rest.map((s) => button(s, true))}</div>}
         </div>
       )}
@@ -131,21 +132,21 @@ export function DocumentsSection({ ideaId, a, facts, disabled, onChanged }: {
         ))}
         {docs.missing.map((k) => (
           <li key={k} data-record-missing={k}>
-            <span aria-hidden>○</span> {KIND_WORD[k]} — <span className="font-semibold">none yet</span>
+            <span aria-hidden>○</span> {KIND_WORD[k]} — <span className="font-semibold">{RECORD_UI.noneYet}</span>
             {!disabled && (GENERATED_KINDS.has(k)
-              ? k === 'COLLISION_REPORT' && <> · <button type="button" disabled={busy} className="underline disabled:opacity-40" onClick={() => void post('action-documents', { op: 'generate', what: 'collision', actionId: a.id }, 'Generating the collision report', (r) => `Saved: ${String(r?.d ?? 'the collision report')} generated, ${String(r?.rows ?? 0)} rows.`)}>generate (free)</button></>
+              ? k === 'COLLISION_REPORT' && <> · <button type="button" disabled={busy} className="underline disabled:opacity-40" onClick={() => void post('action-documents', { op: 'generate', what: 'collision', actionId: a.id }, 'Generating the collision report', (r) => `Saved: ${String(r?.d ?? 'the collision report')} generated, ${String(r?.rows ?? 0)} rows.`)}>{RECORD_UI.generateFree}</button></>
               : k === 'DRAFT_CLAUSE'
-                ? <> · <button type="button" disabled={busy} className="underline disabled:opacity-40" onClick={() => setWriting(true)}>write the instruction</button>
+                ? <> · <button type="button" disabled={busy} className="underline disabled:opacity-40" onClick={() => setWriting(true)}>{RECORD_UI.writeInstruction}</button>
                     {' · '}{asking
-                      ? <span data-draft-confirm>This spends about {price.pence}p ({price.measured ? `measured, n=${price.n}` : 'an estimate'}). <button type="button" onClick={draftWithLex} className="font-semibold underline">Draft it</button> · <button type="button" onClick={() => setAsking(false)} className="underline">Not now</button></span>
-                      : <button type="button" disabled={busy} data-draft-button className="underline disabled:opacity-40" onClick={() => (price.pence > DRAFT_CONFIRM_ABOVE_PENCE ? setAsking(true) : draftWithLex())}>draft it with Lex (about {price.pence}p)</button>}</>
+                      ? <span data-draft-confirm>This spends about {price.pence}p ({price.measured ? `measured, n=${price.n}` : 'an estimate'}). <button type="button" onClick={draftWithLex} className="font-semibold underline">{COMMON_UI.draftIt}</button> · <button type="button" onClick={() => setAsking(false)} className="underline">{COMMON_UI.notNow}</button></span>
+                      : <button type="button" disabled={busy} data-draft-button className="underline disabled:opacity-40" onClick={() => (price.pence > DRAFT_CONFIRM_ABOVE_PENCE ? setAsking(true) : draftWithLex())}>{RECORD_UI.draftWithLex(price.pence)}</button>}</>
                 : k === 'EXPLANATORY_NOTE'
                   // 26-V1b §5 — the note: write it by hand, or Lex drafts it as a proposal; asks first, always, at the measured price
-                  ? <> · <button type="button" disabled={busy} className="underline disabled:opacity-40" onClick={() => setAdding(k)}>write it</button>
+                  ? <> · <button type="button" disabled={busy} className="underline disabled:opacity-40" onClick={() => setAdding(k)}>{RECORD_UI.writeIt}</button>
                       {' · '}{askingNote
-                        ? <span data-note-confirm>{noteAskWords(notePrice())} <button type="button" onClick={draftNote} className="font-semibold underline">Draft it</button> · <button type="button" onClick={() => setAskingNote(false)} className="underline">Not now</button></span>
-                        : <button type="button" disabled={busy} data-note-button className="underline disabled:opacity-40" onClick={() => setAskingNote(true)}>draft it with Lex{notePrice().pence != null ? ` (about ${notePrice().pence}p)` : ''}</button>}</>
-                  : <> · <button type="button" disabled={busy} className="underline disabled:opacity-40" onClick={() => setAdding(k)}>write it</button></>)}
+                        ? <span data-note-confirm>{noteAskWords(notePrice())} <button type="button" onClick={draftNote} className="font-semibold underline">{COMMON_UI.draftIt}</button> · <button type="button" onClick={() => setAskingNote(false)} className="underline">{COMMON_UI.notNow}</button></span>
+                        : <button type="button" disabled={busy} data-note-button className="underline disabled:opacity-40" onClick={() => setAskingNote(true)}>{notePrice().pence != null ? RECORD_UI.draftWithLex(notePrice().pence!) : RECORD_UI.draftWithLexNoPrice}</button>}</>
+                  : <> · <button type="button" disabled={busy} className="underline disabled:opacity-40" onClick={() => setAdding(k)}>{RECORD_UI.writeIt}</button></>)}
           </li>
         ))}
       </ul>
@@ -153,16 +154,16 @@ export function DocumentsSection({ ideaId, a, facts, disabled, onChanged }: {
         onSave={async (v) => { if (await post('action-structure', { op: 'saveDraft', actionId: a.id, instruction: v }, `Saving the instruction for #${a.number ?? '?'}`, (r) => `Saved: version ${String(r?.version ?? 1)} of the drafting instruction for #${a.number ?? '?'}.`)) setWriting(false) }} />}
       {!disabled && (
         <div className="flex flex-wrap items-center gap-2">
-          <label className="flex items-center gap-1">Add a document
+          <label className="flex items-center gap-1">{RECORD_UI.addDocument}
             <select value={pick} onChange={(e) => setPick(e.target.value as DocumentKind)} className="border border-zinc-300 rounded px-1 py-0.5" aria-label="The kind of document to add">
               {DOCUMENT_KINDS.filter((k) => !GENERATED_KINDS.has(k) && k !== 'DRAFT_CLAUSE').map((k) => <option key={k} value={k}>{KIND_WORD[k]}</option>)}
             </select></label>
-          <button type="button" disabled={busy} onClick={() => setAdding(pick)} className="px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Add</button>
-          <button type="button" disabled aria-disabled="true" data-draft-needs className="px-2 py-0.5 rounded border border-zinc-200 text-zinc-500">Draft what this action needs</button>
+          <button type="button" disabled={busy} onClick={() => setAdding(pick)} className="px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">{COMMON_UI.add}</button>
+          <button type="button" disabled aria-disabled="true" data-draft-needs className="px-2 py-0.5 rounded border border-zinc-200 text-zinc-500">{RECORD_UI.draftWhatActionNeeds}</button>
           <span className="text-zinc-600">— coming in the next sprint</span>
         </div>
       )}
-      {said && <p className="border border-zinc-300 rounded px-2 py-1" role="status">{said} <button type="button" className="underline ml-1" onClick={() => setSaid(null)}>OK</button></p>}
+      {said && <p className="border border-zinc-300 rounded px-2 py-1" role="status">{said} <button type="button" className="underline ml-1" onClick={() => setSaid(null)}>{COMMON_UI.ok}</button></p>}
       {adding && <AddDialog action={docs} kind={adding} busy={busy} onClose={() => setAdding(null)}
         onSave={async (title, body) => { if (await post('action-documents', { op: 'addByHand', actionId: a.id, kind: adding, title, body }, 'Adding the document', (r) => `Saved: ${String(r?.d ?? 'the document')} added.`)) setAdding(null) }} />}
     </div>

@@ -22,6 +22,7 @@ import type { ActionDigestRequest } from '@/lib/lex/action-digest-schema'
 import { DIGEST_OP_WORDS } from '@/lib/lex/action-digest-types'
 import { DIGEST_QUESTIONS, DIGEST_CONFIRM_ABOVE_PENCE, type DigestView, type DigestQuote, type DigestPrice } from '@/lib/lex/action-digest-pure'
 import { explainFailure } from '@/lib/api-rejection'
+import { WORKSPACE_UI } from '@/lib/lex/screen-labels'
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const pence = (p: number | null | undefined) => (p == null ? 'not priced' : p < 1 ? `${p.toFixed(2)}p` : `${p.toFixed(1)}p`)
@@ -163,7 +164,7 @@ export function AskButton({ label, price, running, disabled, onGo, dataAttr }: {
   return (
     <span className="inline-flex flex-wrap items-center gap-1.5">
       <button type="button" disabled={disabled || running} {...{ [dataAttr]: '' }}
-        title={`Four models each answer the same six questions about ${label.includes('set') ? 'every action' : 'these actions'}, and a judge writes one digest that keeps each model’s position named. Nothing is added to your list. Price: ${priceWords}.`}
+        title={`Four models each answer the same six questions about ${label === WORKSPACE_UI.askFourSet ? 'every action' : 'these actions'}, and a judge writes one digest that keeps each model’s position named. Nothing is added to your list. Price: ${priceWords}.`}
         onClick={() => (over ? setConfirm(true) : onGo())}
         className="text-[11px] font-medium px-1.5 py-0.5 rounded border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{label}</button>
       {confirm && (
@@ -394,7 +395,7 @@ export function HeadingDigest({ headingId, headingName, actionCount, state, onOp
   return (
     <div className="mb-1.5" data-heading-digest={headingId}>
       <div className="flex flex-wrap items-center gap-2">
-        <AskButton label="Ask four models about this heading" price={price} running={running} disabled={disabled || state.busy != null || actionCount === 0} dataAttr="data-ask-heading-digest"
+        <AskButton label={WORKSPACE_UI.askFourHeading} price={price} running={running} disabled={disabled || state.busy != null || actionCount === 0} dataAttr="data-ask-heading-digest"
           onGo={() => { setOpen(true); void state.start('HEADING', headingId) }} />
         {extra}
         {running && <span className="text-[11px] font-semibold" role="status">Working: {state.stage ?? 'starting'}…</span>}
@@ -416,7 +417,7 @@ export function SetDigestButton({ state, disabled, onOpened }: { state: DigestSt
   const running = state.busy === 'SET'
   const price = state.quote?.set.price ?? null
   return (
-    <AskButton label="Ask four models about the whole set" price={price} running={running} disabled={disabled || state.busy != null || (state.quote?.set.actions ?? 0) === 0} dataAttr="data-ask-set-digest"
+    <AskButton label={WORKSPACE_UI.askFourSet} price={price} running={running} disabled={disabled || state.busy != null || (state.quote?.set.actions ?? 0) === 0} dataAttr="data-ask-set-digest"
       onGo={() => { onOpened(); void state.start('SET') }} />
   )
 }

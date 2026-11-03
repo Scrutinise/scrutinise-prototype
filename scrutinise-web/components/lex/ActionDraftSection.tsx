@@ -15,6 +15,7 @@ import { useRef, useState } from 'react'
 import { parseDraft, draftPrice, INSTRUMENT_WORD, INSTRUMENTS, RELATIONS, EXTENTS, type DraftInstruction, type Relation, type Instrument } from '@/lib/lex/action-draft-pure'
 import { LIMITS } from '@/lib/lex/input-limits'
 import BoundedInput from './BoundedInput'
+import { DOCUMENT_UI, COMMON_UI, INSTRUCTION_FIELD, INSTRUCTION_EDITOR, WORKSPACE_UI } from '@/lib/lex/screen-labels'
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -43,30 +44,30 @@ export function Editor({ start, legislative, onSave, onCancel, disabled }: { sta
   const box = 'w-full text-xs p-1.5 rounded border border-zinc-300'
   return (
     <div className="space-y-1.5 rounded border border-blue-200 p-2" data-draft-editor>
-      <label className="block text-[11px]">Instrument
+      <label className="block text-[11px]">{INSTRUCTION_FIELD.instrument}
         <select value={v.instrument ?? ''} onChange={(e) => set({ instrument: (e.target.value || null) as Instrument | null })} className="ml-1 border border-zinc-300 rounded px-1 py-0.5">
-          <option value="">not chosen</option>{INSTRUMENTS.map((i) => <option key={i} value={i}>{INSTRUMENT_WORD[i]}</option>)}
+          <option value="">{INSTRUCTION_EDITOR.notChosen}</option>{INSTRUMENTS.map((i) => <option key={i} value={i}>{INSTRUMENT_WORD[i]}</option>)}
         </select></label>
       {legislative && (
-        <label className="block text-[11px]">Amends / inserts into / repeals — one line each: relation ({RELATIONS.join(', ')}), the Act (ukpga/2010/25), the provision (section/5), then “ — ” and a note
+        <label className="block text-[11px]">{INSTRUCTION_EDITOR.provisionsLine} relation ({RELATIONS.join(', ')}), the Act (ukpga/2010/25), the provision (section/5), then “ — ” and a note
           <textarea value={lines} onChange={(e) => setLines(e.target.value)} rows={4} className={box} aria-label="Provisions" /></label>
       )}
       {/* Every bounded box shows its limit and says when it cut something (§30.1); the numbers are the schema's own. */}
-      <label className="block text-[11px]">Duty on whom<BoundedInput value={v.dutyOnWhom} onChange={(x) => set({ dutyOnWhom: x })} className={box} max={LIMITS.instructionLine} aria-label="Duty on whom" /></label>
-      <label className="block text-[11px]">Enforced how<BoundedInput value={v.enforcedHow} onChange={(x) => set({ enforcedHow: x })} className={box} max={LIMITS.instructionLine} aria-label="Enforced how" /></label>
-      {legislative && <label className="block text-[11px]">Commencement<BoundedInput value={v.commencement} onChange={(x) => set({ commencement: x })} className={box} max={LIMITS.instructionLine} aria-label="Commencement" /></label>}
+      <label className="block text-[11px]">{INSTRUCTION_FIELD.dutyOnWhom}<BoundedInput value={v.dutyOnWhom} onChange={(x) => set({ dutyOnWhom: x })} className={box} max={LIMITS.instructionLine} aria-label="Duty on whom" /></label>
+      <label className="block text-[11px]">{INSTRUCTION_FIELD.enforcedHow}<BoundedInput value={v.enforcedHow} onChange={(x) => set({ enforcedHow: x })} className={box} max={LIMITS.instructionLine} aria-label="Enforced how" /></label>
+      {legislative && <label className="block text-[11px]">{INSTRUCTION_FIELD.commencement}<BoundedInput value={v.commencement} onChange={(x) => set({ commencement: x })} className={box} max={LIMITS.instructionLine} aria-label="Commencement" /></label>}
       {legislative && (
-        <fieldset className="text-[11px]"><legend>Extent</legend>{EXTENTS.map((x) => (
+        <fieldset className="text-[11px]"><legend>{INSTRUCTION_FIELD.extent}</legend>{EXTENTS.map((x) => (
           <label key={x} className="mr-2"><input type="checkbox" checked={v.extent.includes(x)} onChange={(e) => set({ extent: e.target.checked ? [...v.extent, x] : v.extent.filter((y) => y !== x) })} /> {x}</label>
         ))}</fieldset>
       )}
       {legislative
-        ? <label className="block text-[11px]">The clause — its first line is always the caveat, added if you leave it out<textarea value={v.clause} onChange={(e) => set({ clause: e.target.value })} rows={8} className={`${box} font-serif`} aria-label="The clause" /></label>
-        : <label className="block text-[11px]">Wording, in plain English<textarea value={v.plainWording} onChange={(e) => set({ plainWording: e.target.value })} rows={4} className={box} /></label>}
-      <label className="block text-[11px]">Purpose — one line<BoundedInput value={v.purpose} onChange={(x) => set({ purpose: x })} className={box} max={LIMITS.instructionPurpose} aria-label="Purpose" /></label>
+        ? <label className="block text-[11px]">{INSTRUCTION_EDITOR.clause}<textarea value={v.clause} onChange={(e) => set({ clause: e.target.value })} rows={8} className={`${box} font-serif`} aria-label="The clause" /></label>
+        : <label className="block text-[11px]">{INSTRUCTION_EDITOR.plainWording}<textarea value={v.plainWording} onChange={(e) => set({ plainWording: e.target.value })} rows={4} className={box} /></label>}
+      <label className="block text-[11px]">{INSTRUCTION_EDITOR.purposeOneLine}<BoundedInput value={v.purpose} onChange={(x) => set({ purpose: x })} className={box} max={LIMITS.instructionPurpose} aria-label="Purpose" /></label>
       <div className="flex gap-2">
-        <button disabled={disabled} onClick={() => onSave({ ...v, provisions: legislative ? fromLines(lines) : [] })} className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Save as a new version</button>
-        <button onClick={onCancel} className="text-xs underline text-zinc-600">Cancel</button>
+        <button disabled={disabled} onClick={() => onSave({ ...v, provisions: legislative ? fromLines(lines) : [] })} className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">{DOCUMENT_UI.saveAsNewVersion}</button>
+        <button onClick={onCancel} className="text-xs underline text-zinc-600">{COMMON_UI.cancel}</button>
       </div>
     </div>
   )
@@ -101,9 +102,9 @@ export function DraftAllButton({ actions, run, disabled, headingName }: { action
   }
   return (
     <div className="flex flex-wrap items-center gap-2 text-[11px] pl-2" data-draft-all>
-      {!asking && todo.length > 0 && <button type="button" disabled={disabled || !!progress?.startsWith('Drafting')} onClick={() => setAsking(true)} className="font-medium px-1.5 py-0.5 rounded border border-zinc-300">Draft all legislative actions ({todo.length} not yet drafted)</button>}
-      {asking && <span>This drafts {todo.length} clause{todo.length === 1 ? '' : 's'}, about {total}p in all ({price.measured ? `measured, n=${price.n}` : 'an estimate'}). <button onClick={() => void go()} className="font-semibold underline">Draft them</button> · <button onClick={() => setAsking(false)} className="underline">Not now</button></span>}
-      {progress?.startsWith('Drafting') && <button type="button" onClick={() => { stop.current = true }} className="underline">Stop after this one</button>}
+      {!asking && todo.length > 0 && <button type="button" disabled={disabled || !!progress?.startsWith('Drafting')} onClick={() => setAsking(true)} className="font-medium px-1.5 py-0.5 rounded border border-zinc-300">{WORKSPACE_UI.draftAllLegislative} ({todo.length} not yet drafted)</button>}
+      {asking && <span>This drafts {todo.length} clause{todo.length === 1 ? '' : 's'}, about {total}p in all ({price.measured ? `measured, n=${price.n}` : 'an estimate'}). <button onClick={() => void go()} className="font-semibold underline">{WORKSPACE_UI.draftThem}</button> · <button onClick={() => setAsking(false)} className="underline">{COMMON_UI.notNow}</button></span>}
+      {progress?.startsWith('Drafting') && <button type="button" onClick={() => { stop.current = true }} className="underline">{WORKSPACE_UI.stopAfterThis}</button>}
       {!todo.length && <span className="text-zinc-600">Every legislative action here has a drafting instruction or a draft waiting.</span>}
       {progress && <span role="status">{progress}</span>}
     </div>

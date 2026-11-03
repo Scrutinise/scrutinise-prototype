@@ -14,6 +14,7 @@ import { useCallback, useState } from 'react'
 import { explainFailure } from '@/lib/api-rejection'
 import { LIMITS } from '@/lib/lex/input-limits'
 import BoundedInput from './BoundedInput'
+import { COMMON_UI, RECORD_UI } from '@/lib/lex/screen-labels'
 import type { NoteView } from '@/lib/lex/research-notes'
 
 const when = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
@@ -75,9 +76,9 @@ export default function ActionComments({ ideaId, actionId, number }: { ideaId: s
   const count = notes?.length
   return (
     <details open={open} onToggle={(e) => { const o = (e.currentTarget as HTMLDetailsElement).open; setOpen(o); if (o && notes === null) void load() }} className="rounded border border-zinc-300 bg-white" data-action-comments={actionId}>
-      <summary className="cursor-pointer px-2 py-1 text-[11px] font-semibold text-zinc-800">Comments{count != null ? ` (${count})` : ''} <span className="font-normal text-zinc-500">— on #{number ?? '?'}; everyone who can see this idea sees them</span></summary>
+      <summary className="cursor-pointer px-2 py-1 text-[11px] font-semibold text-zinc-800">{RECORD_UI.comments}{count != null ? ` (${count})` : ''} <span className="font-normal text-zinc-500">— on #{number ?? '?'}; everyone who can see this idea sees them</span></summary>
       <div className="px-2 pb-2 pt-1 space-y-2 text-xs">
-        {error && <p className="font-semibold border-2 border-zinc-900 rounded px-2 py-1" role="alert">⚠ {error} <button type="button" onClick={() => setError(null)} className="ml-1 px-2 py-0.5 rounded border border-zinc-900 bg-zinc-100">OK</button></p>}
+        {error && <p className="font-semibold border-2 border-zinc-900 rounded px-2 py-1" role="alert">⚠ {error} <button type="button" onClick={() => setError(null)} className="ml-1 px-2 py-0.5 rounded border border-zinc-900 bg-zinc-100">{COMMON_UI.ok}</button></p>}
         {notes === null && !error && <p className="text-zinc-500">Reading the comments…</p>}
         {notes && notes.length === 0 && <p className="text-zinc-600">No comments yet. Write the first below.</p>}
         {notes && notes.map((n) => {
@@ -97,17 +98,17 @@ export default function ActionComments({ ideaId, actionId, number }: { ideaId: s
               )}
               <div className="mt-1 flex flex-wrap items-start gap-1.5">
                 <BoundedInput value={replies[n.id] ?? ''} onChange={(v) => setReplies((s) => ({ ...s, [n.id]: v }))} max={LIMITS.actionReply} multiline rows={2} placeholder="Reply beneath (you cannot change what someone else wrote)" aria-label={`Reply to the comment by ${n.authorName}`} className="text-xs border border-zinc-300 rounded px-1.5 py-0.5 w-72 max-w-full" />
-                <button type="button" disabled={busy != null || !(replies[n.id] ?? '').trim()} onClick={() => void sendReply(n.id)} className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Reply</button>
+                <button type="button" disabled={busy != null || !(replies[n.id] ?? '').trim()} onClick={() => void sendReply(n.id)} className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">{RECORD_UI.reply}</button>
               </div>
             </div>
           )
         })}
         <div className="flex flex-wrap items-start gap-1.5" data-comment-add>
           <BoundedInput value={draft} onChange={setDraft} max={LIMITS.actionComment} multiline rows={3} placeholder="Add a comment on this action" aria-label={`Add a comment on action ${number ?? ''}`} className="text-xs border border-zinc-300 rounded px-1.5 py-0.5 w-96 max-w-full" />
-          <button type="button" disabled={busy != null || !draft.trim()} onClick={() => void addComment()} className="text-[11px] font-medium px-2 py-1 rounded bg-zinc-900 text-white disabled:opacity-40" data-comment-save>Add comment</button>
+          <button type="button" disabled={busy != null || !draft.trim()} onClick={() => void addComment()} className="text-[11px] font-medium px-2 py-1 rounded bg-zinc-900 text-white disabled:opacity-40" data-comment-save>{RECORD_UI.addComment}</button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button type="button" disabled={busy != null || !notes?.length} onClick={() => void summarise()} title="Lex reads this thread and tells you what was said. It is shown here and stored nowhere; it is never written into the thread. Costs under 1p (estimate)." className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Ask Lex to summarise this thread</button>
+          <button type="button" disabled={busy != null || !notes?.length} onClick={() => void summarise()} title="Lex reads this thread and tells you what was said. It is shown here and stored nowhere; it is never written into the thread. Costs under 1p (estimate)." className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">{RECORD_UI.summariseThread}</button>
           <span className="text-[10px] text-zinc-500">estimate: under 1p</span>
           {busy === 'summary' && <span className="text-[11px] font-semibold" role="status">Lex is reading the thread…</span>}
         </div>
@@ -115,7 +116,7 @@ export default function ActionComments({ ideaId, actionId, number }: { ideaId: s
           <div className="rounded border border-zinc-400 bg-zinc-50 p-1.5" data-thread-summary>
             <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Lex’s summary — not part of the thread; nothing was written{summary.pence != null ? ` · cost ${summary.pence < 1 ? summary.pence.toFixed(2) : summary.pence.toFixed(1)}p (measured on this run)` : ''}</p>
             <p className="mt-0.5 whitespace-pre-wrap">{summary.text}</p>
-            <button type="button" onClick={() => setSummary(null)} className="mt-0.5 text-[11px] underline text-zinc-600">Dismiss</button>
+            <button type="button" onClick={() => setSummary(null)} className="mt-0.5 text-[11px] underline text-zinc-600">{COMMON_UI.dismiss}</button>
           </div>
         )}
       </div>

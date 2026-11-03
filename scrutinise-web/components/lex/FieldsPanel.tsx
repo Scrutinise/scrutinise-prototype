@@ -28,6 +28,7 @@ import { COST_CATEGORIES } from '@/lib/lex/page4-config'
 import PriorVersions from './PriorVersions'
 import { collapsedByDefault as pageCollapsedByDefault } from '@/lib/lex/panel-collapse'
 import CauseMap from './CauseMap'
+import { COMMON_UI, RECORD_UI, STATEMENT_LABEL, COMMENTARY_LABEL } from '@/lib/lex/screen-labels'
 
 // Grouped causes-loop + root-cause handlers (Page 2). Kept as one object so the panel
 // signature stays readable.
@@ -53,9 +54,8 @@ export interface CausesApi {
 
 // §16.2 soft depth cap: beyond this Lex nudges consolidation rather than more depth.
 const MAX_CAUSE_DEPTH = 4
-// 237 (CCh 22 Oct (7)) — the action record's two box labels, verbatim.
-export const STATEMENT_LABEL = `The action, in up to ${LIMITS.actionStatement.toLocaleString('en-GB')} characters`
-export const COMMENTARY_LABEL = 'Action details — what this action does in full and why; parts, tables, no limit'
+// 237 (CCh 22 Oct (7)) — the action record's two box labels, verbatim; held in screen-labels so the field guide reads the same words (26-W-b).
+export { STATEMENT_LABEL, COMMENTARY_LABEL }
 
 // Page 3 policy-options loop + chosen-approach handlers.
 export interface PolicyApi {
@@ -1440,7 +1440,7 @@ function CostLineAdder({ actionId, busy, api }: { actionId: string; busy: boolea
   if (!open) {
     return (
       <button disabled={busy} onClick={() => setOpen(true)}
-        className="text-[11px] text-zinc-500 hover:text-zinc-800 disabled:opacity-40">+ add a cost</button>
+        className="text-[11px] text-zinc-500 hover:text-zinc-800 disabled:opacity-40">{RECORD_UI.addACost}</button>
     )
   }
 
@@ -1491,7 +1491,7 @@ function CostLineAdder({ actionId, busy, api }: { actionId: string; busy: boolea
               }
             }}
             className="text-[11px] px-1.5 py-1 rounded border border-zinc-300 text-zinc-600 hover:bg-zinc-50 disabled:opacity-40">
-            {suggesting ? '…' : 'suggest from ASHE'}
+            {suggesting ? '…' : RECORD_UI.suggestFromAshe}
           </button>
         </div>
       )}
@@ -1535,7 +1535,7 @@ function CostLineAdder({ actionId, busy, api }: { actionId: string; busy: boolea
       {/* 26-S2 sec 6 - the step's form: low, high, basis (above), the PRICE YEAR, and whether the cost is ONE-OFF or PER YEAR. Neither is guessed: the
           one-off / per-year choice is pre-filled from the category and says so; the price year is left for the user (a stated year is a claim). */}
       <div className="flex flex-wrap items-center gap-2 text-[11px]">
-        <label className="flex items-center gap-1">Price year
+        <label className="flex items-center gap-1">{RECORD_UI.priceYear}
           <input type="number" value={d.priceYear ?? ''} placeholder="e.g. 2025" disabled={busy} min={1900} max={2100}
             onChange={(e) => set({ priceYear: e.target.value === '' ? null : Number(e.target.value) })}
             className="w-20 p-1 rounded border border-zinc-200" aria-label="Price year of this figure" /></label>
@@ -1545,7 +1545,7 @@ function CostLineAdder({ actionId, busy, api }: { actionId: string; busy: boolea
             return (
               <label key={r} className={`flex items-center gap-1 rounded px-1.5 py-0.5 ${on ? 'border-2 border-zinc-900 font-semibold' : 'border border-zinc-300'}`}>
                 <input type="radio" name="recurrence" checked={on} disabled={busy} onChange={() => set({ recurrence: r })} className="accent-zinc-900" />
-                {r === 'ONE_OFF' ? 'one-off' : 'per year'}
+                {r === 'ONE_OFF' ? RECORD_UI.oneOff : RECORD_UI.perYear}
               </label>
             )
           })}
@@ -1562,9 +1562,9 @@ function CostLineAdder({ actionId, busy, api }: { actionId: string; busy: boolea
           setD({ label: '', costType: 'STAFF', category: 'IMPLEMENTATION', staffLevel: 'MID' })
           setRawLow(''); setRawHigh(''); setScale(1); setOpen(false)
         }}
-          className={saveClass(!!d.label.trim())}>Add cost</button>
+          className={saveClass(!!d.label.trim())}>{RECORD_UI.addCost}</button>
         <button disabled={busy} onClick={() => setOpen(false)}
-          className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-500">Cancel</button>
+          className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-500">{COMMON_UI.cancel}</button>
       </div>
     </div>
   )
@@ -1588,19 +1588,19 @@ function NoCostBox({ action, busy, api }: { action: CanonicalAction; busy: boole
   if (action.noCostReason && !open) {
     return (
       <span className="text-[11px] text-zinc-800" data-no-cost>
-        <span className="font-semibold">No cost, because:</span> {action.noCostReason}{' '}
-        <button type="button" disabled={busy} onClick={() => setOpen(true)} className="underline text-zinc-600 disabled:opacity-40">Edit</button>{' '}
-        <button type="button" disabled={busy} onClick={() => { api.update(action.id, { noCostReason: null }); setWhy('') }} className="underline text-zinc-600 disabled:opacity-40">Clear</button>
+        <span className="font-semibold">{RECORD_UI.noCostBecause}</span> {action.noCostReason}{' '}
+        <button type="button" disabled={busy} onClick={() => setOpen(true)} className="underline text-zinc-600 disabled:opacity-40">{COMMON_UI.edit}</button>{' '}
+        <button type="button" disabled={busy} onClick={() => { api.update(action.id, { noCostReason: null }); setWhy('') }} className="underline text-zinc-600 disabled:opacity-40">{COMMON_UI.clear}</button>
       </span>
     )
   }
-  if (!open) return <button type="button" disabled={busy} onClick={() => setOpen(true)} className="text-[11px] text-zinc-500 hover:text-zinc-800 disabled:opacity-40" data-no-cost-open>no cost, because…</button>
+  if (!open) return <button type="button" disabled={busy} onClick={() => setOpen(true)} className="text-[11px] text-zinc-500 hover:text-zinc-800 disabled:opacity-40" data-no-cost-open>{RECORD_UI.noCostOpen}</button>
   return (
     <span className="inline-flex flex-wrap items-start gap-1.5 rounded border border-zinc-300 p-1" data-no-cost-form>
       <BoundedInput value={why} onChange={setWhy} max={LIMITS.noCostReason} placeholder="Why this action costs nothing" aria-label={`Why action ${action.number ?? ''} costs nothing`}
         onEnter={() => { if (why.trim().length >= 3) { api.update(action.id, { noCostReason: why.trim() }); setOpen(false) } }} className="text-[11px] p-1 rounded border border-zinc-200 w-64" />
-      <button type="button" disabled={busy || why.trim().length < 3} onClick={() => { api.update(action.id, { noCostReason: why.trim() }); setOpen(false) }} className="text-[11px] font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Save</button>
-      <button type="button" onClick={() => { setWhy(action.noCostReason ?? ''); setOpen(false) }} className="text-[11px] underline text-zinc-600 mt-0.5">Cancel</button>
+      <button type="button" disabled={busy || why.trim().length < 3} onClick={() => { api.update(action.id, { noCostReason: why.trim() }); setOpen(false) }} className="text-[11px] font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">{COMMON_UI.save}</button>
+      <button type="button" onClick={() => { setWhy(action.noCostReason ?? ''); setOpen(false) }} className="text-[11px] underline text-zinc-600 mt-0.5">{COMMON_UI.cancel}</button>
     </span>
   )
 }
@@ -1651,8 +1651,8 @@ function DetailBox({ detail, busy = false, onSave }: { detail: string | null | u
           </label>
           <ResizeHandle height={height} setHeight={setHeight} label="Resize the action details box" />
           <div className="flex flex-wrap items-center gap-2">
-            <button type="button" disabled={busy} onClick={() => { onSave?.(withOwnText(detail, draft)); setEditing(false) }} className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40" data-explanation-save>Save the action details</button>
-            <button type="button" onClick={() => setEditing(false)} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-600">Cancel</button>
+            <button type="button" disabled={busy} onClick={() => { onSave?.(withOwnText(detail, draft)); setEditing(false) }} className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40" data-explanation-save>{RECORD_UI.saveDetails}</button>
+            <button type="button" onClick={() => setEditing(false)} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-600">{COMMON_UI.cancel}</button>
             <span className="text-[10px] text-zinc-500">{draft.length.toLocaleString('en-GB')} characters · no limit{parts.length ? ` · the ${parts.length} quoted part${parts.length === 1 ? '' : 's'} below ${parts.length === 1 ? 'is' : 'are'} kept as they are` : ''}</span>
           </div>
         </div>
@@ -1664,10 +1664,10 @@ function DetailBox({ detail, busy = false, onSave }: { detail: string | null | u
             </div>
             <ResizeHandle height={height} setHeight={setHeight} label="Resize the action details" />
           </div>
-          {onSave && <button type="button" disabled={busy} onClick={write} className={editBtn} data-edit-explanation>Edit the action details</button>}
+          {onSave && <button type="button" disabled={busy} onClick={write} className={editBtn} data-edit-explanation>{RECORD_UI.editDetails}</button>}
         </div>
       ) : (
-        <p className="mt-0.5 text-xs text-zinc-600" data-explanation-empty>No action details written yet{onSave ? <> — <button type="button" disabled={busy} onClick={write} className="underline font-medium text-zinc-800 disabled:opacity-40" data-edit-explanation>Write them</button></> : '.'}</p>
+        <p className="mt-0.5 text-xs text-zinc-600" data-explanation-empty>No action details written yet{onSave ? <> — <button type="button" disabled={busy} onClick={write} className="underline font-medium text-zinc-800 disabled:opacity-40" data-edit-explanation>{RECORD_UI.writeDetails}</button></> : '.'}</p>
       )}
       {parts.length > 0 && (
         <details className="mt-1 text-xs" data-quoted-parts={parts.length}>
@@ -1727,14 +1727,14 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
           </>
         )}
         {step === 2 && (
-          <label className="block text-[11px] text-zinc-600">Who implements it — a body or a role, and whether it sits inside or outside government
+          <label className="block text-[11px] text-zinc-600">{RECORD_UI.whoImplementsLabel}
             <input value={d.whoImplements ?? ''} onChange={(e) => patch({ whoImplements: e.target.value })} placeholder="Who implements"
               className="mt-0.5 w-full text-xs p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
           </label>
         )}
         {step === 3 && (
           <div className="space-y-1">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">Costs (ranges with basis)</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">{RECORD_UI.costsRanges}</p>
             {COST_CATEGORIES.map((cat) => (
               <CostRangeEditor key={cat.key} label={cat.label} fallsOn={cat.fallsOn}
                 value={(d[cat.key as keyof ActionDraft] as CostRange | null) ?? null} benchmarks={benchmarks} busy={busy}
@@ -1746,14 +1746,14 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
         {refusal && <p role="alert" className="text-xs font-semibold text-zinc-900 border-2 border-zinc-900 rounded px-2 py-1" data-save-refused>⚠ {refusal}</p>}
         <div className="flex gap-2">
           <button disabled={busy || !d.practicalStep.trim()} onClick={save}
-            className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Save</button>
-          <button disabled={busy} onClick={() => { setD(action); setRefusal(null); setEditing(false) }} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-500">Cancel</button>
+            className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">{COMMON_UI.save}</button>
+          <button disabled={busy} onClick={() => { setD(action); setRefusal(null); setEditing(false) }} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-500">{COMMON_UI.cancel}</button>
         </div>
       </div>
     )
   }
 
-  const editWord = step === 1 ? 'Edit' : step === 2 ? 'Edit Who' : 'Edit costs'
+  const editWord = step === 1 ? COMMON_UI.edit : step === 2 ? RECORD_UI.editWho : RECORD_UI.editCosts
   return (
     <div className="rounded-lg border border-zinc-200 bg-white p-2" data-card-step={step}>
       {step === 1 && (
@@ -1762,7 +1762,7 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
           {/* 285 (28 Oct) — each part of the record has its own labelled edit beside what it edits: the statement here, the Action details in its box */}
           <div className="flex items-start gap-2">
             <p className="flex-1 min-w-0 text-sm text-zinc-800 whitespace-pre-wrap" data-statement>{action.practicalStep}</p>
-            <button type="button" disabled={busy} onClick={() => setEditing(true)} className="text-[11px] font-medium underline text-zinc-700 disabled:opacity-40 shrink-0" data-edit-action>Edit the action</button>
+            <button type="button" disabled={busy} onClick={() => setEditing(true)} className="text-[11px] font-medium underline text-zinc-700 disabled:opacity-40 shrink-0" data-edit-action>{RECORD_UI.editAction}</button>
           </div>
           {between}
           {/* 26-V1b 257 — "Detail" (the column keeps its name); 2d — the quoted parts collapse to one line each, with their source */}
@@ -1771,7 +1771,7 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
       )}
       {step === 2 && (
         <>
-          <p className="text-sm text-zinc-800"><span className="font-semibold">Who:</span> {action.whoImplements?.trim() || <span className="font-semibold">Not yet answered</span>}</p>
+          <p className="text-sm text-zinc-800"><span className="font-semibold">{RECORD_UI.who}</span> {action.whoImplements?.trim() || <span className="font-semibold">{RECORD_UI.notYetAnswered}</span>}</p>
           <p className="text-[11px] text-zinc-500 mt-1">The rest of this step’s questions — the incentive now, what changes it, skill, how it is enforced, what will oppose it and what tells us it worked — are the next update.</p>
         </>
       )}
@@ -1795,7 +1795,7 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
                     {l.basis && <div className="text-zinc-400 italic">{l.basis}</div>}
                   </div>
                   <button disabled={busy} onClick={() => costLinesApi.remove(l.id)}
-                    className="text-zinc-300 hover:text-red-600">delete</button>
+                    className="text-zinc-300 hover:text-red-600">{RECORD_UI.deleteCostLine}</button>
                 </div>
               ))}
             </div>

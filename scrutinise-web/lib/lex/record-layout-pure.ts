@@ -21,6 +21,8 @@ export const RECORD_SECTIONS = [
   { key: 'comments', label: 'Comments' },
 ] as const
 export type RecordSection = (typeof RECORD_SECTIONS)[number]['key']
+/** A section's title as the band and its closed line show it — one source, so the field guide and the screen cannot disagree (26-W-b). */
+export const sectionLabel = (k: RecordSection): string => RECORD_SECTIONS.find((s) => s.key === k)!.label
 
 // ── 2d: the Detail box — the owner's text, then "Parts of this action, quoted (N)" ────────────────────────────
 export interface QuotedPart { title: string; source: string | null; body: string }

@@ -1014,6 +1014,14 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-11-03 ~12:30 UTC (desktop, session 38): 26-W-b (302) committed — the field guide and the remaining inventory tools.**
+See CHANGE_LOG 12:24 and `docs/LEX_26W_REPORT.md` § 3.
+- **Guide:** `lib/lex/field-guide.ts` over `lib/lex/screen-labels.ts`; `explain_field` / `list_fields`. A label renamed in `screen-labels.ts`
+  renames the screen and the guide together — 26-X renames there. `check:lex-26w-b` D fails on any rendered label the guide lacks.
+- **For Charlie:** `remove_cost_line` is built but not offered (no tool may delete, lex-26p A1) — offer it or keep the rule. Ask Lex
+  "what is the Order section for?" to see the guide answer. Still no tool for Causes editing, the registry snippet, "Draft what this heading needs".
+- 300 ("Drafts") still held until 26-X. Never re-run `apply-26w-305.ts`.
+
 **▶ 2026-11-03 ~04:10 UTC (desktop): CCh-Lex 3 Nov (1) — one session per tree; 26-W-a + 297 committed; 300 held until 26-X; 26-W-b next.**
 See CHANGE_LOG 04:05, `docs/LEX_26W_REPORT.md` (26-W-a) and `docs/LEX_2NOV_REPORT.md` (297–300).
 - **26-W-a** (laptop session, 2 Nov): ten document tools calling the buttons' own functions; Action-details guard (>3,000 chars of instrument-like

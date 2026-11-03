@@ -14,6 +14,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { COMMON_UI, NOTEBOOK_UI } from '@/lib/lex/screen-labels'
 import AddResearch from './AddResearch'
 import { groupNotes, noteTitle, noteMatches, VIEW_MODES, VIEW_LABEL, type ViewMode } from '@/lib/lex/research-notebook-views'
 import {
@@ -127,8 +128,8 @@ export default function ResearchNotebook({ ideaId, compact = false }: { ideaId: 
           <input value={reason} onChange={(e) => setReason(e.target.value)} maxLength={600} placeholder="Reason (to set aside)" aria-label="Reason to set aside" className="text-xs border border-zinc-300 rounded px-1.5 py-0.5 w-40" />
           <button disabled={!!busy || reason.trim().length < 3} onClick={() => void call({ op: 'setAside', noteIds: selIds, reason }).then((ok) => { if (ok) { setReason(''); setSel(new Set()) } })}
             title={reason.trim().length < 3 ? 'Give a reason first — it is kept, because why it was set aside is itself research.' : undefined}
-            className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Set aside</button>
-          <button disabled={!!busy} onClick={() => void call({ op: 'restore', noteIds: selIds }).then((ok) => ok && setSel(new Set()))} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300">Bring back</button>
+            className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">{COMMON_UI.setAside}</button>
+          <button disabled={!!busy} onClick={() => void call({ op: 'restore', noteIds: selIds }).then((ok) => ok && setSel(new Set()))} className="text-xs font-medium px-2 py-0.5 rounded border border-zinc-300">{NOTEBOOK_UI.bringBack}</button>
           <button onClick={() => setSel(new Set())} className="text-xs underline text-zinc-500 ml-auto">Clear</button>
         </div>
       )}
@@ -226,10 +227,10 @@ function OpenNote({ n, call, disabled, isOwner }: { n: NoteView; call: (r: Noteb
           <div className="flex flex-wrap gap-2 text-[11px]">
             {n.mine && <button disabled={disabled} onClick={() => setEditing((e) => !e)} className="underline">{editing ? 'Cancel editing' : 'Edit my comment'}</button>}
             {n.mine && (n.mineOnly
-              ? <button disabled={disabled} onClick={() => void call({ op: 'share', noteIds: [n.id] })} className="underline">Share with the team</button>
-              : <button disabled={disabled} onClick={() => void call({ op: 'makeMineOnly', noteIds: [n.id] })} className="underline">Make mine only</button>)}
-            {n.status === 'SET_ASIDE' && <button disabled={disabled} onClick={() => void call({ op: 'restore', noteIds: [n.id] })} className="underline">Bring back into the record</button>}
-            {isOwner && n.status === 'UNREVIEWED' && <button disabled={disabled} onClick={() => void call({ op: 'putInRecord', noteIds: [n.id] })} className="underline font-semibold">Put in the record</button>}
+              ? <button disabled={disabled} onClick={() => void call({ op: 'share', noteIds: [n.id] })} className="underline">{NOTEBOOK_UI.shareWithTeam}</button>
+              : <button disabled={disabled} onClick={() => void call({ op: 'makeMineOnly', noteIds: [n.id] })} className="underline">{NOTEBOOK_UI.makeMineOnly}</button>)}
+            {n.status === 'SET_ASIDE' && <button disabled={disabled} onClick={() => void call({ op: 'restore', noteIds: [n.id] })} className="underline">{NOTEBOOK_UI.bringBackIntoRecord}</button>}
+            {isOwner && n.status === 'UNREVIEWED' && <button disabled={disabled} onClick={() => void call({ op: 'putInRecord', noteIds: [n.id] })} className="underline font-semibold">{NOTEBOOK_UI.putInRecord}</button>}
           </div>
         </div>
       )}

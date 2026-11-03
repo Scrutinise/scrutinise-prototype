@@ -1,5 +1,29 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-03 12:24 UTC - LEX 26-W-b (302): the field guide, the remaining inventory tools, and the label tables the screen and the guide share
+
+*Desktop session 38, on Charlie's instruction ("re-run check:lex-26w-b, then the regression suite, then commit and push"). 26-W-b was built
+by session e5, which handed the tree over at 3 Nov ~12:00 and makes no edits here. Report: `docs/LEX_26W_REPORT.md` § 3.*
+
+- **Field guide** (`lib/lex/field-guide.ts`, 239 entries): purpose, how it fits, limits, and the Lex tool for every label on the record,
+  document view, tree, workspace and notebook. Labels are read from `lib/lex/screen-labels.ts` when the guide is asked, never copied, so a
+  rename (26-X) moves the screen and the guide together. Lex reads it through `explain_field` / `list_fields` (free; not in the cached prefix).
+- **Inventory tools**: title, statement, keep-conflict note, facet/slot/condition proposals, conditions, cost ranges, cost lines, no-cost
+  reason, heading rename/hide/kind/retire, comments, replies, thread summary, document needs, the notebook's note controls. Each calls the
+  button's own function and is checked twin-against-button on scratch copies.
+  - ⚠ **`remove_cost_line` is built but NOT offered to Lex**: it deletes the row, and `check:lex-26p` A1's standing rule is that no tool the
+    model is offered is a delete. The guide says the owner presses "delete". **For Charlie:** offer it, or keep the rule.
+  - Still no tool: Causes editing, the source registry's snippet, "Draft what this heading needs".
+- **Finishing the check (this session):** part D had never completed (esbuild's `__name` missing in the page; defined by an init script).
+  Its first full run found ~25 workspace controls printed as inline strings; they moved into `WORKSPACE_UI` / `WORKSPACE_VIEW_WORD` with
+  guide entries (ActionsWorkspace, ActionsStructureTools, ActionDigest, ActionDraftSection). Values inside controls are marked
+  `data-shown-value` and dropped; the matching is unchanged. The guide's tool-name scan no longer reads `(op: …)` values as tools.
+  `check:lex-26p`'s "is printed by" now also accepts the label's `screen-labels` constant in the component's own code (new control).
+- **Checks, one at a time:** lex-26w-b 60/60 (5 controls, 0 dead, 113 labels read) · lex-26w 66/66 (H NOT RUN, --live) · lex-26v 66/66 ·
+  lex-26v1b 79/79 · lex-26v2b 47/47 · lex-26v2c 44/44 · lex-26v2d 62/62 · lex-26u 67/67 · lex-26p 116/116 (15 controls; B NOT RUN) ·
+  lex-26s2-browser 33/33 · lex-287 7/7 (1 NOT RUN, --live) · lex-297 18/18 · lex-298-299 50/50 · lex-chat-real-reply 7/7 (1 NOT RUN, --live) ·
+  llm-guards 9/9 · client-boundary clean (control fired) · prompt-examples 26 illustrations, 0 in stored output · check:scripts clean · web tsc clean.
+
 ## 2026-11-03 04:05 UTC - LEX 3 Nov (1): 26-W-a and 2 Nov (1)'s 297 committed together; the 10 regression checks run; 300 ("Drafts") held until 26-X
 
 *Desktop session. CCh-Lex 3 Nov (1): one session per tree from now on — the 26-W session and the Ingest session both acknowledged and make no

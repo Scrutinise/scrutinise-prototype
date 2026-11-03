@@ -19,6 +19,7 @@ import { actionLabel } from '@/lib/lex/action-facets'
 import { colourFor } from '@/lib/lex/action-headings'
 import { LIMITS } from '@/lib/lex/input-limits'
 import BoundedInput from './BoundedInput'
+import { RECORD_UI, WORKSPACE_UI } from '@/lib/lex/screen-labels'
 
 /** The slice of the workspace's `useOps` these tools use. `run` is untyped here on purpose: the route's schema is the check. */
 export interface OpsLike {
@@ -40,7 +41,7 @@ export function ConditionsPanel({ doc, actions, ops, disabled }: { doc: Conditio
   if (!active.length && !doc.proposals.length && !retired.length && !doc.source) {
     return (
       <details className="rounded-lg border border-zinc-200 bg-white" data-conditions-panel>
-        <summary className="cursor-pointer px-2.5 py-1.5 text-xs font-semibold text-zinc-800">Conditions the proposal must meet — none yet</summary>
+        <summary className="cursor-pointer px-2.5 py-1.5 text-xs font-semibold text-zinc-800">{WORKSPACE_UI.conditionsTitle} — none yet</summary>
         <div className="px-2.5 pb-2 space-y-1.5">
           <p className="text-[11px] text-zinc-600">Write the few conditions this proposal has to meet (for example “one named owner per task”). Each action then says which it delivers, and the coverage view shows any condition no action delivers.</p>
           <AddCondition text={text} setText={setText} ops={ops} disabled={disabled} />
@@ -51,7 +52,7 @@ export function ConditionsPanel({ doc, actions, ops, disabled }: { doc: Conditio
   return (
     <details className="rounded-lg border border-zinc-200 bg-white" data-conditions-panel open={cov.uncovered.length > 0 || doc.proposals.length > 0 ? true : undefined}>
       <summary className="cursor-pointer px-2.5 py-1.5 text-xs font-semibold text-zinc-800">
-        Conditions the proposal must meet — {active.length} condition{active.length === 1 ? '' : 's'}{cov.uncovered.length ? ` · ${cov.uncovered.length} with no action` : ' · every one has an action'}{doc.proposals.length ? ` · Lex has proposed ${doc.proposals.length} more` : ''}
+        {WORKSPACE_UI.conditionsTitle} — {active.length} condition{active.length === 1 ? '' : 's'}{cov.uncovered.length ? ` · ${cov.uncovered.length} with no action` : ' · every one has an action'}{doc.proposals.length ? ` · Lex has proposed ${doc.proposals.length} more` : ''}
       </summary>
       <div className="px-2.5 pb-2 space-y-1.5">
         {doc.source && <p className="text-[11px] text-zinc-600" data-conditions-source>From: {doc.source.label}.</p>}
@@ -73,9 +74,9 @@ export function ConditionsPanel({ doc, actions, ops, disabled }: { doc: Conditio
               {editing?.id !== r.condition.id && (
                 <span className="flex gap-2 text-zinc-600">
                   <button type="button" disabled={disabled} onClick={() => setEditing({ id: r.condition.id, text: r.condition.text })} className="underline">Edit</button>
-                  <button type="button" disabled={disabled || i === 0} onClick={() => void ops.run('moveCondition', { conditionId: r.condition.id, dir: 'up' })} className="underline disabled:opacity-30" aria-label={`Move condition ${r.number} up`}>↑</button>
-                  <button type="button" disabled={disabled || i === cov.rows.length - 1} onClick={() => void ops.run('moveCondition', { conditionId: r.condition.id, dir: 'down' })} className="underline disabled:opacity-30" aria-label={`Move condition ${r.number} down`}>↓</button>
-                  <button type="button" disabled={disabled} onClick={() => void ops.run('retireCondition', { conditionId: r.condition.id, retired: true }, undefined, () => `Saved: condition ${r.number} is retired. It is kept; Bring back restores it.`)} className="underline">Retire</button>
+                  <button type="button" disabled={disabled || i === 0} onClick={() => void ops.run('moveCondition', { conditionId: r.condition.id, dir: 'up' })} className="underline disabled:opacity-30" aria-label={`Move condition ${r.number} up`}>{WORKSPACE_UI.moveConditionUp}</button>
+                  <button type="button" disabled={disabled || i === cov.rows.length - 1} onClick={() => void ops.run('moveCondition', { conditionId: r.condition.id, dir: 'down' })} className="underline disabled:opacity-30" aria-label={`Move condition ${r.number} down`}>{WORKSPACE_UI.moveConditionDown}</button>
+                  <button type="button" disabled={disabled} onClick={() => void ops.run('retireCondition', { conditionId: r.condition.id, retired: true }, undefined, () => `Saved: condition ${r.number} is retired. It is kept; Bring back restores it.`)} className="underline">{WORKSPACE_UI.retireCondition}</button>
                 </span>
               )}
             </li>
@@ -86,7 +87,7 @@ export function ConditionsPanel({ doc, actions, ops, disabled }: { doc: Conditio
             <p className="text-[11px] font-semibold text-zinc-800">Lex proposes {doc.proposals.length === 1 ? 'a condition' : `${doc.proposals.length} conditions`} to add — yours until you accept:</p>
             {doc.proposals.map((p) => (
               <p key={p.id} className="text-[11px] text-zinc-800">“{p.text}”{p.why ? <span className="text-zinc-600"> — {p.why}</span> : null}{' '}
-                <button type="button" disabled={disabled} onClick={() => void ops.run('acceptConditionProposal', { proposalId: p.id })} className="underline font-medium ml-1">Add it to the list</button>
+                <button type="button" disabled={disabled} onClick={() => void ops.run('acceptConditionProposal', { proposalId: p.id })} className="underline font-medium ml-1">{WORKSPACE_UI.addItToList}</button>
                 <button type="button" disabled={disabled} onClick={() => void ops.run('dismissConditionProposal', { proposalId: p.id })} className="underline text-zinc-500 ml-2">Dismiss</button></p>
             ))}
           </div>
@@ -108,7 +109,7 @@ function AddCondition({ text, setText, ops, disabled }: { text: string; setText:
     <div className="flex flex-wrap items-start gap-1.5">
       <BoundedInput value={text} onChange={setText} max={LIMITS.conditionText} placeholder="Add a condition — e.g. one named owner per task" aria-label="New condition" onEnter={() => void add()} disabled={disabled}
         className="text-xs p-1.5 rounded border border-zinc-300 w-80 max-w-full focus:outline-none focus:border-blue-400" />
-      <button type="button" disabled={disabled || !text.trim()} onClick={() => void add()} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 disabled:opacity-40">Add condition</button>
+      <button type="button" disabled={disabled || !text.trim()} onClick={() => void add()} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 disabled:opacity-40">{WORKSPACE_UI.addCondition}</button>
     </div>
   )
 }
@@ -160,7 +161,7 @@ export function ConditionChooser({ a, doc, ops, disabled }: { a: CanonicalAction
   const set = (conditionIds: string[]) => void ops.run('assignConditions', { actionIds: [a.id], conditionIds, mode: 'set' }, undefined, () => 'Saved: what the action delivers.')
   return (
     <details className="text-[11px]" data-condition-chooser>
-      <summary className="cursor-pointer text-zinc-600">Conditions it delivers: {conditionWords(doc, a)} — change</summary>
+      <summary className="cursor-pointer text-zinc-600">{RECORD_UI.conditionsDelivers} {conditionWords(doc, a)} {RECORD_UI.change}</summary>
       <ul className="mt-1 space-y-0.5 max-h-48 overflow-y-auto">
         {active.map((c, i) => (
           <li key={c.id}><label className="flex items-start gap-1.5">
@@ -171,7 +172,7 @@ export function ConditionChooser({ a, doc, ops, disabled }: { a: CanonicalAction
         <li className="pt-0.5 border-t border-zinc-100"><label className="flex items-start gap-1.5">
           <input type="checkbox" checked={a.supportOnly} disabled={disabled} className="mt-0.5 accent-zinc-900"
             onChange={(e) => void ops.run('assignConditions', { actionIds: [a.id], support: e.target.checked, ...(e.target.checked ? {} : { conditionIds: a.conditionIds }) }, undefined, () => 'Saved: what the action delivers.')} />
-          <span><span className="font-medium">Support</span> — delivers none of them directly (training, a pilot, a consultation)</span></label></li>
+          <span><span className="font-medium">{RECORD_UI.support}</span> — delivers none of them directly (training, a pilot, a consultation)</span></label></li>
       </ul>
     </details>
   )

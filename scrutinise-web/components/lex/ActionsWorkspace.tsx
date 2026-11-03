@@ -33,7 +33,7 @@ import { usePackPrint, PackStatus } from './ActionsPackPrint'
 import ActionComments from './ActionComments'
 import { DraftAllButton } from './ActionDraftSection'
 import { useRecordFacts, JumpBand, DocumentsSection, LawSection } from './ActionRecordSections'
-import { bandStates, type RecordSection } from '@/lib/lex/record-layout-pure'
+import { bandStates, sectionLabel, type RecordSection } from '@/lib/lex/record-layout-pure'
 
 import { ConditionsPanel, ConditionsCoverageView, ConditionChooser, ResortTool, ConsolidateCard, type ConsolidateCardState } from './ActionsStructureTools'
 import { EMPTY_CONDITIONS, conditionWords, activeConditions, type ConditionsDoc } from '@/lib/lex/action-conditions'
@@ -47,6 +47,7 @@ import { afterOf, afterWords } from '@/lib/lex/action-order-pure'
 import { findByNumber, findWords as findWordsOf, numberQuery, textMatches } from '@/lib/lex/action-find'
 import ActionsBoard from './ActionsBoard'
 import { OrderSection, OrderView, becauseFor } from './ActionsOrder'
+import { COMMON_UI, RECORD_UI, FACET_WORD, WORKSPACE_UI, WORKSPACE_VIEW_WORD } from '@/lib/lex/screen-labels'
 import {
   STEPS, DEFAULT_STEP, stepChecklist, otherStepLine, unresolvedConflict, hasCostRange, type ActionsStep,
 } from '@/lib/lex/action-steps'
@@ -101,14 +102,14 @@ function useOps(ideaId: string, onChanged: () => void | Promise<boolean | void>)
 const COST_LINE_LABEL_SHORT = { implementationCost: 'Implement', enforcementCost: 'Enforce', regulatoryFriction: 'Compliance' } as const
 
 // Decision 167: "Link" is retired from the screen (the column stays; nothing is written to it).
-const FACET_WORD = { avenue: 'Avenue', causes: 'Causes' }
+// FACET_WORD is in lib/lex/screen-labels (26-W-b)
 
 /** 26-S2 §3b — which list groupings belong to which step. A grouping that belongs to another step is not offered (absent, not greyed). */
 // 262: grouping by Now / Next / Later is retired with the words.
 const STEP_GROUP_MODES: Record<ActionsStep, GroupMode[]> = { 1: ['heading', 'cause', 'avenue', 'policy-test'], 2: ['heading'], 3: ['heading'], 4: ['heading'] }
 /** …and which views: the board and the coverage grid are step-1 tools (255; causes against actions); the derived order is step 4's (262). */
 const STEP_VIEWS: Record<ActionsStep, View[]> = { 1: ['list', 'board', 'coverage', 'conditions'], 2: ['list', 'who'], 3: ['list'], 4: ['list', 'order'] }
-const VIEW_LABEL: Record<View, string> = { list: 'List', board: 'Board', coverage: 'Coverage grid', conditions: 'Conditions', order: 'The order, derived', who: 'By who' }
+const VIEW_LABEL: Record<View, string> = WORKSPACE_VIEW_WORD
 
 /** A proposal belongs to a step by what it proposes: causes, avenue and conditions are step 1's; what comes before what, step 4's. */
 const proposalStep = (p: NonNullable<CanonicalAction['facetProposal']>): ActionsStep[] => [
@@ -358,7 +359,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
               onKeyDown={(e) => { if (e.key === 'ArrowUp') { e.preventDefault(); nudge(a.id, -1) } if (e.key === 'ArrowDown') { e.preventDefault(); nudge(a.id, 1) } }}
               title="Drag to reorder — or use the arrow keys" aria-label={`Reorder action ${a.number ?? ''}`}
               className="shrink-0 cursor-grab active:cursor-grabbing text-zinc-300 hover:text-zinc-500 disabled:opacity-30 touch-none px-0.5" style={{ touchAction: 'none' }}>
-              <span aria-hidden className="text-base leading-none">⠿</span>
+              <span aria-hidden className="text-base leading-none">{WORKSPACE_UI.reorder}</span>
             </button>
           )}
           <span className="text-[11px] text-zinc-400 tabular-nums mt-0.5 w-7 shrink-0">#{a.number ?? '?'}</span>
@@ -368,8 +369,8 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
               <OpenTitle a={a} disabled={disabled} ops={ops} />
             ) : (
               <button type="button" onClick={() => toggleOpen(a.id)} aria-expanded={isOpen} className="text-left w-full">
-                <span className={`text-sm ${a.title ? 'font-medium text-zinc-900' : 'text-zinc-700'}`}>{actionLabel(a)}</span>
-                <span className="text-[11px] text-zinc-400 ml-1.5">open +</span>
+                <span className={`text-sm ${a.title ? 'font-medium text-zinc-900' : 'text-zinc-700'}`} data-shown-value>{actionLabel(a)}</span>
+                <span className="text-[11px] text-zinc-400 ml-1.5">{WORKSPACE_UI.openRecord}</span>
               </button>
             )}
             {/* 26-S2 §3b — THE ROW SHOWS ONLY THIS STEP'S TAGS. Step 1: heading, verdict, causes, avenue. Step 2: who. Step 3: cost. Step 4: sequence. The CLOSED row keeps a two-line snippet. */}
@@ -437,7 +438,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
           </div>
           {isOpen ? (
             // 18 Oct (CCh B) — opened: Close is on the title line; the heading menu moved down beside the policy test.
-            <button type="button" onClick={() => toggleOpen(a.id)} aria-expanded className="shrink-0 text-xs font-semibold px-2 py-0.5 rounded border-2 border-zinc-900 bg-white">Close −</button>
+            <button type="button" onClick={() => toggleOpen(a.id)} aria-expanded className="shrink-0 text-xs font-semibold px-2 py-0.5 rounded border-2 border-zinc-900 bg-white">{WORKSPACE_UI.closeRecord}</button>
           ) : headingSelect}
         </div>
         {isOpen && <OpenAction a={a} originals={originals} step={step} hasCostLines={costLineIds.has(a.id)} headingSelect={headingSelect} ctx={{ ideaId, live, byId, causeLite, disabled, ops, renderFull, headingName, conditions }} />}
@@ -491,7 +492,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
     <>
       <button type="button" disabled={disabled} data-hide-all-headings onClick={() => void ops.run('setHeadingsHidden', { hidden: !allHeadingsHidden }, undefined,
         (r: { changed: number }) => `Saved: ${allHeadingsHidden ? 'every heading is shown' : 'every heading is hidden'} (${r.changed} changed).`)}
-        className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{allHeadingsHidden ? 'Show all headings' : 'Hide all headings'}</button>
+        className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{allHeadingsHidden ? WORKSPACE_UI.showAllHeadings : WORKSPACE_UI.hideAllHeadings}</button>
       {KindsAsk}
     </>
   ) : null
@@ -508,7 +509,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
         )}
         {HideAll}
         <button disabled={disabled || needAnswers === 0} title={`Lex proposes an answer for every slot that has none, on every action — Who, Incentive now, What changes it, Skill, How, Against, What tells us it worked. Yours are never changed. It works through the list a dozen actions at a time. ${slotPrice}`} onClick={() => { const est = slotPriceEstimate(needAnswers); if (est != null && est > SLOT_CONFIRM_ABOVE_PENCE) setConfirmSlots(true); else void classifySlots() }}
-          className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40" data-classify-slots>Classify with Lex{needAnswers ? ` (${needAnswers} with open slots)` : ''}</button>
+          className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40" data-classify-slots>{WORKSPACE_UI.classifyWithLex}{needAnswers ? ` (${needAnswers} with open slots)` : ''}</button>
         {confirmSlots && (
           <span className="inline-flex flex-wrap items-center gap-1.5 rounded border-2 border-zinc-900 bg-white px-2 py-1 text-xs" data-confirm-slots role="alert">
             <span>This is {needAnswers} actions, in about {Math.ceil(needAnswers / 12)} requests: estimated <span className="font-semibold">£{((slotPriceEstimate(needAnswers) ?? 0) / 100).toFixed(2)}</span> ({(slotPriceEstimate(1) ?? 0).toFixed(2)}p an action, measured n={SLOT_RUNS.length}). Go on?</span>
@@ -519,7 +520,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
         {slotsWaiting > 0 && (
           <>
             <span className="text-[11px] text-zinc-700 font-semibold">{slotsWaiting} answer{slotsWaiting === 1 ? '' : 's'} from Lex waiting for you</span>
-            <button disabled={disabled} onClick={() => void ops.run('dismissSlots', {}, undefined, (r: { dismissed?: number }) => `Saved: ${r?.dismissed ?? 0} of Lex’s proposed answers dismissed. Your own answers were not touched.`)} className="text-[11px] underline text-zinc-600 disabled:opacity-40">Dismiss them all</button>
+            <button disabled={disabled} onClick={() => void ops.run('dismissSlots', {}, undefined, (r: { dismissed?: number }) => `Saved: ${r?.dismissed ?? 0} of Lex’s proposed answers dismissed. Your own answers were not touched.`)} className="text-[11px] underline text-zinc-600 disabled:opacity-40">{WORKSPACE_UI.dismissThemAll}</button>
           </>
         )}
       </div>
@@ -537,7 +538,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
           </div>
         )}
         {view === 'list' && modes.length > 1 && (
-          <label className="text-[11px] text-zinc-600 flex items-center gap-1">Group
+          <label className="text-[11px] text-zinc-600 flex items-center gap-1">{WORKSPACE_UI.group}
             <select value={mode} onChange={(e) => setMode(e.target.value as GroupMode)} className="border border-zinc-300 rounded px-1 py-0.5 text-xs">
               {modes.map((m) => <option key={m} value={m}>{GROUP_MODE_LABEL[m]}</option>)}
             </select></label>
@@ -549,21 +550,21 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
             <button disabled={disabled || untitled === 0} onClick={async () => {
               const r = await ops.run('proposeTitles', {}, 'Lex is writing titles')
               if (r.ok && r.result) ops.setNote(`Lex proposed ${r.result.proposed} title${r.result.proposed === 1 ? '' : 's'}${r.result.skipped ? `; ${r.result.skipped} it could not title` : ''}${r.result.asTopics ? `; ${r.result.asTopics} read like a topic rather than an action — worth a look` : ''}. Nothing is saved until you accept.`)
-            }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Title these for me{untitled ? ` (${untitled})` : ''}</button>
+            }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{WORKSPACE_UI.titleTheseForMe}{untitled ? ` (${untitled})` : ''}</button>
             {titleProposals > 0 && <button disabled={disabled} onClick={() => void ops.run('acceptTitles', {})} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white">Use all {titleProposals} proposed titles</button>}
           </>
         )}
         <button disabled={disabled || live.length === 0} title={`Lex proposes the ${classifyWords} for every action that has none. You accept or correct.`} onClick={async () => {
           const r = await ops.run('proposeFacets', {}, 'Lex is classifying')
           if (r.ok && r.result) ops.setNote(`Lex proposed the ${classifyWords} for ${r.result.proposed} action${r.result.proposed === 1 ? '' : 's'}. Open an action to correct it, or accept the lot.`)
-        }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Classify with Lex</button>
+        }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{WORKSPACE_UI.classifyWithLex}</button>
         {facetProposals > 0 && <button disabled={disabled} onClick={() => void ops.run('acceptFacets', { step }, undefined,
           (r: { accepted: number; refused?: string[] }) => `Saved: ${r.accepted} accepted.${r.refused?.length ? ` Not taken, because the order would go round in a circle: ${r.refused.join(' ')}` : ''}`)} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white">Accept all {facetProposals} proposed {step === 1 ? 'classifications' : 'orderings'}</button>}
         {step === 1 && (
           <button disabled={disabled || live.length < 2} onClick={async () => {
             const r = await ops.run('findDuplicates', {}, 'finding duplicates')
             if (r.ok) { setDupes(r.result); markDuplicatesChecked() }
-          }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Find duplicates</button>
+          }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{WORKSPACE_UI.findDuplicates}</button>
         )}
         {step === 1 && headingPlan && <ResortTool plan={headingPlan} undoable={structure?.resortUndoable ?? 0} ops={ops} disabled={disabled} />}
         {step === 1 && untestedCount > 0 && (
@@ -571,7 +572,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
             className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Test against the policy ({untestedCount} untested)</button>
         )}
         {step === 1 && <SetDigestButton state={digests} disabled={disabled || live.length === 0} onOpened={() => setSetDigestOpen(true)} />}
-        {step === 1 && <button type="button" disabled={disabled || pack.busy || live.length === 0} data-print-all onClick={() => void pack.print(undefined, 'all the actions')} title="A printable pack of every action with everything the record holds, every paragraph numbered. No model is called." className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Print all</button>}
+        {step === 1 && <button type="button" disabled={disabled || pack.busy || live.length === 0} data-print-all onClick={() => void pack.print(undefined, 'all the actions')} title="A printable pack of every action with everything the record holds, every paragraph numbered. No model is called." className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{WORKSPACE_UI.printAll}</button>}
       </div>
 
       {step === 1 && (
@@ -579,11 +580,11 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
         <BoundedInput value={newHeading} onChange={setNewHeading} max={LIMITS.headingName} placeholder="New heading — e.g. legislation, practical…" aria-label="New heading name"
           onEnter={() => void addHeading()} disabled={disabled}
           className="text-xs p-1.5 rounded border border-zinc-300 w-60 focus:outline-none focus:border-blue-400" />
-        <button disabled={disabled || !newHeading.trim()} onClick={() => void addHeading()} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 disabled:opacity-40">Add heading</button>
+        <button disabled={disabled || !newHeading.trim()} onClick={() => void addHeading()} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 disabled:opacity-40">{WORKSPACE_UI.addHeading}</button>
         <button disabled={disabled} onClick={async () => {
           const r = await ops.run('suggestHeadings', {}, 'Lex is reading your guiding policy')
           if (r.ok && r.result) setSuggestions(r.result.suggestions)
-        }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 hover:bg-zinc-50">Suggest headings from my guiding policy</button>
+        }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 hover:bg-zinc-50">{WORKSPACE_UI.suggestHeadings}</button>
       </div>
       )}
 
@@ -706,11 +707,11 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       )}
 
       {view === 'list' && unparked.length > 0 && (
-        <label className="text-[11px] text-zinc-600 flex flex-wrap items-center gap-1" data-list-filter title="Unreviewed: a proposal of Lex’s is waiting for you (a title, or this step’s classification), or the action has not been tested against the policy.">Show
+        <label className="text-[11px] text-zinc-600 flex flex-wrap items-center gap-1" data-list-filter title="Unreviewed: a proposal of Lex’s is waiting for you (a title, or this step’s classification), or the action has not been tested against the policy.">{WORKSPACE_UI.listFilter}
           <select value={filter} onChange={(e) => setFilter(e.target.value as Filter)} className="border border-zinc-300 rounded px-1 py-0.5 text-xs" aria-label="Filter the list">
             {filterKeys.map((k) => <option key={k} value={k}>{FILTER_LABEL[k]} ({filterCounts[k]})</option>)}
           </select>
-          {filter !== 'all' && <span className="font-semibold text-zinc-800">{shown.length} of {unparked.length} shown{shown.length === 0 ? ' — none match' : ''}</span>}
+          {filter !== 'all' && <span className="font-semibold text-zinc-800" data-shown-value>{shown.length} of {unparked.length} shown{shown.length === 0 ? ' — none match' : ''}</span>}
           {/* 184 - the filter's own help text: what each choice means, in words (the definition of "Unreviewed" is Lex's reading, confirmed by CCh) */}
           <span className="basis-full text-[10px] text-zinc-500" data-filter-help>
             <span className="font-semibold">Unreviewed</span> — Lex has a proposal waiting for you (a title, this step’s classification{step === 2 ? ' or answers' : ''}), or the action has not been tested against the policy. <span className="font-semibold">Conflicts</span> — the policy test says the action conflicts with your Guiding Policy.{step === 1 ? '' : ' '}{step !== 1 && <><span className="font-semibold">Not yet specific</span> — Who and Against are not both answered (draft text, for a legislative action).</>}
@@ -734,7 +735,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
                     onShowArchived={step === 1 ? () => { setShowSetAside(true); setTimeout(() => document.getElementById('set-aside-block')?.scrollIntoView?.({ block: 'start' }), 0) } : undefined} />
                   {consolidate && h && consolidate.headingId === h.id && <ConsolidateCard s={consolidate} ops={ops} disabled={disabled} setS={setConsolidate} onClose={() => setConsolidate(null)} />}
                   {step === 1 && h && <HeadingDigest headingId={h.id} headingName={h.name} actionCount={g.actions.length} state={digests} onOpenAction={openByNumber} disabled={disabled}
-                    extra={<button type="button" disabled={disabled || pack.busy || g.actions.length === 0} data-print-heading onClick={() => void pack.print({ headingId: h.id }, `the heading “${h.name}”`)} title="Print this heading as an Actions Pack (Word and PDF), every paragraph numbered." className="text-[11px] font-medium px-1.5 py-0.5 rounded border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Print this heading</button>} />}
+                    extra={<button type="button" disabled={disabled || pack.busy || g.actions.length === 0} data-print-heading onClick={() => void pack.print({ headingId: h.id }, `the heading “${h.name}”`)} title="Print this heading as an Actions Pack (Word and PDF), every paragraph numbered." className="text-[11px] font-medium px-1.5 py-0.5 rounded border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{WORKSPACE_UI.printHeading}</button>} />}
                   {h && !g.hidden && <DraftAllButton actions={g.actions as never} run={ops.run as never} disabled={disabled} headingName={h.name} />}
                   {!g.hidden && <ul className="space-y-1">{g.actions.map((a) => renderRow(a))}</ul>}
                   {g.hidden && <p className="text-[11px] text-zinc-400 pl-2">Hidden — {g.actions.length} action{g.actions.length === 1 ? '' : 's'} not shown.</p>}
@@ -743,7 +744,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
             })}
           </div>
           {step === 1 && parked.length > 0 && (
-            <CollapsedBlock title="Later phase" count={parked.length} open={showParked} onToggle={() => setShowParked((v) => !v)} hint="Parked for later — still yours, still in the proposal.">
+            <CollapsedBlock title={WORKSPACE_UI.laterPhaseBlock} count={parked.length} open={showParked} onToggle={() => setShowParked((v) => !v)} hint="Parked for later — still yours, still in the proposal.">
               <ul className="space-y-1">{parked.map((a) => (
                 <li key={a.id} data-parked-id={a.id} className="flex items-start gap-2 text-[11px] rounded border border-zinc-200 bg-white px-2 py-1">
                   <span className="text-zinc-400">#{a.number}</span><span className="flex-1">{actionLabel(a)}{a.parkedReason ? <span className="text-zinc-500"> — {a.parkedReason}</span> : null}</span>
@@ -773,17 +774,17 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       {checklist.length > 0 && <StepChecklist step={step} lines={checklist} />}
 
       {step === 1 && setAside.length > 0 && (
-        <CollapsedBlock id="set-aside-block" title="Ruled out and merged away" count={setAside.length} open={showSetAside} onToggle={() => setShowSetAside((v) => !v)} hint="Kept, with the reason. Nothing here is deleted.">
+        <CollapsedBlock id="set-aside-block" title={WORKSPACE_UI.ruledOutBlock} count={setAside.length} open={showSetAside} onToggle={() => setShowSetAside((v) => !v)} hint="Kept, with the reason. Nothing here is deleted.">
           <ul className="space-y-1">{setAside.map((a) => (
             <li key={a.id} data-set-aside-id={a.id} className="flex items-start gap-2 text-[11px] rounded border border-zinc-200 bg-white px-2 py-1">
               <span className="text-zinc-400">#{a.number}</span>
               <span className="flex-1">{actionLabel(a)}<span className="text-zinc-500"> — {a.foldedIntoId ? `part of #${byIdAll.get(a.foldedIntoId)?.number ?? '?'}` : a.status === 'ARCHIVED' ? 'merged away' : 'ruled out'}{a.ruleOutReason && !a.foldedIntoId ? `: ${a.ruleOutReason}` : ''}</span></span>
-              <button disabled={disabled} onClick={() => void ops.run('restore', { ids: [a.id] }, undefined, () => a.foldedIntoId ? `Saved: #${a.number ?? '?'} restored as its own row; its quote is out of #${byIdAll.get(a.foldedIntoId)?.number ?? '?'}’s Detail.` : `Saved: #${a.number ?? '?'} restored to the list.`)} className="underline font-medium">Restore</button>
+              <button disabled={disabled} onClick={() => void ops.run('restore', { ids: [a.id] }, undefined, () => a.foldedIntoId ? `Saved: #${a.number ?? '?'} restored as its own row; its quote is out of #${byIdAll.get(a.foldedIntoId)?.number ?? '?'}’s Detail.` : `Saved: #${a.number ?? '?'} restored to the list.`)} className="underline font-medium">{WORKSPACE_UI.restore}</button>
             </li>))}</ul>
         </CollapsedBlock>
       )}
       {step === 1 && archivedHeadings.length > 0 && (
-        <CollapsedBlock id="retired-headings-block" title="Retired headings" count={archivedHeadings.length} open={showRetired} onToggle={() => setShowRetired((v) => !v)} hint="Archived by a re-sort. Kept; nothing is deleted.">
+        <CollapsedBlock id="retired-headings-block" title={WORKSPACE_UI.retiredHeadingsBlock} count={archivedHeadings.length} open={showRetired} onToggle={() => setShowRetired((v) => !v)} hint="Archived by a re-sort. Kept; nothing is deleted.">
           <ul className="space-y-1">{archivedHeadings.map((h) => (
             <li key={h.id} className="flex items-start gap-2 text-[11px] rounded border border-zinc-200 bg-white px-2 py-1" data-retired-heading>
               <span className="flex-1">{h.name}</span>
@@ -821,13 +822,13 @@ function OpenTitle({ a, disabled, ops }: { a: CanonicalAction; disabled: boolean
     <div className="flex flex-wrap gap-1.5 items-start" data-open-title>
       <BoundedInput value={title} onChange={setTitle} max={LIMITS.actionTitle} placeholder="A short title saying what this action does" aria-label={`Title of action ${a.number ?? ''}`}
         onEnter={() => void saveTitle()} className="flex-1 min-w-[12rem] text-sm p-1.5 rounded border border-zinc-300 focus:outline-none focus:border-blue-400" />
-      <button disabled={disabled} onClick={() => void saveTitle()} className="text-xs font-medium px-2 py-1 rounded bg-zinc-900 text-white disabled:opacity-40">Save</button>
-      <button type="button" onClick={() => { setTitle(a.titleProposal ?? a.title ?? ''); setEditingTitle(false) }} className="text-xs underline text-zinc-600 mt-1">Cancel</button>
+      <button disabled={disabled} onClick={() => void saveTitle()} className="text-xs font-medium px-2 py-1 rounded bg-zinc-900 text-white disabled:opacity-40">{COMMON_UI.save}</button>
+      <button type="button" onClick={() => { setTitle(a.titleProposal ?? a.title ?? ''); setEditingTitle(false) }} className="text-xs underline text-zinc-600 mt-1">{COMMON_UI.cancel}</button>
     </div>
   ) : (
     <p className="text-sm font-semibold text-zinc-900" data-open-title>
-      {a.title?.trim() || <span className="font-normal text-zinc-600">No title yet.</span>}{' '}
-      <button type="button" disabled={disabled} onClick={() => setEditingTitle(true)} className="text-xs font-medium underline text-zinc-700 ml-1 disabled:opacity-40">Edit title</button>
+      {a.title?.trim() || <span className="font-normal text-zinc-600">{RECORD_UI.noTitle}</span>}{' '}
+      <button type="button" disabled={disabled} onClick={() => setEditingTitle(true)} className="text-xs font-medium underline text-zinc-700 ml-1 disabled:opacity-40">{RECORD_UI.editTitle}</button>
     </p>
   )
 }
@@ -858,36 +859,36 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
         {/* 170 — an action the consolidation never tested says so in words, and offers the test. */}
         {!a.policyTest && (
           <div className="rounded border border-zinc-200 bg-white p-2 text-xs w-fit max-w-[34rem]" data-not-tested-box>
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Policy test</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">{RECORD_UI.policyTest}</p>
             <p className="mt-0.5 text-zinc-900"><span className="font-semibold"><span aria-hidden>{POLICY_VERDICT_UI.NOT_TESTED.glyph}</span> {POLICY_VERDICT_UI.NOT_TESTED.word}.</span> No policy test has been run on this action yet.</p>
-            <p className="mt-1"><button type="button" disabled={disabled} onClick={testOne} className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Test against the policy</button></p>
+            <p className="mt-1"><button type="button" disabled={disabled} onClick={testOne} className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">{RECORD_UI.testAgainstPolicy}</button></p>
           </div>
         )}
         {/* DECISION 138 — WHY IT IS IN THE LIST, when the row is opened: what the policy test said and where the action came from. */}
         {a.policyTest && (
           <div className={`rounded bg-white p-2 text-xs w-fit max-w-[34rem] ${a.policyTest.verdict === 'CONFLICTS' ? 'border-2 border-zinc-900' : 'border border-zinc-200'}`}>
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Policy test</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">{RECORD_UI.policyTest}</p>
             <p className="mt-0.5 text-zinc-900">
               <span className="font-semibold"><span aria-hidden>{POLICY_VERDICT_UI[a.policyTest.verdict].glyph}</span> {POLICY_VERDICT_UI[a.policyTest.verdict].word}.</span>{' '}
               {a.policyTest.reason ?? <span className="text-zinc-500">No reason was recorded.</span>}
             </p>
-            <p className="mt-1"><button type="button" disabled={disabled} onClick={testOne} className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">{a.policyTest.verdict === 'NOT_TESTED' ? 'Test against the policy' : 'Test again'}</button></p>
+            <p className="mt-1"><button type="button" disabled={disabled} onClick={testOne} className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">{a.policyTest.verdict === 'NOT_TESTED' ? RECORD_UI.testAgainstPolicy : RECORD_UI.testAgain}</button></p>
             {/* 26-S2 §3c — an action the policy conflicts with is ruled out, edited and re-tested, or KEPT WITH A NOTE. */}
             {a.policyTest.verdict === 'CONFLICTS' && (
               <div className="mt-1.5 space-y-1" data-keep-note>
-                {a.conflictNote && <p className="text-zinc-900"><span className="font-semibold">Kept, with your note:</span> {a.conflictNote}</p>}
+                {a.conflictNote && <p className="text-zinc-900"><span className="font-semibold">{RECORD_UI.keptWithNote}</span> {a.conflictNote}</p>}
                 <BoundedInput value={keepNote} onChange={setKeepNote} max={LIMITS.ruleOutReason} placeholder="Why you are keeping it, although the policy conflicts" aria-label={`Why action ${a.number ?? ''} is kept although it conflicts`}
                   className="w-full text-[11px] border border-zinc-300 rounded px-1.5 py-0.5" />
                 <button type="button" disabled={disabled || keepNote.trim().length < 3 || keepNote.trim() === (a.conflictNote ?? '')} onClick={() => void saveKeep(keepNote.trim())}
-                  className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Keep it, with a note</button>
-                {a.conflictNote && <button type="button" disabled={disabled} onClick={() => void saveKeep(null)} className="text-[11px] underline text-zinc-600 ml-2 disabled:opacity-40">Clear the note</button>}
+                  className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">{RECORD_UI.keepWithNote}</button>
+                {a.conflictNote && <button type="button" disabled={disabled} onClick={() => void saveKeep(null)} className="text-[11px] underline text-zinc-600 ml-2 disabled:opacity-40">{RECORD_UI.clearNote}</button>}
               </div>
             )}
           </div>
         )}
             </div>
         <div className="rounded border border-zinc-200 bg-white p-2 space-y-1.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">The causes it attacks, its avenue{activeConditions(ctx.conditions).length ? ' and the conditions it delivers' : ''} {a.facetProposal && proposalStep(a.facetProposal).includes(1) && '— Lex has proposed some of it'}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">{RECORD_UI.facetsTitle}{activeConditions(ctx.conditions).length ? RECORD_UI.facetsTitleConditions : ''} {a.facetProposal && proposalStep(a.facetProposal).includes(1) && '— Lex has proposed some of it'}</p>
           {a.facetProposal && proposalStep(a.facetProposal).includes(1) && <FacetProposal a={a} step={1} causes={causeLite} others={others} conditions={ctx.conditions} onAccept={() => void ops.run('acceptFacets', { ids: [a.id], step: 1 })} onDismiss={() => void ops.run('dismissFacets', { ids: [a.id], step: 1 })} />}
           <div className="flex flex-wrap gap-2 items-center text-[11px]">
             <label className="flex items-center gap-1">{FACET_WORD.avenue}
@@ -896,7 +897,7 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
               </select></label>
           </div>
           <details className="text-[11px]">
-            <summary className="cursor-pointer text-zinc-600">{FACET_WORD.causes}: {a.targetCauseIds.length ? a.targetCauseIds.map((id) => `#${causeLite.find((c) => c.id === id)?.number ?? '?'}`).join(', ') : 'none recorded'} — change</summary>
+            <summary className="cursor-pointer text-zinc-600">{FACET_WORD.causes}: {a.targetCauseIds.length ? a.targetCauseIds.map((id) => `#${causeLite.find((c) => c.id === id)?.number ?? '?'}`).join(', ') : 'none recorded'} {RECORD_UI.change}</summary>
             <ul className="mt-1 space-y-0.5 max-h-40 overflow-y-auto">
               {causeLite.map((c) => (
                 <li key={c.id}><label className="flex items-start gap-1.5">
@@ -916,14 +917,14 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
         {/* 26-S browser pass E — where it came from is a SOURCE of the record, not part of the verdict line. */}
         {sources && (
           <div className="rounded border border-zinc-200 bg-white p-2 text-xs" data-record-sources>
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Sources</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">{RECORD_UI.sources}</p>
             <p className="mt-0.5 text-zinc-800">{sources}</p>
           </div>
         )}
 
         {originals.length > 0 && (
           <div className="rounded border border-zinc-200 bg-white p-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">The originals this was made from — kept</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">{RECORD_UI.originals}</p>
             <ul className="mt-1 space-y-1">
               {originals.map((o) => (
                 <li key={o.id} className="text-[11px]">
@@ -938,9 +939,9 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
         )}
 
         <div className="flex flex-wrap gap-2 items-center">
-          <button disabled={disabled} onClick={() => void ops.run('park', { ids: [a.id], reason: why || null }, undefined, () => `Saved: #${a.number ?? '?'} moved to “Later phase”.`)} className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-700">Later phase</button>
+          <button disabled={disabled} onClick={() => void ops.run('park', { ids: [a.id], reason: why || null }, undefined, () => `Saved: #${a.number ?? '?'} moved to “Later phase”.`)} className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-700">{RECORD_UI.laterPhase}</button>
           <button disabled={disabled || why.trim().length < 3} onClick={() => void ops.run('ruleOut', { ids: [a.id], reason: why }, undefined, () => `Saved: #${a.number ?? '?'} ruled out, with your reason. It is kept under “Ruled out and merged away”; Restore brings it back.`)} title={why.trim().length < 3 ? 'Give a reason first — it is kept so you can bring the action back.' : undefined}
-            className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-700 disabled:opacity-40">Rule out</button>
+            className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 text-zinc-700 disabled:opacity-40">{RECORD_UI.ruleOut}</button>
           <BoundedInput value={why} onChange={setWhy} max={LIMITS.ruleOutReason} placeholder="Reason (needed to rule out)" aria-label={`Reason to rule out action ${a.number ?? ''}`}
             className="flex-1 min-w-[10rem] text-[11px] border border-zinc-300 rounded px-1.5 py-0.5" />
         </div>
@@ -1001,12 +1002,12 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
           {closed('policy', 1, here(otherStepLine(1, a, hasCostLines, headingName), 1), policyBlock)}
         </div>
       ))}
-      {titled('documents', 'Documents', <DocumentsSection ideaId={ctx.ideaId} a={a} facts={facts} disabled={disabled} onChanged={() => void ops.refresh()} />)}
-      {titled('law', 'Law', <LawSection facts={facts} number={a.number} />)}
+      {titled('documents', sectionLabel('documents'), <DocumentsSection ideaId={ctx.ideaId} a={a} facts={facts} disabled={disabled} onChanged={() => void ops.refresh()} />)}
+      {titled('law', sectionLabel('law'), <LawSection facts={facts} number={a.number} />)}
       {stepPart(2, 'who')}
       {stepPart(3, 'costs')}
       {stepPart(4, 'order')}
-      {closed('prune', null, `Sources, the originals, Later phase and Rule out · ${step === 1 ? 'this step' : 'from step 1'}`, pruneBlock)}
+      {closed('prune', null, `${RECORD_UI.pruneLine} · ${step === 1 ? 'this step' : 'from step 1'}`, pruneBlock)}
       {/* 26-T2 §6 - the comment thread, at the foot of the record on every step */}
       <div data-record-section="comments" className="scroll-mt-10"><ActionComments ideaId={ctx.ideaId} actionId={a.id} number={a.number} /></div>
     </div>
@@ -1025,8 +1026,8 @@ function GroupHeader<T>({ g, h, compact = false, ops, disabled, archived = 0, on
       {editing && h ? (
         <>
           <BoundedInput value={name} onChange={setName} max={LIMITS.headingName} aria-label={`New name for the heading ${h.name}`} className="text-sm border border-zinc-300 rounded px-1.5 py-0.5" />
-          <button disabled={disabled || !name.trim()} onClick={async () => { const r = await ops.run('updateHeading', { headingId: h.id, name }, undefined, () => `Saved: the heading is now called “${name.trim()}”.`); if (r.ok) setEditing(false) }} className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-zinc-900 text-white">Save</button>
-          <button onClick={() => { setName(g.label); setEditing(false) }} className="text-[11px] underline">Cancel</button>
+          <button disabled={disabled || !name.trim()} onClick={async () => { const r = await ops.run('updateHeading', { headingId: h.id, name }, undefined, () => `Saved: the heading is now called “${name.trim()}”.`); if (r.ok) setEditing(false) }} className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-zinc-900 text-white">{COMMON_UI.save}</button>
+          <button onClick={() => { setName(g.label); setEditing(false) }} className="text-[11px] underline">{COMMON_UI.cancel}</button>
         </>
       ) : (
         <h4 className="text-sm font-semibold text-zinc-900">{g.label}</h4>
@@ -1036,19 +1037,19 @@ function GroupHeader<T>({ g, h, compact = false, ops, disabled, archived = 0, on
       </span>
       {h && compact && (
         <span className="ml-auto flex gap-2 items-center text-[11px]">
-          <button disabled={disabled} data-heading-hide onClick={() => void ops.run('updateHeading', { headingId: h.id, hidden: !h.hidden })} className="underline text-zinc-600">{h.hidden ? 'Show' : 'Hide'}</button>
+          <button disabled={disabled} data-heading-hide onClick={() => void ops.run('updateHeading', { headingId: h.id, hidden: !h.hidden })} className="underline text-zinc-600">{h.hidden ? RECORD_UI.show : RECORD_UI.hide}</button>
         </span>
       )}
       {h && !compact && !editing && (
         <span className="ml-auto flex flex-wrap gap-2 items-center text-[11px]">
-          {onConsolidate && <button type="button" disabled={disabled} onClick={onConsolidate} data-consolidate-button title="Lex looks for actions here that are only parts of another, and for two saying the same thing. Nothing is deleted; each can be restored." className="font-medium px-1.5 py-0.5 rounded border border-zinc-300 text-zinc-800 disabled:opacity-40">Consolidate this heading</button>}
-          <button onClick={() => setEditing(true)} className="underline text-zinc-600">Rename</button>
+          {onConsolidate && <button type="button" disabled={disabled} onClick={onConsolidate} data-consolidate-button title="Lex looks for actions here that are only parts of another, and for two saying the same thing. Nothing is deleted; each can be restored." className="font-medium px-1.5 py-0.5 rounded border border-zinc-300 text-zinc-800 disabled:opacity-40">{RECORD_UI.consolidateHeading}</button>}
+          <button onClick={() => setEditing(true)} className="underline text-zinc-600">{RECORD_UI.rename}</button>
           <select value={h.colourKey} disabled={disabled} onChange={(e) => void ops.run('updateHeading', { headingId: h.id, colourKey: e.target.value })} aria-label={`Colour for ${h.name}`} className="border border-zinc-300 rounded px-1 py-0.5">
             {HEADING_PALETTE.map((p) => <option key={p.key} value={p.key}>{p.glyph} {p.name}</option>)}
           </select>
           {/* 26-V2c (268, revised) — the heading's kind: the type of instrument its actions make, set by the owner. "Platform" derives a specification for each. */}
           <label className="flex items-center gap-1" title="The type of instrument this heading's actions make. “Platform” means each action under it needs a specification.">
-            <span className="text-zinc-600">Kind</span>
+            <span className="text-zinc-600">{RECORD_UI.headingKind}</span>
             <select value={h.kind ?? ''} disabled={disabled} data-heading-kind={h.kind ?? 'none'}
               onChange={(e) => { const kind = (e.target.value || null) as HeadingKind | null; void ops.run('updateHeading', { headingId: h.id, kind }, undefined, () => `Saved: “${h.name}” is now ${kind ? `a ${HEADING_KIND_WORD[kind]} heading` : 'a heading with no kind'}${kind === 'PLATFORM' ? ' — each action under it needs a specification' : ''}.`) }}
               aria-label={`Kind of instrument for ${h.name}`} className="border border-zinc-300 rounded px-1 py-0.5">
@@ -1056,8 +1057,8 @@ function GroupHeader<T>({ g, h, compact = false, ops, disabled, archived = 0, on
               {HEADING_KINDS.map((k) => <option key={k} value={k}>{HEADING_KIND_WORD[k]}</option>)}
             </select>
           </label>
-          <button disabled={disabled} onClick={() => void ops.run('updateHeading', { headingId: h.id, hidden: !h.hidden })} className="underline text-zinc-600">{h.hidden ? 'Show' : 'Hide'}</button>
-          <button disabled={disabled} onClick={() => { if (g.actions.length === 0 || window.confirm(`Retire the heading “${h.name}”? Its ${g.actions.length} action(s) stay, with no heading. Nothing is deleted: “Bring back” under Retired headings restores it.`)) void ops.run('deleteHeading', { headingId: h.id }, undefined, () => `Saved: the heading “${h.name}” is retired; its actions stay, with no heading. Bring it back under Retired headings.`) }} className="underline text-zinc-500">Retire heading</button>
+          <button disabled={disabled} onClick={() => void ops.run('updateHeading', { headingId: h.id, hidden: !h.hidden })} className="underline text-zinc-600">{h.hidden ? RECORD_UI.show : RECORD_UI.hide}</button>
+          <button disabled={disabled} onClick={() => { if (g.actions.length === 0 || window.confirm(`Retire the heading “${h.name}”? Its ${g.actions.length} action(s) stay, with no heading. Nothing is deleted: “Bring back” under Retired headings restores it.`)) void ops.run('deleteHeading', { headingId: h.id }, undefined, () => `Saved: the heading “${h.name}” is retired; its actions stay, with no heading. Bring it back under Retired headings.`) }} className="underline text-zinc-500">{RECORD_UI.retireHeading}</button>
         </span>
       )}
       {/* 26-V2c (268, revised) — Lex's proposed kind waits beside the heading for the owner: Accept or Not this. It never sets the kind itself. */}
@@ -1065,9 +1066,9 @@ function GroupHeader<T>({ g, h, compact = false, ops, disabled, archived = 0, on
         <p className="basis-full text-[11px] border border-zinc-900 rounded px-1.5 py-0.5" data-kind-proposal={h.proposedKind}>
           <span aria-hidden>◇</span> <span className="font-semibold">Lex proposes the kind “{HEADING_KIND_WORD[h.proposedKind]}”</span>{h.kind ? ` (now “${isHeadingKind(h.kind) ? HEADING_KIND_WORD[h.kind] : h.kind}”)` : ''}{h.proposedKindReason ? ` — ${h.proposedKindReason}` : ''}{' '}
           <button type="button" disabled={disabled} data-kind-accept onClick={() => void ops.run('answerKindProposal', { headingId: h.id, accept: true }, undefined, () => `Saved: “${h.name}” is now a ${HEADING_KIND_WORD[h.proposedKind as HeadingKind]} heading${h.proposedKind === 'PLATFORM' ? ' — each action under it needs a specification' : ''}.`)}
-            className="ml-1 px-1.5 py-0.5 rounded bg-zinc-900 text-white font-medium disabled:opacity-40">Accept</button>{' '}
+            className="ml-1 px-1.5 py-0.5 rounded bg-zinc-900 text-white font-medium disabled:opacity-40">{COMMON_UI.accept}</button>{' '}
           <button type="button" disabled={disabled} data-kind-dismiss onClick={() => void ops.run('answerKindProposal', { headingId: h.id, accept: false }, undefined, () => `Saved: Lex’s proposal for “${h.name}” is set aside; its kind is unchanged.`)}
-            className="underline">Not this</button>
+            className="underline">{RECORD_UI.notThis}</button>
         </p>
       )}
     </div>
@@ -1078,8 +1079,9 @@ function CollapsedBlock({ id, title, count, hint, open, onToggle, children }: { 
   return (
     <section id={id} className="rounded-lg border border-zinc-200">
       <button type="button" onClick={onToggle} aria-expanded={open} className="w-full flex items-baseline gap-2 px-2.5 py-1.5 text-left">
-        <span className="text-sm font-semibold text-zinc-800">{title}</span><span className="text-[11px] text-zinc-500">{count}</span>
-        <span className="text-[11px] text-zinc-400 flex-1">{hint}</span><span className="text-[11px] text-zinc-500">{open ? 'hide −' : 'show +'}</span>
+        {/* data-label-part / data-shown-value: check:lex-26w-b reads the title and the toggle as labels, the count and the hint as not */}
+        <span className="text-sm font-semibold text-zinc-800" data-label-part>{title}</span><span className="text-[11px] text-zinc-500" data-shown-value>{count}</span>
+        <span className="text-[11px] text-zinc-400 flex-1" data-shown-value>{hint}</span><span className="text-[11px] text-zinc-500" data-label-part>{open ? WORKSPACE_UI.blockHide : WORKSPACE_UI.blockShow}</span>
       </button>
       {open && <div className="px-2.5 pb-2">{children}</div>}
     </section>
@@ -1115,8 +1117,8 @@ function FacetProposal({ a, step, causes, others, onAccept, onDismiss, condition
   if (step === 4 && p.beforeIds?.length) bits.push(`comes before ${p.beforeIds.map((id) => `#${others.find((o) => o.id === id)?.number ?? '?'}`).join(', ')}`)
   return (
     <p className="text-[11px] bg-zinc-50 border border-zinc-200 rounded px-1.5 py-1">
-      <span className="font-semibold">Lex proposes:</span> {bits.join(' · ') || 'nothing more than is already set'}.{' '}
-      <button onClick={onAccept} className="underline font-medium ml-1">Accept</button><button onClick={onDismiss} className="underline ml-2 text-zinc-500">Dismiss</button>
+      <span className="font-semibold">{RECORD_UI.lexProposes}</span> {bits.join(' · ') || 'nothing more than is already set'}.{' '}
+      <button onClick={onAccept} className="underline font-medium ml-1">{COMMON_UI.accept}</button><button onClick={onDismiss} className="underline ml-2 text-zinc-500">{COMMON_UI.dismiss}</button>
     </p>
   )
 }

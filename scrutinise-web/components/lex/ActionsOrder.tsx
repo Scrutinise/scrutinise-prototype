@@ -17,6 +17,7 @@ import { actionLabel } from '@/lib/lex/action-facets'
 import { afterOf, becauseOf, derivedOrder, afterWords } from '@/lib/lex/action-order-pure'
 import { LIMITS } from '@/lib/lex/input-limits'
 import BoundedInput from './BoundedInput'
+import { COMMON_UI, RECORD_UI } from '@/lib/lex/screen-labels'
 import type { OpsLike } from './ActionsStructureTools'
 
 /** The because line for "later must come after earlier", read off the LATER action's record. */
@@ -36,20 +37,20 @@ export function OrderSection({ a, live, ops, disabled }: { a: CanonicalAction; l
       () => on ? `Saved: ${name(a.number)} must come after ${name(earlierNumber)}${text?.trim() ? `, because ${text.trim()}` : ''}.` : `Saved: ${name(a.number)} no longer has to come after ${name(earlierNumber)}.`)
   return (
     <div className="rounded border border-zinc-200 bg-white p-2 space-y-1.5 text-[11px]" data-order-section>
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Order — what this must come after, and why</p>
-      {after.length === 0 && <p data-order-none>Nothing it must come after yet.</p>}
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">{RECORD_UI.orderTitle}</p>
+      {after.length === 0 && <p data-order-none>{RECORD_UI.orderNone}</p>}
       {after.length > 0 && (
         <ul className="space-y-1">
           {after.map((x) => {
             const text = edits[x.id] ?? x.because ?? ''
             return (
               <li key={x.id} className="rounded border border-zinc-200 px-1.5 py-1 space-y-0.5" data-order-after={x.number ?? '?'}>
-                <p><span className="font-semibold">Must come after {name(x.number)}</span> {actionLabel(live.find((o) => o.id === x.id)!, 70)}</p>
+                <p><span className="font-semibold">{RECORD_UI.mustComeAfter} {name(x.number)}</span> {actionLabel(live.find((o) => o.id === x.id)!, 70)}</p>
                 <div className="flex flex-wrap items-start gap-1">
                   <BoundedInput value={text} onChange={(v) => setEdits({ ...edits, [x.id]: v })} max={LIMITS.orderBecause} placeholder="because … (optional)" aria-label={`Why ${name(a.number)} must come after ${name(x.number)}`}
                     className="flex-1 min-w-[12rem] border border-zinc-300 rounded px-1.5 py-0.5" wrapperClassName="flex-1 min-w-[12rem]" />
-                  <button type="button" disabled={disabled || text.trim() === (x.because ?? '')} onClick={() => void save(x.id, true, text, x.number)} className="px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Save the reason</button>
-                  <button type="button" disabled={disabled} onClick={() => void save(x.id, false, null, x.number)} className="underline text-zinc-700">Remove</button>
+                  <button type="button" disabled={disabled || text.trim() === (x.because ?? '')} onClick={() => void save(x.id, true, text, x.number)} className="px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">{RECORD_UI.saveReason}</button>
+                  <button type="button" disabled={disabled} onClick={() => void save(x.id, false, null, x.number)} className="underline text-zinc-700">{COMMON_UI.remove}</button>
                 </div>
               </li>
             )
@@ -57,7 +58,7 @@ export function OrderSection({ a, live, ops, disabled }: { a: CanonicalAction; l
         </ul>
       )}
       <div className="flex flex-wrap items-start gap-1" data-order-add>
-        <label className="flex items-center gap-1">Must come after
+        <label className="flex items-center gap-1">{RECORD_UI.mustComeAfter}
           <select value={pick} onChange={(e) => setPick(e.target.value)} disabled={disabled} aria-label={`An action ${name(a.number)} must come after`} className="border border-zinc-300 rounded px-1 py-0.5 max-w-[16rem]">
             <option value="">choose an action…</option>
             {others.map((o) => <option key={o.id} value={o.id}>{name(o.number)} {actionLabel(o, 60)}</option>)}
@@ -65,7 +66,7 @@ export function OrderSection({ a, live, ops, disabled }: { a: CanonicalAction; l
         <BoundedInput value={because} onChange={setBecause} max={LIMITS.orderBecause} placeholder="because … (optional)" aria-label={`Why ${name(a.number)} must come after it`}
           className="flex-1 min-w-[12rem] border border-zinc-300 rounded px-1.5 py-0.5" wrapperClassName="flex-1 min-w-[12rem]" />
         <button type="button" disabled={disabled || !pick} onClick={async () => { const r = await save(pick, true, because, live.find((o) => o.id === pick)?.number ?? null); if (r.ok) { setPick(''); setBecause('') } }}
-          className="px-2 py-0.5 rounded border border-zinc-300 font-medium disabled:opacity-40">Add</button>
+          className="px-2 py-0.5 rounded border border-zinc-300 font-medium disabled:opacity-40">{COMMON_UI.add}</button>
       </div>
       {before.length > 0 && <p className="text-zinc-600">Must come before: {before.map((b) => name(b.number)).join(', ')} (set on {before.length === 1 ? 'that action' : 'those actions'}).</p>}
     </div>

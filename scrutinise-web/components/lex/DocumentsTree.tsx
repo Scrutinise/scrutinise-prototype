@@ -19,10 +19,11 @@ import DocumentView from './DocumentView'
 import { statusWords } from '@/lib/lex/document-view-pure'
 import { reviewedWords, ISSUES_CHANGED_EVENT } from '@/lib/lex/document-review-pure'
 import BoundedInput from './BoundedInput'
+import { COMMON_UI, DOCUMENT_UI, RECORD_UI, TREE_UI, TREE_FILTER_WORD } from '@/lib/lex/screen-labels'
 import { DraftPlanDialog, DraftRunLine, type DraftScopeInput } from './DraftNeedsPanel'
 
 type Filter = 'all' | 'missing' | 'drafted' | 'accepted'
-const FILTER_WORD: Record<Filter, string> = { all: 'All', missing: 'Missing', drafted: 'Drafted, not accepted', accepted: 'Accepted' }
+const FILTER_WORD: Record<Filter, string> = TREE_FILTER_WORD
 
 
 export default function DocumentsTree({ ideaId, readOnly = false }: { ideaId: string; readOnly?: boolean }) {
@@ -98,7 +99,7 @@ export default function DocumentsTree({ ideaId, readOnly = false }: { ideaId: st
           className="ml-auto w-72 max-w-full text-xs border border-zinc-300 rounded px-2 py-1" />
       </div>
       {!readOnly && <DraftRunLine key={runId ?? 'latest'} ideaId={ideaId} runId={runId} onProgress={() => void load()} />}
-      {said && <p className="text-xs border border-zinc-300 rounded px-2 py-1" role="status">{said} <button type="button" className="underline ml-1" onClick={() => setSaid(null)}>OK</button></p>}
+      {said && <p className="text-xs border border-zinc-300 rounded px-2 py-1" role="status">{said} <button type="button" className="underline ml-1" onClick={() => setSaid(null)}>{COMMON_UI.ok}</button></p>}
 
       {tree.headings.map((h) => {
         const rows = h.actions.filter(matches)
@@ -113,7 +114,7 @@ export default function DocumentsTree({ ideaId, readOnly = false }: { ideaId: st
                 <span className="text-[11px] text-zinc-500">{rows.length} action{rows.length === 1 ? '' : 's'}{h.id && <span data-tree-heading-kind={h.kind ?? 'none'}> · {isHeadingKind(h.kind) ? HEADING_KIND_WORD[h.kind] : 'kind not yet said'}</span>}</span>
               </button>
               {!readOnly && h.actions.some((a) => a.missing.length) && (
-                <button type="button" className="text-xs underline px-2 shrink-0" data-draft-heading onClick={() => setDrafting({ headingId: h.id, label: h.name })}>Draft what this heading needs</button>
+                <button type="button" className="text-xs underline px-2 shrink-0" data-draft-heading onClick={() => setDrafting({ headingId: h.id, label: h.name })}>{TREE_UI.draftWhatHeadingNeeds}</button>
               )}
             </div>
             {hOpen && <ul className="divide-y divide-zinc-100">{rows.map((a) => (
@@ -161,8 +162,8 @@ function ActionRow({ ideaId, a, readOnly, busy, opened, closed, toggle, onOpen, 
           <p className="text-[11px] text-zinc-600" data-needs-line>
             {needsLine(a.needs.kinds.length, live.filter((d) => a.needs.kinds.includes(d.kind)).length, live.filter((d) => a.needs.kinds.includes(d.kind) && d.status === 'ACCEPTED').length)}
             {' · '}{a.needs.why}{a.needs.overridden ? ' (set by hand)' : ''}
-            {!readOnly && <button type="button" className="underline ml-1" onClick={() => setNeedsOpen(!needsOpen)}>Change what this needs</button>}
-            {!readOnly && a.missing.length > 0 && <button type="button" className="underline ml-1" data-draft-action onClick={onDraftNeeds}>Draft what this action needs</button>}
+            {!readOnly && <button type="button" className="underline ml-1" onClick={() => setNeedsOpen(!needsOpen)}>{TREE_UI.changeWhatThisNeeds}</button>}
+            {!readOnly && a.missing.length > 0 && <button type="button" className="underline ml-1" data-draft-action onClick={onDraftNeeds}>{RECORD_UI.draftWhatActionNeeds}</button>}
           </p>
           {needsOpen && !readOnly && <NeedsForm busy={busy} onSave={(m, k, r) => { onNeeds(m, k, r); setNeedsOpen(false) }} />}
         </div>
@@ -189,8 +190,8 @@ function ActionRow({ ideaId, a, readOnly, busy, opened, closed, toggle, onOpen, 
             <li key={k} className="text-xs text-zinc-700" data-tree-missing={k}>
               <span aria-hidden>○</span> {KIND_WORD[k]} — <span className="font-semibold">no document yet</span>
               {!readOnly && (GENERATED_KINDS.has(k)
-                ? k === 'COLLISION_REPORT' && <button type="button" disabled={busy} className="underline ml-1 disabled:opacity-40" onClick={() => onGenerate('collision')}>Generate it (free)</button>
-                : <button type="button" disabled={busy} className="underline ml-1 disabled:opacity-40" onClick={() => onAdd(k)}>Write it</button>)}
+                ? k === 'COLLISION_REPORT' && <button type="button" disabled={busy} className="underline ml-1 disabled:opacity-40" onClick={() => onGenerate('collision')}>{TREE_UI.generateItFree}</button>
+                : <button type="button" disabled={busy} className="underline ml-1 disabled:opacity-40" onClick={() => onAdd(k)}>{TREE_UI.writeIt}</button>)}
             </li>
           ))}
         </ul>
@@ -206,7 +207,7 @@ function NeedsForm({ busy, onSave }: { busy: boolean; onSave: (mode: 'derived' |
   return (
     <div className="mt-1 border border-zinc-200 rounded p-1.5 space-y-1 text-xs" data-needs-form>
       <fieldset className="flex flex-wrap gap-2"><legend className="sr-only">What this action needs</legend>
-        {([['derived', 'Work it out from the avenue and instrument'], ['nothing', 'Needs no document'], ['set', 'Needs exactly these']] as const).map(([m, w]) => (
+        {([['derived', TREE_UI.needsDerived], ['nothing', TREE_UI.needsNothing], ['set', TREE_UI.needsSet]] as const).map(([m, w]) => (
           <label key={m}><input type="radio" name="needs-mode" checked={mode === m} onChange={() => setMode(m)} /> {w}</label>
         ))}
       </fieldset>
@@ -214,7 +215,7 @@ function NeedsForm({ busy, onSave }: { busy: boolean; onSave: (mode: 'derived' |
         <label key={k}><input type="checkbox" checked={kinds.includes(k)} onChange={(e) => setKinds(e.target.checked ? [...kinds, k] : kinds.filter((x) => x !== k))} /> {KIND_WORD[k]}</label>
       ))}</div>}
       {mode !== 'derived' && <BoundedInput value={reason} onChange={setReason} max={LIMITS.ruleOutReason} placeholder="Why — recorded with the choice" aria-label="Why this action needs what it needs" className="w-full text-xs border border-zinc-300 rounded px-1.5 py-0.5" wrapperClassName="w-full" />}
-      <button type="button" disabled={busy} onClick={() => onSave(mode, mode === 'set' ? kinds : undefined, reason)} className="px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Save</button>
+      <button type="button" disabled={busy} onClick={() => onSave(mode, mode === 'set' ? kinds : undefined, reason)} className="px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">{COMMON_UI.save}</button>
     </div>
   )
 }
@@ -224,10 +225,10 @@ export function AddDialog({ action, kind, busy, onClose, onSave }: { action: Tre
   const [body, setBody] = useState('')
   return (
     <FocusDialog title={`Write the ${KIND_WORD[kind]} for #${action.number}`} onClose={onClose}
-      footer={<button type="button" disabled={busy || !title.trim()} onClick={() => onSave(title, body)} className="px-3 py-1 rounded bg-zinc-900 text-white text-sm disabled:opacity-40">Save the document</button>}>
+      footer={<button type="button" disabled={busy || !title.trim()} onClick={() => onSave(title, body)} className="px-3 py-1 rounded bg-zinc-900 text-white text-sm disabled:opacity-40">{DOCUMENT_UI.saveTheDocument}</button>}>
       <div className="space-y-2 text-sm">
-        <label className="block">Title<BoundedInput value={title} onChange={setTitle} max={LIMITS.documentTitle} aria-label="The document’s title" className="w-full border border-zinc-300 rounded px-2 py-1" wrapperClassName="w-full" /></label>
-        <label className="block">The text — use “## ” to start each numbered part<BoundedInput multiline rows={12} value={body} onChange={setBody} max={LIMITS.documentText} aria-label="The document’s text" className="w-full border border-zinc-300 rounded px-2 py-1 text-xs" wrapperClassName="w-full" /></label>
+        <label className="block">{DOCUMENT_UI.title}<BoundedInput value={title} onChange={setTitle} max={LIMITS.documentTitle} aria-label="The document’s title" className="w-full border border-zinc-300 rounded px-2 py-1" wrapperClassName="w-full" /></label>
+        <label className="block">{DOCUMENT_UI.textWithParts}<BoundedInput multiline rows={12} value={body} onChange={setBody} max={LIMITS.documentText} aria-label="The document’s text" className="w-full border border-zinc-300 rounded px-2 py-1 text-xs" wrapperClassName="w-full" /></label>
       </div>
     </FocusDialog>
   )

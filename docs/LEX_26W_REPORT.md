@@ -94,9 +94,25 @@ Traced control by control, from the rendered label to the route to the server fu
   - Lex's prompt states the rule.
   - Checked: 2 Nov's section 1 is refused, and an explanation still goes in.
 
-## §3 — the field guide
+## §3 — the field guide (26-W-b, built 3 Nov)
 
-**NOT BUILT: 26-W-b.**
+- **`lib/lex/screen-labels.ts`** holds the words the record, the document view, the tree, the workspace and the notebook render. The components render these constants, and so does the guide.
+- **`lib/lex/field-guide.ts`**: 239 entries. Each has a purpose, how it fits, its limits where it has any, and the Lex tool that does the same (or "none — why"). Each guide table is typed against its label table, so a label added without an entry is a compile error. Labels are read when the guide is asked, never copied, so a rename in `screen-labels.ts` changes the screen and the guide together. That is the point for 26-X.
+- **Two free tools:** `explain_field` (exact match, else near matches that share a word with the label or key) and `list_fields`. A prompt rule says to answer "what is this for?" from them, never from general knowledge. The guide stays out of the per-turn prompt, so 293's cache savings stand.
+- **`check:lex-26w-b`** has four parts:
+  - **A:** the guide is complete, and every tool it names exists.
+  - **B and C:** each new tool and its button store the same thing on twin scratch copies.
+  - **D:** a real browser renders the workspace with a record open (steps 1–4) and both document views. It fails on any rendered label the guide does not hold, and renames a label in the bundle's own table before mounting.
+- **3 Nov, finishing the check:**
+  - Part D had never completed: esbuild's `__name` helper was missing in the page, so the check now defines it with an init script.
+  - Part D's first full run found about 25 workspace controls rendered as inline strings (the toolbar, the views, heading digests and print, "Draft all legislative actions", the row's open/close, the kept blocks, the conditions list's ↑ ↓ Retire). These moved into `WORKSPACE_UI` / `WORKSPACE_VIEW_WORD`, with guide entries.
+  - Values inside controls (an action's title on its row, counts, the "N left" counter, the filter's help) are marked `data-shown-value` and dropped. A kept block's title and toggle are read as separate parts (`data-label-part`). The matching itself is unchanged.
+  - The guide's tool-name scan no longer reads `(op: bring_back)` as a tool.
+  - Result: **60/60, 5 controls fired, 0 not run, 113 distinct labels read.**
+- **The inventory after 26-W-b:** title, statement, keep-conflict note, facet, slot and condition proposals, cost ranges, cost lines, no-cost reason, conditions, comments, replies, the thread summary, document needs and the notebook's controls each have a tool that calls the button's own function.
+  - ⚠ `remove_cost_line` is built and parity-checked but **not offered to Lex**: it deletes the row, and `check:lex-26p` A1's rule is that no tool offered to the model is a delete. Whether to offer it is Charlie's call.
+  - Still none: Causes editing, the source registry's snippet, and "Draft what this heading needs" (the guide says so in its tool line).
+  - The summary's parity row is not run, because it spends money.
 
 ## §4 — real drafts
 
@@ -177,5 +193,5 @@ Another Lex session (297, CCh-Lex 2 Nov (1) B: "not found" replies and the sourc
 
 1. **D.207.2 "Code text"**: Lex's proposal (the 2 Nov chat draft, 15,606 characters) in the document view. Use it, edit it, or ask for a redraft. A redraft now produces a Code like the scratch runs above, at about 4.7p.
 2. A redraft from chat compared with one from the button. Both now run the same drafter (`draftKindDocument`).
-3. "What is the Order section for?" waits for the field guide (26-W-b).
+3. "What is the Order section for?" Ask Lex in chat: it should answer from `explain_field` (the record's Order section, and `set_action_order`).
 4. Whether D.207.1 (the dismissed enabling clause) should be redrafted or left as it is.

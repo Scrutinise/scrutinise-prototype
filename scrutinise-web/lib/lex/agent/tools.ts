@@ -2007,10 +2007,393 @@ const generateDocumentTool: ToolDefinition = {
   },
 }
 
+// ── 26-W-b (decisions 301, 302) — THE REST OF THE INVENTORY, AND THE FIELD GUIDE ──────────────────────────────────────────
+// Every tool below calls the SAME server function the screen's control calls (the route's own switch names it), so the chat and the
+// button cannot store different things (check:lex-26w-b compares them field by field on twin scratch copies). Anything that writes the
+// owner's own words or answers a proposal on their behalf asks first (tier 'ask'), on the owner's instruction only; a reply or a comment
+// in the owner's name needs their exact words (dictated). The field guide is read, never written.
+import { addCostLine, removeCostLine } from '@/lib/lex/field-machine'
+import * as HKS from '@/lib/lex/heading-kind'
+import { KIND_WORD, HEADING_KIND_WORD } from '@/lib/lex/action-documents-pure'
+import { summariseThread } from '@/lib/lex/action-thread'
+import { explainField, listFields, type GuideArea } from '@/lib/lex/field-guide'
+
+const OWNER_ONLY = 'Call it ONLY when the owner has told you to; it asks first.'
+const saidByUser = (ctx: ToolCtx, text: string) => ctx.turn.userMessages.map(norm).join(' ').includes(norm(text))
+async function oneAction(ctx: ToolCtx, n: number) {
+  const { rows } = await actionsByNumbers(ctx, [n])
+  return rows[0] ?? null
+}
+async function headingByName(ctx: ToolCtx, name: string) {
+  const all = await prisma.actionHeading.findMany({ where: { ideaId: ctx.ideaId }, select: { id: true, name: true, kind: true, hidden: true, archivedAt: true } })
+  const want = name.trim().toLowerCase()
+  return all.find((h) => h.name.trim().toLowerCase() === want) ?? null
+}
+/** The idea's conditions as the screen numbers them: the active ones, in order, from 1. */
+async function conditionByNumber(ctx: ToolCtx, n: number) {
+  const doc = await CDS.readConditions(ctx.ideaId)
+  return activeConditions(doc)[n - 1] ?? null
+}
+const noAction = (n: number) => fail(`there is no live action #${n} on this idea.`)
+const actionsPanel = [{ type: 'open_panel' as const, panel: 'actions' as const }]
+
+const explainFieldTool: ToolDefinition = {
+  name: 'explain_field', category: 'see', tier: 'free',
+  description: 'The field guide: what a section, field or button on the action record, the documents or the documents tree is FOR, how it fits (what feeds it, what reads it), its limits, and which of your tools acts on it. Give the label as the user said it ("Order", "Action details", "Use it as version 2"). Answer "what is this field for?" from this, never from general knowledge. Free.',
+  schema: z.object({ name: z.string().min(1).max(120) }),
+  async run(_ctx, { name }) {
+    const r = explainField(name)
+    if (r.exact) return { ok: true, data: { label: r.exact.label, area: r.exact.area, purpose: r.exact.purpose, howItFits: r.exact.fits, ...(r.exact.limits ? { limits: r.exact.limits } : {}), tool: r.exact.tool } }
+    if (r.near.length) return { ok: true, data: { noExactMatch: name, closest: r.near.map((e) => ({ label: e.label, area: e.area, purpose: e.purpose, tool: e.tool })), note: 'Say which of these the user means; if none, say the guide has no entry for it.' } }
+    return fail(`the field guide has no entry for “${clip(name, 80)}”. Use list_fields to see what it covers, and say so rather than guess.`)
+  },
+}
+
+const listFieldsTool: ToolDefinition = {
+  name: 'list_fields', category: 'see', tier: 'free',
+  description: 'The field guide\'s list for one area — record (the action record), document (the document view), tree (the documents tree), workspace (the conditions list), research (the notebook’s note controls), common (Save, Cancel and the like) — or all of them: each label with what it is for. Free.',
+  schema: z.object({ area: z.enum(['record', 'document', 'tree', 'workspace', 'research', 'common']).optional() }),
+  async run(_ctx, { area }) {
+    const rows = listFields(area as GuideArea | undefined)
+    return { ok: true, data: { area: area ?? 'all', count: rows.length, fields: rows.map((r) => `${r.label} — ${r.purpose}`) } }
+  },
+}
+
+// ── the record: title, statement, policy note, Lex's proposals ──
+const setActionTitleTool: ToolDefinition = {
+  name: 'set_action_title', category: 'change', tier: 'ask',
+  description: `The same as "Edit title" → Save on a record: sets the action's short title (null clears it). ${OWNER_ONLY} To PROPOSE titles instead, use title_actions.`,
+  schema: z.object({ action: z.number().int(), title: z.string().max(LIMITS.actionTitle).nullable() }),
+  describe: (i) => `Set the title of #${(i as { action: number }).action} to “${clip((i as { title: string | null }).title ?? '(no title)', 100)}”`,
+  async run(ctx, { action, title }) {
+    const a = await oneAction(ctx, action); if (!a) return noAction(action)
+    const r = unwrap(await AS.setTitle(ctx.ideaId, a.id, title?.trim() || null))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { action, title: title?.trim() || null, say: `Saved: the title of #${action}.` }, ui: actionsPanel }
+  },
+}
+
+const answerTitleProposalsTool: ToolDefinition = {
+  name: 'answer_title_proposals', category: 'change', tier: 'ask',
+  description: `Accept or dismiss my waiting title proposals (from title_actions), for the named actions or all of them. ${OWNER_ONLY}`,
+  schema: z.object({ accept: z.boolean(), actions: z.array(z.number().int()).max(60).optional().describe('omit for every waiting title') }),
+  describe: (i) => `${(i as { accept: boolean }).accept ? 'Accept' : 'Dismiss'} Lex’s proposed titles${(i as { actions?: number[] }).actions?.length ? ` on ${(i as { actions: number[] }).actions.map((n) => `#${n}`).join(', ')}` : ' on every action'}`,
+  async run(ctx, { accept, actions }) {
+    let ids: string[] | undefined
+    if (actions?.length) { const t = await actionsByNumbers(ctx, actions); if (t.missing.length) return fail(`there is no live action ${t.missing.map((m) => `#${m}`).join(', ')}.`); ids = t.rows.map((x) => x.id) }
+    const r = accept ? unwrap(await AS.acceptTitleProposals(ctx.ideaId, ids)) : unwrap(await AS.dismissTitleProposals(ctx.ideaId, ids))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: r.data, ui: actionsPanel }
+  },
+}
+
+const editStatementTool: ToolDefinition = {
+  name: 'edit_action_statement', category: 'change', tier: 'ask',
+  description: `The same as "Edit the action" → Save: replaces the action's statement (what the action is, in one or two sentences). Over the limit is refused, never cut: put the rest in the Action details. ${OWNER_ONLY}`,
+  schema: z.object({ action: z.number().int(), statement: z.string().min(1).max(20000) }),
+  describe: (i) => `Replace the statement of #${(i as { action: number }).action} with “${clip((i as { statement: string }).statement, 140)}”`,
+  async run(ctx, { action, statement }) {
+    if (statement.trim().length > LIMITS.actionStatement) return fail(`the statement is ${statement.trim().length.toLocaleString('en-GB')} characters; the limit is ${LIMITS.actionStatement.toLocaleString('en-GB')}. Nothing was saved. Shorten it, and offer to keep the rest in the Action details.`)
+    const a = await oneAction(ctx, action); if (!a) return noAction(action)
+    await updateAction(ctx.ideaId, a.id, { practicalStep: statement.trim() })
+    return { ok: true, data: { action, say: `Saved: the statement of #${action}.` }, ui: actionsPanel }
+  },
+}
+
+const keepConflictTool: ToolDefinition = {
+  name: 'keep_conflict_note', category: 'change', tier: 'ask',
+  description: `The same as "Keep it, with a note" on an action the policy test says CONFLICTS: keeps it, with the owner's reason (null clears the note). ${OWNER_ONLY}`,
+  schema: z.object({ action: z.number().int(), note: z.string().min(3).max(LIMITS.ruleOutReason).nullable() }),
+  describe: (i) => (i as { note: string | null }).note ? `Keep #${(i as { action: number }).action} although it conflicts: “${clip((i as { note: string }).note, 120)}”` : `Clear the keep-it note on #${(i as { action: number }).action}`,
+  async run(ctx, { action, note }) {
+    const a = await oneAction(ctx, action); if (!a) return noAction(action)
+    const r = unwrap(await AS.keepConflict(ctx.ideaId, a.id, note?.trim() || null))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { action, kept: !!note, say: note ? `Saved: #${action} is kept, with the note.` : `Saved: the note on #${action} is cleared.` }, ui: actionsPanel }
+  },
+}
+
+const answerFacetProposalsTool: ToolDefinition = {
+  name: 'answer_facet_proposals', category: 'change', tier: 'ask',
+  description: `The same as Accept / Dismiss beside "Lex proposes:" on a record: answers my waiting classification proposals (causes, avenue, conditions in step 1; order in step 4) for the named actions or all of them. ${OWNER_ONLY}`,
+  schema: z.object({ accept: z.boolean(), actions: z.array(z.number().int()).max(60).optional(), step: z.union([z.literal(1), z.literal(4)]).optional() }),
+  describe: (i) => `${(i as { accept: boolean }).accept ? 'Accept' : 'Dismiss'} Lex’s proposed classification${(i as { actions?: number[] }).actions?.length ? ` on ${(i as { actions: number[] }).actions.map((n) => `#${n}`).join(', ')}` : ' on every action'}`,
+  async run(ctx, { accept, actions, step }) {
+    let ids: string[] | undefined
+    if (actions?.length) { const t = await actionsByNumbers(ctx, actions); if (t.missing.length) return fail(`there is no live action ${t.missing.map((m) => `#${m}`).join(', ')}.`); ids = t.rows.map((x) => x.id) }
+    const r = accept ? unwrap(await AS.acceptFacetProposals(ctx.ideaId, ids, step)) : unwrap(await AS.dismissFacetProposals(ctx.ideaId, ids, step))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: r.data, ui: actionsPanel }
+  },
+}
+
+const setActionConditionsTool: ToolDefinition = {
+  name: 'set_action_conditions', category: 'draft', tier: 'free',
+  description: 'The same as "Conditions it delivers: … — change" on a record: which of the idea\'s numbered conditions the action delivers (replacing the list), or support:true for an action that delivers none directly (training, a pilot, a consultation). Use conditions_coverage for the numbers.',
+  schema: z.object({ action: z.number().int(), conditions: z.array(z.number().int().min(1)).max(40).optional(), support: z.boolean().optional() }),
+  async run(ctx, { action, conditions, support }) {
+    const a = await oneAction(ctx, action); if (!a) return noAction(action)
+    let conditionIds: string[] | undefined
+    if (conditions) {
+      const found = await Promise.all(conditions.map((n) => conditionByNumber(ctx, n)))
+      const bad = conditions.filter((_, i) => !found[i])
+      if (bad.length) return fail(`there is no condition ${bad.join(', ')} on this idea.`)
+      conditionIds = found.map((c) => c!.id)
+    }
+    if (!conditionIds && support === undefined) return fail('give the condition numbers, or support:true / false.')
+    const r = unwrap(await CDS.assignConditions(ctx.ideaId, [a.id], support !== undefined ? { support, ...(conditionIds ? { conditionIds } : {}) } : { conditionIds, mode: 'set' }))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { action, conditions: conditions ?? null, support: support ?? null, say: 'Saved: what the action delivers.' }, ui: actionsPanel }
+  },
+}
+
+// ── headings ──
+const headingTool = (name: string, description: string, schema: z.ZodTypeAny, run: ToolDefinition['run'], tier: 'free' | 'ask' = 'free', describe?: ToolDefinition['describe']): ToolDefinition =>
+  ({ name, category: tier === 'ask' ? 'change' : 'draft', tier, description, schema, run, ...(describe ? { describe } : {}) })
+
+const renameHeadingTool = headingTool('rename_action_heading', 'The same as Rename on a heading: gives it a new name. Its actions stay under it.',
+  z.object({ heading: z.string().min(1).max(60), to: z.string().min(1).max(LIMITS.headingName) }),
+  async (ctx, { heading, to }) => {
+    const h = await headingByName(ctx, heading); if (!h) return fail(`there is no heading called “${heading}”.`)
+    const r = unwrap(await AS.updateHeading(ctx.ideaId, h.id, { name: to })); if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { from: h.name, to, say: `Saved: the heading is now called “${to.trim()}”.` }, ui: actionsPanel }
+  })
+const hideHeadingTool = headingTool('hide_action_heading', 'The same as Hide / Show on a heading: hides its actions from the list (they stay live and counted), or shows them again with hidden:false.',
+  z.object({ heading: z.string().min(1).max(60), hidden: z.boolean().default(true) }),
+  async (ctx, { heading, hidden }) => {
+    const h = await headingByName(ctx, heading); if (!h) return fail(`there is no heading called “${heading}”.`)
+    const r = unwrap(await AS.updateHeading(ctx.ideaId, h.id, { hidden })); if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { heading: h.name, hidden }, ui: actionsPanel }
+  })
+const setHeadingKindTool = headingTool('set_heading_kind', `The same as the Kind menu on a heading: the type of instrument its actions make (${Object.keys(HEADING_KIND_WORD).join(', ')}), or null for "not yet said". PLATFORM means each action under it needs a specification.`,
+  z.object({ heading: z.string().min(1).max(60), kind: z.enum(Object.keys(HEADING_KIND_WORD) as [string, ...string[]]).nullable() }),
+  async (ctx, { heading, kind }) => {
+    const h = await headingByName(ctx, heading); if (!h) return fail(`there is no heading called “${heading}”.`)
+    const r = unwrap(await AS.updateHeading(ctx.ideaId, h.id, { kind })); if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { heading: h.name, kind, say: `Saved: “${h.name}” is now ${kind ? `a ${HEADING_KIND_WORD[kind as keyof typeof HEADING_KIND_WORD]} heading` : 'a heading with no kind'}.` }, ui: actionsPanel }
+  })
+const answerKindTool = headingTool('answer_kind_proposal', `The same as Accept / "Not this" beside my proposed kind for a heading. ${OWNER_ONLY}`,
+  z.object({ heading: z.string().min(1).max(60), accept: z.boolean() }),
+  async (ctx, { heading, accept }) => {
+    const h = await headingByName(ctx, heading); if (!h) return fail(`there is no heading called “${heading}”.`)
+    const r = unwrap(await HKS.answerKindProposal(ctx.ideaId, h.id, accept)); if (isBad(r)) return fail(r.error)
+    return { ok: true, data: r.data, ui: actionsPanel }
+  }, 'ask', (i) => `${(i as { accept: boolean }).accept ? 'Accept' : 'Set aside'} Lex’s proposed kind for “${(i as { heading: string }).heading}”`)
+const retireHeadingTool = headingTool('retire_action_heading', `The same as "Retire heading": the heading is retired and its actions stay, with no heading. Nothing is deleted; it can be brought back. ${OWNER_ONLY}`,
+  z.object({ heading: z.string().min(1).max(60) }),
+  async (ctx, { heading }) => {
+    const h = await headingByName(ctx, heading); if (!h) return fail(`there is no heading called “${heading}”.`)
+    const r = unwrap(await AS.deleteHeading(ctx.ideaId, h.id)); if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { heading: h.name, ...r.data, say: `Saved: the heading “${h.name}” is retired; its actions stay, with no heading.` }, ui: actionsPanel }
+  }, 'ask', (i) => `Retire the heading “${(i as { heading: string }).heading}” (its actions stay, with no heading)`)
+
+// ── step 2: Lex's proposals beside the slots ──
+const answerSlotProposalTool: ToolDefinition = {
+  name: 'answer_slot_proposal', category: 'change', tier: 'ask',
+  description: `The same as "Use it" / "Replace mine with this" / Dismiss beside my proposed answer to a step-2 question. accept:true uses it (replace:true is needed where the owner has written their own answer); accept:false dismisses it. slot "all" with accept:false dismisses every waiting proposal on the action. ${OWNER_ONLY}`,
+  schema: z.object({ action: z.number().int(), slot: z.enum([...SLOT_ENUM, 'all'] as [string, ...string[]]), accept: z.boolean(), replace: z.boolean().optional() }),
+  describe: (i) => { const x = i as { action: number; slot: string; accept: boolean; replace?: boolean }; return x.accept ? `${x.replace ? 'Replace your answer with' : 'Use'} Lex’s answer for “${SLOT_UI[x.slot as keyof typeof SLOT_UI]?.label ?? x.slot}” on #${x.action}` : `Dismiss Lex’s proposal${x.slot === 'all' ? 's' : ` for “${SLOT_UI[x.slot as keyof typeof SLOT_UI]?.label ?? x.slot}”`} on #${x.action}` },
+  async run(ctx, { action, slot, accept, replace }) {
+    const a = await oneAction(ctx, action); if (!a) return noAction(action)
+    if (slot === 'all') {
+      if (accept) return fail('"all" only dismisses; accept one slot at a time.')
+      const r = unwrap(await SL.dismissAllSlotProposals(ctx.ideaId, [a.id])); if (isBad(r)) return fail(r.error)
+      return { ok: true, data: r.data, ui: actionsPanel }
+    }
+    const r = accept ? unwrap(await SL.acceptSlot(ctx.ideaId, a.id, slot, { replace })) : unwrap(await SL.dismissSlot(ctx.ideaId, a.id, slot))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { action, slot, accepted: accept }, ui: actionsPanel }
+  },
+}
+
+// ── step 3: costs ──
+const CostRangeZ = z.object({ low: z.number().nonnegative().nullable().optional(), high: z.number().nonnegative().nullable().optional(), unit: z.string().max(40).nullable().optional(), basis: z.string().max(2000).nullable().optional(), priceYear: z.number().int().min(1900).max(2100).nullable().optional() }).nullable()
+const setActionCostsTool: ToolDefinition = {
+  name: 'set_action_costs', category: 'change', tier: 'ask',
+  description: `The same as "Edit costs" → Save in step 3: sets any of the three cost ranges (implementationCost = Cost to implement, enforcementCost = Cost to enforce, regulatoryFriction = Cost of compliance), each low / high in whole pounds with a basis and price year; null clears one. Only what you pass changes. ${OWNER_ONLY}`,
+  schema: z.object({ action: z.number().int(), implementationCost: CostRangeZ.optional(), enforcementCost: CostRangeZ.optional(), regulatoryFriction: CostRangeZ.optional() }),
+  describe: (i) => `Set the cost ranges of #${(i as { action: number }).action}`,
+  async run(ctx, input) {
+    const a = await oneAction(ctx, input.action); if (!a) return noAction(input.action)
+    const patch: Record<string, unknown> = {}
+    for (const k of ['implementationCost', 'enforcementCost', 'regulatoryFriction'] as const) if (input[k] !== undefined) patch[k] = input[k] ? { ...input[k], userOverride: true } : null
+    if (!Object.keys(patch).length) return fail('give at least one of the three cost ranges.')
+    await updateAction(ctx.ideaId, a.id, patch as never)
+    return { ok: true, data: { action: input.action, set: Object.keys(patch) }, ui: actionsPanel }
+  },
+}
+const setNoCostTool: ToolDefinition = {
+  name: 'set_no_cost_reason', category: 'change', tier: 'ask',
+  description: `The same as "no cost, because…" in step 3: answers the cost question with "no cost" and the owner's reason (null clears it). ${OWNER_ONLY}`,
+  schema: z.object({ action: z.number().int(), reason: z.string().min(3).max(LIMITS.noCostReason).nullable() }),
+  describe: (i) => (i as { reason: string | null }).reason ? `Record that #${(i as { action: number }).action} costs nothing, because “${clip((i as { reason: string }).reason, 120)}”` : `Clear “no cost” on #${(i as { action: number }).action}`,
+  async run(ctx, { action, reason }) {
+    const a = await oneAction(ctx, action); if (!a) return noAction(action)
+    await updateAction(ctx.ideaId, a.id, { noCostReason: reason?.trim() || null })
+    return { ok: true, data: { action, reason: reason?.trim() || null }, ui: actionsPanel }
+  },
+}
+const addCostLineTool: ToolDefinition = {
+  name: 'add_cost_line', category: 'change', tier: 'ask',
+  description: `The same as "+ add a cost" → Add cost in step 3: one costed line on an action — a label, type (STAFF, CAPITAL, PROPERTY, RESEARCH, OTHER), category (IMPLEMENTATION, ENFORCEMENT, FRICTION), low / high in whole pounds, the basis (where the number comes from), price year, ONE_OFF or PER_YEAR. A figure is a claim: give its basis. ${OWNER_ONLY}`,
+  schema: z.object({
+    action: z.number().int(), label: z.string().min(1).max(300),
+    costType: z.enum(['STAFF', 'CAPITAL', 'PROPERTY', 'RESEARCH', 'OTHER']).default('OTHER'), category: z.enum(['IMPLEMENTATION', 'ENFORCEMENT', 'FRICTION']).default('IMPLEMENTATION'),
+    low: z.number().nonnegative().nullable().optional(), high: z.number().nonnegative().nullable().optional(),
+    basis: z.string().max(2000).nullable().optional(), priceYear: z.number().int().min(1900).max(2100).nullable().optional(), recurrence: z.enum(['ONE_OFF', 'PER_YEAR']).optional(),
+  }),
+  describe: (i) => { const x = i as { action: number; label: string; low?: number | null; high?: number | null }; return `Add the cost line “${clip(x.label, 80)}”${x.low != null ? ` (£${Math.round(x.low).toLocaleString('en-GB')}${x.high != null && x.high !== x.low ? `–£${Math.round(x.high).toLocaleString('en-GB')}` : ''})` : ''} to #${x.action}` },
+  async run(ctx, { action, ...line }) {
+    const a = await oneAction(ctx, action); if (!a) return noAction(action)
+    // the screen's own default: an implementation cost is one-off, the others per year
+    const created = await addCostLine(ctx.ideaId, a.id, { ...line, recurrence: line.recurrence ?? (line.category === 'IMPLEMENTATION' ? 'ONE_OFF' : 'PER_YEAR') })
+    if (!created) return fail(`#${action} was not found.`)
+    return { ok: true, data: { action, label: line.label, say: `Saved: the cost line “${line.label}” on #${action}.` }, ui: actionsPanel }
+  },
+}
+const removeCostLineTool: ToolDefinition = {
+  name: 'remove_cost_line', category: 'change', tier: 'ask',
+  description: `The same as "delete" on a cost line in step 3. Name the action and the line's label as shown. ${OWNER_ONLY}`,
+  schema: z.object({ action: z.number().int(), label: z.string().min(1).max(300) }),
+  describe: (i) => `Remove the cost line “${clip((i as { label: string }).label, 80)}” from #${(i as { action: number }).action}`,
+  async run(ctx, { action, label }) {
+    const a = await oneAction(ctx, action); if (!a) return noAction(action)
+    const lines = await prisma.costLine.findMany({ where: { actionId: a.id }, select: { id: true, label: true } })
+    const hit = lines.filter((l) => l.label.trim().toLowerCase() === label.trim().toLowerCase())
+    if (hit.length !== 1) return fail(hit.length ? `#${action} has ${hit.length} lines called “${label}”; the screen deletes them one at a time.` : `#${action} has no cost line called “${label}”. Its lines: ${lines.map((l) => `“${l.label}”`).join(', ') || 'none'}.`)
+    await removeCostLine(ctx.ideaId, hit[0].id)
+    return { ok: true, data: { action, removed: hit[0].label }, ui: actionsPanel }
+  },
+}
+
+// ── the idea's conditions (the owner's numbered list) ──
+const changeConditionTool: ToolDefinition = {
+  name: 'change_condition', category: 'change', tier: 'ask',
+  description: `The owner's own list of conditions the proposal must meet, changed as on screen: op "add" (text), "edit" (number, text), "retire" / "bring_back" (number), "up" / "down" (number). To SUGGEST one instead, use propose_condition. ${OWNER_ONLY}`,
+  schema: z.object({ op: z.enum(['add', 'edit', 'retire', 'bring_back', 'up', 'down']), number: z.number().int().min(1).optional(), text: z.string().min(3).max(LIMITS.conditionText).optional() }),
+  describe: (i) => { const x = i as { op: string; number?: number; text?: string }; return x.op === 'add' ? `Add the condition “${clip(x.text, 120)}”` : x.op === 'edit' ? `Change condition ${x.number} to “${clip(x.text, 120)}”` : x.op === 'retire' ? `Retire condition ${x.number} (kept, can be brought back)` : x.op === 'bring_back' ? `Bring back condition ${x.number}` : `Move condition ${x.number} ${x.op}` },
+  async run(ctx, { op, number, text }) {
+    if (op === 'add') {
+      if (!text) return fail('give the condition\'s text.')
+      const r = unwrap(await CDS.addCondition(ctx.ideaId, ctx.userId, text)); if (isBad(r)) return fail(r.error)
+      return { ok: true, data: { added: r.data.number }, ui: actionsPanel }
+    }
+    if (!number) return fail('give the condition\'s number.')
+    // retired conditions are numbered after the active ones on screen; bring_back looks among the retired
+    const doc = await CDS.readConditions(ctx.ideaId)
+    const c = op === 'bring_back' ? doc.items.filter((x) => x.retired)[number - 1] : activeConditions(doc)[number - 1]
+    if (!c) return fail(`there is no ${op === 'bring_back' ? 'retired ' : ''}condition ${number}.`)
+    const r = op === 'edit' ? (text ? unwrap(await CDS.editCondition(ctx.ideaId, c.id, text)) : { ok: false as const, error: 'give the new text.' })
+      : op === 'retire' || op === 'bring_back' ? unwrap(await CDS.retireCondition(ctx.ideaId, c.id, op === 'retire'))
+        : unwrap(await CDS.moveCondition(ctx.ideaId, c.id, op as 'up' | 'down'))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { op, number }, ui: actionsPanel }
+  },
+}
+const answerConditionProposalTool: ToolDefinition = {
+  name: 'answer_condition_proposal', category: 'change', tier: 'ask',
+  description: `Add (accept:true) or dismiss one of my waiting condition proposals, by its place in the waiting list (1 = first). ${OWNER_ONLY}`,
+  schema: z.object({ proposal: z.number().int().min(1), accept: z.boolean() }),
+  describe: (i) => `${(i as { accept: boolean }).accept ? 'Add' : 'Dismiss'} Lex’s proposed condition ${(i as { proposal: number }).proposal}`,
+  async run(ctx, { proposal, accept }) {
+    const doc = await CDS.readConditions(ctx.ideaId)
+    const p = doc.proposals[proposal - 1]
+    if (!p) return fail(`there is no waiting proposal ${proposal}; ${doc.proposals.length} are waiting.`)
+    const r = accept ? unwrap(await CDS.acceptConditionProposal(ctx.ideaId, ctx.userId, p.id)) : unwrap(await CDS.dismissConditionProposal(ctx.ideaId, p.id))
+    if (isBad(r)) return fail(r.error)
+    return { ok: true, data: { proposal, accepted: accept }, ui: actionsPanel }
+  },
+}
+
+// ── comments on an action ──
+const addActionCommentTool: ToolDefinition = {
+  name: 'add_action_comment', category: 'draft', tier: 'free',
+  description: 'The same as "Add comment" under a record: a comment on the action, seen by everyone who can see the idea. With dictated:true and the user\'s exact words it is THEIR comment; otherwise it is labelled as written by Lex.',
+  schema: z.object({ action: z.number().int(), comment: z.string().min(1).max(LIMITS.actionComment), dictated: z.boolean().optional() }),
+  async run(ctx, { action, comment, dictated }) {
+    if (dictated && !saidByUser(ctx, comment)) return fail('“dictated” means the comment is the user’s own words, and this is not word for word in anything they have written. Add it without dictated (it will be Lex’s), or use their exact words.')
+    const a = await oneAction(ctx, action); if (!a) return noAction(action)
+    const viewer = await viewerOf(ctx)
+    const r = await RN.addNote(ctx.ideaId, { id: ctx.userId }, viewer, { op: 'addNote', ownObservation: true, comment, stance: 'CONTEXT', tags: ['comment'], bearsOn: [{ kind: 'action', id: a.id, label: `Action ${action}` }] }, { authorKind: dictated ? 'USER' : 'LEX' })
+    if (!r.ok) return fail((r as { error: string }).error)
+    return { ok: true, data: { action, by: dictated ? 'the user' : 'Lex' }, ui: actionsPanel }
+  },
+}
+const replyToCommentTool: ToolDefinition = {
+  name: 'reply_to_comment', category: 'draft', tier: 'free',
+  description: 'The same as Reply under a comment on an action (note = the comment’s short id, from list_research_notebook). A reply is posted in the USER\'S name, so it needs their exact words: dictated:true with text copied from what they wrote.',
+  schema: z.object({ note: z.string().min(4).max(40), text: z.string().min(1).max(LIMITS.actionReply), dictated: z.literal(true) }),
+  async run(ctx, { note, text }) {
+    if (!saidByUser(ctx, text)) return fail('a reply goes out in the user’s name, so it must be their own words, word for word. Ask them what to say.')
+    const row = await resolveNote(ctx, note); if (!row) return fail(`no comment or note starts with “${note}”.`)
+    const r = await RN.reply(ctx.ideaId, await viewerOf(ctx), row.id, text)
+    if (!r.ok) return fail((r as { error: string }).error)
+    return { ok: true, data: { replied: short(row.id) }, ui: actionsPanel }
+  },
+}
+const summariseThreadTool: ToolDefinition = {
+  name: 'summarise_action_thread', category: 'see', tier: 'free',
+  description: 'The same as "Ask Lex to summarise this thread" under a record: reads the comments on one action and says what was said. Stored nowhere. Under 1p (the result gives the price).',
+  schema: z.object({ action: z.number().int() }),
+  async run(ctx, { action }) {
+    const a = await oneAction(ctx, action); if (!a) return noAction(action)
+    const r = await summariseThread(ctx.ideaId, ctx.userId, await viewerOf(ctx), a.id)
+    if (!r.ok) return fail((r as { error: string }).error)
+    return { ok: true, data: r.data }
+  },
+}
+
+// ── documents: what an action needs ──
+const setDocumentNeedsTool: ToolDefinition = {
+  name: 'set_document_needs', category: 'draft', tier: 'free',
+  description: `The same as "Change what this needs" in the documents tree: mode "derived" (worked out from the avenue and the heading's kind), "nothing" (needs no document, with a reason), or "set" (exactly these kinds: ${Object.keys(KIND_WORD).join(', ')}, with a reason).`,
+  schema: z.object({ action: z.number().int(), mode: z.enum(['derived', 'nothing', 'set']), kinds: z.array(z.enum(Object.keys(KIND_WORD) as [string, ...string[]])).max(8).optional(), reason: z.string().max(LIMITS.ruleOutReason).optional() }),
+  async run(ctx, { action, mode, kinds, reason }) {
+    const a = await oneAction(ctx, action); if (!a) return noAction(action)
+    const r = await DOCS.setNeeds(ctx.ideaId, a.id, { mode, kinds: kinds as never, reason }, ctx.userId)
+    if (!r.ok) return fail((r as { error: string }).error)
+    return { ok: true, data: { action, mode, say: `Saved: what #${action} needs.` }, ui: actionsPanel }
+  },
+}
+
+// ── the research notebook's owner controls ──
+const NOTE_OPS = { set_aside: 'Set aside', put_in_record: 'Put in the record', bring_back: 'Bring back', share: 'Share with the team', mine_only: 'Make mine only' } as const
+const notebookNotesTool: ToolDefinition = {
+  name: 'answer_notes', category: 'change', tier: 'ask',
+  description: `The research notebook's controls on notes (short ids from list_research_notebook): op set_aside (with a reason; kept), put_in_record (the owner takes them into the record), bring_back, share (a note of the user's, to the team), mine_only. ${OWNER_ONLY}`,
+  schema: z.object({ op: z.enum(Object.keys(NOTE_OPS) as [keyof typeof NOTE_OPS, ...Array<keyof typeof NOTE_OPS>]), notes: z.array(z.string().min(4).max(40)).min(1).max(40), reason: z.string().max(400).optional() }),
+  describe: (i) => `${NOTE_OPS[(i as { op: keyof typeof NOTE_OPS }).op]}: ${(i as { notes: string[] }).notes.length} note${(i as { notes: string[] }).notes.length === 1 ? '' : 's'}`,
+  async run(ctx, { op, notes, reason }) {
+    const ids: string[] = []
+    for (const n of notes) { const row = await resolveNote(ctx, n); if (!row) return fail(`no note starts with “${n}”.`); ids.push(row.id) }
+    const viewer = await viewerOf(ctx)
+    const owner = (await prisma.idea.findUnique({ where: { id: ctx.ideaId }, select: { creatorId: true } }))?.creatorId ?? ctx.userId
+    const r = op === 'set_aside' ? await RN.setAside(ctx.ideaId, viewer, ctx.userId, ids, reason ?? '')
+      : op === 'put_in_record' ? await RN.putInRecord(ctx.ideaId, viewer, ids)
+        : op === 'bring_back' ? await RN.restore(ctx.ideaId, viewer, owner, ids)
+          : op === 'share' ? await RN.share(ctx.ideaId, viewer, ids) : await RN.makeMineOnly(ctx.ideaId, viewer, ids)
+    if (!r.ok) return fail((r as { error: string }).error)
+    return { ok: true, data: { op, notes: ids.map(short) }, ui: [{ type: 'open_panel', panel: 'notebook' }] }
+  },
+}
+
+/** 26-W-b — the inventory's remaining rows (lib/lex/field-guide.ts names each of these against its control). */
+export const INVENTORY_TOOLS: ToolDefinition[] = [
+  explainFieldTool, listFieldsTool,
+  setActionTitleTool, answerTitleProposalsTool, editStatementTool, keepConflictTool, answerFacetProposalsTool, setActionConditionsTool,
+  renameHeadingTool, hideHeadingTool, setHeadingKindTool, answerKindTool, retireHeadingTool,
+  // remove_cost_line is NOT here: the button deletes the row, and no tool the model is offered is a delete (check:lex-26p A1).
+  // It is kept below, reachable by name (its parity with the button is checked), and not offered.
+  answerSlotProposalTool, setActionCostsTool, setNoCostTool, addCostLineTool,
+  changeConditionTool, answerConditionProposalTool,
+  addActionCommentTool, replyToCommentTool, summariseThreadTool,
+  setDocumentNeedsTool, notebookNotesTool,
+]
+
 export const DOCUMENT_TOOLS: ToolDefinition[] = [listDocumentsTool, readDocumentTool, proposeDocumentText, draftDocumentTool, redraftDocumentTool, useProposalTool, acceptDocumentTool, setAsideProposalTool, reviewDocumentTool, generateDocumentTool]
 
 export const MODEL_TOOLS: ToolDefinition[] = [
-  ...DOCUMENT_TOOLS,
+  ...DOCUMENT_TOOLS, ...INVENTORY_TOOLS,
   readField, listCandidates, listActionsTool, listSources, readSource, listChallenges, readReplyTool, searchConversationTool, listNotes,
   searchCorpus, searchWeb, searchMyDocuments, statuteEffects, statuteOnward, readSectionTool,
   fileUrl, fileText,
@@ -2028,7 +2411,9 @@ export const MODEL_TOOLS: ToolDefinition[] = [
   addResearchNoteTool, listNotebookTool, extractQuotesTool, suggestTagsTool, updateNoteTool, findSimilarTool, findDisagreementsTool, whatHaveIReadOnTool, summariseSourceTool,
 ]
 
-const INVERSES: ToolDefinition[] = [unmergeCandidates, undoSortCandidate, restoreProposal, restoreSource, unmergeActionsTool]
+const INVERSES: ToolDefinition[] = [unmergeCandidates, undoSortCandidate, restoreProposal, restoreSource, unmergeActionsTool,
+  // 26-W-b: a delete, so not offered to the model (see INVENTORY_TOOLS)
+  removeCostLineTool]
 
 const ALL = new Map<string, ToolDefinition>([...MODEL_TOOLS, ...INVERSES].map((t) => [t.name, t]))
 export const toolByName = (name: string) => ALL.get(name)

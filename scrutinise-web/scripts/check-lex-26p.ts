@@ -30,6 +30,7 @@ import { agentEnabledFor, parseAgentSwitch } from '../lib/lex/agent/flag'
 import { MODEL_TOOLS, needsButton, execute, checkProvenance, isModelTool, toolByName } from '../lib/lex/agent/tools'
 import { SYSTEM_PREFIX, GENERAL_KNOWLEDGE_LABEL } from '../lib/lex/agent/system-prompt'
 import { allControlFiles, knownLabels } from '../lib/lex/agent/controls'
+import * as SCREEN from '../lib/lex/screen-labels'
 import { toolParams, stripOpener, hasOpener, priceUsage, AGENT_MODEL, platformRecord, priorPendingLive } from '../lib/lex/agent/loop'
 import { RUN_PRICES, runNeedsConfirmation } from '../lib/lex/agent/run-prices'
 import { handleAgentTurn, handleConfirm } from '../lib/lex/agent/turn'
@@ -218,10 +219,18 @@ function partA() {
   // is "written down", not "printed", and §23.1's whole point is that those are different claims.
   const codeOf = (file: string) => readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/.*$/gm, '$1')
   const files = allControlFiles()
+  // 26-W-b: a component prints a label either as the literal or through its constant in lib/lex/screen-labels.ts (`RECORD_UI.askLex`),
+  // which the field guide reads too. The reference must be in the component's own code (comments stripped), as the literal had to be.
+  const refsOf = (label: string): string[] => Object.entries(SCREEN).flatMap(([table, v]) =>
+    v && typeof v === 'object' && !Array.isArray(v) ? Object.entries(v as Record<string, unknown>).filter(([, s]) => s === label).map(([k]) => `${table}.${k}`) : [])
+  const printsVia = (code: string, label: string) => refsOf(label).some((r) => new RegExp(`\\b${r.replace('.', '\\.')}\\b`).test(code))
   for (const { label, file } of files) {
-    const present = existsSync(file) && codeOf(file).includes(label)
-    ok(`“${label}” is printed by ${file}`, present)
+    const code = existsSync(file) ? codeOf(file) : ''
+    const present = code.includes(label) || printsVia(code, label)
+    ok(`“${label}” is printed by ${file}${code && !code.includes(label) && present ? ' (through screen-labels)' : ''}`, present)
   }
+  control('a label constant named only in a comment counts as printed (must be FALSE)', () =>
+    printsVia('// WORKSPACE_UI.findDuplicates\nconst x = 1'.replace(/(^|[^:])\/\/.*$/gm, '$1'), 'Find duplicates'))
   control('a label that appears only in a comment counts as printed (must be FALSE)', () => {
     const only = '// "Redraft from what I found" was removed\nconst x = 1'
     return only.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/.*$/gm, '$1').includes('Redraft from what I found')

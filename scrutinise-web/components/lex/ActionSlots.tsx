@@ -18,6 +18,7 @@ import {
   type AnySlot, type Direction,
 } from '@/lib/lex/action-record'
 import { actionLabel } from '@/lib/lex/action-facets'
+import { COMMON_UI, RECORD_UI } from '@/lib/lex/screen-labels'
 
 type Run = (op: 'setSlot' | 'acceptSlot' | 'dismissSlot' | 'proposeSlots' | 'dismissSlots', body: Record<string, unknown>, label?: string, said?: (r: never) => string | null) => Promise<{ ok: boolean }>
 
@@ -53,10 +54,10 @@ export default function ActionSlots({ a, others, disabled, run }: Props) {
         <span className="ml-auto flex flex-wrap items-center gap-2">
           {waiting > 0 && (
             <button type="button" disabled={disabled} onClick={() => void run('dismissSlots', { ids: [a.id] }, undefined, () => `Saved: Lex’s proposed answers on #${n} are dismissed.`)}
-              className="text-[11px] underline text-zinc-600 disabled:opacity-40">Dismiss all of Lex’s proposals</button>
+              className="text-[11px] underline text-zinc-600 disabled:opacity-40">{RECORD_UI.dismissAllSlotProposals}</button>
           )}
           <button type="button" disabled={disabled} onClick={() => void run('proposeSlots', { ids: [a.id] }, `Lex is proposing answers for #${n}`, (r: never) => { const x = r as { proposed?: number }; return `Lex proposed ${x?.proposed ?? 0} answer${x?.proposed === 1 ? '' : 's'} for #${n}. Each sits beside the slot: use it, edit it or dismiss it.` })}
-            className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40" data-ask-lex>Ask Lex</button>
+            className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40" data-ask-lex>{RECORD_UI.askLex}</button>
         </span>
       </div>
 
@@ -86,8 +87,8 @@ export default function ActionSlots({ a, others, disabled, run }: Props) {
                       {to && <span className="ml-1 text-zinc-700">→ changed by <span className="font-medium">#{to.number}</span> {actionLabel(to, 60)}</span>}
                       <span className="ml-1.5 text-[10px] text-zinc-500" data-writer>({writerWords(writer)})</span>
                     </>
-                  ) : <span className="font-semibold" data-unanswered>Not yet answered</span>}
-                  <button type="button" disabled={disabled} onClick={() => open(slot)} className="ml-2 text-[11px] text-zinc-500 hover:text-zinc-800 underline disabled:opacity-40">{answer ? 'Edit' : 'Answer'}</button>
+                  ) : <span className="font-semibold" data-unanswered>{RECORD_UI.notYetAnswered}</span>}
+                  <button type="button" disabled={disabled} onClick={() => open(slot)} className="ml-2 text-[11px] text-zinc-500 hover:text-zinc-800 underline disabled:opacity-40">{answer ? COMMON_UI.edit : RECORD_UI.answer}</button>
                 </div>
               )}
               {isEditing && (
@@ -100,13 +101,13 @@ export default function ActionSlots({ a, others, disabled, run }: Props) {
                           <span aria-hidden>{DIRECTION_UI[d].glyph}</span> {DIRECTION_UI[d].word}
                         </label>
                       ))}
-                      {direction && <button type="button" onClick={() => setDirection('')} className="underline text-zinc-500">no direction</button>}
+                      {direction && <button type="button" onClick={() => setDirection('')} className="underline text-zinc-500">{RECORD_UI.noDirection}</button>}
                     </fieldset>
                   )}
                   <BoundedInput multiline rows={slot === 'who' ? 2 : 3} value={text} onChange={setText} max={slot === 'who' ? LIMITS.whoAnswer : LIMITS.slotAnswer} placeholder={ui.placeholder} aria-label={`${ui.label} for action ${n}`}
                     wrapperClassName="w-full" className="w-full text-xs p-1.5 rounded border border-zinc-300 focus:outline-none focus:border-blue-400" />
                   {slot === 'whatChangesIt' && (
-                    <label className="block text-[11px] text-zinc-600">Link it to the action that changes it (if it is one)
+                    <label className="block text-[11px] text-zinc-600">{RECORD_UI.linkChange}
                       <select value={link} onChange={(e) => setLink(e.target.value)} className="ml-1 border border-zinc-300 rounded px-1 py-0.5 max-w-[16rem]">
                         <option value="">not linked</option>
                         {others.map((o) => <option key={o.id} value={o.id}>#{o.number} {actionLabel(o, 50)}</option>)}
@@ -114,15 +115,15 @@ export default function ActionSlots({ a, others, disabled, run }: Props) {
                     </label>
                   )}
                   <div className="flex flex-wrap gap-2 items-center">
-                    <button type="button" disabled={disabled} onClick={() => void save(slot)} className="text-[11px] font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Save</button>
-                    <button type="button" onClick={() => setEditing(null)} className="text-[11px] underline text-zinc-600">Cancel</button>
-                    {answer && <button type="button" disabled={disabled} onClick={() => void save(slot, true)} className="text-[11px] underline text-zinc-600 disabled:opacity-40">Clear this answer</button>}
+                    <button type="button" disabled={disabled} onClick={() => void save(slot)} className="text-[11px] font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">{COMMON_UI.save}</button>
+                    <button type="button" onClick={() => setEditing(null)} className="text-[11px] underline text-zinc-600">{COMMON_UI.cancel}</button>
+                    {answer && <button type="button" disabled={disabled} onClick={() => void save(slot, true)} className="text-[11px] underline text-zinc-600 disabled:opacity-40">{RECORD_UI.clearAnswer}</button>}
                   </div>
                 </div>
               )}
               {p && (
                 <div className="mt-1 rounded border border-dashed border-zinc-500 bg-zinc-50 p-1.5 text-xs" data-proposal={slot}>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-600">Lex proposes{answer ? ' (beside your answer — yours is kept)' : ''}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-600">{RECORD_UI.slotLexProposes}{answer ? ' (beside your answer — yours is kept)' : ''}</p>
                   <p className="mt-0.5 text-zinc-900">
                     {slot === 'incentiveNow' && p.direction && <span className="font-semibold mr-1"><span aria-hidden>{DIRECTION_UI[p.direction].glyph}</span> {DIRECTION_UI[p.direction].word}.</span>}
                     <span className="whitespace-pre-wrap">{p.text}</span>
@@ -131,10 +132,10 @@ export default function ActionSlots({ a, others, disabled, run }: Props) {
                   {(p.reason || p.source) && <p className="mt-0.5 text-[11px] text-zinc-600">Why: {p.reason || '—'}{p.source ? ` [Ref: ${p.source}]` : ''}</p>}
                   <div className="mt-1 flex flex-wrap gap-2 items-center">
                     {userWrote
-                      ? <button type="button" disabled={disabled} onClick={() => void run('acceptSlot', { actionId: a.id, slot, replace: true }, undefined, () => `Saved: Lex’s answer replaced yours for “${ui.label}” on #${n}.`)} className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-400 disabled:opacity-40">Replace mine with this</button>
-                      : <button type="button" disabled={disabled} onClick={() => void run('acceptSlot', { actionId: a.id, slot }, undefined, () => `Saved: “${ui.label}” on #${n} now uses Lex’s answer.`)} className="text-[11px] font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Use it</button>}
-                    <button type="button" disabled={disabled} onClick={() => { open(slot); setText(p.text); if (slot === 'incentiveNow') setDirection(p.direction ?? ''); if (slot === 'whatChangesIt') setLink(pTo?.id ?? '') }} className="text-[11px] underline text-zinc-700 disabled:opacity-40">Edit it first</button>
-                    <button type="button" disabled={disabled} onClick={() => void run('dismissSlot', { actionId: a.id, slot }, undefined, () => `Saved: Lex’s proposal for “${ui.label}” on #${n} is dismissed.`)} className="text-[11px] underline text-zinc-500 disabled:opacity-40">Dismiss</button>
+                      ? <button type="button" disabled={disabled} onClick={() => void run('acceptSlot', { actionId: a.id, slot, replace: true }, undefined, () => `Saved: Lex’s answer replaced yours for “${ui.label}” on #${n}.`)} className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-400 disabled:opacity-40">{RECORD_UI.replaceMine}</button>
+                      : <button type="button" disabled={disabled} onClick={() => void run('acceptSlot', { actionId: a.id, slot }, undefined, () => `Saved: “${ui.label}” on #${n} now uses Lex’s answer.`)} className="text-[11px] font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">{RECORD_UI.useIt}</button>}
+                    <button type="button" disabled={disabled} onClick={() => { open(slot); setText(p.text); if (slot === 'incentiveNow') setDirection(p.direction ?? ''); if (slot === 'whatChangesIt') setLink(pTo?.id ?? '') }} className="text-[11px] underline text-zinc-700 disabled:opacity-40">{RECORD_UI.editFirst}</button>
+                    <button type="button" disabled={disabled} onClick={() => void run('dismissSlot', { actionId: a.id, slot }, undefined, () => `Saved: Lex’s proposal for “${ui.label}” on #${n} is dismissed.`)} className="text-[11px] underline text-zinc-500 disabled:opacity-40">{COMMON_UI.dismiss}</button>
                   </div>
                 </div>
               )}
