@@ -1190,6 +1190,7 @@ async function processGovukContent(row: QueueRow): Promise<void> {
   }
 
   if (content.notFound) return marker('gov.uk content API 404/410 — page gone or moved')
+  if (GOVUK_FULL_TEXT_CORPORA.has(row.corpus)) return processGovukFullText(row, content, pageUrl, marker)
 
   const metas: SectionMeta[] = []
   const texts: string[] = []
@@ -1240,6 +1241,133 @@ async function processGovukContent(row: QueueRow): Promise<void> {
   }
 
   if (metas.length === 0) return marker(`no extractable body or PDF text (document_type=${content.documentType})`)
+
+  for (let i = 0; i < metas.length; i += 8) {
+    await Promise.all(metas.slice(i, i + 8).map((m, j) => r2Put(m.r2Key!, texts[i + j])))
+  }
+  await bulkUpsertSections(metas)
+  await deleteStaleSections(row.corpus, row.docId, metas.map(m => m.id))
+  await markDone(row.id, metas[0].format)
+}
+
+// ── GOV.UK full text, one section per heading (decision 296 / brief 307) ───────
+// processGovukContent above keeps only PDF attachments, so a publication whose text is an HTML
+// publication (the Civil Service Code) or a Word file (the Civil Service Management Code) was
+// held as its landing page alone; and a PDF is one blob, so "Ministerial Code 7.2" was not
+// addressable. For the corpora named here:
+//   1. the page body — split per <h2>/<h3> if it is a document (the AQuA Book is a detailed_guide
+//      whose body IS the text), else kept whole as the landing summary;
+//   2. HTML publications — fetched through the content API, one section per heading, sourceUrl
+//      carrying the heading's #fragment;
+//   3. Word .docx — split at numbered N.N headings where it has them, else one section; .doc whole;
+//   4. PDFs — unless an HTML twin of the same document is stored (the HTML is the same text, with
+//      headings): split at their own N.N numbering where they have it (MPM), else whole as before.
+// "[Withdrawn]" attachments are not stored: superseded text read as current is worse than absent.
+// Scoped to a named set, not every govuk-content corpus: hmrc-manuals and the rest are untouched.
+const GOVUK_FULL_TEXT_CORPORA = new Set(['govuk-core-docs'])
+
+async function processGovukFullText(
+  row: QueueRow,
+  content: import('../sources/govuk-content').GovukContent,
+  pageUrl: string,
+  marker: (note: string) => Promise<void>,
+): Promise<void> {
+  const { fetchGovukContent, fetchPdfBuffer } = await import('../sources/govuk-content')
+  const { splitHtmlByHeadings, splitNumberedDocx, splitNumberedPdfText, attachmentTwinKey } = await import('../shared/heading-split')
+  const { docToText } = await import('../sources/tax-tribunals')
+
+  const metas: SectionMeta[] = []
+  const texts: string[] = []
+  let seq = 0
+  const push = (text: string, m: Omit<SectionMeta, 'id' | 'corpus' | 'r2Key' | 'wordCount' | 'status' | 'parentDocId'>) => {
+    const ref = String(++seq)
+    metas.push({
+      ...m,
+      id: sectionId(row.corpus, row.docId, ref),
+      corpus: row.corpus,
+      r2Key: compiledKey(row.corpus, row.docId, ref),
+      wordCount: countWords(text),
+      status: 'compiled',
+      parentDocId: row.docId,
+    })
+    texts.push(text)
+  }
+  const pushSplit = (docTitle: string, url: string, parts: import('../shared/heading-split').HeadedSection[], format: SectionMeta['format'], itemDate: string | undefined) => {
+    for (const s of parts) {
+      push(`${docTitle}\n${s.text}`, {
+        sourceUrl: s.anchor ? `${url}#${s.anchor}` : url,
+        format,
+        sectionTitle: `${docTitle} › ${s.path.join(' › ')}`,
+        itemDate,
+      })
+    }
+  }
+  const pageDate = content.publicUpdatedAt ?? undefined
+
+  // 1. page body
+  if (content.bodyHtml) {
+    const parts = splitHtmlByHeadings(content.bodyHtml)
+    if (parts.length) pushSplit(content.title, pageUrl, parts, 'html', pageDate)
+    else {
+      const bodyText = rawToText(content.bodyHtml)
+      if (bodyText.length > 50) push(bodyText, { sourceUrl: pageUrl, format: 'html', sectionTitle: content.title || undefined, itemDate: pageDate })
+    }
+  }
+
+  const atts = content.allAttachments.filter(a => !/\[withdrawn\]/i.test(a.title ?? '') && !/print[\s-]*ready/i.test(a.title ?? ''))
+  const isHtml = (a: { content_type: string | null }) => a.content_type === 'html'
+  const isPdf = (a: { content_type: string | null }) => a.content_type === 'application/pdf'
+  const isDocx = (a: { content_type: string | null }) => a.content_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  const isDoc = (a: { content_type: string | null }) => a.content_type === 'application/msword'
+
+  // 2. HTML publications
+  const htmlTwins = new Set<string>()
+  for (const a of atts.filter(isHtml)) {
+    const path = a.url!.startsWith('http') ? new URL(a.url!).pathname : a.url!
+    const pub = await fetchGovukContent(path)
+    if (pub.notFound || !pub.bodyHtml) continue
+    const url = `https://www.gov.uk${path}`
+    const title = a.title ?? pub.title
+    const date = pub.publicUpdatedAt ?? pageDate
+    const parts = splitHtmlByHeadings(pub.bodyHtml, 1)
+    const before = metas.length
+    if (parts.length) pushSplit(title, url, parts, 'html', date)
+    else {
+      const text = rawToText(pub.bodyHtml)
+      if (text.length >= 100) push(`${title}\n${text}`, { sourceUrl: url, format: 'html', sectionTitle: title, itemDate: date })
+    }
+    if (metas.length > before) htmlTwins.add(attachmentTwinKey(a.title))
+  }
+
+  // 3. Word files. format 'html' is the existing bucket for extracted word-processor text
+  //    (tax-tribunals, same reason); the sourceUrl's .docx/.doc says what it really was.
+  for (const a of atts.filter(a => isDocx(a) || isDoc(a))) {
+    const buf = await fetchPdfBuffer(a.url!)
+    if (!buf) continue
+    const title = a.title ?? content.title
+    const parts = isDocx(a) ? splitNumberedDocx(buf) : []
+    if (parts.length) { pushSplit(title, a.url!, parts, 'html', pageDate); continue }
+    const text = await docToText(buf)
+    if (text && text.trim().length >= 100) push(`${title}\n${text.trim()}`, { sourceUrl: a.url!, format: 'html', sectionTitle: title, itemDate: pageDate })
+  }
+
+  // 4. PDFs without a stored HTML twin
+  const MAX_PDFS = 20
+  for (const a of atts.filter(isPdf).filter(a => !htmlTwins.has(attachmentTwinKey(a.title))).slice(0, MAX_PDFS)) {
+    const buf = await fetchPdfBuffer(a.url!)
+    if (!buf) continue
+    const text = await pdfToText(buf, a.url!)
+    if (!text || text.length < 100) continue
+    // A PDF numbered N.N / N.N.1 (Managing Public Money) is split at its own sections; any
+    // other PDF is one section, as before. sourceUrl carries #page= nowhere — PDF text has no
+    // reliable page boundaries — so the section title is the address.
+    const title = (a.title ?? content.title ?? '').trim()
+    const parts = splitNumberedPdfText(text)
+    if (parts.length) pushSplit(title, a.url!, parts, 'pdf', pageDate)
+    else push(text, { sourceUrl: a.url!, format: 'pdf', sectionTitle: title || undefined, itemDate: pageDate })
+  }
+
+  if (metas.length === 0) return marker(`no extractable body, HTML publication, Word or PDF text (document_type=${content.documentType})`)
 
   for (let i = 0; i < metas.length; i += 8) {
     await Promise.all(metas.slice(i, i + 8).map((m, j) => r2Put(m.r2Key!, texts[i + j])))

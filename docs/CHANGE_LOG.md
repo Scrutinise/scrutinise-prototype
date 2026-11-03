@@ -10,6 +10,29 @@ asked first like every Change tool. It is the one delete Lex may make.
 - `scripts/check-lex-26p.ts` A3: "no tool is a delete" now allows exactly remove_cost_line, and only while it is a Change tool that asks first; control: a second delete tool is caught.
 Checks: web tsc and check:scripts clean; lex-26p 117/117 (B not run, --live); lex-26w-b 60/60 (5 controls, 0 dead; remove_cost_line asks first and stores the same as the button); lex-26w 66/66 (H not run); lex-297 18/18; prompt-examples 26 illustrations, 0 in stored output.
 
+## 2026-11-03 12:46 UTC - INGEST 307 (decision 296): the five codes held as full text, one section per heading; Aqua Book fixed
+
+*CC-Ingest, worktree `C:\ing307`. CCh-Lex 1 Nov decision 296; Charlie's go on 307 (CCh-Lex 3 Nov (1)); pilot run approved by Charlie directly.*
+
+- **Finding (296):** `govuk-core-docs` kept only PDF attachments (`fetchGovukContent` filtered `application/pdf`), so a publication whose
+  text is an HTML publication or a Word file was held as its landing page. Of 59 entries: 4 landing-only (Civil Service Code 42 words,
+  Culture WP case studies, Disability WP factsheet, "White paper unravelling"), 1 nothing (Aqua Book: path redirects to
+  `/guidance/the-aqua-book`), 34 carry dropped HTML/Word attachments (53 HTML, mostly accessible twins of a held PDF). The Civil Service
+  Management Code (`civil-servants-terms-and-conditions`, a .docx) and the Code of Conduct for Special Advisers were not in the corpus.
+- **Writer (scoped to `govuk-core-docs` only — `GOVUK_FULL_TEXT_CORPORA` in `process-row.ts`; hmrc-manuals etc. untouched):** page body
+  split per `<h2>/<h3>` when it is a document; HTML publications fetched and split per heading with `#anchor` sourceUrls; .docx split at
+  its own N.N numbering (CSMC has no Word styles); .doc whole; PDFs split at N.N where they carry N.N.1 numbering (MPM), else whole; a PDF
+  with a stored HTML twin is skipped; "[Withdrawn]" attachments not stored. New `scripts/ingest/shared/heading-split.ts`;
+  `sources/govuk-content.ts` gains `allAttachments` (`attachments` unchanged). Seeder: + SpAd code, + CSMC, + MPM, Aqua Book path fixed.
+- **PREDICTION (logged before the run):** ~411 sections — CSC 8, CSMC 61, Ministerial Code 87, SpAd 38, MPM ~138, Aqua 79.
+- **Pilot run 12:42–12:44 UTC, real `processRow` (`lex-five/run-govuk-docs.ts`), Neon `ep-old-dust`:** **411 sections**, read back from R2:
+  0 missing text, 0 wordCount≠R2, 0 sections not opening with their heading. CSC 8 (1,436 w) · CSMC 61 (30,199) · Ministerial Code 87
+  (12,078) · SpAd 38 (5,855) · MPM 138 (97,910) · Aqua 79 (14,306). Corpus 179 → 584 rows (6 old rows replaced). Coverage of split vs
+  whole text (dry run): CSMC 97.7%, MPM 99.3%. Spot-read: Ministerial Code › Chapter 7 › The role of the Accounting Officer opens "7.16.
+  Heads of departments…"; CSMC 9.4 (unnumbered in the source) is its own section; MPM 3.3 opens "3.3.1 It is important…".
+- **Known:** CSMC is the Nov 2016 .docx gov.uk still serves; Word auto-numbered paragraph numbers are not in its text; 9.3's title loses its
+  wrapped "Arrangements"; MPM Annex 7.3's title runs into its first sub-heading. **Not yet in the search index.** The other 59 not re-run.
+
 ## 2026-11-03 12:24 UTC - LEX 26-W-b (302): the field guide, the remaining inventory tools, and the label tables the screen and the guide share
 
 *Desktop session 38, on Charlie's instruction ("re-run check:lex-26w-b, then the regression suite, then commit and push"). 26-W-b was built

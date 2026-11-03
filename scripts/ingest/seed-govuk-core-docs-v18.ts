@@ -25,11 +25,16 @@ const CORPUS = 'govuk-core-docs'
 const STATIC_PATHS = [
   'government/publications/the-green-book-appraisal-and-evaluation-in-central-government',
   'government/publications/the-magenta-book',
-  'government/publications/the-aqua-book-guidance-on-producing-quality-analysis-for-government',
+  // The publications path redirects here (checked 3 Nov 2026); the page body IS the book.
+  'guidance/the-aqua-book',
   'government/publications/orange-book',
   'government/publications/cabinet-manual',
   'government/publications/civil-service-code',
   'government/publications/ministerial-code',
+  // Brief 307 (decision 296): the codes Lex needs. MPM was put in by hand (INGEST_LEX_FIVE §1).
+  'government/publications/special-advisers-code-of-conduct',
+  'government/publications/civil-servants-terms-and-conditions',   // the Civil Service Management Code
+  'government/publications/managing-public-money',
 ]
 
 async function paceCodePaths(): Promise<string[]> {

@@ -102,6 +102,11 @@ export interface GovukContent {
   bodyHtml: string | null
   sectionId: string | null        // e.g. EIM23151 for manual sections
   attachments: GovukAttachment[]  // application/pdf entries only
+  // Every attachment with a url, whatever its type (brief 307). An HTML publication has
+  // content_type 'html' and a gov.uk PATH as its url (fetch it through this API); Word files
+  // are application/msword or …wordprocessingml.document. Only the full-text path reads this —
+  // `attachments` above is unchanged so every other govuk-content corpus behaves as before.
+  allAttachments: GovukAttachment[]
   publicUpdatedAt: string | null  // ISO date
   notFound: boolean
 }
@@ -113,7 +118,7 @@ export async function fetchGovukContent(path: string): Promise<GovukContent> {
     const res = await fetch(`${CONTENT}${p}`, { headers: { 'User-Agent': UA }, signal })
     clear()
     if (res.status === 404 || res.status === 410) {
-      return { title: '', documentType: '', bodyHtml: null, sectionId: null, attachments: [], publicUpdatedAt: null, notFound: true }
+      return { title: '', documentType: '', bodyHtml: null, sectionId: null, attachments: [], allAttachments: [], publicUpdatedAt: null, notFound: true }
     }
     if (!res.ok) throw new Error(`govuk content ${p}: HTTP ${res.status}`)
     const data = await res.json() as any
@@ -121,12 +126,16 @@ export async function fetchGovukContent(path: string): Promise<GovukContent> {
     const attachments: GovukAttachment[] = (details.attachments ?? [])
       .filter((a: any) => a?.content_type === 'application/pdf' && a?.url)
       .map((a: any) => ({ title: a.title ?? null, url: a.url, content_type: a.content_type }))
+    const allAttachments: GovukAttachment[] = (details.attachments ?? [])
+      .filter((a: any) => a?.url)
+      .map((a: any) => ({ title: a.title ?? null, url: a.url, content_type: a.content_type ?? a.attachment_type ?? null }))
     return {
       title: data.title ?? '',
       documentType: data.document_type ?? '',
       bodyHtml: typeof details.body === 'string' ? details.body : null,
       sectionId: details.section_id ?? null,
       attachments,
+      allAttachments,
       publicUpdatedAt: (data.public_updated_at ?? data.first_published_at ?? null)?.slice(0, 10) ?? null,
       notFound: false,
     }
