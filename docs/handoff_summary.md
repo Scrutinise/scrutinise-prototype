@@ -1014,6 +1014,17 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-11-03 ~04:10 UTC (desktop): CCh-Lex 3 Nov (1) — one session per tree; 26-W-a + 297 committed; 300 held until 26-X; 26-W-b next.**
+See CHANGE_LOG 04:05, `docs/LEX_26W_REPORT.md` (26-W-a) and `docs/LEX_2NOV_REPORT.md` (297–300).
+- **26-W-a** (laptop session, 2 Nov): ten document tools calling the buttons' own functions; Action-details guard (>3,000 chars of instrument-like
+  text refused); `read_source` reads a filed source whole (`lib/lex/source-text.ts`); step limit 8 → 20 once a turn has saved a section; the five
+  templates write the instrument, a proposals-list draft is refused; Code-text price 4.7p (the other four kinds' prices are still V2b's).
+  §5 / 305 is already applied on production (D.207.2 proposal, FieldRevision 13e6e42b) — never re-run `apply-26w-305.ts`.
+- **297** (bare "not found" refused) ships in the same shared-file commit.
+- **300 held:** the screen says "Documents" again until 26-X renames labels; Lex says "documents" to match.
+- **26-W-b:** the field guide (`explain_field`, `list_fields`, a label coverage check that a rename cannot break) and the remaining inventory tools.
+- **307** (Ingest's five-codes pilot) is the Ingest session's, in its own worktree.
+
 **▶ 2026-11-02 ~01:30 UTC (desktop): CCh-Lex 2 Nov (1) — A reported; 298, 299 and "Output Reports" LIVE (4f5c25d); 297 waits on the joint commit with 26-W; 300 built.**
 See CHANGE_LOG 01:00 and `docs/LEX_2NOV_REPORT.md`.
 - **A:** the corpus holds only the gov.uk SUMMARIES of the Civil Service Code (42 words) and Management Code (54 words); the full texts are Charlie's [Ref: 218] (the Code's page) and [Ref: 217] (the Management Code), filed 1 Nov.

@@ -50,7 +50,7 @@ export default function DocumentView({ ideaId, documentId, readOnly = false, onC
   const load = useCallback(async () => {
     const res = await fetch(`/api/ideas/${ideaId}/action-documents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ op: 'view', documentId }) })
     const body = await res.json().catch(() => null)
-    if (!res.ok) { setError(explainFailure(body, res.status, 'Opening the draft')); return }
+    if (!res.ok) { setError(explainFailure(body, res.status, 'Opening the document')); return }
     setData((body as { data: DocumentViewData }).data); setError(null)
   }, [ideaId, documentId])
   useEffect(() => { void load() }, [load])
@@ -70,7 +70,7 @@ export default function DocumentView({ ideaId, documentId, readOnly = false, onC
   }, [ideaId, load, onChanged])
 
   if (error) return <p className="text-xs" role="alert" data-document-view-error>Not opened: {error}</p>
-  if (!data) return <p className="text-xs text-zinc-500">Opening the draft…</p>
+  if (!data) return <p className="text-xs text-zinc-500">Opening the document…</p>
 
   const { doc } = data
   const generated = GENERATED_KINDS.has(doc.kind)
@@ -120,7 +120,7 @@ export default function DocumentView({ ideaId, documentId, readOnly = false, onC
                 <button type="button" onClick={() => setAskRedraft(false)} className="underline">Not now</button></span>
             )}
             <button type="button" onClick={() => setTab('versions')} className="underline">Versions ({data.versions.length})</button>
-            {!askReview && <button type="button" disabled={busy} onClick={() => setAskReview(true)} data-review-open className="px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Review this draft</button>}
+            {!askReview && <button type="button" disabled={busy} onClick={() => setAskReview(true)} data-review-open className="px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Review this document</button>}
           </div>
         )}
         {!readOnly && askReview && <ReviewAsk ideaId={ideaId} documentId={documentId} busy={busy} onClose={() => setAskReview(false)}
@@ -350,7 +350,7 @@ function IssuesTab({ data }: { data: DocumentViewData }) {
                 <p className="text-zinc-600">{i.reviewId ? (i.attachReason ?? `Raised by ${producerWords(i.passKey)}`) : i.attachedBy === 'LEX' ? `Placed here by Lex${i.attachReason ? `: ${i.attachReason}` : ''}` : 'Placed here by you'}{i.sourceModel ? ` · raised by ${i.sourceModel}` : ''}</p>
               </li>
             ))}
-            <li className="text-zinc-600">Answer an issue in the Risks view, or by redrafting this draft.</li>
+            <li className="text-zinc-600">Answer an issue in the Risks view, or by redrafting this document.</li>
           </ul>
         )}
     </div>
@@ -374,9 +374,9 @@ function ReviewAsk({ ideaId, documentId, busy, onDone, onClose }: { ideaId: stri
     try {
       const r = await fetch(`/api/ideas/${ideaId}/action-documents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ op: 'review', documentId, again }) })
       const b = await r.json().catch(() => null) as { data?: { d: string; v: number; outcomes: Array<{ words: string }>; pence: number | null } } | null
-      if (!r.ok || !b?.data) { onDone(`Not done: ${explainFailure(b, r.status, '“Review this draft”')}`); return }
+      if (!r.ok || !b?.data) { onDone(`Not done: ${explainFailure(b, r.status, '“Review this document”')}`); return }
       onDone(`Reviewed ${b.data.d}, version ${b.data.v}${b.data.pence != null ? ` — it cost ${b.data.pence.toFixed(1)}p` : ''}. ${b.data.outcomes.map((o) => o.words).join(' ')} The issues are in the Issues tab, by part.`)
-    } catch (e) { onDone(`Not done: “Review this draft” could not reach the server (${e instanceof Error ? e.message : 'network error'}). Nothing was changed.`) }
+    } catch (e) { onDone(`Not done: “Review this document” could not reach the server (${e instanceof Error ? e.message : 'network error'}). Nothing was changed.`) }
     finally { setRunning(false) }
   }
   if (err) return <p role="alert">Not priced: {err} <button type="button" className="underline" onClick={onClose}>OK</button></p>
@@ -388,7 +388,7 @@ function ReviewAsk({ ideaId, documentId, busy, onDone, onClose }: { ideaId: stri
     <div className="border-2 border-zinc-900 rounded p-1.5 space-y-1" data-review-ask={todo ? 'todo' : 'all-read'}>
       <p className="font-semibold">Review {plan.d}, version {plan.v}, with the five passes</p>
       <ul>{plan.passes.map((p) => <li key={p.passKey}><span aria-hidden>{p.readThisVersion ? '●' : '○'}</span> {p.label} — {p.readThisVersion ? `already read version ${plan.v}` : 'will read it'}: <span className="text-zinc-600">{p.strapline}</span></li>)}</ul>
-      <p>Each pass reads the draft part by part and raises issues on the part they concern; it searches nothing. Each is saved as it finishes. Nothing in the document changes.</p>
+      <p>Each pass reads the document part by part and raises issues on the part they concern; it searches nothing. Each is saved as it finishes. Nothing in the document changes.</p>
       {todo
         ? <p>{todo === 5 ? 'All five' : `The ${todo} that have not read this version`}: {priceWords(plan.price.pence)}.{' '}
             <button type="button" disabled={busy || running} onClick={() => void run(false)} data-review-run className="px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">{running ? 'Reviewing… (about 15 seconds)' : 'Review it'}</button>{' '}

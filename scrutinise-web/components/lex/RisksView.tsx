@@ -83,17 +83,17 @@ export default function RisksView({ ideaId, readOnly = false }: { ideaId: string
       {said && <p className="border border-zinc-300 rounded px-2 py-1" role="status" data-risks-said>{said} <button type="button" className="underline ml-1" onClick={() => setSaid(null)}>OK</button></p>}
 
       <section className="space-y-1.5" data-risks-group="documents">
-        <h4 className="font-bold">By draft</h4>
-        {!data.documents.length && <p>No draft yet. Drafts are written from the tree above.</p>}
+        <h4 className="font-bold">By document</h4>
+        {!data.documents.length && <p>No document yet. Documents are written or drafted from the tree above.</p>}
         {data.documents.map((d) => (
           <div key={d.id} className="border border-zinc-200 rounded p-1.5 space-y-1" data-risks-document={d.d}>
-            <p><span aria-hidden>●</span> <span className="font-semibold">Draft {d.d}</span> {d.title} <span className="text-zinc-600">— {d.kind} · {d.status}{d.v != null ? ` · version ${d.v}` : ' · no version yet'}</span>
+            <p><span aria-hidden>●</span> <span className="font-semibold">{d.d}</span> {d.title} <span className="text-zinc-600">— {d.kind} · {d.status}{d.v != null ? ` · version ${d.v}` : ' · no version yet'}</span>
               {' · '}<span className="font-semibold">{d.issues.filter((i) => i.status === 'OPEN').length} open</span></p>
             <p className="text-zinc-700" data-risks-reviews={d.reviews.length}>
               {d.reviews.length
                 ? <>Reviewed by: {d.reviews.map((r, k) => <span key={r.passKey}>{k ? ' · ' : ''}{r.status === 'RUN' ? '●' : '⚠'} {r.label} (version {r.v}, {day(r.at)}: {r.status === 'RUN' ? `${r.issues} raised` : 'failed'})</span>)}
                   {d.reviews.length < 5 ? ` · ${5 - d.reviews.length} pass${5 - d.reviews.length === 1 ? '' : 'es'} not yet run` : ''}</>
-                : 'Not yet reviewed — open the draft in the tree above and press “Review this draft”.'}
+                : 'Not yet reviewed — open the document in the tree above and press “Review this document”.'}
             </p>
             {list(d.issues, 'document')}
           </div>
@@ -101,7 +101,7 @@ export default function RisksView({ ideaId, readOnly = false }: { ideaId: string
       </section>
 
       <section className="space-y-1" data-risks-group="actions">
-        <h4 className="font-bold">On an action, not on one of its drafts</h4>
+        <h4 className="font-bold">On an action, not on one of its documents</h4>
         {!data.actions.length && <p>None.</p>}
         {data.actions.map((a) => {
           const open = a.issues.filter((i) => i.status === 'OPEN').length
@@ -134,7 +134,7 @@ function IssueRow({ i, where, busy, readOnly, answer }: {
   return (
     <li className={`rounded p-1.5 ${i.status === 'OPEN' ? 'border-2 border-zinc-300' : 'border border-zinc-200'}`} data-risk-issue={i.status} data-risk-part={i.part ?? 'whole'}>
       <p><span aria-hidden>{s.mark}</span> <span className="font-semibold">{i.title ?? 'An issue'}</span>
-        {where === 'document' && <span> · on {i.part ? `part ${i.part}` : 'the draft as a whole'}</span>}
+        {where === 'document' && <span> · on {i.part ? `part ${i.part}` : 'the document as a whole'}</span>}
         <span className="text-zinc-600"> · {s.word}</span></p>
       <p className="whitespace-pre-wrap">{i.text}</p>
       <p className="text-zinc-600">Raised by {i.by}{i.olderVersion ? ` · ⚠ ${i.olderVersion}` : ''}{i.placed && !i.placed.startsWith('Raised by') ? ` · placed here: ${i.placed}` : ''}</p>

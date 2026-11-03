@@ -1289,7 +1289,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                     <DeepeningLawTable ideaId={state.ideaId} />
                   </section>
                   <section className="pt-3" data-deepening="documents">
-                    <h3 className="text-sm font-bold uppercase tracking-wide text-zinc-800 mb-1">Drafts on actions</h3>{/* 300 */}
+                    <h3 className="text-sm font-bold uppercase tracking-wide text-zinc-800 mb-1">The documents</h3>
                     <DocumentsTree ideaId={state.ideaId} />
                   </section>
                   {/* 26-V2d (§7, 225): the Risks view — every issue, by document, answered here */}

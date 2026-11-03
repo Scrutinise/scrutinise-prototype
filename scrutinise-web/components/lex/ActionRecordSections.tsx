@@ -38,7 +38,7 @@ export function useRecordFacts(ideaId: string, actionId: string) {
     try {
       const res = await fetch(`/api/ideas/${ideaId}/action-documents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ op: 'forAction', actionId }) })
       const body = await res.json().catch(() => null)
-      if (!res.ok) { setDocsError(explainFailure(body, res.status, 'Reading this action’s drafts')); return }
+      if (!res.ok) { setDocsError(explainFailure(body, res.status, 'Reading this action’s documents')); return }
       setDocs((body as { data: RecordDocuments }).data); setDocsError(null)
     } catch (e) { setDocsError(`could not reach the server (${e instanceof Error ? e.message : 'network error'})`) }
   }, [ideaId, actionId])
@@ -111,7 +111,7 @@ export function DocumentsSection({ ideaId, a, facts, disabled, onChanged }: {
   const draftWithLex = () => { setAsking(false); void post('action-structure', { op: 'draftAction', actionId: a.id }, `Drafting #${a.number ?? '?'}`, (r) => `Saved: Lex’s proposal for #${a.number ?? '?'} is waiting — open the drafting instruction to compare it${r?.pence != null ? ` (it cost ${Number(r.pence).toFixed(1)}p)` : ''}.`) }
 
   if (docsError) return <p className="text-xs" role="alert">Not read: {docsError}</p>
-  if (!docs) return <p className="text-xs text-zinc-500">Reading this action’s drafts…</p>
+  if (!docs) return <p className="text-xs text-zinc-500">Reading this action’s documents…</p>
   const live = docs.documents.filter((d) => d.status !== 'SUPERSEDED')
   const needed = docs.needs.kinds
   return (
@@ -122,7 +122,7 @@ export function DocumentsSection({ ideaId, a, facts, disabled, onChanged }: {
           <li key={d.id} data-record-document={d.d}>
             <button type="button" onClick={() => setOpen(open === d.id ? null : d.id)} aria-expanded={open === d.id}
               className={`w-full text-left rounded px-1.5 py-1 ${open === d.id ? 'border-2 border-zinc-900' : 'border border-zinc-200'}`}>
-              <span aria-hidden>●</span> <span className="font-semibold">Draft {d.d}</span> {d.title} — {KIND_WORD[d.kind]} · <span className="font-semibold" data-doc-status>{statusWords(d.status, d.acceptedV, d.current?.v ?? null)}</span>
+              <span aria-hidden>●</span> <span className="font-semibold">{d.d}</span> {d.title} — {KIND_WORD[d.kind]} · <span className="font-semibold" data-doc-status>{statusWords(d.status, d.acceptedV, d.current?.v ?? null)}</span>
               {d.current ? ` · version ${d.current.v}` : ''}{d.kind === 'DRAFT_CLAUSE' ? ` · ${docs.lawRows} law row${docs.lawRows === 1 ? '' : 's'}` : ''}{d.stale ? ' · out of date' : ''}{d.proposalWaiting ? ' · Lex’s proposal waiting' : ''}
               {open === d.id && <span className="ml-1 font-semibold">open</span>}
             </button>
@@ -153,8 +153,8 @@ export function DocumentsSection({ ideaId, a, facts, disabled, onChanged }: {
         onSave={async (v) => { if (await post('action-structure', { op: 'saveDraft', actionId: a.id, instruction: v }, `Saving the instruction for #${a.number ?? '?'}`, (r) => `Saved: version ${String(r?.version ?? 1)} of the drafting instruction for #${a.number ?? '?'}.`)) setWriting(false) }} />}
       {!disabled && (
         <div className="flex flex-wrap items-center gap-2">
-          <label className="flex items-center gap-1">Add a draft
-            <select value={pick} onChange={(e) => setPick(e.target.value as DocumentKind)} className="border border-zinc-300 rounded px-1 py-0.5" aria-label="The kind of draft to add">
+          <label className="flex items-center gap-1">Add a document
+            <select value={pick} onChange={(e) => setPick(e.target.value as DocumentKind)} className="border border-zinc-300 rounded px-1 py-0.5" aria-label="The kind of document to add">
               {DOCUMENT_KINDS.filter((k) => !GENERATED_KINDS.has(k) && k !== 'DRAFT_CLAUSE').map((k) => <option key={k} value={k}>{KIND_WORD[k]}</option>)}
             </select></label>
           <button type="button" disabled={busy} onClick={() => setAdding(pick)} className="px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">Add</button>
@@ -164,7 +164,7 @@ export function DocumentsSection({ ideaId, a, facts, disabled, onChanged }: {
       )}
       {said && <p className="border border-zinc-300 rounded px-2 py-1" role="status">{said} <button type="button" className="underline ml-1" onClick={() => setSaid(null)}>OK</button></p>}
       {adding && <AddDialog action={docs} kind={adding} busy={busy} onClose={() => setAdding(null)}
-        onSave={async (title, body) => { if (await post('action-documents', { op: 'addByHand', actionId: a.id, kind: adding, title, body }, 'Adding the draft', (r) => `Saved: Draft ${String(r?.d ?? '')} added.`)) setAdding(null) }} />}
+        onSave={async (title, body) => { if (await post('action-documents', { op: 'addByHand', actionId: a.id, kind: adding, title, body }, 'Adding the document', (r) => `Saved: ${String(r?.d ?? 'the document')} added.`)) setAdding(null) }} />}
     </div>
   )
 }

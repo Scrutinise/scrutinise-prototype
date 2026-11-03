@@ -1001,7 +1001,7 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
           {closed('policy', 1, here(otherStepLine(1, a, hasCostLines, headingName), 1), policyBlock)}
         </div>
       ))}
-      {titled('documents', 'Drafts', <DocumentsSection ideaId={ctx.ideaId} a={a} facts={facts} disabled={disabled} onChanged={() => void ops.refresh()} />)}
+      {titled('documents', 'Documents', <DocumentsSection ideaId={ctx.ideaId} a={a} facts={facts} disabled={disabled} onChanged={() => void ops.refresh()} />)}
       {titled('law', 'Law', <LawSection facts={facts} number={a.number} />)}
       {stepPart(2, 'who')}
       {stepPart(3, 'costs')}

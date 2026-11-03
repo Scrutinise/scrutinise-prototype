@@ -53,9 +53,8 @@ export interface StripInput {
 export function headerStrip(s: StripInput): { pieces: string[]; status: string; prompt: string | null } {
   const status = statusWords(s.status, s.acceptedV, s.current?.v ?? null)
   const waiting = s.proposalWaiting ? `Lex’s proposal ${s.proposalWaiting} is waiting — use it or set it aside below` : null
-  // 300 (2 Nov): "Draft D.38.1" — what we write for an action is a draft, never a "document" (that word is for uploaded files)
-  if (!s.current) return { pieces: [`Draft ${s.d}`, s.title], status: 'no version yet', prompt: waiting }
-  const pieces = [`Draft ${s.d}`, s.title, versionWords(s.current), ...(s.law ? [lawRowsWords(s.law)] : [])]
+  if (!s.current) return { pieces: [s.d, s.title], status: 'no version yet', prompt: waiting }
+  const pieces = [s.d, s.title, versionWords(s.current), ...(s.law ? [lawRowsWords(s.law)] : [])]
   const prompt = [wantsAccept(s.status, s.current.v) ? 'Accept when you are content' : null, waiting].filter(Boolean).join(' · ') || null
   return { pieces, status: status === 'drafted, not accepted' ? 'not yet accepted' : status, prompt }
 }

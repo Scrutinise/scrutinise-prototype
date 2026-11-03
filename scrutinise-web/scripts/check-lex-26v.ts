@@ -197,14 +197,14 @@ async function partB(): Promise<{ copyId: string; userId: string; cleanup: () =>
   const snap = await buildProposalSnapshot(copy.id)
   const model = buildFor('ACTIONS_PACK', snap, null, { selection: { actionIds: [owner.id, other.id] } }).model
   const blocks = model.blocks as Array<{ kind: string; title?: string; refs?: Array<{ title: string; citation: string }> }>
-  const iS = blocks.findIndex((b) => b.kind === 'section' && b.title === 'SOURCES'), iD = blocks.findIndex((b) => b.kind === 'section' && b.title === 'DRAFTS') // 300: printed as "Drafts"
+  const iS = blocks.findIndex((b) => b.kind === 'section' && b.title === 'SOURCES'), iD = blocks.findIndex((b) => b.kind === 'section' && b.title === 'DOCUMENTS')
   ok('the pack prints Sources and Documents as two separate lists, Documents after Sources', iS >= 0 && iD > iS)
   const sourcesText = JSON.stringify(blocks.slice(iS, iD))
   ok('…no D-number appears in the Sources list', !/\bD\.\d+\.\d+/.test(sourcesText))
   const docsText = JSON.stringify(blocks.slice(iD))
   ok('…the Documents list names D.59.1 with its status in words', /D\.59\.1, drafted, not accepted/.test(docsText) && /D\.59\.2, drafted, not accepted, out of date/.test(docsText), docsText.slice(0, 300))
   const all = JSON.stringify(blocks)
-  ok('each action’s drafts print after its record (section 14 "Drafts", 300)', /14 Drafts|\.14[^"]{0,4}"?[^"]{0,20}Drafts/.test(all) || all.includes('Drafts:'))
+  ok('each action’s documents print after its record (section 14 "Documents")', /14 Documents|\.14[^"]{0,4}"?[^"]{0,20}Documents/.test(all) || all.includes('Documents:'))
   const known = new Set<string>()
   const bad1 = checkReply({ reply: 'Under D.59.1, every body must publish its goals.', outcomes: [], knownLabels: known })
   const bad2 = checkReply({ reply: 'Every body must publish its goals [Ref: D.59.1].', outcomes: [], knownLabels: known })
@@ -257,7 +257,7 @@ async function partC(copyId: string, userId: string) {
     const tree = await D.documentTree(copyId)
     const expected = D.treeCounts(tree.headings.flatMap((h) => h.actions).map((a) => ({ needs: a.needs, documents: a.documents.map((d) => ({ kind: d.kind, status: d.status })) }))).line
     const shownCounts = await page.locator('[data-tree-counts]').innerText()
-    ok('the counts at the top are the store’s own ("N actions · N need drafts · N drafted · N accepted · N missing", 300)', shownCounts === expected, `${shownCounts} vs ${expected}`)
+    ok('the counts at the top are the store’s own ("N actions · N need documents · N drafted · N accepted · N missing")', shownCounts === expected, `${shownCounts} vs ${expected}`)
     // 263: D.59.1 was accepted at version 1 in part B and then given a version 2 — so it reads "accepted at version 1, then changed"
     ok('D.59.1 and D.59.2 are in the tree with their status in words (263: "accepted at version 1, then changed — accept again")', (await page.locator('[data-tree-document="D.59.1"] [data-doc-status]').innerText()) === 'accepted at version 1, then changed — accept again' && (await page.locator('[data-tree-document="D.59.2"]').count()) === 1)
     await page.locator('[data-tree-filter="missing"]').click()
@@ -265,9 +265,9 @@ async function partC(copyId: string, userId: string) {
     const expectMissing = tree.headings.flatMap((h) => h.actions).filter((a) => a.missing.length).length
     ok('the "Missing" filter shows exactly the actions with a needed document missing', missingRows === expectMissing, `${missingRows} vs ${expectMissing}`)
     await page.locator('[data-tree-filter="all"]').click()
-    await page.locator('input[aria-label="Find in the drafts"]').fill('D.59.2')
+    await page.locator('input[aria-label="Find in the documents"]').fill('D.59.2')
     ok('the find box finds by D-number: one action', (await page.locator('[data-tree-action]').count()) === 1)
-    await page.locator('input[aria-label="Find in the drafts"]').fill('')
+    await page.locator('input[aria-label="Find in the documents"]').fill('')
     await page.locator('[data-tree-document="D.59.1"] button').first().click()
     await page.waitForSelector('[data-document-view="D.59.1"]')
     const view = await page.locator('[data-document-view="D.59.1"]').innerText()
