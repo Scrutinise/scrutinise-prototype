@@ -28,8 +28,10 @@ import { draftFor, documentTree, generateCollisionReport, generateSchedule, writ
 import { KIND_WORD, type DocumentKind } from './action-documents-pure'
 import { refsIn } from './action-digest-pure'
 import { resolveRefs } from './source-registry'
+import { readSourceText } from './source-text'
 import {
-  TEMPLATES, TEMPLATE_SCHEMA, JOB_MAX_ATTEMPTS, JOB_STALL_MS, JOB_WORD, draftPlan, isTemplateKind, priceWords, templateBody, templateSystem,
+  TEMPLATES, JOB_MAX_ATTEMPTS, JOB_STALL_MS, JOB_WORD, draftPlan, isTemplateKind, priceWords, templateBody, templateSystem,
+  schemaFor, proposalShape, refusalSentence, clauseNumbers, citedClauses,
   type DraftPlan, type JobStatus, type PlanAction, type TemplateAnswer, type TemplateKind,
 } from './document-drafting-pure'
 import type { Result } from './action-structure'
@@ -48,6 +50,30 @@ export interface KindInput {
   instruction: { instrument: string | null; dutyOnWhom: string; enforcedHow: string; plainWording: string } | null
   costLines: Array<{ label: string; low: number | null; high: number | null; unit: string | null; basis: string | null; priceYear: number | null; recurrence: string | null }>
   sources: Array<{ number: number; title: string; citation: string | null; snippet: string | null }>
+  /** 26-W §4a — for a code: the held text of the existing code it is modelled on (the filed source's whole text, from read-source's reader). */
+  model?: { ref: number | null; title: string; text: string; total: number } | null
+}
+
+/** 26-W — the Action details are given whole up to here (#207's are 17,946 characters; the old 8,000 cut lost most of its clauses). */
+export const DETAIL_CHARS = 24_000
+/** …and the model code up to here: the 12,446-character Civil Service Code fits whole; a longer one is given from its start, and says so. */
+export const MODEL_CHARS = 16_000
+
+/**
+ * 26-W §4a — the existing code a code text is modelled on: a source on the idea whose title names a code and whose full text is held,
+ * preferring one the Action details cite, then the shortest (a management code runs to 190,000 characters; the code a person reads is
+ * short). `modelRef` names one outright. Null when none is held — the draft then says so in its gaps.
+ */
+export async function modelSourceFor(ideaId: string, detail: string | null, modelRef?: number | null): Promise<KindInput['model']> {
+  const cited = new Set(refsIn(detail ?? ''))
+  const candidates = modelRef
+    ? [{ number: modelRef }]
+    : (await prisma.ideaSource.findMany({ where: { ideaId, archivedAt: null, title: { contains: 'code', mode: 'insensitive' } }, select: { number: true } })).filter((s) => s.number != null)
+  const read = (await Promise.all(candidates.map(async (c) => ({ c, r: await readSourceText(ideaId, { ref: c.number! }, { size: MODEL_CHARS }) }))))
+    .flatMap(({ c, r }) => (r.ok && r.data.held === 'full text' && r.data.total > 0 ? [{ cited: cited.has(c.number!), ...r.data }] : []))
+    .sort((x, y) => Number(y.cited) - Number(x.cited) || x.total - y.total)
+  const best = read[0]
+  return best ? { ref: best.ref, title: best.title, text: best.text, total: best.total } : null
 }
 export interface KindRun { body: string; reason: string; pence: number | null; seconds: number; dropped: number[]; missing: string[] }
 
@@ -77,12 +103,18 @@ export async function kindInput(ideaId: string, actionId: string): Promise<KindI
 }
 
 /** The model call and the checks for one template kind, writing nothing. */
-export async function composeKindDocument(kind: TemplateKind, input: KindInput, ctx: { ideaId: string; userId: string | null; call?: Call }): Promise<Result<KindRun>> {
+export async function composeKindDocument(kind: TemplateKind, input: KindInput, ctx: { ideaId: string; userId: string | null; call?: Call; instruction?: string }): Promise<Result<KindRun>> {
   const started = Date.now()
   if (kind === 'BACKGROUND_NOTE' && !input.sources.length) return fail(`#${input.number ?? '?'}’s Action details cite no source, so a background note has nothing to draw on. Nothing was drafted.`)
+  // 26-W — the Action details keep their line breaks: the clause numbers ("8.", "E2.") are at the start of lines, and a code cites them.
+  const detail = input.detail?.trim() ? input.detail.trim().slice(0, DETAIL_CHARS) : ''
   const user = [
     `THE GUIDING POLICY:\n${clip(input.policy ?? '(not settled)', 3000)}`,
-    `<action>\nAction #${input.number ?? '?'}${input.title ? ` — ${input.title}` : ''} (avenue: ${input.avenue ?? 'not set'}${input.heading ? `; heading: ${input.heading}` : ''})\nSTATEMENT:\n${input.statement}\n${input.detail?.trim() ? `EXPLANATION:\n${clip(input.detail, 8000)}\n` : 'EXPLANATION: none written.\n'}${input.who ? `Who: ${clip(input.who, 300)}\n` : ''}${input.slots.join('\n')}\n</action>`,
+    `<action>\nAction #${input.number ?? '?'}${input.title ? ` — ${input.title}` : ''} (avenue: ${input.avenue ?? 'not set'}${input.heading ? `; heading: ${input.heading}` : ''})\nSTATEMENT:\n${input.statement}\n${detail ? `ACTION DETAILS${input.detail!.trim().length > DETAIL_CHARS ? ` (the first ${DETAIL_CHARS.toLocaleString('en-GB')} of ${input.detail!.trim().length.toLocaleString('en-GB')} characters)` : ''}:\n${detail}\n` : 'ACTION DETAILS: none written.\n'}${input.who ? `Who: ${clip(input.who, 300)}\n` : ''}${input.slots.join('\n')}\n</action>`,
+    kind === 'CODE_TEXT' ? (input.model
+      ? `MODEL — the held text of [Ref: ${input.model.ref ?? '?'}] ${input.model.title}${input.model.total > input.model.text.length ? ` (its first ${input.model.text.length.toLocaleString('en-GB')} of ${input.model.total.toLocaleString('en-GB')} characters)` : ' (whole)'}. Follow its form; do not copy its duties:\n<model>\n${input.model.text}\n</model>`
+      : 'MODEL: no existing code is held in full on this idea; say so in gaps.') : '',
+    ctx.instruction?.trim() ? `THE OWNER'S INSTRUCTION FOR THIS DRAFT (follow it within the rules):\n${clip(ctx.instruction, 1500)}` : '',
     input.instruction ? `THE DRAFTING INSTRUCTION: instrument — ${input.instruction.instrument ?? 'not set'}; duty on — ${input.instruction.dutyOnWhom || 'not set'}; enforced — ${input.instruction.enforcedHow || 'not set'}.${input.instruction.plainWording ? `\nPLAIN WORDING:\n${clip(input.instruction.plainWording, 3000)}` : ''}` : '',
     kind === 'COSTING' ? (input.costLines.length
       ? `COST LINES (the only figures you may use):\n${input.costLines.map((c) => `- ${c.label}: ${c.low ?? '?'}–${c.high ?? '?'} ${c.unit ?? 'GBP'}${c.priceYear ? `, ${c.priceYear} prices` : ''}${c.recurrence ? `, ${c.recurrence === 'PER_YEAR' ? 'each year' : 'once'}` : ''}${c.basis ? `; basis: ${clip(c.basis, 300)}` : ''}`).join('\n')}`
@@ -92,15 +124,26 @@ export async function composeKindDocument(kind: TemplateKind, input: KindInput, 
   const pass = `actions.document.${kind.toLowerCase()}`
   const call = ctx.call ?? callModelJson
   const res = await call<TemplateAnswer>({
-    model: DRAFT_MODEL, system: templateSystem(kind), user, schema: TEMPLATE_SCHEMA as never, maxOutputTokens: 8_000, timeoutMs: 180_000, reasoningEffort: 'medium',
+    model: DRAFT_MODEL, system: templateSystem(kind), user, schema: schemaFor(kind) as never, maxOutputTokens: 16_000, timeoutMs: 240_000, reasoningEffort: 'medium',
     label: `document-${kind.toLowerCase()}`, stream: 'lex', pass, ideaId: ctx.ideaId, userId: ctx.userId,
   })
   const priced = res.usage.recorded ?? (await recordUsage(res.usage, { stream: 'lex', pass, ideaId: ctx.ideaId, userId: ctx.userId, failed: !res.ok }))
   if (!res.ok) return fail(`The ${KIND_WORD[kind]} did not complete: ${(res as { detail?: string }).detail ?? (res as { reason?: string }).reason ?? 'no reason given'}. Nothing was written.${priced.pence ? ` It cost ${priced.pence.toFixed(1)}p.` : ''}`)
   const allowed = new Set([...refsIn(input.detail ?? ''), ...input.sources.map((s) => s.number)])
   const { body, dropped, dNumbers, missing } = templateBody(kind, res.value, { hasCommentary: !!input.detail?.trim(), allowedRefs: allowed })
+  // 26-W §4b — the instrument, or a list of proposals about it? A list is refused, not saved, and the reason is in words.
+  const shape = proposalShape(kind, body)
+  if (shape.refused) return fail(`${refusalSentence(kind, shape)}${priced.pence ? ` The attempt cost ${priced.pence.toFixed(1)}p.` : ''}`)
+  // 26-W §4a — every duty of a code traces to a clause of the Action details; the ones that do not are SAID, not hidden
+  let untraced: string[] = []
+  if (kind === 'CODE_TEXT') {
+    const clauses = clauseNumbers(input.detail ?? '')
+    untraced = [...body.matchAll(/^## (\d+)\. .*\n([\s\S]*?)(?=\n## |\s*$)/gm)].filter((m) => { const c = citedClauses(m[2]); return !c.length || c.some((x) => !clauses.has(x)) }).map((m) => m[1])
+  }
   const reason = [
     clip(res.value.reason, 1500),
+    kind === 'CODE_TEXT' ? (input.model ? `Modelled on the form of [Ref: ${input.model.ref ?? '?'}] ${input.model.title}.` : 'No existing code is held in full on this idea, so the form is not modelled on one.') : '',
+    untraced.length ? `Duty ${untraced.join(', ')} ${untraced.length === 1 ? 'does' : 'do'} not cite a clause the Action details hold.` : '',
     missing.length ? `Lex wrote nothing under ${missing.map((m) => `“${m}”`).join(', ')}; the document says so there.` : '',
     dropped.length ? `Taken out because neither the Action details nor the sources cite them: ${dropped.map((n) => `[Ref: ${n}]`).join(', ')}.` : '',
     dNumbers ? `Taken out: ${dNumbers} document number${dNumbers === 1 ? '' : 's'} cited as if evidence (a D-number is never a source).` : '',
@@ -109,10 +152,11 @@ export async function composeKindDocument(kind: TemplateKind, input: KindInput, 
 }
 
 /** Compose one template kind and write it as a PROPOSAL on the action's document of that kind. */
-export async function draftKindDocument(ideaId: string, actionId: string, kind: TemplateKind, userId: string | null, opts: { call?: Call } = {}): Promise<Result<{ d: string; v: number; pence: number | null; reason: string }>> {
+export async function draftKindDocument(ideaId: string, actionId: string, kind: TemplateKind, userId: string | null, opts: { call?: Call; instruction?: string; modelRef?: number | null } = {}): Promise<Result<{ d: string; v: number; pence: number | null; reason: string }>> {
   const input = await kindInput(ideaId, actionId)
   if (!input) return fail('That action is not on this idea’s live list. Nothing was drafted.')
-  const r = await composeKindDocument(kind, input, { ideaId, userId, call: opts.call })
+  if (kind === 'CODE_TEXT') input.model = await modelSourceFor(ideaId, input.detail, opts.modelRef)
+  const r = await composeKindDocument(kind, input, { ideaId, userId, call: opts.call, instruction: opts.instruction })
   if (!r.ok) return fail((r as { error: string }).error)
   const fresh = await prisma.lexCoherentAction.findFirst({ where: { id: actionId, ideaId, status: 'LIVE' }, select: { id: true } })
   if (!fresh) return fail('The action was ruled out or merged while Lex was drafting. Nothing was written.')

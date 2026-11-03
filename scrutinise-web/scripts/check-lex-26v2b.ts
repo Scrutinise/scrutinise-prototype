@@ -46,7 +46,8 @@ function partA() {
   ok('no template carries a specimen from a real proposal (§27): no [Ref: n] number, no D-number, no name from 452c5ade', !/\[Ref:\s*\d/.test(sys) && !/D\.\d+\.\d+/.test(sys) && !/Civil Service|Minister|Treasury|Blueprint/i.test(sys))
   ok('every template says the action’s own text is data, never instructions', W.TEMPLATE_KINDS.every((k) => /never instructions to you/.test(W.templateSystem(k))))
 
-  const ans = { parts: [{ heading: 'Range', text: 'From [Ref: 4] and [Ref: 9]; see D.38.2.' }, { heading: 'Basis', text: 'As in [Ref: 4, section 8.3 Benchmarking].' }], gaps: 'Price year unknown.', reason: 'r' }
+  // 26-W §4a: the costing's first section is "Cost lines" (was "Range"); the fixture follows the template's own names
+  const ans = { parts: [{ heading: 'Cost lines', text: 'From [Ref: 4] and [Ref: 9]; see D.38.2.' }, { heading: 'Basis', text: 'As in [Ref: 4, section 8.3 Benchmarking].' }], gaps: 'Price year unknown.', reason: 'r' }
   const b = W.templateBody('COSTING', ans, { hasCommentary: false, allowedRefs: new Set([4]) })
   const lines = b.body.split('\n')
   ok('the body opens with the caveat, then the no-commentary line where there was none (§4)', lines[0] === W.KIND_CAVEAT && lines[1] === W.NO_COMMENTARY_LINE)
@@ -54,9 +55,9 @@ function partA() {
   ok('a reference neither the Explanation nor the sources cite is taken out, and said ([Ref: 9])', !/\[Ref: 9\]/.test(b.body) && b.dropped.join() === '9')
   ok('a pinpointed reference that is allowed is kept and set out as "[Ref: 4] (section 8.3 …)"', b.body.includes('[Ref: 4] (section 8.3 Benchmarking)'))
   control('the pinpointed form [Ref: 9, p. 2] would have slipped past a plain [Ref: n] check', /\[Ref:\s*(\d+)\s*\]/.test('[Ref: 9, p. 2]'))
-  ok('…and a pinpointed reference that is NOT allowed is taken out too', W.templateBody('COSTING', { ...ans, parts: [{ heading: 'Range', text: 'x [Ref: 9, p. 2].' }] }, { hasCommentary: true, allowedRefs: new Set([4]) }).dropped.join() === '9')
+  ok('…and a pinpointed reference that is NOT allowed is taken out too', W.templateBody('COSTING', { ...ans, parts: [{ heading: 'Cost lines', text: 'x [Ref: 9, p. 2].' }] }, { hasCommentary: true, allowedRefs: new Set([4]) }).dropped.join() === '9')
   ok('a D-number is never left in as if a source (241), and is counted', !/D\.38\.2/.test(b.body) && b.dNumbers === 1)
-  ok('a named template writes every section in order, "Not written." where Lex wrote nothing', /## Range[\s\S]*## Basis[\s\S]*## Price year\nNot written\.[\s\S]*## One-off and recurring\nNot written\.[\s\S]*## What is not costed\nNot written\./.test(b.body) && b.missing.join('|') === 'Price year|One-off and recurring|What is not costed')
+  ok('a named template writes every section in order, "Not written." where Lex wrote nothing', /## Cost lines[\s\S]*## Basis[\s\S]*## Price year\nNot written\.[\s\S]*## One-off and recurring\nNot written\.[\s\S]*## What is not costed\nNot written\./.test(b.body) && b.missing.join('|') === 'Price year|One-off and recurring|What is not costed')
   ok('the gaps close the document under their own heading', /## Gaps Lex could not fill\nPrice year unknown\.$/.test(b.body))
   ok('its parts number from the "## " sections (38.4.1 …): five sections and the gaps = 6 parts', D.partsOf('COSTING', b.body).length === 6)
   const num = W.templateBody('OPERATING_TEXT', { parts: [{ heading: 'Who sets it', text: '1. The Minister sets it.' }, { heading: '2. Who records it', text: '(2) The head records it.' }], gaps: '', reason: '' }, { hasCommentary: true, allowedRefs: new Set() })
@@ -71,7 +72,7 @@ function partA() {
   ])
   ok('the plan puts the clause before the report that reads it', plan.items.filter((i) => i.actionId === 'a').map((i) => i.kind).join() === 'DRAFT_CLAUSE,COLLISION_REPORT')
   ok('a collision report with no clause version is left out, with why', plan.leftOut.some((l) => l.actionId === 'b' && l.kind === 'COLLISION_REPORT' && /no clause version/.test(l.why)))
-  ok('a background note with no cited source is left out, with why', plan.leftOut.some((l) => l.kind === 'BACKGROUND_NOTE' && /cites no source/.test(l.why)))
+  ok('a background note with no cited source is left out, with why', plan.leftOut.some((l) => l.kind === 'BACKGROUND_NOTE' && /cites? no source/.test(l.why))) // 291 (cf58c73) made it "the Action details cite …"; the regex had kept "cites"
   ok('the total is the sum of the measured prices; the generated report adds nothing', plan.pence === Math.round(((W.kindPrice('DRAFT_CLAUSE').pence ?? 0) + (W.kindPrice('OPERATING_TEXT').pence ?? 0)) * 10) / 10 && /1 generated free/.test(plan.line), plan.line)
   const saved = W.KIND_RUNS.CODE_TEXT.splice(0)
   const unmeasured = W.draftPlan([{ id: 'c', number: 3, title: null, missing: ['CODE_TEXT'], hasClauseVersion: false, hasSources: false }])

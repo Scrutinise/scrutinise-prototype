@@ -221,7 +221,7 @@ export async function handleConfirm(a: { ideaId: string; user: Owner; idea: Idea
   if (!def) return { status: 422, body: { error: `Unknown action "${v.payload.tool}".` } }
 
   const ctx: ToolCtx = {
-    ideaId: a.ideaId, userId: a.user.id, confirmed: true,
+    ideaId: a.ideaId, userId: a.user.id, confirmed: true, agreedPence: v.payload.pence ?? null,
     turn: { tainted: false, corpusIds: new Set(), webSources: new Map(), userMessages: history.filter((m) => m.role === 'user').map((m) => String(m.content ?? '')), pastedText: null },
   }
 

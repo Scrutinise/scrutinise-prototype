@@ -23,6 +23,8 @@ export interface TurnState {
    * `file_text{fromPaste:true}` files it without Lex having to reproduce it.
    */
   pastedText?: string | null
+  /** 26-W §2c — instrument-like characters this turn has put into Action details (the guard stops it past ~3,000). */
+  instrumentChars?: number
 }
 
 export interface ToolCtx {
@@ -31,6 +33,9 @@ export interface ToolCtx {
   turn: TurnState
   /** TRUE only when called from the confirm endpoint with a verified token. Never set by the model. */
   confirmed: boolean
+  /** 26-W — the price on the card the owner pressed (from the signed token). A tool whose server function re-checks the agreed price
+   *  (queueDrafting) passes this, exactly as the button passes the price it showed. */
+  agreedPence?: number | null
 }
 
 export interface PendingConfirmation {
@@ -88,6 +93,8 @@ export interface ToolDefinition<S extends z.ZodTypeAny = any> {
   describe?: (input: z.infer<S>) => string
   /** For run-tools whose confirmation depends on price. */
   runKind?: import('./run-prices').RunKind
+  /** 26-W — for an `ask` tool whose price depends on its input (a document's kind, a drafting plan): the MEASURED price for the card. */
+  price?: (ctx: ToolCtx, input: z.infer<S>) => Promise<{ pence: number | null; source: string; isFloor?: boolean } | null>
 }
 
 /** The record of one call, as persisted on the assistant message (§9 "every tool call logged with its result"). */

@@ -46,6 +46,16 @@ export const AGENT_RATES = { inPerM: 2.0, outPerM: 10.0, cacheReadPerM: 0.2, cac
 export const PREFIX_CACHE_TTL: '5m' | '1h' = '1h'
 
 const MAX_ITERATIONS = 8
+/**
+ * 26-W §6 (306) — A TURN THAT IS WRITING A DOCUMENT RUNS TO THE END OF IT. On 2 Nov 00:08 Charlie's turn on 452c5ade spent its 8 steps on
+ * reading (list_sources, get_action, the notebook, two read_source, three searches, two read_section, explain) and then writing four
+ * sections, and stopped "after 8 steps without finishing" — the only one of 49 Lex replies in the 14 days before that hit the limit.
+ * Once a turn has saved a section of a document or of the Action details, its limit rises to this. MAX_TURN_PENCE (40p) and the deadline
+ * still bound it, each section is saved as it lands, and "carry on" resumes from the saved state (287).
+ */
+export const WRITING_MAX_ITERATIONS = 20
+export const WRITING_TOOLS: ReadonlySet<string> = new Set(['propose_document_text', 'add_action_details_section'])
+export const stepLimit = (log: ReadonlyArray<{ name: string; ok: boolean }>) => (log.some((t) => t.ok && WRITING_TOOLS.has(t.name)) ? WRITING_MAX_ITERATIONS : MAX_ITERATIONS)
 // ⚠ 28 OCT: was 4096. Charlie's 02:55 turn on 452c5ade asked for long Action details to be drafted; the model ran out mid-call and
 // the reply he got was only the cut-off note, for 21.2p. Output is billed on what is generated, so a higher ceiling costs nothing
 // unless used (CLAUDE.md §18.5); MAX_TURN_PENCE still bounds the turn.
@@ -398,7 +408,7 @@ export async function runAgentTurn(input: AgentTurnInput): Promise<AgentTurnResu
   let last: Anthropic.Message | null = null
   try {
     for (let i = 0; ; i++) {
-      if (i >= MAX_ITERATIONS) { ended = 'iterations'; break }
+      if (i >= stepLimit(toolLog)) { ended = 'iterations'; break }
       if (cost.pence > MAX_TURN_PENCE) { ended = 'budget'; break }
       if (Date.now() - started > TURN_DEADLINE_MS) { ended = 'deadline'; break }
       last = await call()
@@ -438,7 +448,7 @@ export async function runAgentTurn(input: AgentTurnInput): Promise<AgentTurnResu
       reply = `${reply}\n\n(${cutOffSentence(cut)})`.trim()
     }
     else if (ended === 'refusal') reply = reply || 'I was not able to help with that request.'
-    else if (ended === 'iterations') reply = `${reply}\n\nI stopped after ${MAX_ITERATIONS} steps without finishing — what is done is listed below.`.trim()
+    else if (ended === 'iterations') reply = `${reply}\n\nI stopped after ${stepLimit(toolLog)} steps without finishing — what is done is listed below, and “carry on” resumes from it.`.trim()
     else if (ended === 'budget') reply = `${reply}\n\nI stopped because this one request had already cost more than ${MAX_TURN_PENCE}p. What is done is listed below.`.trim()
     else if (ended === 'deadline') reply = `${reply}\n\nI ran out of time on this request. What is done is listed below.`.trim()
 

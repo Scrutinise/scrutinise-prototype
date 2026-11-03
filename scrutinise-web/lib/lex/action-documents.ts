@@ -194,6 +194,23 @@ export async function writeTextProposal(ideaId: string, actionId: string, kind: 
   })
 }
 
+/**
+ * 26-W §2b — Lex writing a document from chat, A SECTION AT A TIME (287's rule for long text, now for documents): the next section is added
+ * to Lex's waiting proposal on that document, so each lands as it is written and a cut-off loses at most the section in hand. Only a
+ * proposal Lex started from chat (`payload.fromChat`) grows; anything else is never written over — the caller starts a new one instead.
+ */
+export async function appendToTextProposal(ideaId: string, documentId: string, section: string): Promise<Result<{ d: string; v: number; chars: number }>> {
+  const doc = await prisma.actionDocument.findFirst({ where: { id: documentId, ideaId } })
+  if (!doc) return fail('That document is not on this idea. Nothing was saved.')
+  const p = await prisma.actionDocumentVersion.findFirst({ where: { documentId, role: 'PROPOSAL', answer: null }, orderBy: { v: 'desc' } })
+  if (!p || !(p.payload as { fromChat?: boolean } | null)?.fromChat) return fail('There is no proposal of Lex’s from chat waiting on this document to add to; start one. Nothing was saved.')
+  const body = `${p.body.trimEnd()}\n\n${section.trim()}`
+  await prisma.actionDocumentVersion.update({ where: { id: p.id }, data: { body, sources: [...new Set([...(Array.isArray(p.sources) ? (p.sources as number[]) : []), ...refsInBody(section)])] as never } })
+  const a = await prisma.lexCoherentAction.findUnique({ where: { id: doc.actionId }, select: { number: true } })
+  return { ok: true, data: { d: dNumber(a?.number ?? null, doc.number), v: p.v, chars: body.length } }
+}
+const refsInBody = (s: string) => [...s.matchAll(/\[Ref:\s*(\d+)/g)].map((m) => Number(m[1]))
+
 /** Use Lex's waiting proposal on a text document: it becomes the next VERSION (by LEX), and the proposal is answered ACCEPTED and kept. */
 export async function useTextProposal(ideaId: string, documentId: string): Promise<Result<{ v: number }>> {
   const doc = await prisma.actionDocument.findFirst({ where: { id: documentId, ideaId } })

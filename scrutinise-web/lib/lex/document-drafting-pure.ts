@@ -30,55 +30,68 @@ export const NO_COMMENTARY_LINE = 'Drafted from a statement with no commentary �
 export const caveatLines = (hasCommentary: boolean) => (hasCommentary ? [KIND_CAVEAT] : [KIND_CAVEAT, NO_COMMENTARY_LINE])
 
 // ── the templates: stored instructions, one per kind (§4) ─────────────────────────────────────────────────────
-export interface Template { title: string; shape: string[]; parts: 'named' | 'numbered'; named?: string[] }
+/**
+ * 26-W §4a (decision 303) — A DRAFT IS THE INSTRUMENT, NOT NOTES ABOUT IT. On 1–2 Nov the code-text template produced, for #207, a list of
+ * what the Code should contain; Charlie: "it was just a set of proposals, not an actual draft code". Each template now asks for the thing
+ * itself, in the order a reader of that instrument expects, and opens with THE_INSTRUMENT_RULE. `parts`:
+ *   named    — sections with exactly the `named` headings, in that order
+ *   numbered — every part a numbered paragraph or rule
+ *   code     — the parts marked "introduction" and "principles" as named sections first, then every "duty" numbered
+ */
+export interface Template { title: string; shape: string[]; parts: 'named' | 'numbered' | 'code'; named?: string[] }
 export const TEMPLATES: Record<TemplateKind, Template> = {
   CODE_TEXT: {
-    title: 'Code text', parts: 'numbered',
+    title: 'Code text', parts: 'code',
     shape: [
-      'The wording of a statutory or management code: short numbered paragraphs, each ONE requirement.',
-      'Each paragraph says the duty, on whom it falls, and the consequence of not meeting it, in that order.',
-      'Use "must" for a requirement and "should" only for guidance the code marks as such; never mix both in one paragraph.',
-      'Where held text of the existing code is supplied, say in the paragraph which existing paragraph it replaces or adds to; never quote text that is not supplied.',
+      'The text of the code itself, as it would be published: an introduction, then the values or principles, then numbered duties. It is addressed to the people the code binds, in the second person.',
+      'Introduction (role "introduction"): who the code applies to, what it is for, where its authority comes from, in a few short paragraphs.',
+      'Values or principles (role "principles"): each value named and defined in one or two sentences.',
+      'Duties (role "duty"), one per part: written "You must …" or "You must not …", one requirement each. Draw every duty from a numbered or lettered clause of the Action details and end its text with that clause, as "(clause 8)" or "(clauses 12.b, E2)". A duty no clause supports is not written.',
+      'Where held text of an existing code is supplied under MODEL, follow its form, order, tone and vocabulary: the way it introduces itself, how it states values, how it phrases a duty. Never copy its duties or quote it; the duties come from the Action details.',
     ],
   },
   SPECIFICATION: {
-    title: 'Specification', parts: 'named', named: ['Purpose', 'Users', 'Records', 'Rules', 'Measures', 'What it must not do'],
+    title: 'Specification', parts: 'named', named: ['Purpose', 'Users', 'Records', 'Rules', 'Measures', 'Exclusions'],
     shape: [
-      'A specification for the platform or system the action calls for, in six sections with exactly these headings: Purpose; Users; Records; Rules; Measures; What it must not do.',
+      'The specification itself, as a builder would receive it, in six sections with exactly these headings: Purpose; Users; Records; Rules; Measures; Exclusions.',
       'Records: each record the system holds, with its fields, as a table (a line of column names, then one row per field, cells separated by " | ").',
-      'Rules: numbered, each one testable. Measures: how anyone would know it works, each with what is counted.',
-      'What it must not do: the limits, including what personal data it must not hold and what it must not decide on its own.',
+      'Rules: numbered, each one testable, written "The system must …". Measures: how anyone would know it works, each with what is counted.',
+      'Exclusions: what the system must not do or hold, including the personal data it must not hold and what it must not decide on its own.',
     ],
   },
   COSTING: {
-    title: 'Costing', parts: 'named', named: ['Range', 'Basis', 'Price year', 'One-off and recurring', 'What is not costed'],
+    title: 'Costing', parts: 'named', named: ['Cost lines', 'Basis', 'Price year', 'One-off and recurring', 'What is not costed'],
     shape: [
-      'A costing for the action in five sections with exactly these headings: Range; Basis; Price year; One-off and recurring; What is not costed.',
-      'Range: a low and a high figure in pounds, never a single point. Basis: every assumption that moves the figure, each stated as an assumption.',
-      'Use ONLY the cost lines supplied for figures. Where none are supplied, give no figure: say what would have to be costed and how, in the Green Book shape (options, costs over time, price year), and say plainly that no figure is given.',
-      'One-off and recurring: a table (a line of column names, then rows, cells separated by " | ") splitting what is spent once from what is spent each year.',
+      'The costing itself, in five sections with exactly these headings: Cost lines; Basis; Price year; One-off and recurring; What is not costed.',
+      'Cost lines: a table (a line of column names, then one row per line, cells separated by " | "): item, low, high, unit, once or each year. Use ONLY the cost lines supplied; where none are supplied the table has no rows and the section says no figure is given.',
+      'Basis: every assumption that moves a figure, each stated as an assumption. Where no figure is given, say what would have to be costed and how, in the Green Book shape (options, costs over time, price year).',
+      'One-off and recurring: what is spent once and what each year, from the cost lines only.',
     ],
   },
   OPERATING_TEXT: {
     title: 'Operating text', parts: 'numbered',
     shape: [
-      'Plain-English operating rules for an organisational action: numbered rules, each one thing a named role does, when, and what record it leaves.',
-      'Write for the people who will follow the rules, not for a lawyer: short sentences, no Latin, a term explained the first time it is used.',
+      'The operating rules themselves, as the people who follow them would read them: numbered rules, each one thing a named role does, when, and what record it leaves.',
+      'Write each rule as a rule ("The line manager records …", "Before work starts, the owner …"), in short sentences, a term explained the first time it is used.',
       'Say who is responsible for each rule by role, never by a person\'s name.',
     ],
   },
   BACKGROUND_NOTE: {
     title: 'Background note', parts: 'named',
     shape: [
-      'A background note: what the supplied sources say on the question this action answers, in short sections with headings of your choosing.',
+      'The background note itself: cited paragraphs setting out what the supplied sources say on the question this action answers, in short sections with headings of your choosing.',
       'Every paragraph cites at least one supplied source as [Ref: n]. Say what each source says, not what you think of it; where sources disagree, say so.',
       'End with a section headed "What the sources do not settle".',
     ],
   },
 }
 
+/** 303 — the line every template opens its rules with. */
+export const THE_INSTRUMENT_RULE = 'Write the document itself, in its final form, as if it were being published today. Do not write proposals, recommendations, options, notes about what the document should contain, or a list of what must be done: those are refused and not saved.'
+
 const COMMON_RULES = [
   'RULES',
+  `- ${THE_INSTRUMENT_RULE}`,
   '- Draft only what the action and its Action details say. Decisions already taken by the owner are in them: carry them out, do not reopen them.',
   '- Add no argument for or against the action, and nothing it does not do.',
   '- Cite a source as [Ref: n] ONLY where you draw on one, and ONLY a number that appears in the supplied sources or the Action details. Never invent a reference; never cite a document number (a "D." followed by numbers): it is an output, not a source.',
@@ -95,7 +108,9 @@ export function templateSystem(kind: TemplateKind): string {
     '',
     'THE DOCUMENT',
     ...t.shape.map((s) => `- ${s}`),
-    t.parts === 'numbered' ? '- Return each numbered paragraph or rule as one part: heading is a short title for it (no number), text is the paragraph.' : '- Return each section as one part, in order: heading is the section heading, text is its body.',
+    t.parts === 'numbered' ? '- Return each numbered paragraph or rule as one part: heading is a short title for it (no number), text is the paragraph.'
+      : t.parts === 'code' ? '- Return each section and each duty as one part, in order, with its role: the introduction, then the principles, then the duties. heading is a short title (no number), text is the body.'
+        : '- Return each section as one part, in order: heading is the section heading, text is its body.',
     '',
     ...COMMON_RULES,
   ].join('\n')
@@ -109,7 +124,120 @@ export const TEMPLATE_SCHEMA = {
     reason: { type: 'string' },
   },
 } as const
-export interface TemplateAnswer { parts: Array<{ heading: string; text: string }>; gaps: string; reason: string }
+/** 26-W — the code template's parts carry their role, so the introduction and principles are never numbered as duties. */
+export const CODE_SCHEMA = {
+  type: 'object', additionalProperties: false, required: ['parts', 'gaps', 'reason'],
+  properties: {
+    parts: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['role', 'heading', 'text'], properties: { role: { type: 'string', enum: ['introduction', 'principles', 'duty'] }, heading: { type: 'string' }, text: { type: 'string' } } } },
+    gaps: { type: 'string' },
+    reason: { type: 'string' },
+  },
+} as const
+export const schemaFor = (kind: TemplateKind) => (TEMPLATES[kind].parts === 'code' ? CODE_SCHEMA : TEMPLATE_SCHEMA)
+export interface TemplateAnswer { parts: Array<{ heading: string; text: string; role?: 'introduction' | 'principles' | 'duty' }>; gaps: string; reason: string }
+
+// ── 26-W §4a — the Action details' clause numbers, so every duty of a code can be traced to one ───────────────────────────────
+
+/** The numbered and lettered clauses of an Action details text: "8.", "12.b.", "E2." at the start of a line (after any bullet). Pure. */
+export function clauseNumbers(detail: string): Set<string> {
+  const out = new Set<string>()
+  for (const line of detail.split('\n')) {
+    // "8.", "8a." (#207 writes clause 8's parts so), "12.a.", "E2."
+    const m = line.match(/^\s*(?:[•\-*]\s*)?(\d{1,3}(?:\.?[a-z])?|[A-Z]\d{1,2})\.[\s\t]/)
+    if (m) out.add(m[1])
+  }
+  return out
+}
+/** The clauses one duty cites, from its closing "(clause 8)" / "(clauses 12.b, E2)". Pure. */
+export function citedClauses(text: string): string[] {
+  const out: string[] = []
+  for (const m of text.matchAll(/\(clauses?\s+([^)]*)\)/gi)) for (const c of m[1].split(/[,;]|\band\b/)) { const k = c.trim().replace(/\.$/, ''); if (k) out.push(k) }
+  return out
+}
+
+// ── 26-W §4b — A LIST OF PROPOSALS IS REFUSED, AND SAYS WHY ─────────────────────────────────────────────────────────────────
+
+/**
+ * A paragraph that proposes rather than states: it says what should, could or ought to happen, recommends, asks the reader to consider,
+ * or lists what must be done or what the document should contain. A code's "You must …" is a duty and does not match.
+ */
+const PROPOSING = [
+  /\b(?:should|ought to|could|might)\b/i,
+  /\b(?:recommend(?:s|ed|ation)?|propos(?:e|es|ed|al)|suggest(?:s|ed)?|consider(?:ing)?|we would|it is proposed)\b/i,
+  /\b(?:must be done|needs? to be (?:done|added|written|set out|drafted)|what (?:must|needs to) be done|action(?:s)? (?:to take|required))\b/i,
+  /\bthe (?:code|document|specification|text|draft) (?:should|must|will|would|needs to) (?:include|contain|cover|set out|address|say|state|list)\b/i,
+  /^(?:add|include|insert|create|draft|set out|introduce|establish|review|ensure that the code)\b/i,
+]
+/** A paragraph that opens by stating a duty ("You must …", "The owner must not …") is the instrument, whatever verbs follow ("you must
+ *  propose alternatives" is a duty to propose, not a proposal). Found on the first live run of 26-W: 2 of 31 duties were counted. */
+const STATES_A_DUTY = /^(?:if [^,]{1,120},\s*)?(?:you|the [a-z ]{2,40}?|each [a-z ]{2,30}?|every [a-z ]{2,30}?|an? [a-z ]{2,30}?)\s+(?:must|shall|may not)\b/i
+export const isProposing = (para: string) => !STATES_A_DUTY.test(para.trim()) && PROPOSING.some((r) => r.test(para.trim()))
+
+export interface ProposalShape { refused: boolean; paragraphs: number; proposing: number; duties?: number; dutiesWithMust?: number; example?: string; why?: string }
+const SHAPE_MIN_PARAGRAPHS = 3
+const SHAPE_MAX_PROPOSING = 0.4
+
+/** The paragraphs of a body that count: not a heading, not the caveat, not the gaps section, not a table row. Pure. */
+export function bodyParagraphs(body: string): string[] {
+  const out: string[] = []
+  let inGaps = false
+  for (const block of body.split(/\n\s*\n/)) {
+    for (const raw of block.split('\n')) {
+      const line = raw.trim()
+      if (!line) continue
+      if (/^#{1,6}\s/.test(line)) { inGaps = /gaps lex could not fill/i.test(line); continue }
+      if (inGaps || line === KIND_CAVEAT || line === NO_COMMENTARY_LINE || line.includes(' | ')) continue
+      out.push(line.replace(/^(?:[•\-*]|\(?[0-9a-z]{1,3}[.)])\s+/i, ''))
+    }
+  }
+  return out
+}
+
+/**
+ * Is this draft the instrument, or a list of proposals about it? Refused when, of at least three paragraphs, more than 40% propose; and,
+ * for code text, when fewer than half its numbered duties are written as duties ("must"). The reason is in words, with an example. Pure.
+ */
+export function proposalShape(kind: DocumentKind, body: string, opts: { wholeDocument?: boolean } = {}): ProposalShape {
+  const whole = opts.wholeDocument ?? true
+  const paras = bodyParagraphs(body)
+  const proposing = paras.filter(isProposing)
+  const shape: ProposalShape = { refused: false, paragraphs: paras.length, proposing: proposing.length }
+  const word = KIND_WORD[kind]
+  if (paras.length >= SHAPE_MIN_PARAGRAPHS && proposing.length / paras.length > SHAPE_MAX_PROPOSING) {
+    return { ...shape, refused: true, example: proposing[0].slice(0, 160), why: `it reads as a list of proposals, not a ${word}: ${proposing.length} of ${paras.length} paragraphs say what should or could be done rather than stating it (for example: “${proposing[0].slice(0, 120)}${proposing[0].length > 120 ? '…' : ''}”)` }
+  }
+  // a code's duty count is a property of the whole document; one section of it written from chat is checked paragraph by paragraph only
+  if (kind === 'CODE_TEXT' && whole) {
+    // the template's "## 1. Title" parts; a code written from chat may number its duties as lines ("1. You must …") under section headings
+    const headed = [...body.matchAll(/^## \d+\. .*\n([\s\S]*?)(?=\n## |\s*$)/gm)].map((m) => m[1].trim())
+    const duties = headed.length ? headed : body.split('\n').filter((l) => /^\s*\(?\d{1,3}[a-z]?[.)]\s+\S/.test(l)).map((l) => l.trim())
+    const withMust = duties.filter((d) => /\bmust\b/i.test(d))
+    Object.assign(shape, { duties: duties.length, dutiesWithMust: withMust.length })
+    if (!duties.length) return { ...shape, refused: true, why: 'it has no numbered duties, so it is not a code' }
+    if (withMust.length * 2 < duties.length) return { ...shape, refused: true, example: duties.find((d) => !/\bmust\b/i.test(d))?.slice(0, 160), why: `only ${withMust.length} of its ${duties.length} numbered paragraphs state a duty (“You must …”), so it is not a code` }
+  }
+  return shape
+}
+
+// ── 26-W §2c — WHERE LEX WRITES: an instrument's text goes in a document, never in the Action details ──────────────────────────
+
+/** Past this much instrument-like text in one turn, Lex is stopped from writing into the Action details and pointed at a document. */
+export const ACTION_DETAILS_INSTRUMENT_MAX = 3000
+
+/**
+ * Does this text read as an instrument (a code, a clause, rules) rather than the action's explanation? Counts the lines that are written
+ * as an instrument's provisions: "You must …", "(3) The Minister must …", "12. The system must …", a "DRAFT CODE" / "Code text" heading.
+ * Three such lines, or a heading that names a draft instrument, is enough. Pure.
+ */
+export function instrumentLike(text: string): { yes: boolean; provisions: number; heading: boolean } {
+  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean)
+  const provisions = lines.filter((l) => /^(?:\(?\d{1,3}[a-z]?[.)]\s+|\([a-z]\)\s+)?(?:you|the [a-z ]{2,40}?|each [a-z ]{2,30}?|every [a-z ]{2,30}?)\s+must(?:\s+not)?\b/i.test(l)).length
+  const heading = lines.some((l) => /^#{1,6}\s.*\b(?:draft (?:code|clause|bill|regulations?)|code text|operating text|specification)\b/i.test(l))
+  return { yes: provisions >= 3 || heading, provisions, heading }
+}
+
+/** The sentence the screen and Lex show when a draft is refused. */
+export const refusalSentence = (kind: DocumentKind, s: ProposalShape) => `Lex’s ${KIND_WORD[kind]} was not saved: ${s.why}. Ask Lex to draft it again, or write it yourself.`
 
 /** [Ref: n] and the pinpointed form the model also writes, [Ref: n, section 8.3 …] — both are checked; the second is set out as [Ref: n] (section 8.3 …). */
 const REF = /\[Ref:\s*(\d+)\s*(?:[,;]\s*([^\]]*))?\]/gi
@@ -128,7 +256,7 @@ export function templateBody(kind: TemplateKind, ans: TemplateAnswer, opts: { ha
     .replace(D_REF, () => { dNumbers++; return '' })
     .replace(/[ \t]+([.,;:])/g, '$1').replace(/[ \t]{2,}/g, ' ').trim()
   const t = TEMPLATES[kind]
-  const given = (ans.parts ?? []).map((p) => ({ heading: keep(p.heading ?? '').replace(/^#+\s*/, '').replace(/^\d+[.)]\s*/, ''), text: keep(p.text ?? '') })).filter((p) => p.heading || p.text)
+  const given = (ans.parts ?? []).map((p) => ({ role: p.role ?? 'duty', heading: keep(p.heading ?? '').replace(/^#+\s*/, '').replace(/^\d+[.)]\s*/, ''), text: keep(p.text ?? '') })).filter((p) => p.heading || p.text)
   const lines = [...caveatLines(opts.hasCommentary)]
   const missing: string[] = []
   if (t.parts === 'named' && t.named) {
@@ -137,6 +265,14 @@ export function templateBody(kind: TemplateKind, ans: TemplateAnswer, opts: { ha
       const text = byName.get(h.toLowerCase())
       if (!text) missing.push(h)
       lines.push('', `## ${h}`, text || 'Not written.')
+    }
+  } else if (t.parts === 'code') {
+    // 26-W — the introduction and principles as named sections, then the duties numbered from 1 (a part with no role counts as a duty)
+    let n = 0
+    for (const p of given) {
+      const duty = p.role === 'duty'
+      if (duty) n++
+      lines.push('', `## ${duty ? `${n}. ` : ''}${p.heading || (duty ? 'Untitled' : p.role === 'introduction' ? 'Introduction' : 'Values')}`, (duty ? p.text.replace(/^\(?\d+[.)]\s+/, '') : p.text) || 'Not written.')
     }
   } else {
     // a numbered part's number is in its heading; the model sometimes repeats it at the start of the text ("1. You must …"), so that goes
@@ -151,9 +287,14 @@ export function templateBody(kind: TemplateKind, ans: TemplateAnswer, opts: { ha
 // 24 Oct 2026 (UTC), claude-sonnet-5-5 at effort medium, scripts/measure-26v2b-kinds.ts — 452c5ade's actions on a scratch copy; cost lines
 // and cited sources read from 452c5ade read only. ⚠ No action on 452c5ade has cost lines, so every costing run is the "no figure" case.
 export const KIND_RUNS: Record<TemplateKind, Array<{ pence: number; seconds: number; on: string }>> = {
+  // 26-W §4d — RE-MEASURED with the 26-W template (the code itself, the whole Action details, the held text of the model code). The V2b
+  // figures (1.60p, 0.90p on #41 and #158, 24 Oct) were for the old template, which sent 8,000 characters of the details and no model;
+  // they are replaced, not averaged in. scripts/check-lex-26w.ts --live, claude-sonnet-5-5 at effort medium.
   CODE_TEXT: [
-    { pence: 1.60, seconds: 8.5, on: 'scratch copy of 452c5ade, 2026-10-24 (#41, under CS Code, with an Explanation)' },
-    { pence: 0.90, seconds: 7.8, on: 'scratch copy of 452c5ade, 2026-10-24 (#158, under CS Mgt Code, no Explanation)' },
+    { pence: 4.71, seconds: 23, on: 'scratch copy of 452c5ade, 2026-11-02 (#207, 26-W template, modelled on [Ref: 218])' },
+    { pence: 4.91, seconds: 23.3, on: 'scratch copy of 452c5ade, 2026-11-02 (#207, 26-W template, modelled on [Ref: 218])' },
+    { pence: 4.71, seconds: 21.6, on: 'scratch copy of 452c5ade, 2026-11-02 (#207, 26-W template, modelled on [Ref: 218])' },
+    { pence: 4.52, seconds: 20.6, on: 'scratch copy of 452c5ade, 2026-11-02 (#207, 26-W template, modelled on [Ref: 218])' },
   ],
   SPECIFICATION: [
     { pence: 2.10, seconds: 16.1, on: 'scratch copy of 452c5ade, 2026-10-24 (#89, under The platform, with an Explanation)' },

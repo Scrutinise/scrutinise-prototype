@@ -27,6 +27,12 @@ import type { ToolCtx, ToolDefinition, ToolResult, UiEffect } from './types'
 import { runSearch } from '@/lib/lex/search-gateway'
 import { effectsFor } from '@/lib/lex/statutory-graph'
 import { readSection } from '@/lib/lex/read-section'
+import { readSourceText, SOURCE_PART_CHARS } from '@/lib/lex/source-text'
+import * as DOCS from '@/lib/lex/action-documents'
+import * as DRAFT from '@/lib/lex/action-draft'
+import * as DD from '@/lib/lex/document-drafting'
+import * as REV from '@/lib/lex/document-review'
+import { draftExplanatoryNote } from '@/lib/lex/explanatory-note'
 import { statuteOnward } from './onward-tool'  // GRAPH 8 — one step of the onward reader
 import { describeEffects, effectsHeadline } from '@/lib/lex/effects-describe'
 import { webSearch } from '@/lib/lex/orientation/web-search'
@@ -40,7 +46,7 @@ import { DRAFTABLE_FIELDS, requestedDraftField } from '@/lib/lex/lex-draft'
 import { validateFieldValue } from '@/lib/lex/proposal-schema'
 import {
   offerRedraft, acceptField, skipField, reopenField, dismissProposal, setProposal,
-  addPolicyOption, addAction,
+  addPolicyOption, addAction, updateAction,
 } from '@/lib/lex/field-machine'
 import { applyFieldEdit, fieldEditFailed } from '@/lib/lex/field-edit-write'
 import { applyPolicyOp, rejectPolicyOption, syncPolicyField } from '@/lib/lex/guiding-policy-state'
@@ -236,21 +242,34 @@ const listSources: ToolDefinition = {
   },
 }
 
+// 26-W §4c (304) — the WHOLE held text of a filed source, in parts. It used to return at most 12 findings clipped to 700 characters, so on
+// 2 Nov Lex modelled a Code on six extracts of a Code it held in full. lib/lex/source-text.ts is the reader; the check imports it.
 const readSource: ToolDefinition = {
   name: 'read_source', category: 'see', tier: 'free',
-  description: 'Read the findings extracted from one filed source. The text comes back fenced as untrusted data.',
-  schema: z.object({ sourceId: z.string().describe('the 8-character id from the snapshot') }),
-  async run(ctx, { sourceId }) {
-    const m = resolvePrefix(await materials(ctx), sourceId)
-    if (!m) return fail(`no filed source on this idea matches "${sourceId}".`)
-    const findings = await prisma.evidenceItem.findMany({
-      where: { ideaId: ctx.ideaId, passKey: `${USER_MATERIAL_PASS_PREFIX}${m.id}` }, orderBy: { createdAt: 'asc' }, take: 12,
-      select: { title: true, body: true },
-    })
+  description: 'Read the WHOLE held text of one source on this idea — a filed document, a fetched page, pasted text, or a corpus section filed as a reference — by its [Ref: n] number (or a filed document’s 8-character id). '
+    + `A long text comes back in parts of about ${SOURCE_PART_CHARS.toLocaleString('en-GB')} characters: pass the nextFrom it gives as \`from\` to read on, until complete is true. `
+    + 'Read a source in full BEFORE modelling a draft on it or saying what it contains. `held` says what is held: "full text", "summary only" or "nothing" — never describe a summary as the text.',
+  schema: z.object({
+    ref: z.number().int().min(1).optional().describe('the [Ref: n] number'),
+    sourceId: z.string().optional().describe('or: a filed document’s 8-character id, as list_sources gives it'),
+    from: z.number().int().min(0).optional().describe('character offset to start from — the nextFrom of the previous call'),
+  }),
+  describe: (i) => { const x = i as { ref?: number; sourceId?: string; from?: number }; return `Read ${x.ref ? `[Ref: ${x.ref}]` : `source ${x.sourceId ?? '?'}`}${x.from ? ` from character ${x.from}` : ''}` },
+  async run(ctx, { ref, sourceId, from }) {
+    if (ref == null && !sourceId) return fail('say which source: its [Ref: n] number as ref, or a filed document’s id as sourceId.')
+    const r = await readSourceText(ctx.ideaId, { ref, materialId: sourceId }, { from })
+    if (!r.ok) return fail((r as { error: string }).error)
+    const s = r.data
+    if (s.corpusId) ctx.turn.corpusIds.add(s.corpusId)
+    const where = s.ref != null ? `[Ref: ${s.ref}]` : 'filed source'
     return {
       ok: true,
-      data: { id: short(m.id), label: m.label, url: m.url, status: m.status, findingCount: findings.length, failureReason: m.failureReason },
-      untrusted: untrustedBlock(ctx, `filed source ${short(m.id)}`, findings.map((f, i) => `${i + 1}. ${f.title}\n${clip(f.body, 700)}`).join('\n\n') || '(no findings were extracted from this source)'),
+      data: {
+        ref: s.ref, title: s.title, kind: s.kind, url: s.url, held: s.held, note: s.note,
+        characters: { from: s.from, to: s.to, total: s.total }, nextFrom: s.nextFrom, complete: s.complete,
+        say: s.held !== 'full text' ? s.note : s.complete && s.from === 0 ? `The whole text (${s.total.toLocaleString('en-GB')} characters).` : `Characters ${s.from.toLocaleString('en-GB')}–${s.to.toLocaleString('en-GB')} of ${s.total.toLocaleString('en-GB')}${s.complete ? ': the end.' : ` — read on with from=${s.nextFrom}.`}`,
+      },
+      ...(s.text ? { untrusted: untrustedBlock(ctx, `${where} ${clip(s.title, 80)}`, s.text) } : {}),
     }
   },
 }
@@ -640,6 +659,20 @@ const addActionTool: ToolDefinition = {
   },
 }
 
+/**
+ * 26-W §2c — WHERE LEX WRITES. An instrument's text goes in a document; the Action details hold the action's explanation, parts and reasoning.
+ * On 2 Nov Lex put 15,606 characters of a draft Code into #207's Action details. A turn that would put more than ~3,000 characters of
+ * instrument-like text there (counted across the turn) is stopped, and told where it goes instead.
+ */
+function instrumentGuard(ctx: ToolCtx, text: string): string | null {
+  const look = DD.instrumentLike(text)
+  if (!look.yes) return null
+  const total = (ctx.turn.instrumentChars ?? 0) + text.length
+  if (total > DD.ACTION_DETAILS_INSTRUMENT_MAX) return `Not saved: this reads as the text of an instrument (${look.heading ? 'its heading names a draft' : `${look.provisions} lines are written as provisions`}), and an instrument's text goes in a document, not the Action details. Write it with propose_document_text (a section per call) on the action's document of that kind; the Action details hold the action's explanation, parts and reasoning.`
+  ctx.turn.instrumentChars = total
+  return null
+}
+
 // 8,000 characters ≈ 2,000 tokens — far inside the 16,000-token ceiling, and above the 5,000-character replace check:lex-26s2 asserts.
 export const DETAIL_CALL_MAX = 8000
 const setActionDetailTool: ToolDefinition = {
@@ -657,9 +690,11 @@ const setActionDetailTool: ToolDefinition = {
     if (provFailed(prov)) return fail(prov.error)
     const { rows } = await actionsByNumbers(ctx, [input.action])
     if (!rows.length) return fail(`there is no live action #${input.action} on this idea.`)
+    const stop = instrumentGuard(ctx, input.detail)
+    if (stop) return fail(stop)
     const cur = await prisma.lexCoherentAction.findUnique({ where: { id: rows[0].id }, select: { commentary: true } })
     const next = input.mode === 'replace' || !cur?.commentary?.trim() ? input.detail.trim() : `${cur.commentary.trim()}\n\n${input.detail.trim()}`
-    await prisma.lexCoherentAction.update({ where: { id: rows[0].id }, data: { commentary: next } })
+    await updateAction(ctx.ideaId, rows[0].id, { commentary: next }) // 26-W 2b: the button's own function
     return { ok: true, data: { number: rows[0].number, detailLength: next.length, mode: input.mode, say: `Put it in the Detail of #${rows[0].number}.` } }
   },
 }
@@ -685,10 +720,12 @@ const addActionDetailsSection: ToolDefinition = {
     if (provFailed(prov)) return fail(prov.error)
     const { rows } = await actionsByNumbers(ctx, [input.action])
     if (!rows.length) return fail(`there is no live action #${input.action} on this idea.`)
-    const cur = await prisma.lexCoherentAction.findUnique({ where: { id: rows[0].id }, select: { commentary: true } })
     const section = `## ${input.heading.replace(/^#+\s*/, '').trim()}\n\n${input.text.trim()}`
+    const stop = instrumentGuard(ctx, section)
+    if (stop) return fail(stop)
+    const cur = await prisma.lexCoherentAction.findUnique({ where: { id: rows[0].id }, select: { commentary: true } })
     const next = cur?.commentary?.trim() ? `${cur.commentary.trim()}\n\n${section}` : section
-    await prisma.lexCoherentAction.update({ where: { id: rows[0].id }, data: { commentary: next } })
+    await updateAction(ctx.ideaId, rows[0].id, { commentary: next }) // 26-W 2b: the button's own function
     const sections = (next.match(/^## /gm) ?? []).length
     return { ok: true, data: { number: rows[0].number, heading: input.heading, sectionChars: section.length, actionDetailsLength: next.length, sectionsNow: sections, say: `Saved the section “${input.heading}” in the Action details of #${rows[0].number}.` } }
   },
@@ -1720,7 +1757,260 @@ const summariseSourceTool: ToolDefinition = {
 // ══ registry + execution ══════════════════════════════════════════════════════════════════════
 
 /** The tools the MODEL is offered. The `undo_*` / `restore_*` inverses are reachable only through a signed undo token. */
+// ══ 26-W §2b (decision 301) — DOCUMENTS: PARITY WITH THE SCREEN ══════════════════════════════════════════════════════════════
+// Before 26-W Lex had no tool for documents, so on 2 Nov it wrote a four-part draft Code into #207's Action details (moved out by 305).
+// Each tool below calls THE SAME server function as the button that does the same thing on the document view (inventory in
+// docs/LEX_26W_REPORT.md §2a); none writes through its own path. Lex's own words are a PROPOSAL beside the owner's versions. "Use it",
+// "Accept" and "Set aside" run only on the owner's instruction, through a confirm card (tier 'ask').
+
+/** "D.207.2", "D207.2", "207.2" → the document on this idea, or why not. */
+async function documentByD(ctx: ToolCtx, d: string): Promise<{ ok: true; id: string; actionId: string; kind: DOCS.DocumentKind; d: string } | { ok: false; error: string }> {
+  const m = String(d).trim().match(/^(?:D\.?\s*)?(\d+)\.(\d+)$/i)
+  if (!m) return { ok: false, error: `“${d}” is not a draft number; they read like D.207.1 (action 207, draft 1).` }
+  const a = await prisma.lexCoherentAction.findFirst({ where: { ideaId: ctx.ideaId, number: Number(m[1]) }, select: { id: true } })
+  if (!a) return { ok: false, error: `there is no action #${m[1]} on this idea, so no D.${m[1]}.${m[2]}.` }
+  const doc = await prisma.actionDocument.findFirst({ where: { ideaId: ctx.ideaId, actionId: a.id, number: Number(m[2]) }, select: { id: true, kind: true } })
+  if (!doc) return { ok: false, error: `#${m[1]} has no document ${m[2]}; list_documents shows what it has.` }
+  return { ok: true, id: doc.id, actionId: a.id, kind: doc.kind as DOCS.DocumentKind, d: `D.${m[1]}.${m[2]}` }
+}
+const DOC_PART_CHARS = 15_000
+
+const listDocumentsTool: ToolDefinition = {
+  name: 'list_documents', category: 'see', tier: 'free',
+  description: 'List the documents on the actions (the draft clause, code text, specification, costing, operating text, background note, explanatory note, collision report, schedule): each one\'s D-number, kind, status, current version, whether a proposal of yours is waiting, and what each action still needs. Give an action number for one action only.',
+  schema: z.object({ action: z.number().int().optional().describe('only this action, as in #207') }),
+  describe: (i) => ((i as { action?: number })?.action ? `List the documents of #${(i as { action: number }).action}` : 'List the documents'),
+  async run(ctx, { action }) {
+    const tree = await DOCS.documentTree(ctx.ideaId)
+    const rows = tree.headings.flatMap((h) => h.actions.map((a) => ({ heading: h.name, a }))).filter(({ a }) => action == null || a.number === action)
+    if (action != null && !rows.length) return fail(`there is no live action #${action} on this idea.`)
+    return {
+      ok: true,
+      data: rows.filter(({ a }) => action != null || a.documents.length || a.missing.length).slice(0, 80).map(({ heading, a }) => ({
+        action: a.number, heading, needs: a.needs.kinds.map((k) => DOCS.KIND_WORD[k]), needsWhy: a.needs.why, missing: a.missing.map((k) => DOCS.KIND_WORD[k]),
+        documents: a.documents.map((d) => ({ d: d.d, kind: DOCS.KIND_WORD[d.kind], title: d.title, status: d.status, acceptedAtVersion: d.acceptedV, currentVersion: d.current?.v ?? null, versions: d.versions, proposalWaiting: d.proposalWaiting, parts: d.parts.length, stale: d.stale })),
+      })),
+    }
+  },
+}
+
+const readDocumentTool: ToolDefinition = {
+  name: 'read_document', category: 'see', tier: 'free',
+  description: `Read a document by its D-number: its current version (default), your waiting proposal, or an earlier version. A long text comes back in parts of ${DOC_PART_CHARS.toLocaleString('en-GB')} characters — pass nextFrom as \`from\` to read on.`,
+  schema: z.object({ d: z.string().describe('the D-number, as in D.207.2'), which: z.enum(['current', 'proposal', 'version']).default('current'), v: z.number().int().min(1).optional().describe('with which "version": the version number'), from: z.number().int().min(0).optional() }),
+  describe: (i) => `Read ${(i as { d?: string })?.d ?? 'a document'}`,
+  async run(ctx, { d, which, v, from }) {
+    const doc = await documentByD(ctx, d)
+    if (!doc.ok) return fail((doc as { error: string }).error)
+    const o = await DOCS.openDocument(ctx.ideaId, doc.id)
+    if (!o.ok) return fail((o as { error: string }).error)
+    let body: string | null = null
+    let label = ''
+    if (which === 'proposal') {
+      const p = await prisma.actionDocumentVersion.findFirst({ where: { documentId: doc.id, role: 'PROPOSAL', answer: null }, orderBy: { v: 'desc' }, select: { body: true, v: true, reason: true } })
+      if (!p) return fail(`${doc.d} has no proposal of yours waiting.`)
+      body = p.body; label = `proposal ${p.v}${p.reason ? ` — ${clip(p.reason, 300)}` : ''}`
+    } else if (which === 'version' && v) {
+      const x = await prisma.actionDocumentVersion.findFirst({ where: { documentId: doc.id, role: 'VERSION', v }, select: { body: true } })
+      if (!x) return fail(`${doc.d} has no version ${v}; it has ${o.data.versions.length}.`)
+      body = x.body; label = `version ${v}`
+    } else {
+      // 26-W live run: a bare "no version yet" left Lex to guess the kind, and it called a code text a "draft clause". Name it.
+      if (!o.data.current) return fail(`${doc.d} (${DOCS.KIND_WORD[doc.kind]}, “${o.data.title}”) has no version yet${o.data.proposals.some((p) => !p.answer) ? ' — only a proposal of yours, waiting (read it with which:"proposal")' : ''}.`)
+      body = o.data.current.body; label = `version ${o.data.current.v} (current)`
+    }
+    const start = Math.min(from ?? 0, body.length)
+    const to = Math.min(body.length, start + DOC_PART_CHARS)
+    return {
+      ok: true,
+      data: {
+        d: doc.d, kind: DOCS.KIND_WORD[doc.kind], title: o.data.title, status: o.data.status, acceptedAtVersion: o.data.acceptedV, reading: label,
+        versions: o.data.versions.map((x) => ({ v: x.v, by: x.author, at: x.at, chars: x.chars })), proposals: o.data.proposals.map((p) => ({ v: p.v, answer: p.answer ?? 'waiting', at: p.at })),
+        characters: { from: start, to, total: body.length }, nextFrom: to < body.length ? to : undefined, complete: to >= body.length, text: body.slice(start, to),
+      },
+    }
+  },
+}
+
+/** 26-W §4b on Lex's own writing from chat: a section that is a list of proposals is refused, for an instrument's kinds. */
+const INSTRUMENT_KINDS: ReadonlySet<string> = new Set(['CODE_TEXT', 'SPECIFICATION', 'OPERATING_TEXT', 'COSTING'])
+const proposeDocumentText: ToolDefinition = {
+  name: 'propose_document_text', category: 'draft', tier: 'free',
+  description: 'Write the text of a document as YOUR PROPOSAL, a SECTION per call, each saved as it lands: the owner sees it in the document view beside their versions and uses, edits or sets it aside. '
+    + 'This — never the Action details — is where a code, a specification, operating rules or any instrument\'s text goes. mode "start" begins a new proposal (an older waiting one is set aside, kept); mode "append" adds the next section to the proposal you started. '
+    + 'Give the document by its D-number, or by action and kind to start one (it is made if the action has none of that kind). Write the instrument itself, never proposals about it. The draft clause is not written here: use redraft_document.',
+  schema: z.object({
+    d: z.string().optional().describe('the D-number, as in D.207.2'),
+    action: z.number().int().optional().describe('or: the action number, with kind'),
+    kind: z.enum(['CODE_TEXT', 'SPECIFICATION', 'COSTING', 'OPERATING_TEXT', 'BACKGROUND_NOTE', 'EXPLANATORY_NOTE']).optional(),
+    mode: z.enum(['start', 'append']),
+    heading: z.string().min(1).max(140).describe('the section heading, without "#"'),
+    text: z.string().min(1).max(ACTION_DETAILS_SECTION_MAX, `a section is at most ${ACTION_DETAILS_SECTION_MAX.toLocaleString('en-GB')} characters — split it`),
+    reason: z.string().max(600).optional().describe('with mode "start": one line on what this draft is and what it is modelled on'),
+    provenance: ProvenanceSchema,
+  }),
+  describe: (i) => { const x = i as { d?: string; action?: number; heading?: string }; return `Write “${x.heading ?? ''}” into ${x.d ?? `#${x.action ?? '?'}`}'s document as a proposal` },
+  async run(ctx, input) {
+    const prov = await checkProvenance(ctx, input.provenance)
+    if (provFailed(prov)) return fail(prov.error)
+    let doc: { id: string; actionId: string; kind: DOCS.DocumentKind; d: string } | null = null
+    if (input.d) { const r = await documentByD(ctx, input.d); if (!r.ok) return fail((r as { error: string }).error); doc = r as typeof doc }
+    let actionId = doc?.actionId ?? null
+    let kind = (doc?.kind ?? input.kind ?? null) as DOCS.DocumentKind | null
+    if (!doc) {
+      if (input.action == null || !input.kind) return fail('say which document: its D-number, or the action and the kind.')
+      const { rows } = await actionsByNumbers(ctx, [input.action])
+      if (!rows.length) return fail(`there is no live action #${input.action} on this idea.`)
+      actionId = rows[0].id
+    }
+    if (kind === 'DRAFT_CLAUSE') return fail('a draft clause is drafted from its drafting instruction so its law rows can be written; use redraft_document on it. Nothing was saved.')
+    if (kind && DOCS.GENERATED_KINDS.has(kind)) return fail(`a ${DOCS.KIND_WORD[kind]} is generated from the data, not written. Nothing was saved.`)
+    const section = `## ${input.heading.replace(/^#+\s*/, '').trim()}\n\n${input.text.trim()}`
+    if (kind && INSTRUMENT_KINDS.has(kind)) {
+      const shape = DD.proposalShape(kind, section, { wholeDocument: false })
+      if (shape.refused) return fail(`${DD.refusalSentence(kind, shape)} Nothing was saved.`)
+    }
+    if (input.mode === 'append') {
+      if (!doc) return fail('to add a section, name the document by its D-number (the one your "start" call returned).')
+      const r = await DOCS.appendToTextProposal(ctx.ideaId, doc.id, section)
+      if (!r.ok) return fail((r as { error: string }).error)
+      return { ok: true, data: { d: r.data.d, proposal: r.data.v, sectionChars: section.length, proposalChars: r.data.chars, say: `Added “${input.heading}” to my proposal on ${r.data.d}.` }, ui: [{ type: 'open_panel', panel: 'actions' }] }
+    }
+    const reason = `Lex’s draft from chat, ${new Date().toISOString().slice(0, 10)}${input.reason?.trim() ? `: ${clip(input.reason, 500)}` : ''}. Written from ${prov.line}.`
+    const w = await DOCS.writeTextProposal(ctx.ideaId, actionId!, kind!, doc ? (await prisma.actionDocument.findUnique({ where: { id: doc.id }, select: { title: true } }))!.title : (isTemplateKindName(kind!) ? DD.TEMPLATES[kind as DD.TemplateKind].title : 'Explanatory note'), { body: section, reason, pence: null, sources: [...section.matchAll(/\[Ref:\s*(\d+)/g)].map((m) => Number(m[1])), payload: { fromChat: true, turnStarted: new Date().toISOString() } })
+    return { ok: true, data: { d: w.d, proposal: w.v, sectionChars: section.length, say: `Started my proposal on ${w.d} with “${input.heading}”. Add the next section with mode "append" and d "${w.d}".` }, ui: [{ type: 'open_panel', panel: 'actions' }] }
+  },
+}
+const isTemplateKindName = (k: string) => DD.isTemplateKind(k)
+
+const draftDocumentTool: ToolDefinition = {
+  name: 'draft_document', category: 'run', tier: 'ask',
+  description: 'The same as the owner\'s "Draft what this action needs": drafts every document the action still needs (each a proposal of yours, saved as it finishes, in the background). Asks first, at the measured price.',
+  schema: z.object({ action: z.number().int() }),
+  describe: (i) => `Draft what #${(i as { action?: number })?.action ?? '?'} needs`,
+  async price(ctx, { action }) {
+    const { rows } = await actionsByNumbers(ctx, [action])
+    if (!rows.length) return null
+    const p = await DD.planFor(ctx.ideaId, { actionId: rows[0].id })
+    return p.ok ? { pence: p.data.pence, source: `measured: ${p.data.line}` } : null
+  },
+  async run(ctx, { action }) {
+    const { rows } = await actionsByNumbers(ctx, [action])
+    if (!rows.length) return fail(`there is no live action #${action} on this idea.`)
+    const r = await DD.queueDrafting(ctx.ideaId, { actionId: rows[0].id }, ctx.userId, ctx.agreedPence ?? 0)
+    if (!r.ok) return fail((r as { error: string }).error)
+    return { ok: true, data: { queued: r.data.queued, alreadyWaiting: r.data.alreadyWaiting, pence: r.data.pence, say: `Drafting ${r.data.queued} document${r.data.queued === 1 ? '' : 's'} for #${action}; each is saved as a proposal as it finishes.` }, ui: [{ type: 'open_panel', panel: 'actions' }] }
+  },
+}
+
+const redraftDocumentTool: ToolDefinition = {
+  name: 'redraft_document', category: 'run', tier: 'ask',
+  description: 'The same as "Ask Lex to redraft" on a document: a fresh draft of it, as a proposal beside its versions (an older waiting proposal is set aside, kept). For a code, specification, costing, operating text or background note you may pass the owner\'s instruction ("model it on [Ref: 218]", "shorter") and a model source. Asks first, at the measured price.',
+  schema: z.object({ d: z.string(), instruction: z.string().max(1500).optional(), modelRef: z.number().int().optional().describe('code text only: the [Ref: n] of the existing code to model the form on') }),
+  describe: (i) => `Redraft ${(i as { d?: string })?.d ?? 'the document'}${(i as { instruction?: string })?.instruction ? ` — “${clip((i as { instruction: string }).instruction, 100)}”` : ''}`,
+  async price(ctx, { d }) {
+    const doc = await documentByD(ctx, d)
+    if (!doc.ok) return null
+    const p = DD.kindPrice(doc.kind)
+    return { pence: p.pence, source: p.n ? `measured, mean of n=${p.n} real runs` : 'not measured' }
+  },
+  async run(ctx, { d, instruction, modelRef }) {
+    const doc = await documentByD(ctx, d)
+    if (!doc.ok) return fail((doc as { error: string }).error)
+    const r = doc.kind === 'DRAFT_CLAUSE' ? await DRAFT.draftWithLex(ctx.ideaId, doc.actionId, ctx.userId)
+      : doc.kind === 'EXPLANATORY_NOTE' ? await draftExplanatoryNote(ctx.ideaId, doc.actionId, ctx.userId)
+        : DD.isTemplateKind(doc.kind) ? await DD.draftKindDocument(ctx.ideaId, doc.actionId, doc.kind, ctx.userId, { instruction, modelRef })
+          : { ok: false as const, error: `a ${DOCS.KIND_WORD[doc.kind]} is generated from the data, not drafted.` }
+    if (!r.ok) return fail((r as { error: string }).error)
+    const note = instruction && !DD.isTemplateKind(doc.kind) ? ' (this kind’s drafter takes no instruction: it drafts from the action and its Action details)' : ''
+    return { ok: true, data: { d: doc.d, say: `My redraft of ${doc.d} is waiting as a proposal${note}.`, pence: (r as { data: { pence?: number | null } }).data.pence ?? null }, ui: [{ type: 'open_panel', panel: 'actions' }] }
+  },
+}
+
+const useProposalTool: ToolDefinition = {
+  name: 'use_proposal', category: 'change', tier: 'ask',
+  description: 'ONLY when the owner tells you to: the same as "Use it" on a document (for a draft clause, "Take all" then save) — your waiting proposal becomes the document\'s next version. Asks first.',
+  schema: z.object({ d: z.string() }),
+  describe: (i) => `Use Lex’s proposal as the next version of ${(i as { d?: string })?.d ?? 'the document'}`,
+  async run(ctx, { d }) {
+    const doc = await documentByD(ctx, d)
+    if (!doc.ok) return fail((doc as { error: string }).error)
+    const r = doc.kind === 'DRAFT_CLAUSE' ? await DRAFT.acceptProposal(ctx.ideaId, doc.actionId) : await DOCS.useTextProposal(ctx.ideaId, doc.id)
+    if (!r.ok) return fail((r as { error: string }).error)
+    const v = 'version' in r.data ? (r.data as { version: number }).version : (r.data as { v: number }).v
+    return { ok: true, data: { d: doc.d, version: v, say: `${doc.d} is now at version ${v}, from my proposal.` } }
+  },
+}
+
+const acceptDocumentTool: ToolDefinition = {
+  name: 'accept_document', category: 'change', tier: 'ask',
+  description: 'ONLY when the owner tells you to: the same as "Accept version N" — the owner accepts the document as it stands. Asks first.',
+  schema: z.object({ d: z.string() }),
+  describe: (i) => `Accept ${(i as { d?: string })?.d ?? 'the document'} as it stands`,
+  async run(ctx, { d }) {
+    const doc = await documentByD(ctx, d)
+    if (!doc.ok) return fail((doc as { error: string }).error)
+    const r = await DOCS.acceptDocument(ctx.ideaId, doc.id)
+    if (!r.ok) return fail((r as { error: string }).error)
+    return { ok: true, data: { d: r.data.d, acceptedVersion: r.data.v, say: `${r.data.d} is accepted at version ${r.data.v}.` } }
+  },
+}
+
+const setAsideProposalTool: ToolDefinition = {
+  name: 'set_aside_proposal', category: 'change', tier: 'ask',
+  description: 'ONLY when the owner tells you to: the same as "Set aside" on your waiting proposal — it is kept, listed in Versions, and no longer waiting. Asks first.',
+  schema: z.object({ d: z.string() }),
+  describe: (i) => `Set aside Lex’s proposal on ${(i as { d?: string })?.d ?? 'the document'}`,
+  async run(ctx, { d }) {
+    const doc = await documentByD(ctx, d)
+    if (!doc.ok) return fail((doc as { error: string }).error)
+    const r = doc.kind === 'DRAFT_CLAUSE' ? await DRAFT.dismissProposal(ctx.ideaId, doc.actionId) : await DOCS.setAsideTextProposal(ctx.ideaId, doc.id)
+    if (!r.ok) return fail((r as { error: string }).error)
+    return { ok: true, data: { d: doc.d, say: `My proposal on ${doc.d} is set aside (kept in Versions).` } }
+  },
+}
+
+const reviewDocumentTool: ToolDefinition = {
+  name: 'review_document', category: 'run', tier: 'ask',
+  description: 'The same as "Review this document" on a document: the five review passes read its current version and raise issues on its parts. Asks first, at the measured price.',
+  schema: z.object({ d: z.string(), again: z.boolean().default(false).describe('all five passes again, even those that read this version') }),
+  describe: (i) => `Review ${(i as { d?: string })?.d ?? 'the document'}${(i as { again?: boolean })?.again ? ' again (all five passes)' : ''}`,
+  async price(ctx, { d, again }) {
+    const doc = await documentByD(ctx, d)
+    if (!doc.ok) return null
+    const p = await REV.reviewPlan(ctx.ideaId, doc.id)
+    if (!p.ok) return null
+    return { pence: again ? p.data.price.again.pence : p.data.price.pence, source: `measured, n=${p.data.price.n}` }
+  },
+  async run(ctx, { d, again }) {
+    const doc = await documentByD(ctx, d)
+    if (!doc.ok) return fail((doc as { error: string }).error)
+    const r = await REV.reviewDocument(ctx.ideaId, doc.id, { userId: ctx.userId, again })
+    if (!r.ok) return fail((r as { error: string }).error)
+    return { ok: true, data: { d: r.data.d, version: r.data.v, pence: r.data.pence, passes: r.data.outcomes } }
+  },
+}
+
+const generateDocumentTool: ToolDefinition = {
+  // 'run', not 'change': it builds a GENERATED version from data (free, no model call), never over anyone's words — like run_comparison,
+  // it runs without a card, as the screen's "Generate again" does. check:lex-26p: every 'change' tool asks first.
+  name: 'generate_collision_report', category: 'run', tier: 'free',
+  description: 'The same as "Generate" on a collision report: builds (or refreshes) the action\'s collision report from its clause and the effects data. Free; no model call.',
+  schema: z.object({ action: z.number().int() }),
+  describe: (i) => `Generate the collision report of #${(i as { action?: number })?.action ?? '?'}`,
+  async run(ctx, { action }) {
+    const { rows } = await actionsByNumbers(ctx, [action])
+    if (!rows.length) return fail(`there is no live action #${action} on this idea.`)
+    const r = await DOCS.generateCollisionReport(ctx.ideaId, rows[0].id)
+    if (!r.ok) return fail((r as { error: string }).error)
+    return { ok: true, data: { d: r.data.d, version: r.data.v, rows: r.data.rows, unchanged: r.data.unchanged } }
+  },
+}
+
+export const DOCUMENT_TOOLS: ToolDefinition[] = [listDocumentsTool, readDocumentTool, proposeDocumentText, draftDocumentTool, redraftDocumentTool, useProposalTool, acceptDocumentTool, setAsideProposalTool, reviewDocumentTool, generateDocumentTool]
+
 export const MODEL_TOOLS: ToolDefinition[] = [
+  ...DOCUMENT_TOOLS,
   readField, listCandidates, listActionsTool, listSources, readSource, listChallenges, readReplyTool, searchConversationTool, listNotes,
   searchCorpus, searchWeb, searchMyDocuments, statuteEffects, statuteOnward, readSectionTool,
   fileUrl, fileText,
@@ -1761,7 +2051,7 @@ export async function execute(def: ToolDefinition, ctx: ToolCtx, rawInput: unkno
   const input = parsed.data
 
   if (needsButton(def) && !ctx.confirmed) {
-    const price = def.runKind ? RUN_PRICES[def.runKind] : null
+    const price = def.runKind ? RUN_PRICES[def.runKind] : def.price ? await def.price(ctx, input) : null
     const summary = def.describe ? def.describe(input) : `Run ${def.name}.`
     const token = signConfirm({ ideaId: ctx.ideaId, userId: ctx.userId, tool: def.name, input, pence: price?.pence ?? null })
     return {
