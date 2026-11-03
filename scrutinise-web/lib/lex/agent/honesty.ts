@@ -32,7 +32,7 @@ export interface ToolOutcome {
 }
 
 export interface Violation {
-  kind: 'unconfirmed-claim' | 'pending-claimed-done' | 'overstated-total' | 'unknown-control' | 'phantom-pending' | 'dnumber-as-authority'
+  kind: 'unconfirmed-claim' | 'pending-claimed-done' | 'overstated-total' | 'unknown-control' | 'phantom-pending' | 'dnumber-as-authority' | 'bare-not-found'
   sentence: string
   detail: string
 }
@@ -58,21 +58,21 @@ const CLAIMS: Array<{ re: RegExp; tools: string[]; label: string }> = [
   { re: /\b(?:I(?:[’']ve| have)?|we(?:[’']ve| have)?)\s+(?:\w+ly\s+|now\s+)*(?:filed|attached|uploaded|logged)\b|\b(?:has|have|was|were|is|are)\s+(?:\w+ly\s+|now\s+|been\s+|also\s+|just\s+)*(?:filed|attached|uploaded)\b|\bfiled (?:it|them|that|both|all|the)\b/i,
     tools: ['file_url', 'file_text'], label: 'filed something' },
   { re: /\b(?:I(?:[’']ve| have)?|we(?:[’']ve| have)?)\s+(?:\w+ly\s+|now\s+)*added\b|\b(?:has|have|was|were|is|are)\s+(?:\w+ly\s+|now\s+|been\s+|also\s+|just\s+)*added\b|\badded (?:it|them|that|this|both|all|the|a|an)\b|\bnow (?:added|in your sources|on your list)\b/i,
-    tools: ['file_url', 'file_text', 'add_candidate', 'add_action', 'set_action_detail', 'add_action_details_section', 'set_action_slot', 'write_note', 'draft_field'], label: 'added something' },
+    tools: ['file_url', 'file_text', 'add_candidate', 'add_action', 'set_action_detail', 'add_action_details_section', 'propose_document_text', 'redraft_document', 'set_action_slot', 'write_note', 'draft_field'], label: 'added something' },
   { re: /\byou(?:[’']ll| will| should| can| ought to)\s+(?:now\s+)?(?:see|find)\b[^.?!]{0,60}\b(?:added|there|in (?:your|the)|appear|listed|filed|saved)\b/i,
-    tools: ['file_url', 'file_text', 'add_candidate', 'add_action', 'set_action_detail', 'add_action_details_section', 'set_action_slot', 'write_note', 'draft_field'], label: 'said the user will now see it' },
+    tools: ['file_url', 'file_text', 'add_candidate', 'add_action', 'set_action_detail', 'add_action_details_section', 'propose_document_text', 'redraft_document', 'set_action_slot', 'write_note', 'draft_field'], label: 'said the user will now see it' },
   { re: /\b(?:I(?:[’']ve| have)?)\s+(?:now\s+)?(?:drafted|written|put (?:that|it|this) in|put together|composed|proposed)\b|\b(?:has|have|was|were) (?:now |been )?drafted\b|\bdrafted (?:it|that|this|a|the)\b/i,
-    tools: ['draft_field', 'add_candidate', 'add_action', 'set_action_detail', 'add_action_details_section', 'set_action_slot', 'write_note'], label: 'drafted something' },
+    tools: ['draft_field', 'add_candidate', 'add_action', 'set_action_detail', 'add_action_details_section', 'propose_document_text', 'redraft_document', 'set_action_slot', 'write_note'], label: 'drafted something' },
   // ⚠ "noted" is deliberately NOT here: "I've noted your point" is conversation, not a write, and flagging it
   // would repair correct replies. A claim of SAVING is what a write has to back.
   { re: /\b(?:I(?:[’']ve| have)?)\s+(?:now\s+)?(?:saved|recorded|stored)\b|\b(?:has|have|was|were|is|are) (?:now |been )?(?:saved|recorded|stored)\b/i,
-    tools: ['file_url', 'file_text', 'draft_field', 'add_candidate', 'add_action', 'set_action_detail', 'add_action_details_section', 'set_action_slot', 'write_note'], label: 'saved something' },
+    tools: ['file_url', 'file_text', 'draft_field', 'add_candidate', 'add_action', 'set_action_detail', 'add_action_details_section', 'propose_document_text', 'redraft_document', 'set_action_slot', 'write_note'], label: 'saved something' },
   { re: /\b(?:I(?:[’']ve| have)?)\s+(?:now\s+)?(?:edited|changed|updated|rewritten|rewrote|reworded|replaced|amended)\b|\b(?:has|have|was|were) (?:now |been )?(?:edited|changed|updated|rewritten|reworded|replaced|amended)\b/i,
     tools: ['edit_field'], label: 'edited something' },
   { re: /\b(?:I(?:[’']ve| have)?)\s+(?:now\s+)?(?:accepted|approved|confirmed|chosen|settled)\b|\b(?:has|have|was|were) (?:now |been )?(?:accepted|approved|chosen|settled)\b/i,
-    tools: ['accept_field', 'choose_policy'], label: 'accepted something' },
+    tools: ['accept_field', 'choose_policy', 'accept_document', 'use_proposal'], label: 'accepted something' },
   { re: /\b(?:I(?:[’']ve| have)?)\s+(?:now\s+)?(?:ruled out|rejected|restored|merged|moved|archived|dismissed|removed|skipped|reopened|un-?chosen)\b|\b(?:has|have|was|were) (?:now |been )?(?:ruled out|rejected|restored|merged|moved|archived|dismissed|removed|skipped|reopened)\b/i,
-    tools: ['rule_out_candidate', 'restore_candidate', 'merge_candidates', 'move_to_actions', 'archive_source', 'dismiss_proposal', 'skip_field', 'reopen_field', 'unchoose_policy'], label: 'changed or removed something' },
+    tools: ['rule_out_candidate', 'restore_candidate', 'merge_candidates', 'move_to_actions', 'archive_source', 'dismiss_proposal', 'skip_field', 'reopen_field', 'unchoose_policy', 'set_aside_proposal'], label: 'changed or removed something' },
   { re: /\b(?:I(?:[’']ve| have)?)\s+(?:now\s+)?(?:run|ran|started|kicked off|completed)\b[^.?!]{0,50}\b(?:comparison|gap check|consolidation|build|re-?run|check|pass)\b|\bthe (?:comparison|gap check|consolidation|re-?run) (?:has |have )?(?:been )?(?:run|completed|finished|done)\b/i,
     tools: ['run_comparison', 'run_gap_check', 'run_consolidation', 'rerun_build'], label: 'ran a process' },
   { re: /\b(?:I(?:[’']ve| have)?)\s+(?:now\s+)?(?:searched|looked (?:up|through|in)|checked the (?:corpus|web))\b|\bmy search (?:found|returned|turned up)\b|\b(?:the )?search (?:found|returned|turned up)\b/i,
@@ -128,6 +128,43 @@ const D_AS_CITATION = /\[\s*(?:Ref:\s*)?D\.\d+\.\d+/i
 const D_AUTHORITY = /\b(?:under|according to|pursuant to|by virtue of|as (?:required|provided|set out|established|stated|laid down) (?:by|in)|on the authority of)\s+D\.\d+\.\d+|\bD\.\d+\.\d+(?:\.\d+)?(?:,[^.?!]{0,40})?\s+(?:requires?|provides?|establishes|mandates?|obliges?|proves?|confirms?|shows? that|demonstrates?|is (?:the )?(?:law|authority|evidence))\b/i
 export function citesDNumberAsAuthority(sentence: string): boolean {
   return D_NUMBER.test(sentence) && (D_AS_CITATION.test(sentence) || D_AUTHORITY.test(sentence))
+}
+
+/**
+ * 297 (CCh-Lex 2 Nov (1) B) — A "NOT FOUND" IS AN ANSWER ONLY WITH ITS WORKING.
+ * Lex told Charlie the corpus held "only a summary" of the Civil Service Code and stopped there. True (the corpus holds the gov.uk
+ * page's 42-word summary, never the Code's text) — and useless: it did not say what it had searched, what the summary was, or that
+ * the full text is published on gov.uk and can be filed with "+ Add research". A reply that says something could not be found must
+ * carry all four parts:
+ *   1 · what was searched     2 · what was found, and why that falls short     3 · "+ Add research"     4 · where the official text is published
+ * ⚠ Checked per REPLY, not per sentence: the parts are usually in the sentences around the "not found", not in it.
+ */
+const NOT_FOUND = /\b(?:could(?:n[’']t| not)|can(?:[’']t|not)|did(?:n[’']t| not)|unable to|failed to)\s+(?:find|locate|trace|turn up)\b|\b(?:is|are|was|were)(?:n[’']t| not)\s+(?:in|held in|available in|anywhere in)\s+(?:the |our |your |my )?(?:corpus|search results)\b|\bthe corpus (?:does(?:n[’']t| not) (?:hold|have|contain|include|carry)|holds only|has only|only (?:holds|has|carries))\b|\bno (?:results|matches|hits)\b|\bnot found\b|\bfound nothing\b|\bnothing (?:came up|turned up|matched)\b/i
+const NF_SEARCHED = /\b(?:I )?(?:searched|search(?:ing)? for|looked (?:in|through|for|at)|checked|queried|ran (?:a |the )?search)\b|\bsearch(?:es)? (?:for|on)\b/i
+const NF_FOUND = /\b(?:found|the closest|holds?|returned|turned up|only (?:a|the|an)|what (?:there is|the corpus has)|nothing (?:at all|else|on))\b/i
+const NF_ADD = /\+?\s*Add research\b/i
+const NF_PUBLISHED = /https?:\/\/\S+|\b(?:gov\.uk|legislation\.gov\.uk|parliament\.uk|publishing\.service\.gov\.uk|nao\.org\.uk)\b|\bpublished (?:at|on|by|in)\b|\b(?:do(?:n[’']t| not)|cannot|can[’']t) (?:know|say|tell) where\b[^.?!]{0,60}\bpublished\b|\b(?:is|are) not published\b|\bofficial (?:text|version|copy)\b[^.?!]{0,80}\b(?:at|on|from)\b/i
+
+/** The platform's own sentence when a retried reply still has a bare "not found" (the last resort; it names a real control). */
+export const NOT_FOUND_FILL = 'To fill the gap: if you have the document, or know where its official text is published, add it with “+ Add research” — the “+” just above the box you type in — and I will read it.'
+
+// Only a "not found" about MATERIAL — law, evidence, a document's text — needs the four parts. One about the screen, a field, the chat
+// or the controls ("I have not found your second paragraph in either field") is a different answer, and so is the user's own ("you couldn't find it").
+// Measured 2 Nov over all 702 stored Lex replies: without these two filters 4 of 9 flagged replies were of that kind.
+const NF_MATERIAL = /\b(?:corpus|search(?:es|ed)?|sources?|legislation|law|statute|act|research|documents?|text|report|evidence|data|figures?|statistics|web|code|guidance|publication)\b/i
+const NF_NOT_MATERIAL = /\b(?:chat|conversation|field|controls?|screen|button|panel|tab|menu)\b|\byou (?:could(?:n[’']t| not)|can(?:[’']t|not)|did(?:n[’']t| not))\b/i
+
+/** The parts a "not found" reply is missing, in the brief's words. Null when the reply has no "not found" about material, or has all four. Exported for the check. */
+export function notFoundGaps(reply: string): { sentence: string; missing: string[] } | null {
+  const sentence = splitSentences(reply).find((s) => !/\?\s*$/.test(s) && NOT_FOUND.test(s) && NF_MATERIAL.test(s) && !NF_NOT_MATERIAL.test(s))
+  if (!sentence) return null
+  const others = reply.replace(sentence, ' ')
+  const missing: string[] = []
+  if (!NF_SEARCHED.test(reply)) missing.push('what you searched (the words or collection you searched)')
+  if (!NF_FOUND.test(others)) missing.push('what you did find, and why it falls short')
+  if (!NF_ADD.test(reply)) missing.push('how to fill the gap: the user can file the document or its web address with “+ Add research”')
+  if (!NF_PUBLISHED.test(reply)) missing.push('where the official text is published (its web address, if you know it — say so if you do not)')
+  return missing.length ? { sentence, missing } : null
 }
 
 export interface CheckInput {
@@ -195,6 +232,14 @@ export function checkReply(input: CheckInput): Violation[] {
       })
     }
   }
+
+  const gaps = notFoundGaps(reply)
+  if (gaps) {
+    violations.push({
+      kind: 'bare-not-found', sentence: gaps.sentence,
+      detail: `says something could not be found but does not say ${gaps.missing.join('; ')} — a bare “not found” is not an answer; keep the sentence and add what is missing`,
+    })
+  }
   return violations
 }
 
@@ -214,7 +259,13 @@ export function correctionMessage(violations: Violation[]): string {
  * ⚠ It never rewrites a claim into a different claim — it removes it and adds a platform sentence.
  */
 export function stripViolations(reply: string, violations: Violation[], outcomes: ToolOutcome[]): string {
-  const kept = removeSentences(reply, violations.map((v) => v.sentence))
+  // 297: a "not found" is TRUE — it is incomplete, not false — so it is kept, and the platform adds the way to fill the gap.
+  const kept0 = removeSentences(reply, violations.filter((v) => v.kind !== 'bare-not-found').map((v) => v.sentence))
+  const kept = violations.some((v) => v.kind === 'bare-not-found') && !NF_ADD.test(kept0)
+    ? `${kept0}\n\n${NOT_FOUND_FILL}`
+    : kept0
+  // Nothing was REMOVED when the only fault was an incomplete "not found", so the removal note would be untrue; the fill sentence stands alone.
+  if (violations.every((v) => v.kind === 'bare-not-found')) return kept
   const anyChange = outcomes.some((o) => o.ok && (o.category === 'file' || o.category === 'draft' || o.category === 'change' || o.category === 'run'))
   const pending = outcomes.some((o) => o.pending)
   const note = pending

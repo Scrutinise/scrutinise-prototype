@@ -1,5 +1,78 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-03 04:05 UTC - LEX 3 Nov (1): 26-W-a and 2 Nov (1)'s 297 committed together; the 10 regression checks run; 300 ("Drafts") held until 26-X
+
+*Desktop session. CCh-Lex 3 Nov (1): one session per tree from now on — the 26-W session and the Ingest session both acknowledged and make no
+edits or git actions here.*
+
+- **Shared files, one commit naming both streams:** `lib/lex/agent/honesty.ts`, `lib/lex/agent/system-prompt.ts`, `package.json` and this file
+  carry LEX 26-W-a (301–306: document tools, the Action-details guard, `read_source` in full, the step limit) and 2 Nov (1) B / 297 (a bare
+  "not found" is refused). Then 26-W-a's own files by path (see its entry below at 00:24 and `docs/LEX_26W_REPORT.md`).
+- **300 held until 26-X** (Charlie, 3 Nov): `cf46a10` was live; the 14 code files it changed are back to their wording before it ("Documents",
+  "Review this document", "Add a document", a bare "D.38.1", the pack's paragraph 14 "Documents"), and 26-W's Lex wording follows the screen
+  again ("DOCUMENTS ON ACTIONS…", `review_document` quotes "Review this document", `check:lex-26w`'s parity table). Identifiers never changed.
+- **Regression, run one at a time (16 run, all green):** lex-26v2b 47/47 (26-W's two fixture fixes: "Cost lines", `/cites? no source/`) ·
+  lex-26v1b 79/79 · lex-26v2c 44/44 · lex-26v2d 62/62 · lex-287 7/7 (B NOT RUN, --live) · lex-chat-real-reply 7/7 (B NOT RUN, --live) ·
+  prompt-examples 26 illustrations, 0 in stored output · llm-guards 9/9 · client-boundary clean (control fired) · check:scripts clean ·
+  lex-26w 66/66 (H NOT RUN, --live) · lex-26v 66/66 · lex-26u 67/67 · lex-26p 116/116 (B NOT RUN) · lex-297 18/18 · lex-298-299 50/50 · web tsc clean.
+
+## 2026-11-02 01:00 UTC - LEX 2 Nov (1): 297 a bare "not found" is refused · 298 Add research simplified · 299 Sources list filters, sort, search, possible duplicates · "Output Reports"
+
+*Desktop session. CCh-Lex 2 Nov (1), which replaces 1 Nov (1) and (2). Report: `docs/LEX_2NOV_REPORT.md`. Ran beside LEX 26-W in the same tree.*
+
+- **A (checked, nothing changed):** `govuk-core-docs:government/publications/civil-service-code:1` is the gov.uk **publication page's 42-word
+  summary**, not the Code; the Code's full text (`…/the-civil-service-code`) is in no corpus. The Management Code likewise: a 54-word summary
+  (`quangos-govuk:…/civil-servants-terms-and-conditions:1`), no full text. On 452c5ade both full texts ARE sources since 1 Nov:
+  **[Ref: 217]** Management Code (Charlie's file, 192,110 chars, 23:42) and **[Ref: 218]** the Code's gov.uk page (12,446 chars incl. the page's
+  cookie banner, 23:47). [Ref: 189] is the corpus summary; [Ref: 88] is a 2011 Lords answer *about* the Code.
+- **B / 297:** the honesty check refuses a "not found" about material unless the reply says what was searched, what was found and why it falls
+  short, "+ Add research", and where the official text is published (`bare-not-found`, `notFoundGaps`); the last resort keeps the true sentence
+  and adds the platform's fill line. Prompt rule in `SYSTEM_PREFIX`. Over all 702 stored replies it flags 5 (all material; 4 screen/field
+  "not found"s excluded). `check:lex-297` 18/18 (cold read of Reply 64). ⚠ **Ships in the joint commit of `honesty.ts` / `system-prompt.ts` /
+  `package.json` / this file with LEX 26-W**, made by 26-W once its own files are committed — not in 4f5c25d.
+- **C:** "Outputs" (right-hand panel) and "Reports" (idea page tab) → **"Output Reports"**. **300** (agreed by Charlie 2 Nov): what we write for
+  actions are **"Drafts"** — Overview sub-tab "Drafts", the Deepening's "Drafts on actions", the record's "Drafts" section, "Draft D.38.1",
+  "Review this draft", "Add a draft", the printed pack's paragraph 14 "Drafts" (same number); "Documents" now means uploaded files only. Words
+  only. Shipped **cf46a10**; **verified live**: `/api/health` reported `cf46a109550e` at 01:20:36 UTC and the bundles carry "Drafts on actions",
+  "Review this draft", "Find in the drafts", "Needs no draft" (control absent). Lex's own wording was reworded by 26-W in its files and ships
+  with its commit.
+- **D / 298:** 1 what · 2 Title (from the file's name / page title) · "Already added as [Ref: N] — add this as a further note to it?" (held-text
+  sha-256 or web address) · the drop-down replaced by "This is a further note on a source I've already added" (type-to-search picker) · Quote,
+  Comment, More behind "+". Note storage unchanged; the registry row's `sourceType` is "pasted text" for pasted text.
+- **E / 299:** `SourceBrowser` (Sources list AND 298's picker) on `lib/lex/source-list.ts`: pills Documents · Web pages · Found by Lex; all kinds
+  with counts, Bears on #N, Possible duplicates; sort Ref / date added / A–Z; search titles and held text (`?detail=1`, `?q=`). 452c5ade: 218
+  sources = Documents 7 · Web 5 · Pasted 0 · Own 2 · Found by Lex 204. **Possible duplicates: 21 groups, 62 sources, none merged** — the true
+  copies are **12+13** (competency framework page + its PDF) and **189+217** (Management Code summary + full text); the rest are one report or
+  debate cited by several passages (full table in the report). Hansard is matched only within a sitting; sections of one Act never group.
+- **Checks run:** check:lex-297 18/18 · check:lex-298-299 50/50 (7 controls, 0 dead, 0 not run) · check:lex-26s2-browser 33/33 (its field-order
+  assertion now asserts 298's order) · check:add-research-md-browser 13/13 · check:lex-26r 120/120 (2 NOT RUN, need --live) · check:lex-25m 12 ·
+  25n 98 · 25z 50 · check:lex-chat-real-reply 7/7 (B NOT RUN, needs --live) · check:prompt-examples clean · check:client-boundary clean · tsc clean
+  · clean-room tsc of 4f5c25d (worktree + `npm ci` in scrutinise-web only) PASS. ⚠ **check:lex-26p red: "every Change tool asks first — 
+  generate_collision_report"** — a tool that exists only in 26-W's uncommitted `tools.ts`; not this work's.
+- **Shipped:** 4f5c25d (D, E, C — this session's own files only, by explicit path; clean-room `npm ci` + tsc of the commit PASS). **Verified
+  live:** `/api/health` reported `4f5c25def7b4` at 01:07:35 UTC, and the live JS bundles carry "This is a further note on a source I…",
+  "Already added as [Ref: ", "Possible duplicates", "+ Add your comment", "Search titles and held text" and "Output Reports"; a random control
+  string is absent. ⚠ Charlie's own screen is the last check (§20) — not yet done.
+
+## 2026-11-02 00:24 UTC - LEX 26-W §5 (305): #207's draft Code moved out of Action details into D.207.2, as Lex's proposal
+
+*Laptop session. BRIEF_26W §5, done first. Data only, no code shipped. Report: `docs/LEX_26W_REPORT.md` §5.*
+
+- **What was there:** at 00:08 UTC Lex wrote four sections ("DRAFT CODE FOR APPROVAL (1 of 4)" … "(4 of 4)") into #207's Action details with
+  `add_action_details_section`, taking them from 17,946 to 33,554 characters. #207 had **no FieldRevision at all**, so the 00:07 state was
+  rebuilt from the tool's own append rule (`current.trim() + "\n\n" + section`) and proved by the tool log: the first call reported
+  `actionDetailsLength` 21,068 = 17,946 + 2 + 3,120; the sections are 3,120 + 4,330 + 4,753 + 3,397; before + "\n\n" + sections rebuilds the
+  field exactly; `updatedAt` was still 00:08:51.765, so nothing touched it after Lex.
+- ⚠ **Departure from §5's letter: the proposal is on D.207.2 (a new CODE TEXT document), not D.207.1.** D.207.1 is the DRAFT_CLAUSE document
+  (the enabling clause; its one proposal was dismissed by Charlie at 23:27 on 1 Nov). A clause document's proposal is read as a drafting
+  instruction and "Use it" refuses it, so Code text there could not be used, edited or set aside. D.207.2 was written through
+  `writeTextProposal`, the writer "Draft what this action needs" uses. D.207.1 is untouched.
+- **Written (`scripts/apply-26w-305.ts`, guarded, dry run first):** D.207.2 "Code text", PROPOSAL 1 by LEX, **15,606 characters**, the four
+  sections verbatim and in order, reason "Lex's draft from chat, 2 Nov …", no price (no model call). Then one FieldRevision
+  (`LEX_26W_305_MOVED_TO_DOCUMENT`: previous 33,554, new 17,946) and Action details restored to **17,946**.
+- **Read back cold (plain reads, against the pre-write snapshot): 7/7** — Action details equal the 00:07 content and hold no draft-Code
+  heading; the proposal equals the sections byte for byte; D.207.1 still one row, DISMISSED; the revision holds both states.
+
 ## 2026-10-29 02:49 UTC - LEX: 294 the documents stop printing Mechanism and Target; LexMessage in entity_list_v5; lex-26s2-structure's red explained and fixed
 
 *Laptop session. CCh-Lex 29 Oct (1). Report: `docs/LEX_28OCT_REPORT.md` § "29 Oct (1)".*
