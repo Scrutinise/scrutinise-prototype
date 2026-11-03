@@ -1,5 +1,15 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-03 13:12 UTC - LEX 26-W-b follow-up: Lex may remove a cost line (Charlie, 3 Nov)
+
+Charlie's decision on the question 26-W-b flagged: `remove_cost_line` (the same as "delete" on a cost line in step 3) is now OFFERED to Lex,
+asked first like every Change tool. It is the one delete Lex may make.
+- `lib/lex/agent/tools.ts`: `removeCostLineTool` added to INVENTORY_TOOLS (it was defined, parity-checked, and unoffered).
+- `lib/lex/agent/system-prompt.ts` rule 4: "You cannot delete, with one exception: remove_cost_line …" (it said Lex cannot delete at all, which would now be false).
+- `lib/lex/field-guide.ts`: the "delete" cost-line entry names remove_cost_line instead of "none".
+- `scripts/check-lex-26p.ts` A3: "no tool is a delete" now allows exactly remove_cost_line, and only while it is a Change tool that asks first; control: a second delete tool is caught.
+Checks: web tsc and check:scripts clean; lex-26p 117/117 (B not run, --live); lex-26w-b 60/60 (5 controls, 0 dead; remove_cost_line asks first and stores the same as the button); lex-26w 66/66 (H not run); lex-297 18/18; prompt-examples 26 illustrations, 0 in stored output.
+
 ## 2026-11-03 12:24 UTC - LEX 26-W-b (302): the field guide, the remaining inventory tools, and the label tables the screen and the guide share
 
 *Desktop session 38, on Charlie's instruction ("re-run check:lex-26w-b, then the regression suite, then commit and push"). 26-W-b was built

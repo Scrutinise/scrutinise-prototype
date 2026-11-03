@@ -115,7 +115,7 @@ const RECORD: Record<keyof typeof RECORD_UI, GuideText> = {
   perYear: { purpose: 'Marks a cost as recurring each year.', fits: 'As one-off.', tool: 'add_cost_line' },
   noCostOpen: { purpose: 'Answers the cost question with "no cost", and why.', fits: 'Not a blank: the checklist, the row and the Proposal all say it in the owner\'s words.', tool: 'set_no_cost_reason' },
   noCostBecause: { purpose: 'The owner\'s reason the action costs nothing.', fits: 'As "no cost, because…".', limits: 'At least 3 characters; the box shows its limit.', tool: 'set_no_cost_reason' },
-  deleteCostLine: { purpose: 'Removes a cost line.', fits: 'The ranges are untouched.', tool: none('it deletes the line, and Lex is offered no tool that deletes; the owner presses it') },
+  deleteCostLine: { purpose: 'Removes a cost line.', fits: 'The ranges are untouched.', tool: 'remove_cost_line (asks first; the one delete Lex may make)' },
   orderTitle: { purpose: 'Heads the Order section: what this action must come after, and why.', fits: 'The whole order is worked out from these links; an impossible circle is refused, naming both actions.', tool: 'set_action_order' },
   orderNone: { purpose: 'Says nothing has to come before this action.', fits: 'As the Order section.', tool: 'set_action_order' },
   mustComeAfter: { purpose: 'Records that this action must come after another, with an optional reason.', fits: 'As the Order section.', limits: 'The reason is up to 300 characters.', tool: 'set_action_order' },

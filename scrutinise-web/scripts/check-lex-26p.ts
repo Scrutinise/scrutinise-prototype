@@ -149,7 +149,13 @@ function partA() {
   control('a tool that took ideaId would be caught (must be FALSE)', () => ['ideaId'].every((k) => !/^(idea|user|owner|creator)(id)?$/i.test(k)))
   const change = MODEL_TOOLS.filter((t) => t.category === 'change')
   ok(`every Change tool asks first (${change.length})`, change.every((t) => needsButton(t)), change.filter((t) => !needsButton(t)).map((t) => t.name).join(', '))
-  ok('no tool is a delete', !MODEL_TOOLS.some((t) => /delete|remove|destroy|drop|purge/i.test(t.name)))
+  // One named exception (Charlie, 3 Nov): remove_cost_line, the same as "delete" on a cost line — offered only while it asks first.
+  const DELETE_ALLOWED = new Set(['remove_cost_line'])
+  const isDelete = (n: string) => /delete|remove|destroy|drop|purge/i.test(n)
+  const deletes = MODEL_TOOLS.filter((t) => isDelete(t.name))
+  ok('no tool is a delete, except remove_cost_line', deletes.every((t) => DELETE_ALLOWED.has(t.name)), deletes.filter((t) => !DELETE_ALLOWED.has(t.name)).map((t) => t.name).join(', '))
+  ok('remove_cost_line is offered and asks first', deletes.some((t) => t.name === 'remove_cost_line') && deletes.filter((t) => DELETE_ALLOWED.has(t.name)).every((t) => t.category === 'change' && needsButton(t)))
+  control('a second delete tool would be caught (must be FALSE)', () => ['remove_cost_line', 'delete_action'].filter(isDelete).every((n) => DELETE_ALLOWED.has(n)))
   ok('the inverse tools (unmerge, restore_*) are NOT offered to the model — only reachable by a signed undo', !isModelTool('unmerge_candidates') && !isModelTool('restore_proposal') && !isModelTool('undo_sort_candidate') && !isModelTool('restore_source') && !!toolByName('unmerge_candidates'))
   ok('the comparison (~2p) runs without a button; gap check, consolidation and re-run do not (§3: asks first above ~5p)',
     !runNeedsConfirmation('run_comparison') && runNeedsConfirmation('run_gap_check') && runNeedsConfirmation('run_consolidation') && runNeedsConfirmation('rerun_build'))

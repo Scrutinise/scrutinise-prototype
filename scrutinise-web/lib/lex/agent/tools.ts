@@ -2382,9 +2382,9 @@ export const INVENTORY_TOOLS: ToolDefinition[] = [
   explainFieldTool, listFieldsTool,
   setActionTitleTool, answerTitleProposalsTool, editStatementTool, keepConflictTool, answerFacetProposalsTool, setActionConditionsTool,
   renameHeadingTool, hideHeadingTool, setHeadingKindTool, answerKindTool, retireHeadingTool,
-  // remove_cost_line is NOT here: the button deletes the row, and no tool the model is offered is a delete (check:lex-26p A1).
-  // It is kept below, reachable by name (its parity with the button is checked), and not offered.
-  answerSlotProposalTool, setActionCostsTool, setNoCostTool, addCostLineTool,
+  // remove_cost_line IS offered (Charlie, 3 Nov): the one delete the model may make — a cost line, asked first like its button.
+  // check:lex-26p A3 names it as the only exception to "no tool is a delete", and only while it asks first.
+  answerSlotProposalTool, setActionCostsTool, setNoCostTool, addCostLineTool, removeCostLineTool,
   changeConditionTool, answerConditionProposalTool,
   addActionCommentTool, replyToCommentTool, summariseThreadTool,
   setDocumentNeedsTool, notebookNotesTool,
