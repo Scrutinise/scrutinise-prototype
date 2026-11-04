@@ -1014,6 +1014,12 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-11-03 13:16 UTC (desktop): Lex may remove a cost line — 06e58ec, live (/api/health).** See CHANGE_LOG 13:12.
+- Charlie decided: `remove_cost_line` is OFFERED, asked first — the one named exception to "no tool deletes" (lex-26p A3 allows exactly it).
+- **Still open:** the 3 Nov (2) §20 live Lex turn — ask "what is the Order section for?" (expect explain_field's answer), and try
+  removing a cost line (expect a confirm card). Server-side only, so the commit hash is the proof until then.
+- 307 waits for Charlie's approval in the Ingest session (worktree C:\ing307). Labels held until BRIEF_26X (stage renames, 300, Brief on every draft).
+
 **▶ 2026-11-03 ~12:30 UTC (desktop, session 38): 26-W-b (302) committed — the field guide and the remaining inventory tools.**
 See CHANGE_LOG 12:24 and `docs/LEX_26W_REPORT.md` § 3.
 - **Guide:** `lib/lex/field-guide.ts` over `lib/lex/screen-labels.ts`; `explain_field` / `list_fields`. A label renamed in `screen-labels.ts`
