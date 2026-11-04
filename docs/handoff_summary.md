@@ -1014,6 +1014,18 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-11-04 (laptop): 26-X part X1 + addendum 1 (321–323) — the lifecycle, the checklist, Organising / Drafting, the strip, the lock,
+the three-row toolbar, "Add action", the counted title button.** See CHANGE_LOG (26-X X1) and `docs/LEX_26X_REPORT.md` § X1.
+- **Schema:** `Idea.deepenOverride jsonb` (`prisma/lex_26x_deepen_override.sql`, applied to Neon first). "Needs no draft" reuses
+  `record.documentNeeds` mode `nothing` — no column. ⚠ For CCh: `entity_list_v5.md` does not list `Idea.deepenOverride`.
+- **Decided by me, say if wrong:** Add action's title limit is the existing 110 (`LIMITS.actionTitle`), not the addendum's 120; "Defined ◐"
+  now means *begun but not all three*; Lex's `add_action` takes an EXISTING heading's name only.
+- **Fixed on the way:** an action opened on Drafting under a hidden heading was not drawn (deep links / flips / Add action under a hidden
+  heading opened nothing). `acceptTitleProposals` used to overwrite a title the owner had written; it no longer does.
+- **Next:** 325 (costing-params: the per-year discount schedule, Green Book re-anchors) between X1's push and X2 — ⚠ another stream has
+  uncommitted edits in `lib/lex/costing-params.ts` and `docs/cost-benchmarks-seed-v1.json` (CBA-1, by the file names); agree before touching.
+  Then X2 (the Brief on every draft), X3.
+
 **▶ 2026-11-03 13:16 UTC (desktop): Lex may remove a cost line — 06e58ec, live (/api/health).** See CHANGE_LOG 13:12.
 - Charlie decided: `remove_cost_line` is OFFERED, asked first — the one named exception to "no tool deletes" (lex-26p A3 allows exactly it).
 - **Still open:** the 3 Nov (2) §20 live Lex turn — ask "what is the Order section for?" (expect explain_field's answer), and try

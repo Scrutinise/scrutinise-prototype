@@ -26,6 +26,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { LIFECYCLE_STAGE_WORD } from '@/lib/lex/screen-labels'
 
 /** How often to ask while a run is in flight. The same cadence the build page polls at. */
 const POLL_MS = 4000
@@ -172,7 +173,7 @@ export default function RerunBanner({ ideaId, surface = 'strategy' }: {
             {clean
               ? `Version ${finished.version} is ready — all ${finished.passesTotal} passes ran. `
                 + (surface === 'build'
-                  ? 'The First Draft is where it landed.'
+                  ? `${LIFECYCLE_STAGE_WORD.development} is where it landed.`
                   : 'The panel beside you was drawn before it finished.')
               : `${finished.passesComplete} of ${finished.passesTotal} passes ran. What they produced is real; the rest did not happen.`}
           </p>

@@ -15,6 +15,8 @@
 import {
   COMMON_UI, RECORD_UI, DOCUMENT_UI, DOCUMENT_TAB_WORD, INSTRUCTION_FIELD, INSTRUCTION_EDITOR, TOUCH_BLOCK, TREE_UI, TREE_FILTER_WORD,
   PROVISION_COLUMNS, PRECEDENT_COLUMNS, STATEMENT_LABEL, COMMENTARY_LABEL, FACET_WORD, WORKSPACE_UI, WORKSPACE_VIEW_WORD, NOTEBOOK_UI, shown,
+  LIFECYCLE_STAGE_WORD, LIFECYCLE_UI, PROGRESS_WORD, CHECKLIST_WORD, PAGE_UI, DRAFTING_FILTER_WORD, DEEPENING_LOCK_UI,
+  ORGANISING_TOOLBAR_UI, ADD_ACTION_UI,
 } from './screen-labels'
 import { EXTENTS } from './action-draft-pure'
 import { RECORD_SECTIONS, type RecordSection } from './record-layout-pure'
@@ -203,25 +205,25 @@ const WORKSPACE: Record<keyof typeof WORKSPACE_UI, GuideText> = {
   retireCondition: { purpose: 'Retires a condition: kept, listed under "Retired (kept)", and Bring back restores it.', fits: 'Nothing is deleted.', tool: 'change_condition (op: retire)' },
   addCondition: { purpose: 'Adds a condition, in the owner\'s words, to the end of the list.', fits: 'As the conditions list.', limits: 'The box shows its limit.', tool: 'change_condition (op: add)' },
   addItToList: { purpose: 'Takes Lex\'s proposed condition into the owner\'s list.', fits: 'Lex\'s proposals change nothing until added; Dismiss sets one aside.', tool: 'answer_condition_proposal' },
-  group: { purpose: 'Chooses how the list is grouped: by heading, cause, avenue or policy test.', fits: 'Step 1 offers all four; later steps group by heading.', tool: none('a view of the list; group_actions gives Lex the same grouping') },
+  group: { purpose: 'Chooses how the list is grouped: by heading, cause, avenue or policy test.', fits: 'Organising offers all four; Drafting groups by heading.', tool: none('a view of the list; group_actions gives Lex the same grouping') },
   hideAllHeadings: { purpose: 'Hides every heading\'s actions from the list at once.', fits: 'Hidden is not ruled out: the actions stay live and counted.', tool: 'hide_action_heading (one heading at a time)' },
   showAllHeadings: { purpose: 'Shows every hidden heading\'s actions again.', fits: 'As "Hide all headings".', tool: 'hide_action_heading (hidden: false)' },
-  titleTheseForMe: { purpose: 'Lex proposes a short title for every action that has none.', fits: 'Each proposal waits on its row until the owner uses it, edits it or says no.', tool: 'title_actions, answer_title_proposals' },
-  classifyWithLex: { purpose: 'Lex proposes this step\'s classification for every action that has none: causes, avenue and conditions in step 1, the seven answers in step 2.', fits: 'Proposals sit beside the owner\'s answers; nothing changes until accepted.', tool: 'classify_actions, propose_action_slots' },
-  dismissThemAll: { purpose: 'Sets aside every answer Lex has proposed in step 2, on every action.', fits: 'The owner\'s own answers are not touched.', tool: 'answer_slot_proposal (accept: false)' },
+  titleThemWithLex: { purpose: 'Lex proposes a short title for every action that has no title and no proposal waiting; it reads "N actions have no title · Title them with Lex", with its price.', fits: 'On the Organising toolbar\'s "Lex and checks" row. Pressing it also shows the Untitled filter, so the N are on screen. Each proposal waits on its row under the statement ("Lex proposes: … — Accept · Not this"); a title the owner wrote is never replaced.', limits: 'The price is measured from past runs (shown on the button).', tool: 'title_actions, answer_title_proposals' },
+  classifyWithLex: { purpose: 'Lex proposes the causes, avenue and conditions for every action that has none (on the Organising page).', fits: 'Proposals sit beside the owner\'s answers; nothing changes until accepted. The seven "Who, how and against" answers are proposed per action, from its record ("Ask Lex").', tool: 'classify_actions, propose_action_slots' },
+  dismissThemAll: { purpose: 'Sets aside every answer Lex has proposed for "Who, how and against", on every action.', fits: 'The owner\'s own answers are not touched. (Its button left the screen with the step tabs, 26-X; Lex can still do it.)', tool: 'answer_slot_proposal (accept: false)' },
   findDuplicates: { purpose: 'Lists pairs of actions that may say the same thing.', fits: 'Free: no model is called. Merging a pair is the owner\'s choice, and can be undone.', tool: 'find_action_duplicates, merge_actions' },
   askFourSet: { purpose: 'Four models each answer the same six questions about every action, and a judge writes one digest keeping each model\'s position named.', fits: 'Asks first at the price shown; nothing is added to the list.', tool: none('a priced run started from the screen') },
   printAll: { purpose: 'A printable Actions Pack (Word and PDF) of every action, every paragraph numbered.', fits: 'No model is called.', tool: none('a file the screen builds') },
-  addHeading: { purpose: 'Adds a heading, named by the owner, to group actions under.', fits: 'Headings group actions into instruments; each can be given a kind.', limits: 'The box shows its limit.', tool: 'create_action_heading' },
+  addHeading: { purpose: 'Adds a heading, named by the owner, to group actions under.', fits: 'A primary button: pressing it opens the name box. Headings group actions into instruments; each can be given a kind.', limits: 'The box shows its limit.', tool: 'create_action_heading' },
   suggestHeadings: { purpose: 'Lex reads the Guiding Policy and suggests headings.', fits: 'The owner adds the ones they want.', tool: 'suggest_action_headings' },
-  listFilter: { purpose: 'Filters the list: all actions, Unreviewed, Conflicts, or Not yet specific.', fits: 'Unreviewed means Lex has a proposal waiting or the action was never tested against the policy.', tool: 'list_actions' },
+  listFilter: { purpose: 'Filters the list: all actions, Unreviewed, Conflicts, or Untitled.', fits: 'Unreviewed means Lex has a proposal waiting or the action was never tested against the policy.', tool: 'list_actions' },
   askFourHeading: { purpose: 'As "Ask four models about the whole set", for the actions under one heading.', fits: 'Asks first at the price shown.', tool: none('a priced run started from the screen') },
   printHeading: { purpose: 'Prints one heading\'s actions as an Actions Pack (Word and PDF).', fits: 'As "Print all".', tool: none('a file the screen builds') },
   draftAllLegislative: { purpose: 'Drafts a drafting instruction for every legislative action under the heading that has none.', fits: 'Asks first with the total price; each draft is stored as it completes, so stopping loses nothing.', tool: 'draft_document (one action at a time)' },
   draftThem: { purpose: 'Confirms "Draft all legislative actions" at the price shown.', fits: 'As "Draft all legislative actions".', tool: 'draft_document' },
   stopAfterThis: { purpose: 'Stops "Draft all legislative actions" once the current draft finishes.', fits: 'Drafts already done are kept; pressing again carries on with the rest.', tool: none('a control on a run the screen is making') },
-  reorder: { purpose: 'The drag handle: drag a row, or use the arrow keys, to reorder the list.', fits: 'The list order is the owner\'s; step 4\'s derived order comes from "Must come after".', tool: none('a screen control') },
-  openRecord: { purpose: 'Opens the action\'s record beneath its row.', fits: 'The record shows this step\'s sections.', tool: 'get_action' },
+  reorder: { purpose: 'The drag handle (Organising): drag a row, or use the arrow keys, to reorder the list.', fits: 'The list order is the owner\'s; the order of what must come first comes from "Must come after" on each record.', tool: none('a screen control') },
+  openRecord: { purpose: 'Opens the action\'s record beneath its row, on the Drafting page.', fits: 'The record opens with its drafts at the top; every other section is closed under one line saying where it stands.', tool: 'get_action' },
   closeRecord: { purpose: 'Closes the opened record.', fits: 'Nothing is saved or lost by closing.', tool: none('a screen control') },
   ruledOutBlock: { purpose: 'The actions ruled out or merged away, each with its reason.', fits: 'Kept: nothing here is deleted; Restore brings one back.', tool: 'restore_actions, unmerge_actions' },
   laterPhaseBlock: { purpose: 'The actions parked for a later phase.', fits: 'Still the owner\'s and still in the proposal; Bring back returns one to the list.', tool: 'park_actions, restore_actions' },
@@ -231,13 +233,49 @@ const WORKSPACE: Record<keyof typeof WORKSPACE_UI, GuideText> = {
   restore: { purpose: 'Brings a ruled-out or merged-away action back into the list.', fits: 'A merged-away part comes out of the action it was tucked into.', tool: 'restore_actions' },
 }
 const VIEWS: Record<keyof typeof WORKSPACE_VIEW_WORD, GuideText> = {
-  list: { purpose: 'The actions as a list, grouped.', fits: 'Every step has it.', tool: 'list_actions' },
-  board: { purpose: 'The actions as cards on a board by heading, with possible duplicates outlined.', fits: 'A step-1 view; its writes are the list\'s own.', tool: 'list_actions, find_action_duplicates' },
-  coverage: { purpose: 'Causes against actions: which causes each action attacks, and any cause no action attacks.', fits: 'A step-1 view.', tool: 'causes_without_action' },
-  conditions: { purpose: 'Conditions against actions: a condition no action delivers reads NO ACTION.', fits: 'A step-1 view.', tool: 'conditions_coverage' },
-  order: { purpose: 'The order the actions must happen in, worked out from what each must come after.', fits: 'A step-4 view.', tool: 'set_action_order' },
-  who: { purpose: 'The incentive map: who implements each action, their incentive now and what changes it.', fits: 'A step-2 view.', tool: 'set_action_slot' },
+  list: { purpose: 'The actions as a list, grouped.', fits: 'Both pages have it; Drafting has only the list.', tool: 'list_actions' },
+  board: { purpose: 'The actions as cards on a board by heading, with possible duplicates outlined.', fits: 'An Organising view; its writes are the list\'s own.', tool: 'list_actions, find_action_duplicates' },
+  coverage: { purpose: 'Causes against actions: which causes each action attacks, and any cause no action attacks.', fits: 'An Organising view.', tool: 'causes_without_action' },
+  conditions: { purpose: 'Conditions against actions: a condition no action delivers reads NO ACTION.', fits: 'An Organising view.', tool: 'conditions_coverage' },
+  order: { purpose: 'The order the actions must happen in, worked out from what each must come after.', fits: 'Its tab left with the step tabs (26-X); each record\'s Order section still sets what it must come after.', tool: 'set_action_order' },
+  who: { purpose: 'The incentive map: who implements each action, their incentive now and what changes it.', fits: 'Its tab left with the step tabs (26-X); it becomes the Deepening\'s "Who delivers and who resists" view (315).', tool: 'set_action_slot' },
 }
+// 26-X addendum 321–323 — the three toolbar rows, the controls moved onto them, and the "Add action" form
+const ROW = { view: 'On the Organising toolbar\'s "View" row, where nothing changes data.', add: 'On the Organising toolbar\'s "Add" row.', lex: 'On the Organising toolbar\'s "Lex and checks" row.' }
+const TOOLBAR_G: Record<keyof typeof ORGANISING_TOOLBAR_UI, GuideText> = {
+  rowView: { purpose: 'The first toolbar row: how the list is shown — List, Board, Coverage grid, Conditions, Group, Hide all / Show all headings, the find box and Show.', fits: ROW.view, tool: none('a row of screen controls') },
+  rowAdd: { purpose: 'The second toolbar row: Add action, Add heading, Suggest headings from my guiding policy, Import actions from a document.', fits: ROW.add, tool: none('a row of screen controls') },
+  rowLex: { purpose: 'The third toolbar row: the runs Lex makes and the checks — titles, classify, duplicates, re-sort, the policy test, four models, gaps, print.', fits: `${ROW.lex} Each that spends says its price first.`, tool: none('a row of screen controls') },
+  addAction: { purpose: 'Adds an action of the owner\'s own: a title (required), a statement, and a heading (or Unsorted).', fits: `${ROW.add} It is the page\'s primary button. The action lands first under its heading, opened on Drafting, numbered, with its strip at "Defined ◐" until it has a statement and a heading with a kind.`, limits: 'The title and the statement show their limits.', tool: 'add_action' },
+  importActions: { purpose: 'Reads a document you have filed and shows a table of every idea in it for you to change and confirm before anything is added.', fits: `${ROW.add} (Moved from above the list.)`, tool: 'import_actions_from_source' },
+  checkForGaps: { purpose: 'Looks for actions the guiding policy cannot do without: a free read first, then four models; each suggestion says what fails without it.', fits: `${ROW.lex} (Moved from its own box above the list.) Nothing is an action until you accept it.`, tool: 'run_gap_check' },
+  reSort: { purpose: 'Lex sorts the actions into instrument headings, one batch at a time; Undo puts them back.', fits: ROW.lex, tool: none('a run started from the screen') },
+  testAgainstPolicy: { purpose: 'Tests the actions that read "? Not tested" against the Guiding Policy; the count is how many are untested.', fits: `${ROW.lex} The price of the run is shown when it finishes.`, tool: 'test_actions_against_policy' },
+  untitledFilter: { purpose: 'A filter on the list: the actions with no title.', fits: 'In "Show" on the View row; "Title them with Lex" turns it on, so its count is the rows shown.', tool: 'list_actions' },
+  acceptAllTitles: { purpose: 'Accepts every title Lex has proposed and that waits on its row.', fits: `${ROW.lex} Beside "Title them with Lex", only while proposals wait. A row the owner has titled since keeps the owner\'s title.`, tool: 'answer_title_proposals' },
+  lexProposes: { purpose: 'Lex\'s proposed title for the action, under its statement on the row.', fits: 'A proposal: the action keeps no title until it is accepted.', tool: 'answer_title_proposals' },
+  acceptTitle: { purpose: 'Takes Lex\'s proposed title as the action\'s title.', fits: 'On the row\'s proposal. A title the owner wrote is never replaced.', tool: 'answer_title_proposals' },
+  notThisTitle: { purpose: 'Sets aside Lex\'s proposed title; the action stays untitled.', fits: 'On the row\'s proposal.', tool: 'answer_title_proposals' },
+}
+const ADD_ACTION_G: Record<keyof typeof ADD_ACTION_UI, GuideText> = {
+  dialogTitle: { purpose: 'The "Add action" form: title, statement and heading.', fits: 'Save adds the action as the owner\'s (source USER); Cancel adds nothing.', tool: 'add_action' },
+  title: { purpose: 'The new action\'s title — what it does, in a few words.', fits: 'Required.', limits: 'The box shows its limit.', tool: 'add_action (title)' },
+  statement: { purpose: 'The new action\'s statement: the practical step, who does what.', fits: 'Optional here; "Defined" needs it. The Action details hold the rest, once added.', limits: '1,000 characters, with a counter.', tool: 'add_action (practicalStep)' },
+  heading: { purpose: 'The heading the new action goes under; Unsorted puts it under no heading.', fits: 'The action lands first under it.', tool: 'add_action (heading)' },
+  unsorted: { purpose: 'No heading: the action is listed under "No heading" until one is chosen.', fits: 'The default.', tool: 'add_action' },
+  kind: { purpose: 'The kind of instrument the action makes — read from its heading, not chosen here.', fits: 'Set on the heading (its row in the list); every action under it shares it.', tool: 'set_heading_kind' },
+  save: { purpose: 'Adds the action.', fits: 'A refusal says why in words, and nothing is added.', tool: 'add_action' },
+}
+
+/** 321 — "the field guide says which row a control is on": the existing workspace controls, by row. */
+const WORKSPACE_ROW: Partial<Record<keyof typeof WORKSPACE_UI, keyof typeof ROW>> = {
+  group: 'view', hideAllHeadings: 'view', showAllHeadings: 'view', listFilter: 'view',
+  addHeading: 'add', suggestHeadings: 'add',
+  classifyWithLex: 'lex', findDuplicates: 'lex', askFourSet: 'lex', printAll: 'lex',
+}
+const onRows = <K extends string>(texts: Record<K, GuideText>, rows: Partial<Record<K, keyof typeof ROW>>): Record<K, GuideText> =>
+  Object.fromEntries((Object.keys(texts) as K[]).map((k) => [k, rows[k] && !texts[k].fits.includes(ROW[rows[k]!]) ? { ...texts[k], fits: `${ROW[rows[k]!]} ${texts[k].fits}` } : texts[k]])) as Record<K, GuideText>
+
 const NOTEBOOK: Record<keyof typeof NOTEBOOK_UI, GuideText> = {
   bringBack: { purpose: 'Brings set-aside notes back.', fits: 'Setting aside never deletes a note.', tool: 'answer_notes (op: bring_back)' },
   shareWithTeam: { purpose: 'Shares one of the user\'s own notes with the team.', fits: 'Only a note\'s author can share it.', tool: 'answer_notes (op: share)' },
@@ -258,9 +296,9 @@ const SECTIONS: Record<RecordSection, GuideText> = {
   detail: { purpose: 'The action\'s full explanation: what it does and why, its parts and reasoning.', fits: 'The statement is the headline; an instrument\'s text goes in a document, never here.', limits: 'No limit; more than 3,000 characters of instrument-like text from Lex is refused.', tool: 'set_action_detail, add_action_details_section' },
   documents: { purpose: 'The action\'s documents: each with its number, kind, status and version, and what is still needed.', fits: 'Opens each document in the document view.', tool: 'list_documents, read_document' },
   law: { purpose: 'The law rows this action\'s drafting instruction wrote.', fits: 'The idea\'s whole law is on the Overview\'s Law tab.', tool: 'read_document' },
-  who: { purpose: 'Step 2: who implements it, their incentive, what changes it, skill, how it is enforced, what opposes it, what tells us it worked.', fits: '"Specific enough" needs Who and Against.', tool: 'set_action_slot, propose_action_slots' },
-  costs: { purpose: 'Step 3: the cost ranges, cost lines, or "no cost, because".', fits: 'The full costing is in the Deepening.', tool: 'set_action_costs, add_cost_line, set_no_cost_reason' },
-  order: { purpose: 'Step 4: what this action must come after, and why.', fits: 'The order is derived from these links.', tool: 'set_action_order' },
+  who: { purpose: 'Who implements it, their incentive, what changes it, skill, how it is enforced, what opposes it, what tells us it worked.', fits: '"Specific enough" needs Who and Against. A section of the record until it moves to the Deepening (315).', tool: 'set_action_slot, propose_action_slots' },
+  costs: { purpose: 'The cost ranges, cost lines, or "no cost, because".', fits: 'The full costing is in the Deepening.', tool: 'set_action_costs, add_cost_line, set_no_cost_reason' },
+  order: { purpose: 'What this action must come after, and why.', fits: 'The order is derived from these links.', tool: 'set_action_order' },
   comments: { purpose: 'The comment thread on the action.', fits: 'Everyone who can see the idea sees it.', tool: 'add_action_comment, reply_to_comment' },
 }
 const SLOTS: Record<AnySlot, GuideText> = {
@@ -278,15 +316,74 @@ const DIRECTIONS_G: Record<Direction, GuideText> = {
   INDIFFERENT: { purpose: 'The present incentive neither helps nor hinders.', fits: 'A choice on "Incentive now".', tool: 'set_action_slot (direction)' },
 }
 const STEP_G: Record<ActionsStep, GuideText> = {
-  1: { purpose: 'Step 1: sort the list, classify each action, merge duplicates, rule out what does not fit.', fits: 'The screen shows only the tools for the step the owner is on.', tool: 'classify_actions, set_action_facets, merge_actions, rule_out_actions' },
-  2: { purpose: 'Step 2: who, how and against for each action.', fits: 'As the step bar.', tool: 'set_action_slot, propose_action_slots' },
-  3: { purpose: 'Step 3: a cost range for each action.', fits: 'As the step bar.', tool: 'set_action_costs, add_cost_line, set_no_cost_reason' },
-  4: { purpose: 'Step 4: the order, from what each action must come after.', fits: 'As the step bar.', tool: 'set_action_order' },
+  // 26-X 308: the step tabs are gone; these four words now head the record's sections (one line each, saying where it stands)
+  1: { purpose: 'The record\'s classification: the heading, avenue, causes and the policy verdict.', fits: 'The list is sorted on the Organising page; this is one action\'s part of it.', tool: 'classify_actions, set_action_facets, merge_actions, rule_out_actions' },
+  2: { purpose: 'Who, how and against for this action.', fits: 'A section of the record until it moves to the Deepening (315).', tool: 'set_action_slot, propose_action_slots' },
+  3: { purpose: 'A cost range for this action.', fits: 'A section of the record; the roll-up is in the Deepening.', tool: 'set_action_costs, add_cost_line, set_no_cost_reason' },
+  4: { purpose: 'What this action must come after.', fits: 'A section of the record; the order is derived from these links.', tool: 'set_action_order' },
 }
 const COST_G: Record<keyof typeof COST_LINE_LABEL, GuideText> = {
   implementationCost: { purpose: 'What it costs government to put the action in place.', fits: 'One of the three cost ranges.', tool: 'set_action_costs' },
   enforcementCost: { purpose: 'What it costs to enforce once in place.', fits: 'One of the three cost ranges.', tool: 'set_action_costs' },
   regulatoryFriction: { purpose: 'What it costs those who must comply.', fits: 'One of the three cost ranges.', tool: 'set_action_costs' },
+}
+
+// ── 26-X (308–318) — the lifecycle, the checklist, the two pages, the strip, the lock ──────────────────────────────────
+const LIFECYCLE_G: Record<keyof typeof LIFECYCLE_STAGE_WORD, GuideText> = {
+  creation: { purpose: 'Lifecycle stage 1: saying what you want to change; Lex’s first pass over it.', fits: 'Its state line counts Lex’s runs; its screen is where material is added and the idea re-run.', tool: none('a stage of the lifecycle, shown on the bar') },
+  development: { purpose: 'Lifecycle stage 2: the problem, the causes and the guiding policy, then organising the actions, drafting each one and the Deepening.', fits: 'It carries a checklist, not sub-stages; its state line counts the actions, drafted and accepted.', tool: 'list_actions, list_documents' },
+  privateScrutiny: { purpose: 'Lifecycle stage 3: what your allies say is wrong.', fits: 'Not yet open: its page is its own brief, after this one.', tool: none('not yet built') },
+  publicScrutiny: { purpose: 'Lifecycle stage 4: what your opponents say is wrong.', fits: 'Not yet open.', tool: none('not yet built') },
+  promotion: { purpose: 'Lifecycle stage 5: winning the support the proposal needs.', fits: 'Not yet open; its plan is the checklist’s last line.', tool: none('not yet built') },
+  submission: { purpose: 'Lifecycle stage 6: the idea lodged with a decision-maker — an MP for a Private Member’s Bill, a committee as evidence, a consultation, a department.', fits: 'Recorded with the body, the date and the form, by the owner; nothing records one yet, so it reads "not submitted".', tool: none('not yet built') },
+  inForce: { purpose: 'Lifecycle stage 7: did it work, once in force.', fits: 'Stated and not built: there is nothing yet to track it with.', tool: none('not yet built') },
+}
+const LIFECYCLE_UI_G: Record<keyof typeof LIFECYCLE_UI, GuideText> = {
+  youAreHere: { purpose: 'Marks the stage, page or checklist line the user is on, in words.', fits: 'Always with a filled disc and a heavier border — never colour alone.', tool: none('a screen marker') },
+  notYetOpen: { purpose: 'Says a stage has nothing built behind it yet.', fits: 'Private Scrutiny, Public Scrutiny and Promotion read so until their pages are built.', tool: none('a state in words') },
+  notYetAvailable: { purpose: 'Says something is stated but not built.', fits: 'In Force, and the Promotional plan.', tool: none('a state in words') },
+  notSubmitted: { purpose: 'Says the idea has not been lodged with a decision-maker.', fits: 'Submission’s state until a submission is recorded.', tool: none('a state in words') },
+}
+const PROGRESS_G: Record<keyof typeof PROGRESS_WORD, GuideText> = {
+  defined: { purpose: 'The action has its statement, a heading, and the heading’s kind.', fits: 'The first state of the strip; ◐ while it is begun but not all three are set (an action just added with only its title reads ◐).', tool: 'assign_action_heading, set_heading_kind' },
+  briefed: { purpose: 'The action has a Brief for its draft, or needs no draft.', fits: 'Until the Brief on every draft is built, only a draft clause’s drafting instruction counts as its Brief, so other kinds read ○ here.', tool: 'redraft_document' },
+  drafted: { purpose: 'The action’s draft (its instrument) has a version.', fits: 'Companions — the collision report, the explanatory note — are not the draft; a costing is the draft only of a financial action.', tool: 'draft_document, list_documents' },
+  reviewed: { purpose: 'All five review passes have read the draft’s current version.', fits: '◐ when some have; a new version needs reading again.', tool: 'review_document' },
+  accepted: { purpose: 'The owner has accepted the draft at its current version.', fits: '◐ when it was accepted at an earlier version and has changed since. Accepted or "needs no draft" counts as done for the Deepening.', tool: 'accept_document' },
+  noDraft: { purpose: 'The action needs no draft, for the reason the owner gave.', fits: 'Shown as "Defined ● · needs no draft ✓"; it counts as done for the Deepening.', tool: 'set_document_needs (mode: nothing)' },
+}
+const CHECKLIST_G: Record<keyof typeof CHECKLIST_WORD, GuideText> = {
+  problem: { purpose: 'Checklist line 1: is the problem written?', fits: 'Opens the problem in the Diagnosis.', tool: none('a line that opens a section') },
+  causes: { purpose: 'Checklist line 2: the causes, and how many have actions against them.', fits: 'Opens the causes.', tool: 'causes_without_action' },
+  policy: { purpose: 'Checklist line 3: whether a guiding policy is chosen.', fits: 'Opens the guiding policy.', tool: none('a line that opens a section') },
+  organising: { purpose: 'Checklist line 4: the live actions, their headings and conditions, and how many are untested against the policy.', fits: 'Opens the Organising page.', tool: 'list_actions' },
+  drafting: { purpose: 'Checklist line 5: how many actions are accepted, need no draft, or are still to go.', fits: 'Opens the Drafting page; "0 to go" opens the Deepening.', tool: 'list_documents' },
+  deepening: { purpose: 'Checklist line 6: the Deepening — collisions, four models, the review passes, costs, who delivers.', fits: 'Locked until every live action is accepted or needs no draft; the owner can open it early with a reason.', tool: none('a page; its runs are started from the screen') },
+  promotion: { purpose: 'Checklist line 7: the promotional plan.', fits: 'Not yet available.', tool: none('not yet built') },
+  locked: { purpose: 'Says the Deepening is locked, with how many actions are still to go.', fits: 'Shown with 🔒 and the word, never a colour alone.', tool: none('a state in words') },
+}
+const PAGE_G: Record<keyof typeof PAGE_UI, GuideText> = {
+  organising: { purpose: 'The page with the list’s organising tools only: headings, classify, duplicates, the policy test, rule out, Later phase, the views and the find box.', fits: 'Every row shows its progress strip; there is no drafting control on it. An action’s title goes to Drafting with it open.', tool: 'list_actions, classify_actions' },
+  drafting: { purpose: 'The same list with each action’s progress, filtered by where each stands; opening an action shows its record with its drafts at the top.', fits: 'Its counts say how many are accepted, need no draft, or are still to go.', tool: 'list_documents, draft_document' },
+  backToOrganising: { purpose: 'Returns from an action on Drafting to the Organising page.', fits: 'At the same place in the list, with the same filters and find box.', tool: none('a screen control') },
+  openInDrafting: { purpose: 'Opens an action on the Drafting page.', fits: 'On every Organising row; the title does the same.', tool: 'get_action' },
+  needsNoDraftBecause: { purpose: 'Records that the action needs no draft, with the owner’s reason.', fits: 'The same store as the tree’s "Needs no document"; the action then counts as done for the Deepening.', limits: '300 characters, with a counter.', tool: 'set_document_needs (mode: nothing)' },
+  saveNoDraft: { purpose: 'Saves "needs no draft" with the reason typed.', fits: 'As "Needs no draft, because…".', tool: 'set_document_needs (mode: nothing)' },
+  needsDraftAfterAll: { purpose: 'Takes "needs no draft" back: what the action needs is worked out again from its avenue and heading.', fits: 'The reason given before is not kept on the action.', tool: 'set_document_needs (mode: derived)' },
+}
+const DRAFT_FILTER_G: Record<keyof typeof DRAFTING_FILTER_WORD, GuideText> = {
+  all: { purpose: 'Shows every live action on the Drafting page.', fits: 'Actions in Later phase are not counted.', tool: 'list_actions' },
+  toBrief: { purpose: 'Shows the actions whose draft has no Brief yet.', fits: 'A filter on the Drafting page; each action is under exactly one.', tool: 'list_documents' },
+  toDraft: { purpose: 'Shows the actions with a Brief and no draft yet.', fits: 'As "to brief".', tool: 'list_documents' },
+  toReview: { purpose: 'Shows the actions drafted but not yet read by all five review passes.', fits: 'As "to brief".', tool: 'list_documents' },
+  toAccept: { purpose: 'Shows the actions whose draft has been reviewed and not yet accepted.', fits: 'As "to brief".', tool: 'list_documents' },
+  noDraft: { purpose: 'Shows the actions that need no draft, with their reasons.', fits: 'They count as done for the Deepening.', tool: 'list_documents' },
+  accepted: { purpose: 'Shows the actions whose draft is accepted at its current version.', fits: 'They count as done for the Deepening.', tool: 'list_documents' },
+}
+const LOCK_G: Record<keyof typeof DEEPENING_LOCK_UI, GuideText> = {
+  deepenNow: { purpose: 'The owner opens the Deepening before every action is drafted.', fits: 'It asks for a reason, recorded with the owner and the time; everything the Deepening produces then says "Deepened with N actions undrafted — reason: …".', tool: none('the owner’s decision, made on the screen') },
+  overrideReason: { purpose: 'The owner’s reason for deepening early.', fits: 'Printed on the Deepening page and on every output it produces.', limits: 'The box shows its limit.', tool: none('the owner’s decision, made on the screen') },
+  recordOverride: { purpose: 'Records the reason and opens the Deepening.', fits: 'An override is added to the record, never replacing an earlier one.', tool: none('the owner’s decision, made on the screen') },
 }
 
 // ── assembled ──────────────────────────────────────────────────────────────────────────────────────────────────
@@ -321,12 +418,23 @@ export function guideEntries(): GuideEntry[] {
     ...PRECEDENT_COLUMNS.map((c) => ({ key: `document.precedentColumn.${c}`, area: 'document' as const, label: c, purpose: `The "${c}" column of the precedents table.`, fits: 'Precedents are existing provisions the draft draws on.', tool: 'read_document' })),
     ...fromTable('tree', 'tree', TREE_UI, TREE),
     ...fromTable('tree', 'filter', TREE_FILTER_WORD, FILTERS),
-    ...fromTable('workspace', 'workspace', WORKSPACE_UI, WORKSPACE),
-    ...fromTable('workspace', 'view', WORKSPACE_VIEW_WORD, VIEWS),
+    ...fromTable('workspace', 'workspace', WORKSPACE_UI, onRows(WORKSPACE, WORKSPACE_ROW)),
+    ...fromTable('workspace', 'view', WORKSPACE_VIEW_WORD, onRows(VIEWS, { list: 'view', board: 'view', coverage: 'view', conditions: 'view' })),
     // the facets heading is two table words, shown as one line when the idea has conditions
     { key: 'record.facetsTitleWithConditions', area: 'record', label: RECORD_UI.facetsTitle + RECORD_UI.facetsTitleConditions, ...RECORD.facetsTitle, tool: 'set_action_facets, set_action_conditions, classify_actions' },
     ...EXTENTS.map((x) => ({ key: `document.extent.${x}`, area: 'document' as const, label: x, purpose: `A place the provision extends to: ${x}.`, fits: 'One of the Extent choices in the drafting instruction; legislative actions only.', tool: 'redraft_document' })),
     ...fromTable('research', 'notebook', NOTEBOOK_UI, NOTEBOOK),
+    // 26-X
+    ...fromTable('workspace', 'lifecycle', LIFECYCLE_STAGE_WORD, LIFECYCLE_G),
+    ...fromTable('workspace', 'lifecycleUi', LIFECYCLE_UI, LIFECYCLE_UI_G),
+    ...fromTable('workspace', 'progress', PROGRESS_WORD, PROGRESS_G),
+    ...fromTable('workspace', 'checklist', CHECKLIST_WORD, CHECKLIST_G),
+    ...fromTable('workspace', 'page', PAGE_UI, PAGE_G),
+    ...fromTable('workspace', 'draftingFilter', DRAFTING_FILTER_WORD, DRAFT_FILTER_G),
+    ...fromTable('workspace', 'deepeningLock', DEEPENING_LOCK_UI, LOCK_G),
+    // 26-X addendum 321–323
+    ...fromTable('workspace', 'toolbar', ORGANISING_TOOLBAR_UI, TOOLBAR_G),
+    ...fromTable('workspace', 'addAction', ADD_ACTION_UI, ADD_ACTION_G),
   ]
 }
 

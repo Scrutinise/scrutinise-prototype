@@ -30,11 +30,12 @@ import { EQUAL_SPLIT, LHP_KEYS, parseMax, readStored, writeStored, type LhpMax }
 // ⚠ THE VOCABULARY ONLY — `stages.ts` holds no prisma, on purpose. `StageContext` is a
 // TYPE import, erased at compile, so the server-only counting module never reaches the
 // browser bundle. See `lib/lex/stages.ts`.
-import { stageByKey, type LexStageKey } from '@/lib/lex/stages'
+import { stageByKey, type LexStageKey, type ActionsPage, type KernelSection } from '@/lib/lex/stages'
 import type { StageContext } from '@/lib/lex/stage-context'
 import FeedbackDialog from '@/components/lex/FeedbackDialog'
 import { installFaultCapture } from '@/lib/client-fault-capture'
 import DeepeningPanel from '@/components/lex/DeepeningPanel'
+import DeepeningGate from '@/components/lex/DeepeningGate'
 import UpdatePassPanel from '@/components/lex/UpdatePassPanel'
 import DocumentsTree from '@/components/lex/DocumentsTree'
 import RisksView from '@/components/lex/RisksView'
@@ -67,6 +68,10 @@ interface Props {
    * wiring so that one column could change, and the two copies would drift.
    */
   stage?: LexStageKey
+  /** 26-X 318 — the Development checklist's link: open the Coherent Actions section on the Organising or the Drafting page. */
+  actionsPage?: ActionsPage | null
+  /** 26-X §3a — the checklist's first three lines: open the problem, the causes or the guiding policy. */
+  kernelSection?: KernelSection | null
 }
 
 // §20.5 — a conservative match for the user criticising something Lex produced,
@@ -122,7 +127,7 @@ function PanelEdge({ label, hint, onOpen }: { label: string; hint: string; onOpe
   )
 }
 
-export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initialMessages, isFirstIdea, stageCtx = null, stage: lexStage = 'strategy' }: Props) {
+export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initialMessages, isFirstIdea, stageCtx = null, stage: lexStage = 'strategy', actionsPage = null, kernelSection = null }: Props) {
   const opening = openingBubbles?.length ? openingBubbles : DEFAULT_OPENING
 
   const [ideaId, setIdeaId] = useState<string | null>(initialIdeaId ?? null)
@@ -1284,6 +1289,9 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                   {/* 26-K §4c's mount stays here: the Deepening stage renders `DeepeningPanel`
                       instead of `FieldsPanel`, so `RerunOptions`'s "New material and rebuilds"
                       section (nested inside `FieldsPanel`, see §10b above) never mounts here. */}
+                  {/* 26-X decision 317 — THE LOCK: until every live action is accepted or needs no draft (or the owner overrides, with a
+                      reason), this page shows only the count and the actions still to go; nothing below mounts, so nothing in it runs. */}
+                  <DeepeningGate ideaId={state.ideaId}>
                   {/* 26-V1 §6 (decision 244): the law table at the top; the documents tree below it; the passes below that. */}
                   <section className="pt-2" data-deepening="law">
                     <DeepeningLawTable ideaId={state.ideaId} />
@@ -1306,6 +1314,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                     onOpenPass={setOpenDeepeningPass}
                     onDiscussIssue={discussIssue}
                   />
+                  </DeepeningGate>
                 </div>
               ) : (
               <FieldsPanel
@@ -1316,7 +1325,8 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 setAsideActions={state.setAsideActions}
                 actionHeadings={state.actionHeadings}
                 actionsStructure={{ conditions: state.conditions, headingPlan: state.headingPlan, archivedHeadings: state.archivedHeadings, resortUndoable: state.resortUndoable }}
-                actionsStep={state.actionsStep}
+                actionsPage={actionsPage}
+                kernelSection={kernelSection}
                 archivedCauses={state.archivedCauses}
                 costLines={state.costLines}
                 benchmarks={state.benchmarks}

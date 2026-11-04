@@ -11,6 +11,8 @@ import React, { useCallback, useState } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import ActionsWorkspace from '@/components/lex/ActionsWorkspace'
 import FeedbackDialog from '@/components/lex/FeedbackDialog'
+import ActionGapCheck from '@/components/lex/ActionGapCheck'
+import ActionImport from '@/components/lex/ActionImport'
 import { ActionStructureBody, OP_WORDS, INPUT_WORDS, type ActionStructureOp } from '@/lib/lex/action-structure-schema'
 import { describeIssues } from '@/lib/api-rejection'
 import { LIMITS } from '@/lib/lex/input-limits'
@@ -35,7 +37,7 @@ const store = {
   ] as A[],
   headings: [{ id: 'h1', name: 'Legislation', colourKey: HEADING_PALETTE[0].key, hidden: false, orderIndex: 0 }] as A[],
 }
-const hooks: A = { store, rejectNext: null as A | null, failReread: false, log: [] as string[], step: undefined as number | undefined } // step: which of the four steps the workspace shows (default: step 1)
+const hooks: A = { store, rejectNext: null as A | null, failReread: false, log: [] as string[], step: undefined as number | undefined, slots: false, added: null } // step: which of the four steps the workspace shows (default: step 1); slots (26-X addendum): render the real Import and Check for gaps on the toolbar
 
 const clip = (s: string, n: number) => s.replace(/\s+/g, ' ').trim().slice(0, n)
 const stateBody = () => ({
@@ -82,6 +84,23 @@ function handle(raw: A): { status: number; body: A } {
     case 'setHeadingsHidden': { let n = 0; for (const h of store.headings) if (!!h.hidden !== b.hidden) { h.hidden = b.hidden; n++ } return ok({ changed: n }) }
     case 'updateHeading': { const h = store.headings.find((x) => x.id === b.headingId); if (h && b.hidden !== undefined) h.hidden = b.hidden; return ok(null) }
     case 'setTitle': { const a = store.actions.find((x) => x.id === b.actionId); if (a) a.title = b.title ? clip(b.title, LIMITS.actionTitle) : null; return ok(null) }
+    // 26-X addendum 322/323 — the stand-in for addActionAtHeading (first under its heading; the DATABASE half is check:lex-26x part F) and the
+    // title proposals (an owner's title is never replaced — the same rule as acceptTitleProposals)
+    case 'addAction': {
+      const n = Math.max(0, ...store.actions.map((a) => a.number ?? 0)) + 1
+      const row = mk(n, { id: `new${n}`, title: clip(b.title, LIMITS.actionTitle), practicalStep: b.practicalStep ?? '', headingId: b.headingId, source: 'USER' })
+      const at = store.actions.findIndex((a) => a.status === 'LIVE' && !a.parked && (a.headingId ?? null) === (b.headingId ?? null))
+      store.actions.splice(at < 0 ? store.actions.length : at, 0, row)
+      hooks.added = row
+      return ok({ id: row.id, number: n, title: row.title, headingId: row.headingId, headingName: store.headings.find((h) => h.id === b.headingId)?.name ?? null })
+    }
+    case 'proposeTitles': { let p = 0; for (const a of store.actions) if (a.status === 'LIVE' && !a.title && !a.titleProposal) { a.titleProposal = `Proposed title for ${a.number}`; p++ } return ok({ proposed: p, skipped: 0, asTopics: 0, pence: 0.9 }) }
+    case 'acceptTitles': {
+      let accepted = 0, keptYours = 0
+      for (const a of store.actions) if (a.titleProposal && (!b.ids || b.ids.includes(a.id))) { if (a.title) keptYours++; else { a.title = a.titleProposal; accepted++ } a.titleProposal = null }
+      return ok({ accepted, keptYours })
+    }
+    case 'dismissTitles': { for (const a of store.actions) if (a.titleProposal && (!b.ids || b.ids.includes(a.id))) a.titleProposal = null; return ok({ dismissed: 1 }) }
     default: return ok(null)
   }
 }
@@ -104,12 +123,19 @@ window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   // The digest panel (26-T1) reads its digests on mount. Unanswered, its relative URL failed on this origin-less page and put a stray
   // "Could not read the digests" alert in the status strip, beside whatever the check was looking at. The workspace has none here.
   if (url.includes('/action-digest') && (!init?.method || init.method === 'GET')) return json(200, { digests: [] })
+  // 26-X — the progress strips read /development; the harness has no documents, so every action reads as to brief
+  // 26-X addendum 321 — the real "Check for gaps" and "Import actions from a document" sit on the toolbar (hooks.slots); they read these on mount/open
+  if (url.includes('/gap-check') && (!init?.method || init.method === 'GET')) return json(200, { free: { heuristic: true, causesWithoutAction: [], emptyCategories: [] }, suggestions: [], lastCostPence: null })
+  if (url.includes('/action-import') && (!init?.method || init.method === 'GET')) return json(200, { pass: null, sources: [] })
+  if (url.includes('/development') && (!init?.method || init.method === 'GET')) return json(200, { rows: [], parked: 0, counts: { total: 0, accepted: 0, noDraft: 0, toGo: 0, drafted: 0, byStage: { toBrief: 0, toDraft: 0, toReview: 0, toAccept: 0, noDraft: 0, accepted: 0 } } })
   return realFetch(input, init)
 }) as typeof window.fetch
 hooks.post = async (raw: A) => { const r = handle(raw); return r }
 
 function Workspace() {
   const [s, setS] = useState(stateBody())
+  // 26-X 308/318 — step 1 is the Organising page; steps 2–4 render as Drafting (where records open). A title on Organising flips here.
+  const [page, setPage] = useState<'organising' | 'drafting'>(hooks.step && hooks.step !== 1 ? 'drafting' : 'organising')
   const reread = useCallback(async (): Promise<boolean> => {
     const res = await fetch('/api/ideas/x/state')
     if (!res.ok) return false
@@ -119,8 +145,11 @@ function Workspace() {
   return (
     <div>
       <p id="count-live">{s.actions.length}</p>
+      <p id="page-now">{page}</p>
       <ActionsWorkspace ideaId="x" actions={s.actions as never} setAside={s.setAsideActions as never} headings={s.actionHeadings as never} causes={[]} busy={false}
-        step={hooks.step} onChanged={reread} renderFull={(_a, _s, between) => <div data-full-card>{between}</div>} />
+        page={page} onPage={(p) => setPage(p)} onChanged={reread} renderFull={(_a, _s, between) => <div data-full-card>{between}</div>}
+        importSlot={hooks.slots ? <ActionImport ideaId="x" onChanged={() => void reread()} inline /> : undefined}
+        gapSlot={hooks.slots ? <ActionGapCheck ideaId="x" onChanged={() => void reread()} inline /> : undefined} />
     </div>
   )
 }

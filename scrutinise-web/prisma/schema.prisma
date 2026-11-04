@@ -903,6 +903,9 @@ model Idea {
   /// 26-S2 §3a (decision 166) — the step the user is on in the Coherent Actions screen: 1 Sort and prune · 2 Who, how and against ·
   /// 3 Costs · 4 Order. Stored per idea so returning lands where they left it. DDL: prisma/lex_26s2_steps.sql.
   actionsStep               Int             @default(1)
+  /// 26-X decision 317 — the owner's OVERRIDES of the Deepening's lock, appended, never edited: [{ reason, by, at, toGo }]. The last is the
+  /// one in force; `toGo` is how many actions were still to go when it was made. NULL = never overridden. DDL: prisma/lex_26x_deepen_override.sql.
+  deepenOverride            Json?
   /// 26-S2 decision 188 - the CONDITIONS the proposal must meet: { items:[{id,text,by,at}], proposals:[{id,text,why}], source? }. DDL: prisma/lex_26s2_conditions.sql.
   conditions                Json?
   /// 26-S2 190 - the instrument headings the Re-sort pass sorts into: { targets:[{name,purpose}], source }. DDL: prisma/lex_26s2_conditions.sql.

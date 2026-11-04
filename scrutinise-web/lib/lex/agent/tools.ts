@@ -639,21 +639,32 @@ const addActionTool: ToolDefinition = {
     whoImplements: z.string().max(200).optional(),
     // 286/288 (28 Oct (5)) — Target organisation and Intended wording are retired: a target body goes in whoImplements, draft wording in detail.
     dictated: z.boolean().optional().describe('true ONLY when practicalStep is the user\'s own words, copied exactly from what they just wrote. Never for your own drafting or rewording.'),
+    // 26-X addendum 322 — the same as the screen's "Add action": a title, and the heading it goes under (it lands FIRST under that heading)
+    title: z.string().max(LIMITS.actionTitle).optional().describe('a short title for the action (what it does, in a few words)'),
+    heading: z.string().max(LIMITS.headingName).optional().describe('the name of one of the idea’s EXISTING headings to put it under; omit for Unsorted (no heading). Never invent one — create_action_heading makes a heading.'),
     provenance: ProvenanceSchema,
   }),
   async run(ctx, input) {
     const prov = await checkProvenance(ctx, input.provenance)
     if (provFailed(prov)) return fail(prov.error)
+    let headingId: string | null = null
+    if (input.heading?.trim()) {
+      const hs = await prisma.actionHeading.findMany({ where: { ideaId: ctx.ideaId, archivedAt: null }, select: { id: true, name: true } })
+      const hit = hs.find((h) => h.name.trim().toLowerCase() === input.heading!.trim().toLowerCase())
+      if (!hit) return fail(`there is no heading called “${input.heading}” on this idea. Its headings are: ${hs.map((h) => `“${h.name}”`).join(', ') || 'none yet'}. Use one of those, omit heading for Unsorted, or create the heading first (create_action_heading).`)
+      headingId = hit.id
+    }
     // Decision 182 — same rule as 178: an action the owner dictates is the owner's. ENFORCED: the statement must be inside what the user wrote.
     if (input.dictated) {
       const said = ctx.turn.userMessages.map(norm).join(' ')
       if (!said.includes(norm(input.practicalStep))) return fail('“dictated” means the statement is the user’s own words, and this is not word for word in anything they have written. Add it without dictated:true (it will be yours, marked as from Lex), or use their exact words.')
     }
-    const row = await addAction(ctx.ideaId, { practicalStep: input.practicalStep, commentary: input.detail, whoImplements: input.whoImplements, source: input.dictated ? 'USER' : 'LEX' })
+    // 322 — the one writer the screen's "Add action" uses (field-machine addAction), placed first under its heading, as the screen does
+    const row = await addAction(ctx.ideaId, { practicalStep: input.practicalStep, commentary: input.detail, whoImplements: input.whoImplements, source: input.dictated ? 'USER' : 'LEX', title: input.title ?? null, headingId, place: 'topOfHeading' })
     await auditProvenance(ctx, `actions:${row.id}`, input.practicalStep, input.practicalStep, prov)
     return {
       ok: true,
-      data: { number: row.number, id: short(row.id), source: input.dictated ? 'USER (the owner’s own action, written at their dictation)' : 'LEX', hasDetail: !!input.detail?.trim(), provenance: prov.line, say: `Added as #${row.number}.` },
+      data: { number: row.number, id: short(row.id), title: row.title, heading: input.heading?.trim() ? input.heading.trim() : 'Unsorted (no heading)', source: input.dictated ? 'USER (the owner’s own action, written at their dictation)' : 'LEX', hasDetail: !!input.detail?.trim(), provenance: prov.line, say: `Added as #${row.number}, first under ${input.heading?.trim() ? `“${input.heading.trim()}”` : 'No heading'}.` },
       ui: [{ type: 'open_panel', panel: 'actions' }],
     }
   },

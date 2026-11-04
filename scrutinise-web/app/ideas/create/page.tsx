@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import CreateIdeaClient from './CreateIdeaClient'
-import type { LexStageKey } from '@/lib/lex/stages'
+import { parseActionsPage, parseKernelSection, type LexStageKey } from '@/lib/lex/stages'
 // ⚠ THE COUNTS COME FROM A SEPARATE, SERVER-ONLY MODULE. See `stages.ts` — putting the
 // prisma read beside the vocabulary put `pg` in the browser bundle.
 import { stageContext } from '@/lib/lex/stage-context'
@@ -23,7 +23,7 @@ interface Props {
    * ⚠ ANYTHING ELSE IS STAGE 2, silently. A typo in a pasted URL must land the user on a
    * working screen, not on an error about a query parameter they did not type.
    */
-  searchParams: Promise<{ ideaId?: string; stage?: string }>
+  searchParams: Promise<{ ideaId?: string; stage?: string; view?: string; section?: string }>
 }
 
 export default async function CreateIdeaPage({ searchParams }: Props) {
@@ -123,7 +123,7 @@ export default async function CreateIdeaPage({ searchParams }: Props) {
   // columns by what is IN them, and the stage by what you DO there.
   const FIRST_IDEA_INTRO =
     "I'm here to help you develop and build support for a credible proposal for your idea, ready for " +
-    'Parliamentary colleagues. This is Stage 2, the Strategy: working through what I drafted. On the left is '  +
+    'Parliamentary colleagues. This is Development: working through what I drafted. On the left is '  +
     'what to do next, with the chat underneath it; in the middle is the draft as it stands; and on the right '  +
     'is the legislation and the findings, filed under the questions they answer. You can answer here in the '   +
     "chat, or type straight into the draft if you don't need my help. For a quick introduction if you don't "  +
@@ -150,7 +150,11 @@ export default async function CreateIdeaPage({ searchParams }: Props) {
 
   // 25-K §1 — the three stages, which one this is, and what is on the other two.
   const lexStage: LexStageKey = params.stage === 'deepening' ? 'deepening' : 'strategy'
-  const stageCtx = await stageContext(initialIdeaId ?? null, lexStage)
+  // 26-X §3a / 318 — the checklist's links: `view=organising|drafting` opens the Coherent Actions section on that page; `section=problem|
+  // causes|policy` opens that kernel section. Anything else is ignored (the workspace opens as it always has).
+  const actionsPage = lexStage === 'strategy' ? parseActionsPage(params.view) : null
+  const kernelSection = lexStage === 'strategy' ? parseKernelSection(params.section) : null
+  const stageCtx = await stageContext(initialIdeaId ?? null, lexStage, actionsPage)
 
   return (
     <CreateIdeaClient
@@ -160,6 +164,8 @@ export default async function CreateIdeaPage({ searchParams }: Props) {
       isFirstIdea={isFirstIdea}
       stageCtx={stageCtx}
       stage={lexStage}
+      actionsPage={actionsPage}
+      kernelSection={kernelSection}
     />
   )
 }

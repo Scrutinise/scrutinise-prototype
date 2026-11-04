@@ -26,6 +26,7 @@ import { runSearch } from './search-gateway'
 import { stripNullBytes } from './json-safe'
 import { nextNumber } from './guiding-policy'
 import { parseRecord } from './action-record'
+import { LIMITS } from './input-limits'
 
 // Prisma enum values mirror our string union.
 type DbStatus = 'EMPTY' | 'AWAITING_CONFIRMATION' | 'ACCEPTED' | 'SKIPPED'
@@ -1056,6 +1057,12 @@ export interface ActionInput {
   enforcementCost?: CostRangeInput
   regulatoryFriction?: CostRangeInput
   source?: 'USER' | 'LEX'
+  /** 26-X addendum 322 — "Add action" (and Lex's add_action): the title, at most LIMITS.actionTitle. */
+  title?: string | null
+  /** 322 — the heading it is added under (null = Unsorted). Must be one of the idea's live headings. */
+  headingId?: string | null
+  /** 322 — 'topOfHeading' puts it first under its heading (the "Add action" form, Lex's add_action); default 'last' (the import, the gap check). */
+  place?: 'last' | 'topOfHeading'
 }
 
 export async function listActions(ideaId: string) {
@@ -1102,10 +1109,38 @@ export async function createActions(ideaId: string, actions: ActionInput[], sour
   })
 }
 
+/**
+ * THE ONE FUNCTION THAT ADDS AN ACTION (26-X addendum 322): the "Add action" form, Lex's add_action, the import and the gap check all call it.
+ * The number comes from the database trigger (159). `place: 'topOfHeading'` puts the new row first under its heading — the rows at and after
+ * that position move down one, in one transaction, so the rest of the list keeps its order. A heading that is not one of the idea's live
+ * headings is refused (thrown as AddActionError, worded).
+ */
+export class AddActionError extends Error {}
 export async function addAction(ideaId: string, input: ActionInput) {
+  const headingId = input.headingId ?? null
+  if (headingId) {
+    const h = await prisma.actionHeading.findFirst({ where: { id: headingId, ideaId, archivedAt: null }, select: { id: true } })
+    if (!h) throw new AddActionError('That heading is not one of this idea’s headings (it may have been retired). Choose another, or Unsorted.')
+  }
+  const title = input.title?.trim() ? input.title.trim().slice(0, LIMITS.actionTitle) : null
+  if (input.place === 'topOfHeading') {
+    return prisma.$transaction(async (tx) => {
+      const first = await tx.lexCoherentAction.aggregate({ where: { ideaId, status: 'LIVE', parked: false, headingId }, _min: { orderIndex: true } })
+      let at = first._min.orderIndex
+      if (at == null) {
+        const top = await tx.lexCoherentAction.aggregate({ where: { ideaId }, _max: { orderIndex: true } })
+        at = (top._max.orderIndex ?? -1) + 1
+      } else {
+        await tx.lexCoherentAction.updateMany({ where: { ideaId, orderIndex: { gte: at } }, data: { orderIndex: { increment: 1 } } })
+      }
+      return tx.lexCoherentAction.create({ data: { ...actionData(ideaId, input), title, headingId, orderIndex: at } })
+    })
+  }
   const base = await nextActionOrderIndex(ideaId)
-  return prisma.lexCoherentAction.create({
-    data: {
+  return prisma.lexCoherentAction.create({ data: { ...actionData(ideaId, input), title, headingId, orderIndex: base } })
+}
+function actionData(ideaId: string, input: ActionInput) {
+  return {
       ideaId,
       practicalStep: input.practicalStep.trim(),
       mechanismType: input.mechanismType?.trim() || null,
@@ -1118,9 +1153,7 @@ export async function addAction(ideaId: string, input: ActionInput) {
       enforcementCost: (input.enforcementCost ?? undefined) as never,
       regulatoryFriction: (input.regulatoryFriction ?? undefined) as never,
       source: (input.source ?? 'USER') as never,
-      orderIndex: base,
-    },
-  })
+  }
 }
 
 export async function updateAction(ideaId: string, actionId: string, patch: Partial<ActionInput>) {

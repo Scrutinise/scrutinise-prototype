@@ -31,7 +31,7 @@ function Record_() {
   if (!s) return <p>loading</p>
   const noop = (() => undefined) as never
   return (
-    <ActionsWorkspace ideaId={fg.ideaId} actions={s.actions} setAside={s.setAsideActions} headings={s.actionHeadings} causes={[]} busy={false} step={fg.step ?? 1}
+    <ActionsWorkspace ideaId={fg.ideaId} actions={s.actions} setAside={s.setAsideActions} headings={s.actionHeadings} causes={[]} busy={false} page="drafting" onPage={() => undefined} /* 26-X 318: a record opens on the Drafting page */
       onChanged={reread} initiallyOpen={[fg.actionId!]} costLineActionIds={[]}
       renderFull={(a, st, between) => <ActionCard action={a as never} step={st as never} between={between} benchmarks={s.benchmarks} costLines={(s.costLines as Array<{ actionId: string }>).filter((l) => l.actionId === (a as { id: string }).id) as never} busy={false}
         api={{ update: noop, add: noop, remove: noop } as never} costLinesApi={{ add: noop, remove: noop, suggest: async () => null } as never} />}

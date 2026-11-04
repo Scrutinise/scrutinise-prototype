@@ -22,7 +22,8 @@ import * as RN from '../lib/lex/research-notes'
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import ActionsWorkspace from '../components/lex/ActionsWorkspace'
-import ActionsSteps from '../components/lex/ActionsSteps'
+import ActionsPages from '../components/lex/ActionsPages'
+import { RECORD_UI as RECORD_UI_26S2 } from '../lib/lex/screen-labels'
 import * as ST from '../lib/lex/action-steps'
 import { computeCanonicalState } from '../lib/lex/state'
 import * as FM from '../lib/lex/field-machine'
@@ -245,7 +246,7 @@ function mkAction(n: number, extra: Record<string, unknown> = {}) {
 const renderWs = (step: number, actions: unknown[], open: string[] = [], costLineActionIds: string[] = []) => renderToStaticMarkup(React.createElement(ActionsWorkspace, {
   ideaId: 'idea-x', actions: actions as never, setAside: [] as never, headings: [{ id: 'h1', name: 'Legislation', colourKey: 'blue', hidden: false, orderIndex: 0 }] as never,
   causes: [{ id: 'c1', number: 1, cause: 'A cause', whyPersisted: null }] as never, busy: false, onChanged: () => {}, renderFull: (a: { number: number }, s: number, between?: React.ReactNode) => React.createElement('div', null, `FULL CARD ${a.number} STEP ${s}`, between),
-  initiallyOpen: open, step: step as never, costLineActionIds,
+  initiallyOpen: open, page: (step === 1 ? 'organising' : 'drafting') as never, onPage: () => {}, costLineActionIds,
 }))
 
 function partC() {
@@ -259,12 +260,14 @@ function partC() {
   ok('the step labels are the brief\'s four words', ST.STEP_NUMBERS.map((n) => `${n} ${ST.STEPS[n].label}`).join(' · ') === '1 Sort and prune · 2 Who, how and against · 3 Costs · 4 Order')
   ok('clampStep never lets a stored value outside 1–4 through', ST.clampStep(0) === 1 && ST.clampStep(9) === 1 && ST.clampStep(3) === 3 && ST.clampStep('x') === 1 && ST.clampStep(null) === 1)
 
-  // the bar: position + weight + a word, never colour alone
-  const bar = renderToStaticMarkup(React.createElement(ActionsSteps, { ideaId: 'idea-x', initialStep: 2 as never, children: () => null }))
-  ok('the bar prints the four steps in words, in order', ST.STEP_NUMBERS.every((n) => textOf(bar).includes(`${n} ${ST.STEPS[n].label}`)) && textOf(bar).indexOf('1 Sort and prune') < textOf(bar).indexOf('4 Order'))
-  ok('the current step is marked by SHAPE (●), WEIGHT (bold, a 2px border) and a word ("you are here") — and only that one', /aria-current="step"[^>]*data-step="2"|data-step="2"[^>]*aria-current="step"/.test(bar) && (bar.match(/aria-current="step"/g) ?? []).length === 1 && /●/.test(bar) && (bar.match(/○/g) ?? []).length === 3 && /font-bold/.test(bar) && /border-2/.test(bar) && /you are here/.test(bar))
-  ok('…and the step\'s intro sits under the bar', textOf(bar).includes(ST.STEPS[2].lead) && textOf(bar).includes('An action is only real when someone named will do it'))
-  control('the OTHER steps\' intros printed as well (must be FALSE)', textOf(bar).includes(ST.STEPS[1].body.slice(0, 40)))
+  // ⚠ MOVED BY 26-X DECISION 308 (4 Nov 2026): the four-step bar is gone (its component, ActionsSteps, was deleted with it — an assertion
+  // over a component nothing imports is over dead code, CLAUDE.md §23.1). Its place is the two-page bar, Organising · Drafting, held to the
+  // same rule: position + weight + a word, never colour alone. The step intros stay in action-steps.ts (asserted above against the brief)
+  // and are no longer printed. Was: four steps in words, the current marked, the step's intro under the bar.
+  const bar = renderToStaticMarkup(React.createElement(ActionsPages, { ideaId: 'idea-x', initialPage: 'drafting', children: () => null }))
+  ok('308: the page bar prints the two pages in words, in order — and no step', /Organising[\s\S]*Drafting/.test(textOf(bar)) && !/Sort and prune|Who, how and against|\b3 Costs|4 Order/.test(textOf(bar)))
+  ok('308: the current page is marked by SHAPE (●), WEIGHT (bold, a 2px border) and a word ("You are here") — and only that one', /aria-current="page"[^>]*data-page="drafting"/.test(bar) && (bar.match(/aria-current="page"/g) ?? []).length === 1 && /●/.test(bar) && (bar.match(/○/g) ?? []).length === 1 && /font-bold/.test(bar) && /border-2/.test(bar) && /You are here/.test(bar))
+  control('a step intro printed under the page bar (must be FALSE)', textOf(bar).includes(ST.STEPS[2].body.slice(0, 40)))
 
   // the workspace, rendered, step by step
   const rows = [
@@ -274,27 +277,29 @@ function partC() {
   ]
   const h2 = renderWs(2, rows)
   const s1 = textOf(renderWs(1, rows)), s2 = textOf(h2), s3 = textOf(renderWs(3, rows)), s4 = textOf(renderWs(4, rows))
-  ok('STEP 1 offers its tools: Title these for me, Classify with Lex, Find duplicates, Add heading, Suggest headings, the Coverage grid', ['Title these for me', 'Classify with Lex', 'Find duplicates', 'Add heading', 'Suggest headings from my guiding policy', 'Coverage grid'].every((w) => s1.includes(w)))
+  // ⚠ MOVED BY 26-X addendum 321/323: "Title these for me" became "N actions have no title · Title them with Lex" and is shown only when an
+  // action has no title (every row here is titled); "Add action" (322) is the page's primary button. Was: 'Title these for me' in this list.
+  ok('STEP 1 offers its tools: Add action, Classify with Lex, Find duplicates, Add heading, Suggest headings, the Coverage grid', ['Add action', 'Classify with Lex', 'Find duplicates', 'Add heading', 'Suggest headings from my guiding policy', 'Coverage grid'].every((w) => s1.includes(w)))
   ok('STEP 1 row: title, summary, heading, avenue, causes, verdict (shape + word) — and NOTHING of steps 2–4 (no Who, cost, sequence, “specific enough”)', s1.includes('Action 1') && s1.includes('The body of action 1') && s1.includes('Legislation') && s1.includes('Legislative') && s1.includes('1 cause') && s1.includes('✓ Fits') && s1.includes('✗ Conflicts') && !/Who:|Cost:|Sequence:|specific enough|Cabinet Office|Implement £/.test(s1), s1.slice(0, 600))
   control('a step-1 row that still printed "specific enough" (must be FALSE)', /specific enough/.test(s1))
   ok('STEP 1 has no sequence view and no Link tag anywhere', !/○ Sequence|● Sequence/.test(s1) && !/\blink:/i.test(s1))
-  ok('STEP 2 row carries Who ("Cabinet Office", else "not yet answered") and none of step 1\'s tools', s2.includes('Who: Cabinet Office') && s2.includes('Who: not yet answered') && !/Title these for me|Find duplicates|Coverage grid|Add heading/.test(s2) && !/Select action|Reorder action|Heading for action/.test(h2))
-  ok('…and STEP 2 offers its one tool, “Classify with Lex” (for the seven answers), and the row names the missing slots (“not yet specific — Who and Against unanswered”; “draft text missing” for a legislative one)', /Classify with Lex/.test(s2) && /not yet specific — draft text missing/.test(s2) && /not yet specific — Who and Against unanswered/.test(s2) && /1 of 7 answered/.test(s2) && /0 of 7 answered/.test(s2), s2.slice(0, 500))
-  ok('STEP 3 row carries the cost ("Implement £1,000–£2,000", else "Cost: not yet answered") and no Who', s3.includes('Implement £1,000–£2,000') && s3.includes('Cost: not yet answered') && !/Who:/.test(s3))
-  ok('…a cost LINE counts as a cost (step 3 reads it as recorded)', textOf(renderWs(3, [mkAction(7)], [], ['a7'])).includes('cost lines recorded'))
-  // 26-V1b decision 262: step 4 is Order by dependency only — no Now / Next / Later, no "Sequence" (the column keeps its value, unshown)
-  ok('STEP 4 offers Classify with Lex, the derived order, and its rows say what each must come after; no Now / Next / Later; no step-1 tools', s4.includes('Classify with Lex') && s4.includes('The order, derived') && s4.includes('nothing it must come after') && !/\bSequence\b|\bNow\b/.test(s4) && !/Title these for me|Find duplicates|Add heading|Coverage grid/.test(s4))
-  ok('the list is checklist-ended in EVERY step: each step prints its own advisory checklist', ST.STEP_NUMBERS.every((n) => new RegExp(`Step ${n} checklist`).test(textOf(renderWs(n, rows)))))
+  // ⚠ MOVED BY 26-X DECISION 308 (4 Nov 2026): steps 2–4 have no page. Their row tags (Who, cost, what it must come after) and their
+  // toolbars (step 2's "Classify with Lex" for the seven answers, step 4's derived-order view) left with the step tabs; their DATA is on the
+  // record (Who, how and against · Costs · Order), opened on the Drafting page. Was: per-step rows, per-step toolbars, per-step checklists,
+  // and an opened record whose current step's line read "this step" and the others "from step N". The harness renders step 1 as Organising
+  // and steps 2–4 as Drafting.
+  ok('308: DRAFTING rows carry none of the old step tags (no Who, no cost, no order) and none of Organising\'s tools', !/Who:|Cost:|Implement £|must come after/.test(s2) && !/Title them with Lex|Add action|Find duplicates|Coverage grid|Add heading/.test(s2) && !/Select action|Reorder action/.test(h2))
+  control('308: the step-2 bulk "Classify with Lex" still on Drafting (must be FALSE)', /Classify with Lex/.test(s2))
+  ok('308: no derived-order view and no step-4 classification on either page', !/The order, derived/.test(s1) && !/The order, derived/.test(s4) && !/Classify with Lex/.test(s4))
+  ok('308: the advisory checklist is Organising\'s (step 1\'s); Drafting has its counts instead', /Step 1 checklist/.test(s1) && !/Step [234] checklist/.test(s2 + s3 + s4))
   ok('…step 1\'s says what is unfinished, in words with counts, and that it never blocks', /2 actions have no heading/.test(s1) && /2 actions have no cause/.test(s1) && /Advisory: it never stops you moving on/.test(s1))
-  ok('…step 4\'s counts the actions placed by nothing — nothing they must come after or before (262)', /\d+ actions? ha(?:s|ve) nothing (?:it|they) must come after or before/.test(s4), (/Step 4 checklist.{0,200}/.exec(s4) ?? [''])[0])
-
-  // an OPENED record: this step's section first and open, every other under ONE line each
+  // an OPENED record (on Drafting): every section closed under ONE line saying where it stands; no line names a step
   const o2 = renderWs(2, rows, ['a1'])
-  ok('OPENED in step 2 (265: every section closed, the current one marked "this step"): steps 1, 3 and 4 collapse under one line each saying where they stand', /data-step-section="2" data-step-current="true"/.test(o2) && (o2.match(/<details[^>]*data-step-section/g) ?? []).length === 4 && /this step/.test(o2) && /from step 1/.test(o2) && /from step 3/.test(o2) && /from step 4/.test(o2) && /data-slots-for="a1"/.test(o2) && (o2.match(/data-slot="/g) ?? []).length === 7)
-  ok('…the line for step 3 says "a cost range is recorded" where one is, and the collapsed sections still hold their content (nothing hidden, only out of the way)', /Costs — a cost range is recorded · from step 3/.test(textOf(o2)) && textOf(o2).includes('FULL CARD 1 STEP 3') && textOf(o2).includes('FULL CARD 1 STEP 1'))
-  const o1 = renderWs(1, rows, ['a2'])
-  ok('OPENED in step 1: the policy test with its reason, the conflict note control, causes, avenue — and "Edit title"', /Policy test/.test(textOf(o1)) && /It rules out thresholds/.test(textOf(o1)) && /Keep it, with a note/.test(textOf(o1)) && /Edit title/.test(textOf(o1)) && /Later phase/.test(textOf(o1)))
-  ok('…and "Who, how and against — not yet answered · from step 2" is the line for the Who section while unanswered', /Who, how and against — not yet answered · from step 2/.test(textOf(o1)))
+  ok('OPENED on Drafting: the step sections are closed under one line each, none saying "this step" or "from step N" (308), and Who, how and against holds its seven slots', (o2.match(/<details[^>]*data-step-section/g) ?? []).length === 4 && !/this step|from step \d/.test(textOf(o2)) && /data-slots-for="a1"/.test(o2) && (o2.match(/data-slot="/g) ?? []).length === 7)
+  ok('…the Costs line says "a cost range is recorded" where one is, and the collapsed sections still hold their content (nothing hidden, only out of the way)', /Costs — a cost range is recorded/.test(textOf(o2)) && textOf(o2).includes('FULL CARD 1 STEP 3') && textOf(o2).includes('FULL CARD 1 STEP 1'))
+  const o1 = renderWs(2, rows, ['a2'])
+  ok('OPENED: the policy test with its reason, the conflict note control, causes, avenue — and "Edit title"', /Policy test/.test(textOf(o1)) && /It rules out thresholds/.test(textOf(o1)) && /Keep it, with a note/.test(textOf(o1)) && /Edit title/.test(textOf(o1)) && /Later phase/.test(textOf(o1)))
+  ok('…and "Who, how and against — not yet answered" is the line for the Who section while unanswered', /Who, how and against — not yet answered/.test(textOf(o1)))
   control('a FITS action offering "Keep it, with a note" (must be FALSE)', /Keep it, with a note/.test(textOf(renderWs(1, rows, ['a1']))))
 
   // the checklists, pure
@@ -355,9 +360,11 @@ async function partD() {
     const clear = await post({ op: 'keepConflict', actionId: x.id, note: null })
     ok('clearing the note puts the action back to waiting', clear.status === 200 && (await prisma.lexCoherentAction.findUnique({ where: { id: x.id } }))?.conflictNote == null)
 
-    // Classify is a step 1 / step 4 job
-    const cls = await post({ op: 'proposeFacets' })   // the idea is at step 3
-    ok('"Classify with Lex" in step 3 proposes nothing, spends nothing, and says why in words', cls.status === 422 && /step 1 \(causes and avenue\) or step 4/.test(cls.json.error ?? '') && /Nothing was proposed/.test(cls.json.error ?? ''), cls.json.error)
+    // Classify is a step 1 / step 4 job. ⚠ MOVED BY 26-X 308: the stored step (Idea.actionsStep) is no longer read — the Organising page's
+    // "Classify with Lex" is step 1's — so the route call this used to make (relying on the idea being at step 3) would now classify and
+    // SPEND. The refusal for a step with nothing to classify is asserted on the function, with step 3 asked for explicitly.
+    const cls = await S.proposeFacets(id, null, 3)
+    ok('"Classify with Lex" asked for step 3 proposes nothing, spends nothing, and says why in words', !cls.ok && /step 1 \(causes and avenue\) or step 4/.test((cls as { error: string }).error) && /Nothing was proposed/.test((cls as { error: string }).error), (cls as { error?: string }).error)
 
     // accept / dismiss only this step's part
     const cause = await prisma.diagnosisCause.findFirst({ where: { ideaId: id } })
@@ -480,14 +487,16 @@ function partG() {
   const aside = [{ ...mkAction(9), status: 'ARCHIVED', headingId: 'h1', mergedIntoId: 'a1' }, { ...mkAction(10), status: 'RULED_OUT', headingId: 'h1', ruleOutReason: 'no' }]
   const withAside = (step: number) => renderToStaticMarkup(React.createElement(ActionsWorkspace, {
     ideaId: 'idea-x', actions: rows as never, setAside: aside as never, headings: [{ id: 'h1', name: 'Legislation', colourKey: 'blue', hidden: false, orderIndex: 0 }] as never,
-    causes: [] as never, busy: false, onChanged: () => {}, renderFull: () => null, step: step as never,
+    causes: [] as never, busy: false, onChanged: () => {}, renderFull: () => null, page: (step === 1 ? 'organising' : 'drafting') as never,
   }))
   const h1 = withAside(1), h2 = withAside(2)
   ok('the filter is offered with COUNTS: All actions (3), Unreviewed, Conflicts (1)', /All actions \(3\)/.test(textOf(h1)) && /Conflicts \(1\)/.test(textOf(h1)) && /Unreviewed \(1\)/.test(textOf(h1)), textOf(h1).slice(0, 300))
-  ok('"Not yet specific" is offered from step 2 on, not in step 1', /Not yet specific \(\d\)/.test(textOf(h2)) && !/Not yet specific/.test(textOf(h1)))
+  // ⚠ MOVED BY 26-X 308: "Not yet specific" was a step-2 filter; the Organising filter is step 1's and the Drafting page has its own filters
+  // (to brief · to draft · … · accepted, BRIEF_26X §5a), so it is offered on neither. "Specific enough" is still on the record's Who section.
+  ok('308: "Not yet specific" is offered on neither page; Drafting offers its own filters instead', !/Not yet specific/.test(textOf(h1)) && !/Not yet specific/.test(textOf(h2)) && /data-drafting-bar/.test(h2))
   ok('a heading reads "· 1 archived" after a merge/rebuild archived one of its actions — a RULED-OUT one is not counted as archived', /1 archived/.test(textOf(h1)) && !/2 archived/.test(textOf(h1)) && /data-archived-count/.test(h1))
   ok('…and in step 1 the word is a button that opens the set-aside block', /<button[^>]*data-archived-count[^>]*>1 archived<\/button>/.test(h1) || /data-archived-count[^>]*>1 archived<\/button>/.test(h1))
-  control('a heading with nothing archived printing "archived" (must be FALSE)', /archived/.test(textOf(renderToStaticMarkup(React.createElement(ActionsWorkspace, { ideaId: 'idea-x', actions: rows as never, setAside: [] as never, headings: [{ id: 'h1', name: 'Legislation', colourKey: 'blue', hidden: false, orderIndex: 0 }] as never, causes: [] as never, busy: false, onChanged: () => {}, renderFull: () => null, step: 1 as never })))))
+  control('a heading with nothing archived printing "archived" (must be FALSE)', /archived/.test(textOf(renderToStaticMarkup(React.createElement(ActionsWorkspace, { ideaId: 'idea-x', actions: rows as never, setAside: [] as never, headings: [{ id: 'h1', name: 'Legislation', colourKey: 'blue', hidden: false, orderIndex: 0 }] as never, causes: [] as never, busy: false, onChanged: () => {}, renderFull: () => null, page: 'organising' as never })))))
   ok('the Not-tested rows offer the test: the toolbar button counts them', /Test against the policy \(0 untested\)|Test against the policy/.test(textOf(renderWs(1, [mkAction(1), mkAction(2)]))) && /Test against the policy \(2 untested\)/.test(textOf(renderWs(1, [mkAction(1), mkAction(2)]))))
   control('the button offered when every action is already tested (must be FALSE)', /Test against the policy \(/.test(textOf(renderWs(1, [mkAction(1, { policyTest: { verdict: 'FITS', reason: 'ok', from: [] } })]))))
 }
@@ -504,7 +513,7 @@ async function partH() {
   control('an over-limit statement that left the commentary empty (must be FALSE)', !S.statementAndCommentary(long).commentary)
   ok('a statement within the limit adds nothing to the commentary', S.statementAndCommentary('Short enough.').commentary === null)
   const wsHtml = renderWs(1, [mkAction(1), mkAction(2)])
-  ok('item 2: the bulk-bar control reads "Ask Lex to review and merge" (it always goes through Lex) — and nowhere a bare "Merge" button', renderToStaticMarkup(React.createElement(ActionsWorkspace, { ideaId: 'x', actions: [mkAction(1), mkAction(2)] as never, setAside: [] as never, headings: [] as never, causes: [] as never, busy: false, onChanged: () => {}, renderFull: () => null, step: 1 as never, initiallyOpen: [] })).indexOf('Ask Lex to review and merge') === -1 /* the bar shows only with a selection */ && /Ask Lex to review and merge/.test(read('components/lex/ActionsWorkspace.tsx')) && !/>Merge<\/button>/.test(read('components/lex/ActionsWorkspace.tsx')))
+  ok('item 2: the bulk-bar control reads "Ask Lex to review and merge" (it always goes through Lex) — and nowhere a bare "Merge" button', renderToStaticMarkup(React.createElement(ActionsWorkspace, { ideaId: 'x', actions: [mkAction(1), mkAction(2)] as never, setAside: [] as never, headings: [] as never, causes: [] as never, busy: false, onChanged: () => {}, renderFull: () => null, page: 'organising' as never, initiallyOpen: [] })).indexOf('Ask Lex to review and merge') === -1 /* the bar shows only with a selection */ && /Ask Lex to review and merge/.test(read('components/lex/ActionsWorkspace.tsx')) && !/>Merge<\/button>/.test(read('components/lex/ActionsWorkspace.tsx')))
   ok('item 3: the per-row heading menu now offers "+ New heading…" too, so both menus agree', /value="__new"[^>]*>\+ New heading…/.test(wsHtml) && (wsHtml.match(/\+ New heading…/g) ?? []).length >= 2)
   control('step 2 offering a heading menu with "+ New heading…" (must be FALSE)', /\+ New heading…/.test(renderWs(2, [mkAction(1)])))
 
@@ -627,9 +636,10 @@ function partJ() {
     ideaId: 'idea-x', actions: [a] as never, setAside: [] as never, headings: [{ id: 'h1', name: 'Legislation', colourKey: 'blue', hidden: false, orderIndex: 0 }] as never,
     causes: [{ id: 'c1', number: 1, cause: 'A cause', whyPersisted: null }] as never, busy: false, onChanged: () => {},
     renderFull: (x: unknown, s: number, between?: React.ReactNode) => React.createElement(FP.ActionCard, { action: x as never, step: s as never, between, benchmarks: [], costLines: [], busy: false, api: {} as never, costLinesApi: {} as never }),
-    initiallyOpen: ['a7'], step: step as never, costLineActionIds: [],
+    initiallyOpen: ['a7'], page: (step === 1 ? 'organising' : 'drafting') as never, onPage: () => {}, costLineActionIds: [],
   }))
-  const html = openHtml(1)
+  // ⚠ 26-X 318: a record opens on the Drafting page only (an Organising title flips there), so the opened record is rendered on Drafting
+  const html = openHtml(2)
   const pos = (re: RegExp) => html.search(re)
   const order = [pos(/data-open-title/), pos(/Close −/), pos(/data-statement/), pos(/data-test-line/), pos(/The causes it attacks/), pos(/data-commentary/)]
   ok('top to bottom: [title · Edit title · Close], the full statement, [test | heading menu], avenue and causes, Detail', order.every((p) => p >= 0) && order.every((p, i) => i === 0 || p > order[i - 1] || (i === 1 && p > 0)), order.join(','))
@@ -643,12 +653,14 @@ function partJ() {
   ok('256: the heading menu sits at the right of the jump band (above the policy test); the test is not full width', /Heading for action 7/.test(band) && /ml-auto/.test(band) && /Policy test/.test(line) && /w-fit/.test(line) && !/Heading for action 7/.test(line) && !/w-full/.test(line.slice(0, line.indexOf('Policy test') + 400)))
   ok('the line under the title (avenue · causes · tested) is gone from the opened row', !/>1 cause</.test(html) && !/data-not-tested(?!-box)/.test(html))
   ok('257/266: the Action details renders on the opened card, labelled "Action details" (never "Commentary"), whole', /data-commentary/.test(html) && />Action details<\/span>/.test(html) && !/Commentary/.test(textOf(html)) && !/Mechanism — commentary/.test(html) && textOf(html).includes('Second paragraph: examples.'))
-  control('an action with NO detail showing detail text, rather than "No action details written yet" (285; must be FALSE)', !/No action details written yet/.test(openHtml(1, withCom(7, { commentary: null }))))
+  control('an action with NO detail showing detail text, rather than "No action details written yet" (285; must be FALSE)', !/No action details written yet/.test(openHtml(2, withCom(7, { commentary: null }))))
   control('the heading menu still sitting in the title line / header (must be FALSE)', /Heading for action 7[\s\S]{0,200}Close −/.test(html) || /Close −[\s\S]{0,300}Heading for action 7[\s\S]{0,30}<\/div><\/div><div class="border-t/.test(html))
-  const closed = renderToStaticMarkup(React.createElement(ActionsWorkspace, { ideaId: 'idea-x', actions: [act] as never, setAside: [] as never, headings: [] as never, causes: [] as never, busy: false, onChanged: () => {}, renderFull: () => null, initiallyOpen: [], step: 1 as never, costLineActionIds: [] }))
+  const closed = renderToStaticMarkup(React.createElement(ActionsWorkspace, { ideaId: 'idea-x', actions: [act] as never, setAside: [] as never, headings: [] as never, causes: [] as never, busy: false, onChanged: () => {}, renderFull: () => null, initiallyOpen: [], page: 'organising' as never, costLineActionIds: [] }))
   ok('the CLOSED row keeps a two-line snippet (clamped to two lines) and its tags', /data-row-summary/.test(closed) && /WebkitLineClamp|-webkit-line-clamp:\s*2/.test(closed) && /1 cause/.test(closed))
-  const s2 = openHtml(2)
-  ok('step 2 / 3: the opened record has the title line and no heading menu', /data-open-title/.test(s2) && !/Heading for action 7/.test(s2))
+  // ⚠ MOVED BY 26-X: there is one opened record (on Drafting), and its band carries the heading menu — a heading (and its kind) is part of
+  // "Defined" on the progress strip, so the record is where it is set. Was: steps 2/3's record had no heading menu. Organising never opens one.
+  const s2 = openHtml(2), s1 = openHtml(1)
+  ok('26-X: the opened record (Drafting) has the title line and the heading menu in its band; Organising opens no record in place', /data-open-title/.test(s2) && /Heading for action 7/.test(s2.slice(s2.search(/data-jump-band/))) && !/data-record-order/.test(s1))
 }
 
 // ── K · decision 177 — the seven slots, "specific enough", the pass that proposes, the documents, the tools (a SCRATCH idea; the model stood in for) ──
@@ -893,14 +905,11 @@ async function partL() {
   // 184 - pure render: the filter's own help text carries the definitions
   const htmlF = renderWs(1, [mkAction(1), mkAction(2)])
   ok('184: the filter has its own HELP TEXT in words — what "Unreviewed" means (a proposal of Lex\'s waiting, or never tested) and what "Conflicts" means', /data-filter-help/.test(htmlF) && /Unreviewed<\/span> — Lex has a proposal waiting for you/.test(htmlF) && /has not been tested against the policy/.test(htmlF) && /Conflicts<\/span> — the policy test says/.test(htmlF))
-  ok('…and in step 2 it adds "Not yet specific" and the answers', /data-filter-help/.test(renderWs(2, [mkAction(1)])) && /Not yet specific<\/span> — Who and Against are not both answered/.test(renderWs(2, [mkAction(1)])) && /this step’s classification or answers/.test(renderWs(2, [mkAction(1)])))
-  control('step 1 describing "Not yet specific" (a step-2 tool; must be FALSE)', /Not yet specific<\/span>/.test(htmlF))
-  ok('"Unreviewed" in step 2 counts an action with a proposed answer waiting (and not one without)', (() => {
-    const fits = { verdict: 'FITS', reason: 'ok', from: [] }
-    const withP = mkAction(1, { policyTest: fits, record: { against: { text: '', by: 'LEX', at: '', proposal: { text: 'Opposition from the department.', reason: 'x', source: null, at: '' } } } })
-    const h = textOf(renderWs(2, [withP, mkAction(2, { policyTest: fits })]))
-    return /Unreviewed \(1\)/.test(h)
-  })())
+  // ⚠ MOVED BY 26-X 308: the step-2 list filter (with "Not yet specific" and "answers") had no page to live on. The Organising filter is
+  // step 1's; Drafting filters by where each action stands (§5a), and a Lex proposal waiting in "Who, how and against" is said on the record.
+  // Was: step 2's help text adding "Not yet specific", and step 2's "Unreviewed" counting an action with a proposed answer.
+  ok('308: Drafting has no Organising filter or its help text; it has its own stage filters', !/data-filter-help/.test(renderWs(2, [mkAction(1)])) && /data-drafting-bar/.test(renderWs(2, [mkAction(1)])))
+  control('Organising describing "Not yet specific" (a step-2 tool; must be FALSE)', /Not yet specific<\/span>/.test(htmlF))
 
   const owner = await prisma.user.findFirst({ where: { email: 'cl@scrutinise.org' } })
   if (!owner) { skip('the scratch run', 'cl@scrutinise.org is not in this database'); return }
@@ -939,8 +948,10 @@ async function partL() {
     const none = s2.actions.filter((x) => !x.parked && !ST.costAnswered(x, s2.costLines.some((l) => l.actionId === x.id))).length
     ok('the step-3 checklist counts an action with a costed line (A) and one with "no cost, because" (B) as ANSWERED, and the rest as open', ST.costAnswered(bNow) && !ST.costAnswered(s2.actions.find((x) => x.id === C.id)!) && cl3[0].text.startsWith(`${none} `), cl3.map((l) => l.text).join(' | '))
     control('an action with only a "no cost" reason still counted as having no cost answer (must be FALSE)', !ST.costAnswered(bNow))
-    const row3 = textOf(renderToStaticMarkup(React.createElement(ActionsWorkspace, { ideaId: id, actions: s2.actions.filter((x) => [A.id, B.id, C.id].includes(x.id)) as never, setAside: [] as never, headings: [] as never, causes: [] as never, busy: false, onChanged: () => {}, renderFull: () => null, initiallyOpen: [], step: 3 as never, costLineActionIds: [A.id] })))
-    ok('the step-3 row says "No cost, because ..." where that is the answer, the cost where there is one, and "Cost: not yet answered" where neither', /No cost ?, because It restates a duty/.test(row3) && /Cost: not yet answered/.test(row3) && /cost lines recorded/.test(row3), row3.slice(0, 400))
+    const row3 = textOf(renderToStaticMarkup(React.createElement(ActionsWorkspace, { ideaId: id, actions: s2.actions.filter((x) => [A.id, B.id, C.id].includes(x.id)) as never, setAside: [] as never, headings: [] as never, causes: [] as never, busy: false, onChanged: () => {}, renderFull: () => null, initiallyOpen: [], page: 'drafting' as never, costLineActionIds: [A.id] })))
+    // ⚠ MOVED BY 26-X 308: the cost tag left the ROW with the step tabs (no page shows a row by its cost); the record's Costs line says it
+    // (the next assertion). Was: the step-3 row said "No cost, because …", the cost, or "Cost: not yet answered".
+    ok('308: no row carries a cost tag any more — the record\'s Costs line does', !/No cost ?, because|Cost: not yet answered|cost lines recorded/.test(row3), row3.slice(0, 400))
     ok('…and the collapsed line for step 3 on an opened record says "no cost, because"', /Costs — no cost, because It restates/.test(ST.otherStepLine(3, bNow as never, false)))
 
     // the cost summary reads these
@@ -976,7 +987,9 @@ async function partL() {
         return j.parts.flatMap((p) => p.items).some((i) => i.key.startsWith('actions-step:'))
       } finally { await deleteScratch(empty.id) }
     })())
-    ok('the form\'s words are on the screen: Price year, one-off / per year, "no cost, because…" (source-shaped)', /Price year/.test(read('components/lex/FieldsPanel.tsx')) && /one-off/.test(read('components/lex/FieldsPanel.tsx')) && /no cost, because…/.test(read('components/lex/FieldsPanel.tsx')))
+    // ⚠ Red since 26-W-b (found in 26-X, red at HEAD too): "no cost, because…" moved into RECORD_UI.noCostOpen, so the literal is no longer in
+    // FieldsPanel. Read the constant the panel renders.
+    ok('the form\'s words are on the screen: Price year, one-off / per year, "no cost, because…" (source-shaped)', /Price year/.test(read('components/lex/FieldsPanel.tsx')) && /one-off/.test(read('components/lex/FieldsPanel.tsx')) && /RECORD_UI\.noCostOpen/.test(read('components/lex/FieldsPanel.tsx')) && RECORD_UI_26S2.noCostOpen === 'no cost, because…')
   } finally {
     await deleteScratch(id)
   }

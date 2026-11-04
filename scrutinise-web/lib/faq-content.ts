@@ -117,10 +117,12 @@ ${SEVEN_STAGES.map((s) => `${s.n}. **${s.name}** — ${s.does}${s.available ? ''
 
 **${STAGE_CAVEAT_HEADING}** ${STAGE_CAVEAT}
 
-**"${FIRST_SCRUTINY_LABEL}" is not a stage. It is a review status** — whether anyone outside has looked at the work. It is true of everything made in Stages 1, 2 and 3 alike: a briefing, a kernel and a deepened proposal. ${REVIEW_COUNTERPARTS_NOTE} The platform never infers a review from a comment or a contribution; a review is a deliberate act.
+**Development carries a checklist, not sub-stages:** the problem, the causes, the guiding policy, organising the actions, drafting each one, the Deepening (it opens when every live action is accepted or needs no draft), and a promotional plan. **Submission** means the idea has been lodged with a decision-maker — an MP for a Private Member's Bill, a committee as evidence, a consultation, a department — and is recorded with the body, the date and the form.
+
+**"${FIRST_SCRUTINY_LABEL}" is not a stage. It is a review status** — whether anyone outside has looked at the work. It is true of everything made in Stages 1 and 2 alike: a briefing, a kernel and a deepened proposal. ${REVIEW_COUNTERPARTS_NOTE} The platform never infers a review from a comment or a contribution; a review is a deliberate act.
 
 **Stage 7, In Force, is stated and not built.** It would track whether a law, once in force, did what it was meant to, and the platform has nothing to build that with yet. It is listed so that you can see what the platform is for.
-### Stage 2, the first draft — Diagnosis: how do I know I have found the right cause?
+### Development — Diagnosis: how do I know I have found the right cause?
 
 Everything after the Diagnosis is built on the cause you settle on, so it deserves the most care. While you are working on your causes, "What to do next" shows five checks. Tick each when you are satisfied — none is required, and "Confirm these causes" stays available either way. Beside any check, "Ask Lex" has Lex apply that test to your causes and tell you what it finds; it reports and suggests, and changes nothing.
 

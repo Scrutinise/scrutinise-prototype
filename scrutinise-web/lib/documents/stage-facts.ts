@@ -11,6 +11,7 @@ import { prisma } from '@/lib/prisma'
 import { PAGE_SEQUENCE } from '@/lib/lex/page1-config'
 import { DEEPENING_PASS_KEYS } from '@/lib/lex/pass-keys'
 import { kernelProgressOf, type KernelProgress } from './stage-banner'
+import { developmentState, overrideLine } from '@/lib/lex/development'
 
 export async function readKernelProgress(ideaId: string): Promise<KernelProgress> {
   const [rows, builds, passes] = await Promise.all([
@@ -21,4 +22,9 @@ export async function readKernelProgress(ideaId: string): Promise<KernelProgress
   const byKey = new Map(rows.map((r) => [r.fieldKey, r.status as string]))
   const fieldStatuses = PAGE_SEQUENCE.flatMap((p) => p.fields).map((f) => byKey.get(f.key) ?? 'EMPTY')
   return kernelProgressOf({ built: builds > 0, fieldStatuses, deepeningPassKeys: DEEPENING_PASS_KEYS, passes })
+}
+
+/** 26-X decision 317 — "Deepened with 13 actions undrafted — reason: …" for the banner, or null when no override is in force. A read only. */
+export async function readDeepenedEarly(ideaId: string): Promise<string | null> {
+  return overrideLine(await developmentState(ideaId))
 }

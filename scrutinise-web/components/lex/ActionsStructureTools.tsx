@@ -19,7 +19,7 @@ import { actionLabel } from '@/lib/lex/action-facets'
 import { colourFor } from '@/lib/lex/action-headings'
 import { LIMITS } from '@/lib/lex/input-limits'
 import BoundedInput from './BoundedInput'
-import { RECORD_UI, WORKSPACE_UI } from '@/lib/lex/screen-labels'
+import { RECORD_UI, WORKSPACE_UI, ORGANISING_TOOLBAR_UI } from '@/lib/lex/screen-labels'
 
 /** The slice of the workspace's `useOps` these tools use. `run` is untyped here on purpose: the route's schema is the check. */
 export interface OpsLike {
@@ -209,7 +209,7 @@ export function ResortTool({ plan, undoable, ops, disabled }: { plan: HeadingPla
   return (
     <>
       <button type="button" disabled={disabled} onClick={() => void open()} data-resort-button title="Puts every live action under one of your instrument headings, with a reason for each. Nothing is deleted: the old headings are archived and Undo puts everything back."
-        className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Re-sort into headings</button>
+        className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{ORGANISING_TOOLBAR_UI.reSort}</button>
       {undoable > 0 && (
         <button type="button" disabled={disabled} data-resort-undo onClick={() => void ops.run('undoResort', {}, 'putting the actions back', (r: { restored: number; headingsBack: string[] }) => `Saved: ${r.restored} action${r.restored === 1 ? '' : 's'} back on the heading they were on${r.headingsBack.length ? `; ${r.headingsBack.length} archived heading${r.headingsBack.length === 1 ? '' : 's'} brought back` : ''}.`)}
           className="text-[11px] underline text-zinc-700 disabled:opacity-40">Undo the re-sort ({undoable} moved)</button>

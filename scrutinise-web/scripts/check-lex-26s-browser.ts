@@ -116,7 +116,10 @@ async function partB() {
 
     // ── D / E · the opened record
     section('B2 · D, E — the opened record is one box; provenance is a source')
-    await page.locator('li[data-action-id="a2"] button[aria-expanded]').first().click()
+    // ⚠ MOVED BY 26-X 318: a record opens on the DRAFTING page only; on Organising a title flips there with the action open (as a user does it).
+    // Was: the row's own open button (aria-expanded) opened the record in place on the one page there was.
+    await page.locator('li[data-action-id="a2"] [data-row-title]').first().click()
+    await page.waitForFunction(() => document.getElementById('page-now')?.textContent === 'drafting' && !!document.querySelector('li[data-action-id="a2"][data-open="true"]'))
     const li2 = page.locator('li[data-action-id="a2"]')
     ok('opened: the row carries the box marker, a 2px border and a grey fill', (await li2.getAttribute('data-open')) === 'true' && /border-2/.test((await li2.getAttribute('class')) ?? '') && /bg-zinc-100/.test((await li2.getAttribute('class')) ?? ''))
     const geo = await page.evaluate(() => {
@@ -141,7 +144,8 @@ async function partB() {
     ok('"Edit title" opens the title box with a counter ("… left")', (await li2.locator('input[aria-label^="Title of action"]').count()) === 1 && /\d+ left/.test(await text('li[data-action-id="a2"] [data-limit-counter]')))
     await li2.locator('button:has-text("Cancel")').first().click()
     // 265 (24 Oct): every record section opens CLOSED; open the policy test and the step-1 tools by their lines, as a user does
-    ok('265: the record opened with its sections closed', (await li2.locator('details[data-record-section][open]').count()) === 0)
+    // ⚠ MOVED BY 26-X 318: on Drafting the record opens with its Drafts at the top, OPEN; every other section closed. Was: every section closed.
+    ok('265 / 318: the record opened with its Drafts open and every other section closed', (await li2.locator('details[data-record-section][open]').count()) === 1 && (await li2.locator('details[data-record-section="documents"][open]').count()) === 1)
     for (const key of ['policy', 'prune']) await li2.locator(`details[data-record-section="${key}"] > summary`).click()
     const verdictBox = await li2.locator('text=Policy test').first().locator('xpath=..').innerText()
     ok('the verdict box carries the reason only — no "From:"', /It matches the policy/.test(verdictBox) && !/From:/.test(verdictBox), verdictBox)
@@ -159,6 +163,9 @@ async function partB() {
     ok('Rule out → the list was re-read (row gone) and the strip says what happened', (await page.locator('li[data-action-id="a2"]').count()) === 0 && /Saved: #2 ruled out, with your reason/.test(await text('[data-status-strip]')))
     const stored2 = await h<number>(`window.__h.store.actions.find(a => a.id==='a2').ruleOutReason.length`)
     ok('…and the server holds all 600 characters (not 400, not nothing)', stored2 === 600, `${stored2}`)
+    // 26-X 308: the bulk bar is an Organising tool — back to that page (the store is the server's, so nothing is lost by the remount)
+    await page.evaluate(() => { (window as never as { __h: { step?: number } }).__h.step = undefined; (window as never as { __mount: (w: string) => void }).__mount('workspace') })
+    await page.waitForFunction(() => document.getElementById('page-now')?.textContent === 'organising' && !!document.querySelector('[data-action-id]'))
 
     // ── A1 · the bulk bar
     section('B4 · A1 — the bulk bar')
@@ -178,8 +185,13 @@ async function partB() {
     // ── A1/A2 · a refusal renders
     section('B5 · A — a refusal renders as "Not saved: …" with OK, where the user is looking')
     await page.evaluate(() => { (window as never as { __h: { rejectNext: unknown } }).__h.rejectNext = { status: 422, body: { error: { formErrors: [], fieldErrors: { reason: ['Too big: expected string to have <=600 characters'] } } } } })
-    await page.locator('input[aria-label="New heading name"]').fill('Will be refused')
-    await page.locator('button:has-text("Add heading")').click()
+    // ⚠ MOVED BY 26-X addendum 321: the name box opens on pressing "Add heading" (it was always shown) and saves with "Save".
+    const addHeadingVia = async (name: string) => {
+      if (!(await page.locator('[data-add-heading-box]').count())) await page.locator('[data-add-heading]').click()
+      await page.locator('[data-add-heading-box] input[aria-label="New heading name"]').fill(name)
+      await page.locator('[data-add-heading-box] button:has-text("Save")').click()
+    }
+    await addHeadingVia('Will be refused')
     await page.waitForSelector('[data-status-strip] [role=alert]')
     const alertText = await text('[data-status-strip] [role=alert]')
     ok('the refusal says "Not saved:", names the control and the input, says nothing was changed', /Not saved: .*Add heading.*reason.*Nothing was changed/.test(alertText), alertText)
@@ -203,12 +215,10 @@ async function partB() {
 
     // ── A2 · the three heading paths + B
     section('B6 · A2, B — the three heading paths, each re-reads and says what happened')
-    await page.locator('input[aria-label="New heading name"]').fill('Practical')
-    await page.locator('button:has-text("Add heading")').click()
+    await addHeadingVia('Practical')
     await page.waitForSelector('[data-status-strip] >> text=heading “Practical” added')
-    ok('1 · top "Add heading": the heading is in the list after the re-read, the box is cleared, the strip says so', (await page.locator('section[aria-label="Practical"]').count()) === 1 && (await page.locator('input[aria-label="New heading name"]').inputValue()) === '')
-    await page.locator('input[aria-label="New heading name"]').fill('Practical')
-    await page.locator('button:has-text("Add heading")').click()
+    ok('1 · top "Add heading": the heading is in the list after the re-read, the box closes (addendum 321), the strip says so', (await page.locator('section[aria-label="Practical"]').count()) === 1 && (await page.locator('input[aria-label="New heading name"]').count()) === 0)
+    await addHeadingVia('Practical')
     await page.waitForSelector('[data-status-strip] >> text=you already have a heading called “Practical”')
     ok('…adding the SAME name says "Nothing added: you already have…" (it used to do nothing, silently)', (await page.locator('section[aria-label="Practical"]').count()) === 1)
     await page.locator('select[aria-label="Heading for action 5"]').selectOption({ label: '◆ Practical' }).catch(async () => {
@@ -274,7 +284,9 @@ async function partB() {
       await page.evaluate((st) => { (window as never as { __h: { step: number } }).__h.step = st; (window as never as { __mount: (w: string) => void }).__mount('workspace') }, step)
       await page.waitForSelector('li[data-action-id], [data-heading-hide]')
       const hb = page.locator('section[aria-label="Legislation"] [data-heading-hide]')
-      ok(`step ${step}: the heading row has its own Hide control, and Hide all sits in the top group`, (await hb.count()) === 1 && (await page.locator('[data-hide-all-headings]').count()) === 1)
+      // ⚠ MOVED BY 26-X 308 / addendum 321: steps 2–4 are the Drafting page; "Hide all" is an Organising control (the View row), ABSENT here,
+      // not greyed — it is pressed on Organising in B7c above. The heading's own Hide stays on Drafting. Was: Hide all in the top group on every step.
+      ok(`step ${step} (Drafting): the heading row has its own Hide control; Hide all is Organising’s and absent here`, (await hb.count()) === 1 && (await page.locator('[data-hide-all-headings]').count()) === 0)
       await hb.click()
       await page.waitForFunction(() => (window as never as { __h: { store: { headings: Array<{ hidden: boolean }> } } }).__h.store.headings[0].hidden === true)
       ok(`step ${step}: Hide hides the heading (the server holds it) and the row reads "Show"`, /^Show$/.test((await hb.innerText()).trim()))
@@ -286,11 +298,6 @@ async function partB() {
       await page.locator('section[aria-label="Legislation"] [data-heading-hide]').click()
       await page.waitForFunction(() => (window as never as { __h: { store: { headings: Array<{ hidden: boolean }> } } }).__h.store.headings[0].hidden === false)
       ok(`step ${next}: Show brings it back`, /^Hide$/.test((await page.locator('section[aria-label="Legislation"] [data-heading-hide]').innerText()).trim()))
-      await page.locator('[data-hide-all-headings]').click()
-      await page.waitForSelector('[data-status-strip] >> text=every heading is hidden')
-      ok(`step ${next}: Hide all hides every heading`, await h<boolean>(`window.__h.store.headings.every(x => x.hidden)`))
-      await page.locator('[data-hide-all-headings]').click()
-      await page.waitForSelector('[data-status-strip] >> text=every heading is shown')
     }
     await page.evaluate(() => { (window as never as { __h: { step?: number } }).__h.step = undefined; (window as never as { __mount: (w: string) => void }).__mount('workspace') })
     await page.waitForSelector('li[data-action-id]')

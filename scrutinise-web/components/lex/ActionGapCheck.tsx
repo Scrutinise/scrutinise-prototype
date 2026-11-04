@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { ORGANISING_TOOLBAR_UI } from '@/lib/lex/screen-labels'
 
 /**
  * ══ 26-N §8 — "CHECK FOR GAPS", IN COHERENT ACTIONS ═════════════════════════════════════════
@@ -36,7 +37,9 @@ const VERDICT_UI: Record<Verdict, { glyph: string; word: string; border: string 
   FITS: { glyph: '✓', word: 'Fits', border: 'border border-zinc-200' },
 }
 
-export default function ActionGapCheck({ ideaId, onChanged }: { ideaId: string; onChanged?: () => void }) {
+/** 26-X addendum 321 — `inline`: the button sits on the Organising toolbar's "Lex and checks" row (it was a box of its own above the list);
+ *  its findings open as a full-width panel beneath the row, only once there is something to show. */
+export default function ActionGapCheck({ ideaId, onChanged, inline = false }: { ideaId: string; onChanged?: () => void; inline?: boolean }) {
   const [free, setFree] = useState<Free | null>(null)
   const [items, setItems] = useState<Suggestion[]>([])
   const [lastCost, setLastCost] = useState<number | null>(null)
@@ -86,19 +89,46 @@ export default function ActionGapCheck({ ideaId, onChanged }: { ideaId: string; 
 
   const hasFree = !!free && (free.causesWithoutAction.length > 0 || free.emptyCategories.length > 0)
 
+  const findings = <GapFindings hasFree={hasFree} free={free} run={run} lastCost={lastCost} items={items} busy={busy} act={act} error={error} />
+  const about = 'Looks for actions the guiding policy cannot do without. A free read comes first; then four models are asked what is missing, and each suggestion has to say what fails without it. Nothing is added to your actions until you accept it.'
+  const label = busy === 'run' ? 'Checking… (a few minutes)' : ORGANISING_TOOLBAR_UI.checkForGaps
+  if (inline) {
+    const showing = hasFree || !!run || items.length > 0 || !!error
+    return (
+      <>
+        <button type="button" disabled={!!busy} onClick={() => void check()} title={about} data-gap-check-button
+          className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">
+          {label}{items.length > 0 && busy !== 'run' ? ` · ${items.length} suggestion${items.length === 1 ? '' : 's'} waiting below` : ''}
+        </button>
+        {showing && <div className="basis-full w-full rounded-lg border border-zinc-300 p-3" id="action-gap-check">
+          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-700">{ORGANISING_TOOLBAR_UI.checkForGaps}</p>
+          <p className="text-[11px] text-zinc-600 mt-0.5">{about}</p>
+          {findings}
+        </div>}
+      </>
+    )
+  }
   return (
     <div className="rounded-lg border border-zinc-300 p-3 mb-3" id="action-gap-check">
       <div className="flex flex-wrap items-center gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-700 flex-1">Check for gaps</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-700 flex-1">{ORGANISING_TOOLBAR_UI.checkForGaps}</p>
         <button type="button" disabled={!!busy} onClick={() => void check()}
           className="text-xs font-semibold px-3 py-1 rounded-full bg-zinc-900 text-white disabled:opacity-40">
-          {busy === 'run' ? 'Checking… (a few minutes)' : 'Check for gaps'}
+          {label}
         </button>
       </div>
-      <p className="text-[11px] text-zinc-600 mt-0.5">
-        Looks for actions the guiding policy cannot do without. A free read comes first; then four models are asked what is
-        missing, and each suggestion has to say what fails without it. Nothing is added to your actions until you accept it.
-      </p>
+      <p className="text-[11px] text-zinc-600 mt-0.5">{about}</p>
+      {findings}
+    </div>
+  )
+}
+
+function GapFindings({ hasFree, free, run, lastCost, items, busy, act, error }: {
+  hasFree: boolean; free: Free | null; run: RunResult | null; lastCost: number | null; items: Suggestion[]; busy: string | null
+  act: (id: string, op: 'accept' | 'dismiss') => Promise<void>; error: string | null
+}) {
+  return (
+    <>
 
       {hasFree && free && (
         <div className="mt-2 rounded-lg border border-zinc-200 p-2.5">
@@ -164,6 +194,6 @@ export default function ActionGapCheck({ ideaId, onChanged }: { ideaId: string; 
         </ul>
       )}
       {error && <p className="text-[11px] text-red-700 mt-2">{error}</p>}
-    </div>
+    </>
   )
 }

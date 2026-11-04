@@ -19,6 +19,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ActionImportRequest } from '@/lib/lex/action-import-schema'
 import { explainFailure } from '@/lib/api-rejection'
 import FocusDialog from './FocusDialog'
+import { ORGANISING_TOOLBAR_UI, WORKSPACE_UI } from '@/lib/lex/screen-labels'
 import { POLICY_VERDICT_UI } from '@/lib/lex/action-facets'
 import { colourFor } from '@/lib/lex/action-headings'
 import {
@@ -30,7 +31,8 @@ interface Reply { ok?: boolean; result?: unknown; error?: unknown }
 type EditBody = Omit<Extract<ActionImportRequest, { op: 'edit' }>, 'op' | 'passId'>
 type ItemPatch = NonNullable<EditBody['items']>[number]['patch']
 
-export default function ActionImport({ ideaId, onChanged, initialSourceNumber }: { ideaId: string; onChanged?: () => void; initialSourceNumber?: number }) {
+/** 26-X addendum 321 — `inline`: the button sits on the Organising toolbar's "Add" row (it was above the list). */
+export default function ActionImport({ ideaId, onChanged, initialSourceNumber, inline = false }: { ideaId: string; onChanged?: () => void; initialSourceNumber?: number; inline?: boolean }) {
   const [open, setOpen] = useState(false)
   const [pass, setPass] = useState<ImportPassView | null>(null)
   const [importable, setImportable] = useState<{ sources: ImportableSource[]; notRead: Array<{ number: number; title: string; why: string }> } | null>(null)
@@ -122,11 +124,11 @@ export default function ActionImport({ ideaId, onChanged, initialSourceNumber }:
   const done = pass?.status === 'CONFIRMED'
 
   return (
-    <div className="mb-3" id="action-import">
-      <div className="flex flex-wrap items-center gap-1.5">
-        <button type="button" onClick={() => { setOpen(!open); if (!open) void load() }} aria-expanded={open}
+    <div className={inline ? 'contents' : 'mb-3'} id="action-import">
+      <div className={inline ? 'contents' : 'flex flex-wrap items-center gap-1.5'}>
+        <button type="button" onClick={() => { setOpen(!open); if (!open) void load() }} aria-expanded={open} data-import-button
           className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50">
-          Import actions from a document
+          {ORGANISING_TOOLBAR_UI.importActions}
         </button>
         {pass && !open && ['MAPPING', 'READY', 'CONFIRMING', 'FAILED'].includes(pass.status) && (
           <span className="text-[11px] text-zinc-600" data-import-announce>An import of [Ref: {pass.sourceNumber}] is {pass.status === 'READY' ? 'waiting for your review' : pass.status === 'FAILED' ? 'stopped' : 'being read'}.{' '}
@@ -415,7 +417,7 @@ function After({ pass, ideaId, onChanged, onAnother }: { pass: ImportPassView; i
       <p className="text-sm font-semibold text-zinc-900">Imported from [Ref: {pass.sourceNumber}]: {r.created.length} new action{r.created.length === 1 ? '' : 's'}{r.created.length ? ` (#${r.created.map((c) => c.number ?? '?').join(', #')})` : ''}, added to {r.addedTo.length}, {r.findings} sent to the policy review{r.headingsCreated.length ? `, ${r.headingsCreated.length} new heading${r.headingsCreated.length === 1 ? '' : 's'}` : ''}{r.reheaded ? `, ${r.reheaded} existing re-headed` : ''}.</p>
       <p className="text-xs text-zinc-700">The new actions are in your list, not confirmed, and each one says where it came from. <strong>The gap check has not been re-run</strong> — press “Check for gaps” when you want it to look again.</p>
       <div className="flex flex-wrap gap-2">
-        <button type="button" disabled={!!working} onClick={() => void run('proposeTitles', 'Title these for me')} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300">Title these for me</button>
+        <button type="button" disabled={!!working} onClick={() => void run('proposeTitles', WORKSPACE_UI.titleThemWithLex)} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300">{WORKSPACE_UI.titleThemWithLex}</button>
         <button type="button" disabled={!!working} onClick={() => void run('proposeFacets', 'Classify with Lex')} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300">Classify with Lex</button>
       </div>
       <button type="button" onClick={onAnother} className="text-[11px] underline text-zinc-600">Import another document</button>

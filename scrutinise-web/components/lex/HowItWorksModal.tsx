@@ -15,6 +15,7 @@ import { useState } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import { FAQ_MARKDOWN } from '@/lib/faq-content'
 import { PRODUCT_FACTS } from '@/lib/lex/product-facts'
+import { LIFECYCLE_STAGE_WORD } from '@/lib/lex/screen-labels'
 
 // Verbatim tour copy (Sprint 1.4 brief). The per-panel detail lives in the boxes
 // below, so the intro no longer repeats it.
@@ -102,7 +103,8 @@ const BUILD_STEPS: { name: string; side: string; blurb: string }[] = [
     blurb: 'Ten passes over about ten minutes: I search the corpus, draft a diagnosis and an approach, research what the draft raises, revise it against what I find, and read the whole thing back as a hostile committee clerk.',
   },
   {
-    name: 'The First Draft',
+    // 26-X 316 — "The First Draft" is no longer a stage name: what the build hands over is the start of Development.
+    name: LIFECYCLE_STAGE_WORD.development,
     side: 'last',
     blurb: 'Everything I drafted, as proposals you accept, edit or throw out — with the decisions I had to make laid out so you can take them yourself. Nothing is yours until you say it is.',
   },

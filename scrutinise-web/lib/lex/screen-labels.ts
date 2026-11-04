@@ -181,7 +181,8 @@ export const WORKSPACE_UI = {
   group: 'Group',
   hideAllHeadings: 'Hide all headings',
   showAllHeadings: 'Show all headings',
-  titleTheseForMe: 'Title these for me',
+  // 26-X addendum 323: was "Title these for me (4)"; the count's meaning is now in the label ("4 actions have no title · Title them with Lex")
+  titleThemWithLex: 'Title them with Lex',
   classifyWithLex: 'Classify with Lex',
   dismissThemAll: 'Dismiss them all',
   findDuplicates: 'Find duplicates',
@@ -245,6 +246,107 @@ export const TOUCH_BLOCK = {
   judgments: 'Judgments interpreting it',
   near: 'Near provisions, with their question',
 } as const
+
+// ══ 26-X (decisions 308–318) — the lifecycle, the Development checklist, the Organising and Drafting pages ══════════════════════════════
+
+/** 316 — the seven lifecycle stages, in order. The stage bar, every generated document's banner and the FAQ read these names. */
+export const LIFECYCLE_STAGE_WORD = {
+  creation: 'Creation',
+  development: 'Development',
+  privateScrutiny: 'Private Scrutiny',
+  publicScrutiny: 'Public Scrutiny',
+  promotion: 'Promotion',
+  submission: 'Submission',
+  inForce: 'In Force',
+} as const
+/** The bar's own words. */
+export const LIFECYCLE_UI = {
+  youAreHere: 'You are here',
+  notYetOpen: 'not yet open',
+  notYetAvailable: 'not yet available',
+  notSubmitted: 'not submitted',
+} as const
+
+/** 310 — the progress strip's five states, and "needs no draft" (313). */
+export const PROGRESS_WORD = {
+  defined: 'Defined',
+  briefed: 'Briefed',
+  drafted: 'Drafted',
+  reviewed: 'Reviewed',
+  accepted: 'Accepted',
+  noDraft: 'needs no draft',
+} as const
+
+/** §3a — the Development checklist's seven lines. */
+export const CHECKLIST_WORD = {
+  problem: 'The problem',
+  causes: 'The causes',
+  policy: 'The guiding policy',
+  organising: 'Organising the actions',
+  drafting: 'Drafting',
+  deepening: 'The Deepening',
+  promotion: 'Promotional plan',
+  locked: 'locked',
+} as const
+
+/** 308 / 318 — the two pages over the one action list, and the flip between them. */
+export const PAGE_UI = {
+  organising: 'Organising',
+  drafting: 'Drafting',
+  backToOrganising: '← Back to Organising',
+  openInDrafting: 'Open',
+  needsNoDraftBecause: 'Needs no draft, because…',
+  saveNoDraft: 'Save — needs no draft',
+  needsDraftAfterAll: 'It needs a draft after all',
+} as const
+/** §5a — the Drafting page's filters, one per stage of the strip, and "all". */
+export const DRAFTING_FILTER_WORD = {
+  all: 'all',
+  toBrief: 'to brief',
+  toDraft: 'to draft',
+  toReview: 'to review',
+  toAccept: 'to accept',
+  noDraft: 'needs no draft',
+  accepted: 'accepted',
+} as const
+
+/** 317 — the Deepening's lock, and the owner's override. */
+export const DEEPENING_LOCK_UI = {
+  deepenNow: 'Deepen now',
+  overrideReason: 'Why deepen before every action is drafted',
+  recordOverride: 'Record the reason and open the Deepening',
+} as const
+
+/** 26-X addendum 321 — the Organising toolbar is three labelled rows; and the controls on them whose words were written in their components. */
+export const ORGANISING_TOOLBAR_UI = {
+  rowView: 'View',
+  rowAdd: 'Add',
+  rowLex: 'Lex and checks',
+  addAction: 'Add action',
+  importActions: 'Import actions from a document',
+  checkForGaps: 'Check for gaps',
+  reSort: 'Re-sort into headings',
+  testAgainstPolicy: 'Test against the policy',
+  // 323 — a count on a button is never unexplained. "N" is replaced by the count where it is shown (withCount).
+  untitledFilter: 'Untitled',
+  acceptAllTitles: 'Accept all N proposed titles',
+  lexProposes: 'Lex proposes:',
+  acceptTitle: 'Accept',
+  notThisTitle: 'Not this',
+} as const
+/** 26-X addendum 322 — the "Add action" form. */
+export const ADD_ACTION_UI = {
+  dialogTitle: 'Add an action',
+  title: 'Title',
+  statement: 'Statement',
+  heading: 'Heading',
+  unsorted: 'Unsorted',
+  kind: 'Kind',
+  save: 'Add the action',
+} as const
+
+/** A template label with "N" in it, shown with the count in place of the N. */
+export const withCount = (l: string, n: number): string => l.replace(/\bN\b/, String(n))
 
 /** A label shown with "N" where the screen shows a number or a name. */
 export const shown = (l: string | ((x: string) => string)): string => (typeof l === 'function' ? l('N') : l)

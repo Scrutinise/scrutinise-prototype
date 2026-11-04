@@ -13,6 +13,7 @@
 // the label to the component FIRST.
 
 import { LEX_STAGES } from '../stages'
+import { LIFECYCLE_STAGE_WORD, CHECKLIST_WORD, DRAFTING_FILTER_WORD, PROGRESS_WORD, ORGANISING_TOOLBAR_UI, ADD_ACTION_UI } from '../screen-labels'
 import { PRODUCT_FACTS } from '../product-facts'
 import { PAGE_SEQUENCE } from '../page1-config'
 
@@ -25,8 +26,9 @@ export interface Control {
   where: string
   /** What pressing it does — one clause. */
   does: string
-  /** 26-S2 §3d — the Coherent Actions step(s) this control belongs to. Lex names a control from another step only with “that is in step N”. */
-  steps?: Array<1 | 2 | 3 | 4>
+  /** 26-X 308 (was 26-S2's four steps) — the Coherent Actions PAGE this control is on. Lex names a control on the other page only as
+   *  “that is on the Organising page” (or Drafting), and says how to get there. */
+  page?: 'Organising' | 'Drafting'
 }
 
 export const CONTROLS: readonly Control[] = [
@@ -35,8 +37,9 @@ export const CONTROLS: readonly Control[] = [
   { label: 'prior chat', file: 'components/lex/ChatPanel.tsx', where: 'the strip at the top of the chat', does: 'shows the earlier conversation, which is hidden when the chat opens' },
   { label: 'Add to report', file: 'components/lex/QuestionPanel.tsx', where: 'on a source in THE RESEARCH', does: 'marks it as one of the sources the proposal itself rests on, so it appears in DRAFT STRATEGY' },
   { label: 'Remove from report', file: 'components/lex/QuestionPanel.tsx', where: 'on the same card, once a source has been added', does: 'takes the source back out of DRAFT STRATEGY' },
-  { label: 'Check for gaps', file: 'components/lex/ActionGapCheck.tsx', where: 'the actions section', does: 'runs the gap check on the coherent actions', steps: [1] },
-  { label: 'Import actions from a document', file: 'components/lex/ActionImport.tsx', where: 'the actions section, beside “Check for gaps”', does: 'reads a document you have filed and shows a table of every idea in it — what is new, what adds to an action you already have, what belongs to the policy — for you to change and confirm before anything is added', steps: [1] },
+  // 26-X addendum 321: both are on the Organising toolbar's rows now; each component prints its words through ORGANISING_TOOLBAR_UI (screen-labels.ts)
+  { label: 'Check for gaps', file: 'components/lex/ActionGapCheck.tsx', where: 'the Organising toolbar, the “Lex and checks” row', does: 'runs the gap check on the coherent actions: a free read, then four models; the suggestions open beneath the row, each to accept or dismiss', page: 'Organising' },
+  { label: 'Import actions from a document', file: 'components/lex/ActionImport.tsx', where: 'the Organising toolbar, the “Add” row', does: 'reads a document you have filed and shows a table of every idea in it — what is new, what adds to an action you already have, what belongs to the policy — for you to change and confirm before anything is added', page: 'Organising' },
   { label: 'Consolidate', file: 'components/lex/GuidingPolicyScreen.tsx', where: 'the guiding-policy screen', does: 'drafts the guiding policy from the candidates marked as part of the solution' },
   { label: 'Rule out', file: 'components/lex/FieldsPanel.tsx', where: 'on a candidate approach', does: 'rules the candidate out, with a reason; it can be restored' },
   { label: 'Add approach', file: 'components/lex/FieldsPanel.tsx', where: 'beneath the candidate approaches', does: 'adds an approach of your own as a candidate' },
@@ -44,26 +47,35 @@ export const CONTROLS: readonly Control[] = [
   { label: 'Accept', file: 'components/lex/ActionGapCheck.tsx', where: 'on a proposal', does: 'accepts the proposal into your idea' },
   { label: 'Dismiss', file: 'components/lex/ActionGapCheck.tsx', where: 'on a proposal', does: 'dismisses the proposal' },
   // 26-Q — the coherent-actions workspace (components/lex/ActionsWorkspace.tsx). Each label is printed there verbatim.
-  { label: 'Title these for me', file: 'components/lex/ActionsWorkspace.tsx', where: 'the toolbar above the list of coherent actions', does: 'has me draft a short title for every untitled action, as proposals you accept or edit', steps: [1] },
-  { label: 'Classify with Lex', file: 'components/lex/ActionsWorkspace.tsx', where: 'the toolbar (steps 1, 2 and 4)', does: 'has me propose, for every action that has none, the answers of the step you are in — step 1 the causes it attacks and its avenue; step 2 the seven answers (Who, Incentive now, What changes it, Skill, How, Against, What tells us it worked), each beside the slot and never over one you wrote; step 4 its sequence and what it comes before. In step 3 it proposes nothing. All proposals you can correct', steps: [1, 2, 4] },
-  { label: 'Ask Lex', file: 'components/lex/ActionSlots.tsx', where: 'on an open action in step 2', does: 'has me propose the answers for that one action (the slots with no answer of yours), each beside its slot with a one-line reason and the source where I used one', steps: [2] },
-  { label: 'Use it', file: 'components/lex/ActionSlots.tsx', where: 'on a proposal of mine beside an empty slot (step 2)', does: 'copies my proposed answer into the slot, marked as accepted from me', steps: [2] },
-  { label: 'Replace mine with this', file: 'components/lex/ActionSlots.tsx', where: 'on a proposal of mine beside an answer YOU wrote (step 2)', does: 'is the only way my proposal replaces your answer; it is a deliberate choice, never automatic', steps: [2] },
-  { label: 'Find duplicates', file: 'components/lex/ActionsWorkspace.tsx', where: 'the same toolbar', does: 'lists the pairs of actions that read as near-duplicates, closest first, with a Merge? button beside each', steps: [1] },
-  { label: 'Suggest headings from my guiding policy', file: 'components/lex/ActionsWorkspace.tsx', where: 'the same toolbar', does: 'offers starting headings drawn from your settled guiding policy, which you can add, rename or ignore', steps: [1] },
-  { label: 'Add heading', file: 'components/lex/ActionsWorkspace.tsx', where: 'the same toolbar', does: 'creates a heading of your own to sort actions under', steps: [1] },
-  { label: 'Coverage grid', file: 'components/lex/ActionsWorkspace.tsx', where: 'a view tab above the list of actions', does: 'shows causes against actions, so a cause with no action against it is an empty row', steps: [1] },
-  { label: 'Later phase', file: 'components/lex/ActionsWorkspace.tsx', where: 'on an open action, and in the bulk bar', does: 'parks an action under a collapsed Later phase header; it stays yours and can be brought back', steps: [1] },
-  { label: 'Ask Lex to review and merge', file: 'components/lex/ActionsWorkspace.tsx', where: 'the bulk bar, with exactly two actions selected', does: 'asks me how the two relate and merges them if they are one thing; the originals are kept', steps: [1] },
-  { label: 'Consolidate this heading', file: 'components/lex/ActionsWorkspace.tsx', where: 'on a heading’s own row (step 1), once the heading holds two or more actions — shown or hidden', does: 'asks first, then has me read the actions under that heading and sort out two things: parts of a bigger action are tucked into that action’s Commentary, quoted word for word with their number, and two actions saying the same thing are joined into one with both originals kept; nothing is deleted, “Restore” puts any of them back as its own row, and “Undo this consolidation” reverses the whole pass', steps: [1] },
-  { label: 'Compare', file: 'components/lex/ActionsWorkspace.tsx', where: 'the bulk bar, with exactly two actions selected', does: 'shows the two side by side with my verdict on how they relate, and changes nothing', steps: [1] },
-  // 26-S2 §3 — the step bar (components/lex/ActionsSteps.tsx prints the labels from lib/lex/action-steps.ts) and what belongs to each step.
-  { label: 'Sort and prune', file: 'lib/lex/action-steps.ts', where: 'step 1 on the step bar at the top of the Coherent Actions section', does: 'moves to step 1: titles, headings, causes, avenue, the policy verdict, merging duplicates, ruling out, the gap check and the import — the screen then shows only step 1’s tools', steps: [1] },
-  { label: 'Who, how and against', file: 'lib/lex/action-steps.ts', where: 'step 2 on the same step bar', does: 'moves to step 2: who implements each action — the screen then shows only step 2’s tools', steps: [2] },
-  { label: 'Costs', file: 'lib/lex/action-steps.ts', where: 'step 3 on the same step bar', does: 'moves to step 3: a cost range for each action — the screen then shows only step 3’s tools', steps: [3] },
-  { label: 'Order', file: 'lib/lex/action-steps.ts', where: 'step 4 on the same step bar', does: 'moves to step 4: what each action must come after, and why — the order of the list is derived from those; the screen then shows only step 4’s tools', steps: [4] },
-  { label: 'Test against the policy', file: 'components/lex/ActionsWorkspace.tsx', where: 'the toolbar (it counts the untested actions) and on an open action that reads ? Not tested (step 1)', does: 'runs the same test the import uses — fits, does not fit, or conflicts with your Guiding Policy, with a one-line reason — on the actions that were never tested, and says what it cost; on one open action it tests it again', steps: [1] },
-  { label: 'Keep it, with a note', file: 'components/lex/ActionsWorkspace.tsx', where: 'on an open action whose policy test says Conflicts (step 1)', does: 'keeps the action in the list with your reason for keeping it, so it no longer counts as waiting for a decision', steps: [1] },
+  // 26-X addendum 321–323 — the three toolbar rows (View · Add · Lex and checks), "Add action", and the title proposals, from screen-labels.ts
+  { label: 'Title them with Lex', file: 'components/lex/ActionsWorkspace.tsx', where: 'the Organising toolbar’s “Lex and checks” row, reading “N actions have no title · Title them with Lex” with its price', does: 'has me propose a short title for each action with no title and no proposal waiting; pressing it also shows the Untitled filter, and each proposal waits on its row under the statement — “Lex proposes: … — Accept · Not this”. A title you wrote is never replaced', page: 'Organising' },
+  { label: 'Accept all N proposed titles', file: 'components/lex/ActionsWorkspace.tsx', where: 'beside “Title them with Lex”, only while proposals wait', does: 'accepts every waiting title proposal at once; a row you have titled since keeps your title', page: 'Organising' },
+  { label: 'Not this', file: 'components/lex/ActionsWorkspace.tsx', where: 'on a title proposal of mine on a row', does: 'sets my proposed title aside; the action stays untitled', page: 'Organising' },
+  { label: 'Untitled', file: 'components/lex/ActionsWorkspace.tsx', where: 'the “Show” filter on the toolbar’s View row', does: 'shows only the actions with no title', page: 'Organising' },
+  { label: 'Add action', file: 'components/lex/ActionsWorkspace.tsx', where: 'the Organising toolbar’s “Add” row (a filled, primary button)', does: 'opens a small form — Title (required), Statement (optional, 1,000 characters), Heading (or Unsorted); the kind comes from the heading. The action is yours, lands first under its heading, and opens on the Drafting page', page: 'Organising' },
+  { label: 'View', file: 'components/lex/ActionsWorkspace.tsx', where: 'the first row of the Organising toolbar', does: 'holds how the list is shown — List, Board, Coverage grid, Conditions, Group, Hide all / Show all headings, the find box and Show; nothing on it changes the actions', page: 'Organising' },
+  { label: 'Lex and checks', file: 'components/lex/ActionsWorkspace.tsx', where: 'the third row of the Organising toolbar', does: 'holds the runs I make and the checks: titles, classify, duplicates, re-sort, the policy test, four models, gaps and print, each with its price where it spends', page: 'Organising' },
+  { label: 'Classify with Lex', file: 'components/lex/ActionsWorkspace.tsx', where: 'the Organising toolbar', does: 'has me propose, for every action that has none, the causes it attacks and its avenue (and the conditions it delivers, where the idea has conditions). All proposals you can correct', page: 'Organising' },
+  { label: 'Ask Lex', file: 'components/lex/ActionSlots.tsx', where: 'in “Who, how and against” on an open action (Drafting)', does: 'has me propose the answers for that one action (the slots with no answer of yours), each beside its slot with a one-line reason and the source where I used one', page: 'Drafting' },
+  { label: 'Use it', file: 'components/lex/ActionSlots.tsx', where: 'on a proposal of mine beside an empty slot in “Who, how and against”', does: 'copies my proposed answer into the slot, marked as accepted from me', page: 'Drafting' },
+  { label: 'Replace mine with this', file: 'components/lex/ActionSlots.tsx', where: 'on a proposal of mine beside an answer YOU wrote in “Who, how and against”', does: 'is the only way my proposal replaces your answer; it is a deliberate choice, never automatic', page: 'Drafting' },
+  { label: 'Find duplicates', file: 'components/lex/ActionsWorkspace.tsx', where: 'the same toolbar', does: 'lists the pairs of actions that read as near-duplicates, closest first, with a Merge? button beside each', page: 'Organising' },
+  { label: 'Suggest headings from my guiding policy', file: 'components/lex/ActionsWorkspace.tsx', where: 'the same toolbar', does: 'offers starting headings drawn from your settled guiding policy, which you can add, rename or ignore', page: 'Organising' },
+  { label: 'Add heading', file: 'components/lex/ActionsWorkspace.tsx', where: 'the Organising toolbar’s “Add” row (a filled, primary button)', does: 'opens a box for the name, then creates a heading of your own to sort actions under', page: 'Organising' },
+  { label: 'Coverage grid', file: 'components/lex/ActionsWorkspace.tsx', where: 'a view tab above the list of actions', does: 'shows causes against actions, so a cause with no action against it is an empty row', page: 'Organising' },
+  { label: 'Later phase', file: 'components/lex/ActionsWorkspace.tsx', where: 'on an open action, and in the bulk bar', does: 'parks an action under a collapsed Later phase header; it stays yours and can be brought back', page: 'Organising' },
+  { label: 'Ask Lex to review and merge', file: 'components/lex/ActionsWorkspace.tsx', where: 'the bulk bar, with exactly two actions selected', does: 'asks me how the two relate and merges them if they are one thing; the originals are kept', page: 'Organising' },
+  { label: 'Consolidate this heading', file: 'components/lex/ActionsWorkspace.tsx', where: 'on a heading’s own row (Organising), once the heading holds two or more actions — shown or hidden', does: 'asks first, then has me read the actions under that heading and sort out two things: parts of a bigger action are tucked into that action’s Commentary, quoted word for word with their number, and two actions saying the same thing are joined into one with both originals kept; nothing is deleted, “Restore” puts any of them back as its own row, and “Undo this consolidation” reverses the whole pass', page: 'Organising' },
+  { label: 'Compare', file: 'components/lex/ActionsWorkspace.tsx', where: 'the bulk bar, with exactly two actions selected', does: 'shows the two side by side with my verdict on how they relate, and changes nothing', page: 'Organising' },
+  // 26-X 308/318 — the two pages over the one action list (the four-step bar is gone; these labels print from lib/lex/screen-labels.ts)
+  { label: 'Organising', file: 'lib/lex/screen-labels.ts', where: 'the page bar at the top of the Coherent Actions section, and line 4 of the Development checklist', does: 'shows the list with its organising tools only: headings, classify, duplicates, the policy test, rule out, Later phase, the views and the find box — each row with its progress strip, and no drafting control', page: 'Organising' },
+  { label: 'Drafting', file: 'lib/lex/screen-labels.ts', where: 'the same page bar, and line 5 of the Development checklist', does: 'shows the same list with each action’s progress (Defined, Briefed, Drafted, Reviewed, Accepted), filters by where each stands, and opens an action’s record with its drafts at the top', page: 'Drafting' },
+  { label: 'Open', file: 'lib/lex/screen-labels.ts', where: 'on each row of the Organising page (the title does the same)', does: 'goes to the Drafting page with that action open', page: 'Organising' },
+  { label: '← Back to Organising', file: 'lib/lex/screen-labels.ts', where: 'at the top of an action opened on the Drafting page', does: 'returns to the Organising page at the same place, with the same filters', page: 'Drafting' },
+  { label: 'Needs no draft, because…', file: 'lib/lex/screen-labels.ts', where: 'at the top of an action’s drafts, on the Drafting page', does: 'records, with your reason, that this action needs no draft; it then counts as done for the Deepening', page: 'Drafting' },
+  { label: 'Deepen now', file: 'lib/lex/screen-labels.ts', where: 'on the Deepening’s page while it is locked (the owner only)', does: 'opens the Deepening before every action is drafted, with your reason; the reason is printed on everything the Deepening produces' },
+  { label: 'Test against the policy', file: 'components/lex/ActionsWorkspace.tsx', where: 'the Organising toolbar’s “Lex and checks” row (“Test against the policy (N untested)”; pressing it shows the Unreviewed filter) and on an open action that reads ? Not tested', does: 'runs the same test the import uses — fits, does not fit, or conflicts with your Guiding Policy, with a one-line reason — on the actions that were never tested, and says what it cost; on one open action it tests it again', page: 'Organising' },
+  { label: 'Keep it, with a note', file: 'components/lex/ActionsWorkspace.tsx', where: 'on an open action whose policy test says Conflicts', does: 'keeps the action in the list with your reason for keeping it, so it no longer counts as waiting for a decision', page: 'Organising' },
   { label: 'Re-run', file: 'components/lex/RerunOptions.tsx', where: 'on THE IDEA stage, at the top of the page', does: 'opens a dialogue that says what a re-run will do and cost before anything is spent' },
 ]
 
@@ -90,6 +102,10 @@ export function knownLabels(): Set<string> {
   for (const c of CONTROLS) out.add(normLabel(c.label))
   for (const p of PANEL_NAMES) out.add(normLabel(p))
   for (const s of LEX_STAGES) { out.add(normLabel(s.name)); out.add(normLabel(`stage ${s.n}`)) }
+  // 26-X — the seven lifecycle stages on the bar, the Development checklist's lines and the Drafting filters are on the screen too
+  for (const w of [...Object.values(LIFECYCLE_STAGE_WORD), ...Object.values(CHECKLIST_WORD), ...Object.values(DRAFTING_FILTER_WORD), ...Object.values(PROGRESS_WORD)]) out.add(normLabel(w))
+  // 26-X addendum 321–323 — the toolbar's rows and the "Add action" form
+  for (const w of [...Object.values(ORGANISING_TOOLBAR_UI), ...Object.values(ADD_ACTION_UI)]) out.add(normLabel(w))
   for (const page of PAGE_SEQUENCE) {
     if ((page as { label?: string }).label) out.add(normLabel((page as { label?: string }).label!))
     for (const f of page.fields) if (f.label) out.add(normLabel(f.label))

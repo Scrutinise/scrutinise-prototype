@@ -23,7 +23,10 @@ import { RELATION_WORD } from '@/lib/lex/law-panel-words'
 import { RECORD_SECTIONS, bandFits, type RecordSection } from '@/lib/lex/record-layout-pure'
 import { draftPrice, DRAFT_CONFIRM_ABOVE_PENCE, EMPTY_INSTRUCTION } from '@/lib/lex/action-draft-pure'
 import { explainFailure } from '@/lib/api-rejection'
-import { COMMON_UI, RECORD_UI } from '@/lib/lex/screen-labels'
+import { COMMON_UI, RECORD_UI, PAGE_UI, PROGRESS_WORD } from '@/lib/lex/screen-labels'
+import { NO_DRAFT_GLYPH } from '@/lib/lex/action-progress-pure'
+import { LIMITS } from '@/lib/lex/input-limits'
+import BoundedInput from './BoundedInput'
 import DocumentView, { noteAskWords } from './DocumentView'
 import { notePrice } from '@/lib/lex/explanatory-note-pure'
 import { AddDialog } from './DocumentsTree'
@@ -115,8 +118,13 @@ export function DocumentsSection({ ideaId, a, facts, disabled, onChanged }: {
   if (!docs) return <p className="text-xs text-zinc-500">Reading this action’s documents…</p>
   const live = docs.documents.filter((d) => d.status !== 'SUPERSEDED')
   const needed = docs.needs.kinds
+  const noDraft = docs.needs.overridden && needed.length === 0
   return (
     <div className="space-y-1.5 text-xs" data-record-documents>
+      {/* 26-X §5c (313) — "Needs no draft, because…": a stated state with a reason, the same store as the tree's "Needs no document". */}
+      <NoDraftBox noDraft={noDraft} why={docs.needs.why} busy={busy} disabled={disabled}
+        onSave={(reason) => post('action-documents', { op: 'setNeeds', actionId: a.id, mode: 'nothing', reason }, PAGE_UI.needsNoDraftBecause, () => `Saved: #${a.number ?? '?'} needs no draft, with your reason. It counts as done for the Deepening.`)}
+        onClear={() => post('action-documents', { op: 'setNeeds', actionId: a.id, mode: 'derived' }, PAGE_UI.needsDraftAfterAll, () => `Saved: #${a.number ?? '?'} needs a draft again; what it needs is worked out from its avenue and instrument.`)} />
       <p data-needs-line>{needsLine(needed.length, live.filter((d) => needed.includes(d.kind)).length, live.filter((d) => needed.includes(d.kind) && d.status === 'ACCEPTED').length)} · {docs.needs.why}{docs.needs.overridden ? ' (set by hand)' : ''}</p>
       <ul className="space-y-1">
         {live.map((d) => (
@@ -167,6 +175,29 @@ export function DocumentsSection({ ideaId, a, facts, disabled, onChanged }: {
       {adding && <AddDialog action={docs} kind={adding} busy={busy} onClose={() => setAdding(null)}
         onSave={async (title, body) => { if (await post('action-documents', { op: 'addByHand', actionId: a.id, kind: adding, title, body }, 'Adding the document', (r) => `Saved: ${String(r?.d ?? 'the document')} added.`)) setAdding(null) }} />}
     </div>
+  )
+}
+
+// ── 26-X §5c (313) — "Needs no draft, because…" ─────────────────────────────────────────────────────────────────
+function NoDraftBox({ noDraft, why, busy, disabled, onSave, onClear }: { noDraft: boolean; why: string; busy: boolean; disabled: boolean; onSave: (reason: string) => Promise<boolean>; onClear: () => Promise<boolean> }) {
+  const [open, setOpen] = useState(false)
+  const [reason, setReason] = useState('')
+  if (noDraft) return (
+    <p className="rounded border-2 border-zinc-900 bg-white px-2 py-1" data-no-draft>
+      <span aria-hidden>{NO_DRAFT_GLYPH}</span> <span className="font-semibold">{PROGRESS_WORD.noDraft}</span>, because: {why.replace(/^needs nothing:\s*/, '')}
+      {!disabled && <> · <button type="button" disabled={busy} onClick={() => void onClear()} className="underline disabled:opacity-40" data-no-draft-clear>{PAGE_UI.needsDraftAfterAll}</button></>}
+    </p>
+  )
+  if (disabled) return null
+  return open ? (
+    <div className="flex flex-wrap items-start gap-1.5 rounded border border-zinc-300 bg-zinc-50 p-1.5" data-no-draft-box>
+      <BoundedInput value={reason} onChange={setReason} max={LIMITS.noDraftReason} placeholder="Why this action needs no draft — e.g. it is done by an existing power" aria-label={PAGE_UI.needsNoDraftBecause}
+        className="flex-1 min-w-[14rem] text-xs border border-zinc-300 rounded px-1.5 py-0.5" />
+      <button type="button" disabled={busy || reason.trim().length < 3} onClick={async () => { if (await onSave(reason.trim())) { setOpen(false); setReason('') } }} className="px-2 py-0.5 rounded bg-zinc-900 text-white font-medium disabled:opacity-40" data-no-draft-save>{PAGE_UI.saveNoDraft}</button>
+      <button type="button" onClick={() => { setOpen(false); setReason('') }} className="underline text-zinc-700 mt-0.5">{COMMON_UI.cancel}</button>
+    </div>
+  ) : (
+    <p><button type="button" disabled={busy} onClick={() => setOpen(true)} className="underline disabled:opacity-40" data-no-draft-open>{PAGE_UI.needsNoDraftBecause}</button></p>
   )
 }
 

@@ -42,6 +42,8 @@
 // the result is `components/lex/StageBar.tsx`.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { LIFECYCLE_STAGE_WORD, CHECKLIST_WORD } from './screen-labels'
+
 export type LexStageKey = 'idea' | 'strategy' | 'deepening'
 
 export interface LexStage {
@@ -63,26 +65,45 @@ export interface LexStage {
  * with Lex*, which all happen inside platform Stage 1. Renaming either to match the other
  * would break one of them; they are different things that both happen to be called stages.
  */
+// ⚠⚠ 26-X DECISION 316 — THESE ARE NOW THE THREE SCREENS OF THE WORKSPACE, NAMED FROM THE SEVEN-STAGE LIFECYCLE. "The First Pass" and "The
+// First Draft" are no longer stage names (§2c): the first screen IS Creation; the second is Development, whose checklist holds Organising and
+// Drafting; the third is the Deepening, the checklist's sixth line, locked until every live action is drafted (317). The KEYS and URLs are
+// unchanged (identifiers). The names come from screen-labels.ts, the one table the stage bar, the banners and the FAQ read.
 export const LEX_STAGES: readonly LexStage[] = [
   {
     n: 1,
     key: 'idea',
-    name: 'The First Pass',
+    name: LIFECYCLE_STAGE_WORD.creation,
     purpose: 'Say what you want to change. Add information and files, then re-run.',
   },
   {
     n: 2,
     key: 'strategy',
-    name: 'The First Draft',
-    purpose: 'Work through what Lex drafted: read what matters, make the decisions.',
+    name: LIFECYCLE_STAGE_WORD.development,
+    purpose: 'Work through what Lex drafted — the problem, the causes, the guiding policy — then organise the actions and draft each one.',
   },
   {
     n: 3,
     key: 'deepening',
-    name: 'The Deepening',
-    purpose: 'Go deeper — more research, more evidence, harder questions.',
+    name: CHECKLIST_WORD.deepening,
+    purpose: 'Test the whole once every action is drafted: collisions, four models, the review passes, costs, and who delivers.',
   },
 ] as const
+
+// ── 26-X §2 (316) — the seven lifecycle stages, in order, and which one each screen is in ────────────────────────────────────────────
+export type LifecycleKey = keyof typeof LIFECYCLE_STAGE_WORD
+export const LIFECYCLE_KEYS: readonly LifecycleKey[] = ['creation', 'development', 'privateScrutiny', 'publicScrutiny', 'promotion', 'submission', 'inForce']
+/** The build screen is Creation; the workspace and the Deepening are both Development (the Deepening is its checklist's sixth line). */
+export const lifecycleOfScreen = (k: LexStageKey): LifecycleKey => (k === 'idea' ? 'creation' : 'development')
+
+/** 308 / 318 — the two pages over the one action list. Anything else is neither (the workspace opens as it always has). */
+export type ActionsPage = 'organising' | 'drafting'
+export const parseActionsPage = (v: unknown): ActionsPage | null => (v === 'organising' || v === 'drafting' ? v : null)
+/** The sections the checklist's first three lines open (§3a). */
+export type KernelSection = 'problem' | 'causes' | 'policy'
+export const parseKernelSection = (v: unknown): KernelSection | null => (v === 'problem' || v === 'causes' || v === 'policy' ? v : null)
+/** 318 — the deep link to one action on the Drafting page: `/ideas/[id]/drafting#38` lands here with #38 open. */
+export const draftingHref = (ideaId: string, number?: number | null) => `/ideas/${ideaId}/drafting${number != null ? `#${number}` : ''}`
 
 export function stageByKey(key: LexStageKey): LexStage {
   const s = LEX_STAGES.find((x) => x.key === key)

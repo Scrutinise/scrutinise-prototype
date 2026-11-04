@@ -26,7 +26,7 @@ function Workspace() {
   }, [])
   useEffect(() => { void reread() }, [reread])
   if (!s) return <p>loading</p>
-  return <ActionsWorkspace ideaId={dv.ideaId} actions={s.actions} setAside={s.setAsideActions} headings={s.actionHeadings} causes={[]} busy={false} step={dv.step ?? 1}
+  return <ActionsWorkspace ideaId={dv.ideaId} actions={s.actions} setAside={s.setAsideActions} headings={s.actionHeadings} causes={[]} busy={false} page={dv.step && dv.step !== 1 ? 'drafting' : 'organising'} /* 26-X 308: step 1 is Organising; 2–4 Drafting */
     onChanged={reread} renderFull={(_a, _st, between) => <div data-full-card>{between}</div>} structure={{ conditions: s.conditions, headingPlan: null, archivedHeadings: [], resortUndoable: 0 }} />
 }
 

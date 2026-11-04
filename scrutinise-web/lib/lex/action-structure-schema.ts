@@ -108,6 +108,8 @@ export const ActionStructureBody = z.discriminatedUnion('op', [
   // 26-V2c (268, revised) — Lex proposes a kind for each heading with none (asked first, at the measured price); the owner answers each.
   z.object({ op: z.literal('proposeHeadingKinds'), agreedPence: z.number().min(0).max(500) }),
   z.object({ op: z.literal('answerKindProposal'), headingId: z.string(), accept: z.boolean() }),
+  // 26-X addendum 322 — "Add action": a title (required), a statement (optional), a heading (null = Unsorted). Source USER; top of its heading.
+  z.object({ op: z.literal('addAction'), title: z.string().trim().min(1).max(LIMITS.actionTitle), practicalStep: z.string().trim().max(LIMITS.actionStatement).optional(), headingId: z.string().nullable() }),
 ])
 
 /** What the UI must send — the schema's INPUT type, so an optional/defaulted key stays optional. */
@@ -118,7 +120,7 @@ export type ActionStructureOp = ActionStructureRequest['op']
 export const OP_WORDS: Record<ActionStructureOp, string> = {
   createHeading: '“Add heading”', updateHeading: 'Editing the heading', deleteHeading: '“Retire heading”',
   assignHeading: '“Assign to heading”', assignToNewHeading: '“+ New heading…”', setTitle: '“Save title”', acceptTitles: 'Accepting the proposed titles',
-  dismissTitles: 'Dismissing the proposed title', proposeTitles: '“Title these for me”', reorder: 'Saving the new order',
+  dismissTitles: 'Dismissing the proposed title', proposeTitles: '“Title them with Lex”', reorder: 'Saving the new order',
   park: '“Later phase”', unpark: '“Bring back”', ruleOut: '“Rule out”', restore: '“Restore”', setFacets: 'Saving the classification',
   acceptFacets: 'Accepting the proposed classification', dismissFacets: 'Dismissing the proposed classification',
   proposeFacets: '“Classify with Lex”', suggestHeadings: '“Suggest headings from my guiding policy”',
@@ -133,6 +135,7 @@ export const OP_WORDS: Record<ActionStructureOp, string> = {
   saveDraft: 'Saving the drafting instruction', draftAction: '“Draft this clause”', acceptDraft: 'Using Lex’s draft', dismissDraft: 'Dismissing Lex’s draft', touches: '“What this touches”',
   setAfter: 'Saving what this action must come after',
   proposeHeadingKinds: '“Ask Lex to propose kinds”', answerKindProposal: 'Answering Lex’s proposed kind',
+  addAction: '“Add action”',
 }
 
 /** And the words for the inputs those controls send. */
@@ -145,4 +148,5 @@ export const INPUT_WORDS: Record<string, string> = {
   op: 'the control', step: 'the step (1 to 4)', note: 'the note', slot: 'the question being answered', text: 'the answer', direction: 'the direction (with, against, indifferent)', linkActionId: 'the linked action', replace: 'the choice to replace your answer',
   afterId: 'the action it must come after', on: 'whether it must come after', because: 'the reason (“because …”)',
   kind: 'the kind of heading', agreedPence: 'the price you agreed', accept: 'accept or not',
+  practicalStep: 'the statement',
 }

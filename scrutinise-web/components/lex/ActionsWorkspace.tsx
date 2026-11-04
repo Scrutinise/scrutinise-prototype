@@ -51,6 +51,12 @@ import { COMMON_UI, RECORD_UI, FACET_WORD, WORKSPACE_UI, WORKSPACE_VIEW_WORD } f
 import {
   STEPS, DEFAULT_STEP, stepChecklist, otherStepLine, unresolvedConflict, hasCostRange, type ActionsStep,
 } from '@/lib/lex/action-steps'
+import type { ActionsPage } from '@/lib/lex/stages'
+import { PAGE_UI, DRAFTING_FILTER_WORD, ORGANISING_TOOLBAR_UI, withCount } from '@/lib/lex/screen-labels'
+import { titleProposalPrice, untitledWords } from '@/lib/lex/title-proposal-pure'
+import AddActionForm from './AddActionForm'
+import { DRAFTING_STAGES, draftingLine, type Progress, type DraftingCounts, type DraftingStage } from '@/lib/lex/action-progress-pure'
+import ProgressStrip from './ProgressStrip'
 
 // ── talking to the route ─────────────────────────────────────────────────────────────────────────────────
 
@@ -98,6 +104,26 @@ function useOps(ideaId: string, onChanged: () => void | Promise<boolean | void>)
   return { run, busy, error, saved, setSaved, note, setNote, clearError: () => setError(null), /** 26-V1b — a write made outside `run` (the document view) re-reads the list the same way. */ refresh: onChanged }
 }
 
+// ── 26-X §5f (310) — every action's progress strip and the Drafting counts, from /development (one documents-tree read). Re-read whenever
+//    the list is re-read (`actions` changes after every write), so a strip is never older than the row beside it. ──
+export interface DevelopmentView { rows: Array<{ id: string; progress: Progress }>; counts: DraftingCounts; parked: number }
+function useDevelopment(ideaId: string, actions: CanonicalAction[], initial: DevelopmentView | null = null) {
+  const [dev, setDev] = useState<DevelopmentView | null>(initial)
+  const [error, setError] = useState<string | null>(null)
+  useEffect(() => {
+    let live = true
+    fetch(`/api/ideas/${ideaId}/development`).then(async (res) => {
+      const body = await res.json().catch(() => null)
+      if (!live) return
+      if (!res.ok) { setError(explainFailure(body, res.status, 'Reading how far each action has got')); return }
+      setDev(body as DevelopmentView); setError(null)
+    }).catch((e) => { if (live) setError(`Reading how far each action has got could not reach the server (${e instanceof Error ? e.message : 'network error'}).`) })
+    return () => { live = false }
+  }, [ideaId, actions])
+  const byId = useMemo(() => new Map((dev?.rows ?? []).map((r) => [r.id, r.progress])), [dev])
+  return { dev, byId, error }
+}
+
 // Decision 179: the three cost columns are COST lines — "Cost to implement / Cost to enforce / Cost of compliance" (never "Against", the step-2 slot).
 const COST_LINE_LABEL_SHORT = { implementationCost: 'Implement', enforcementCost: 'Enforce', regulatoryFriction: 'Compliance' } as const
 
@@ -117,8 +143,8 @@ const proposalStep = (p: NonNullable<CanonicalAction['facetProposal']>): Actions
 ]
 
 /** 26-S §5d / 26-S2 §8 — the list filter. `Unreviewed` is READ NARROWLY (the brief does not define it): a proposal of Lex's is waiting for the user (a title or a classification for this step), or the action was never tested against the policy. `Not yet specific` exists from step 2 on. */
-type Filter = 'all' | 'unreviewed' | 'conflicts' | 'notSpecific'
-const FILTER_LABEL: Record<Filter, string> = { all: 'All actions', unreviewed: 'Unreviewed', conflicts: 'Conflicts', notSpecific: 'Not yet specific' }
+type Filter = 'all' | 'unreviewed' | 'conflicts' | 'notSpecific' | 'untitled'
+const FILTER_LABEL: Record<Filter, string> = { all: 'All actions', unreviewed: 'Unreviewed', conflicts: 'Conflicts', notSpecific: 'Not yet specific', untitled: ORGANISING_TOOLBAR_UI.untitledFilter }
 const isUntested = (a: Pick<CanonicalAction, 'policyTest'>): boolean => !a.policyTest || a.policyTest.verdict === 'NOT_TESTED'
 /** What a finished policy test says, in words, with what it cost (170: the price is measured, never a guess). */
 const testedWords = (r: { tested: number; counts: Record<string, number>; pence: number | null } | null): string => {
@@ -158,25 +184,50 @@ interface Props {
   renderFull: (a: CanonicalAction, step: ActionsStep, between?: ReactNode) => ReactNode
   /** Ids of rows to render already open. Used by the render checks, so that what an OPENED row shows is read from the output. */
   initiallyOpen?: string[]
-  /** 26-S2 §3 — the step the user is on (1–4). The screen shows only that step's tools. Default 1. */
-  step?: ActionsStep
+  /** 26-X 308 — the page the user is on. Organising shows step 1's tools and only those (§4a); Drafting shows the strips and opens records
+   *  with their Drafts at the top (§5a). Default Organising. */
+  page?: ActionsPage
+  /** 318 — the flip: Organising → Drafting with an action open, and "← Back to Organising". Absent: the page cannot change from here. */
+  onPage?: (p: ActionsPage, actionNumber?: number | null) => void
+  /** The progress to show before /development answers (the render checks hand in what the route returned). The browser re-reads it. */
+  initialDevelopment?: DevelopmentView | null
   /** Ids of the actions that have cost lines (step 3's checklist counts a cost line as a cost). */
   costLineActionIds?: string[]
   /** 26-S2 188 + 190 - the idea's conditions, the instrument headings the Re-sort sorts into, the headings it archived, and how many moved actions Undo can put back. */
   structure?: { conditions: ConditionsDoc; headingPlan: HeadingPlan | null; archivedHeadings: Array<{ id: string; name: string }>; resortUndoable: number }
+  /** 26-X addendum 321 — "Import actions from a document" (row 2, Add) and "Check for gaps" (row 3, Lex and checks), rendered by the caller
+   *  (they carry their own state and routes) and placed on the Organising toolbar's rows. */
+  importSlot?: ReactNode
+  gapSlot?: ReactNode
 }
 
-type View = 'list' | 'board' | 'coverage' | 'conditions' | 'order' | 'who'
+type View ='list' | 'board' | 'coverage' | 'conditions' | 'order' | 'who'
 
-export default function ActionsWorkspace({ ideaId, actions, setAside, headings, causes, busy: parentBusy, onChanged, renderFull, initiallyOpen, step = DEFAULT_STEP, costLineActionIds, structure }: Props) {
+export default function ActionsWorkspace({ ideaId, actions, setAside, headings, causes, busy: parentBusy, onChanged, renderFull, initiallyOpen, page = 'organising', onPage, costLineActionIds, structure, initialDevelopment, importSlot, gapSlot }: Props) {
+  // 26-X 308 — Organising IS step 1's toolset; the old steps 2–4 have no page (their data is on the record). `step` stays the name the
+  // step-1 helpers (stepChecklist, the facet proposals) take, fixed at 1.
+  const org = page === 'organising'
+  const step: ActionsStep = DEFAULT_STEP
   const conditions = structure?.conditions ?? EMPTY_CONDITIONS
   const headingPlan = structure?.headingPlan ?? null
   const archivedHeadings = structure?.archivedHeadings ?? []
   const ops = useOps(ideaId, onChanged)
+  const development = useDevelopment(ideaId, actions, initialDevelopment ?? null)
+  // §5a — the Drafting page's own filter (to brief · to draft · to review · to accept · needs no draft · accepted), kept across the flip
+  const [draftFilter, setDraftFilter] = useState<'all' | DraftingStage>('all')
+  // 318 — where Organising was when an action was opened from it, so "← Back to Organising" returns to the same place
+  const rootRef = useRef<HTMLDivElement>(null)
+  const organisingScroll = useRef<number | null>(null)
+  const scrollParent = (): HTMLElement | null => {
+    let el = rootRef.current?.parentElement ?? null
+    while (el && !(el.scrollHeight > el.clientHeight && /(auto|scroll)/.test(getComputedStyle(el).overflowY))) el = el.parentElement
+    return el
+  }
   const [viewAsked, setView] = useState<View>('list')
   const [modeAsked, setMode] = useState<GroupMode>('heading')
   // a view or grouping that belongs to another step is not offered here: fall back to the list / by heading
-  const view: View = STEP_VIEWS[step].includes(viewAsked) ? viewAsked : 'list'
+  // Drafting is the list only (§5a); Organising offers step 1's views (List · Board · Coverage grid · Conditions — §4a)
+  const view: View = org && STEP_VIEWS[step].includes(viewAsked) ? viewAsked : 'list'
   const mode: GroupMode = STEP_GROUP_MODES[step].includes(modeAsked) ? modeAsked : 'heading'
   // "find duplicates has run since the last change": remembered per idea in this browser, against a signature of the list
   const [dupesSig, setDupesSig] = useState<string | null>(null)
@@ -200,8 +251,14 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   const unparked = useMemo(() => live.filter((a) => !a.parked), [live])
   const parked = useMemo(() => live.filter((a) => a.parked), [live])
   const causeLite = useMemo(() => causes.map((c) => ({ id: c.id, number: c.number ?? null, cause: c.cause })), [causes])
-  const untitled = live.filter((a) => !a.title?.trim() && !a.titleProposal).length
-  const titleProposals = live.filter((a) => a.titleProposal).length
+  // 26-X addendum 323 — the count on "Title them with Lex" is the actions with NO TITLE (the Untitled filter shows exactly them); Lex is asked
+  // only about those with no proposal waiting; a proposal is shown (and counted for "Accept all") only on a row that still has no title.
+  const hasNoTitle = (a: CanonicalAction) => !a.title?.trim()
+  const untitled = live.filter((a) => !a.parked && hasNoTitle(a)).length
+  const toAskTitles = live.filter((a) => !a.parked && hasNoTitle(a) && !a.titleProposal).length
+  const titleProposals = live.filter((a) => hasNoTitle(a) && a.titleProposal).length
+  const [adding, setAdding] = useState(false)
+  const [headingBoxOpen, setHeadingBoxOpen] = useState(false)
   const facetProposals = live.filter((a) => a.facetProposal && proposalStep(a.facetProposal).includes(step)).length
   const byId = useMemo(() => new Map(live.map((a) => [a.id, a])), [live])
   const headingById = useMemo(() => new Map(headings.map((h) => [h.id, h])), [headings])
@@ -222,9 +279,10 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
     unreviewed: (a) => !!a.titleProposal || (!!a.facetProposal && proposalStep(a.facetProposal).includes(step)) || (step === 2 && proposalCount(a) > 0) || isUntested(a),
     conflicts: (a) => a.policyTest?.verdict === 'CONFLICTS',
     notSpecific: (a) => !specificEnough(a),
+    untitled: (a) => hasNoTitle(a),
   }
-  const filterCounts: Record<Filter, number> = { all: unparked.length, unreviewed: unparked.filter(matches.unreviewed).length, conflicts: unparked.filter(matches.conflicts).length, notSpecific: unparked.filter(matches.notSpecific).length }
-  const filterKeys: Filter[] = step === 1 ? ['all', 'unreviewed', 'conflicts'] : ['all', 'unreviewed', 'conflicts', 'notSpecific']
+  const filterCounts: Record<Filter, number> = { all: unparked.length, unreviewed: unparked.filter(matches.unreviewed).length, conflicts: unparked.filter(matches.conflicts).length, notSpecific: unparked.filter(matches.notSpecific).length, untitled: unparked.filter(matches.untitled).length }
+  const filterKeys: Filter[] = step === 1 ? ['all', 'unreviewed', 'conflicts', 'untitled'] : ['all', 'unreviewed', 'conflicts', 'notSpecific', 'untitled']
   // 190 (UI B) - the FIND BOX: matches title, statement and commentary (and "#12"), every word of it, case-blind; filters the list live
   const [find, setFind] = useState('')
   const findWords = useMemo(() => findWordsOf(find), [find])
@@ -234,12 +292,14 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   const shown = useMemo(() => unparked.filter(matches[filter]).filter(found), [unparked, filter, step, findWords]) // eslint-disable-line react-hooks/exhaustive-deps
   // a heading reads `· n archived` after a rebuild or a merge archives one of its actions (they sit under `Ruled out and merged away`)
   const archivedByHeading = useMemo(() => { const m = new Map<string, number>(); for (const a of setAside) if (a.status === 'ARCHIVED' && a.headingId) m.set(a.headingId, (m.get(a.headingId) ?? 0) + 1); return m }, [setAside])
-  const groups = useMemo(() => groupActions(shown, mode, { headings, causes: causeLite }), [shown, mode, headings, causeLite])
+  // §5a — Drafting: the same live list by heading, through its own filter (the find box and the Organising filters are Organising's tools)
+  const draftShown = useMemo(() => unparked.filter((a) => draftFilter === 'all' || development.byId.get(a.id)?.stage === draftFilter), [unparked, draftFilter, development.byId])
+  const groups = useMemo(() => groupActions(org ? shown : draftShown, org ? mode : 'heading', { headings, causes: causeLite }), [org, shown, draftShown, mode, headings, causeLite])
   const checklist = useMemo(() => stepChecklist(step, unparked, { duplicatesChecked, conditions }, { actionIdsWithCostLines: costLineIds }), [step, unparked, duplicatesChecked, costLineIds, conditions])
   // 190 - Consolidate this heading: one card at a time, under the heading's own header
   const [consolidate, setConsolidate] = useState<ConsolidateCardState | null>(null)
   // 26-T1 - the digest (four models + a judge), per heading and for the whole set: step 1's
-  const digests = useDigests(ideaId, step === 1, onChanged)
+  const digests = useDigests(ideaId, org, onChanged)
   const [setDigestOpen, setSetDigestOpen] = useState(false)
   // 26-T2 - the Actions Pack: any selection, one heading, or all
   const pack = usePackPrint(ideaId)
@@ -251,6 +311,29 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
     setOpen((s) => new Set(s).add(a.id))
     setTimeout(() => document.querySelector(`[data-action-id="${a.id}"]`)?.scrollIntoView?.({ block: 'center' }), 50)
   }
+  // ── 318 — THE FLIP. From Organising, an action's title (or "Open") goes to Drafting with that action open; the Organising scroll position
+  //    is remembered, and the find box, filter and grouping are this component's own state, which the flip does not unmount. ──
+  const flipTo = (a: CanonicalAction) => {
+    organisingScroll.current = scrollParent()?.scrollTop ?? null
+    setOpen(new Set([a.id]))
+    if (draftFilter !== 'all' && development.byId.get(a.id)?.stage !== draftFilter) setDraftFilter('all')
+    onPage?.('drafting', a.number)
+    setTimeout(() => document.querySelector(`[data-action-id="${a.id}"]`)?.scrollIntoView?.({ block: 'start' }), 80)
+  }
+  const backToOrganising = () => {
+    const y = organisingScroll.current
+    onPage?.('organising')
+    setTimeout(() => { const p = scrollParent(); if (p && y != null) p.scrollTop = y }, 80)
+  }
+  // 318 — a deep link (`/ideas/[id]/drafting#38`) lands on Drafting with #38 open
+  useEffect(() => {
+    if (page !== 'drafting' || typeof window === 'undefined') return
+    const m = /^#(\d+)$/.exec(window.location.hash)
+    const a = m ? live.find((x) => x.number === Number(m[1])) : undefined
+    if (!a) return
+    setOpen(new Set([a.id]))
+    setTimeout(() => document.querySelector(`[data-action-id="${a.id}"]`)?.scrollIntoView?.({ block: 'start' }), 150)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps -- on arrival only
   const allHeadingsHidden = headings.length > 0 && headings.every((h) => h.hidden)
 
   const toggleOpen = (id: string) => setOpen((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
@@ -324,19 +407,37 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       (x: { name: string; created: boolean }) => x.created
         ? `Saved: heading “${x.name}” added. It is in the list with no actions on it yet — use a row’s heading menu, or select rows and “Assign to heading”.`
         : `Nothing added: you already have a heading called “${x.name}”.`)
-    if (r.ok) setNewHeading('')
+    if (r.ok) { setNewHeading(''); setHeadingBoxOpen(false) }
+  }
+  // 322 — "Add action": written through the shared addAction; the new row opens on Drafting, first under its heading
+  const addOwnAction = async (body: { title: string; practicalStep: string; headingId: string | null }): Promise<string | null> => {
+    const r = await ops.run('addAction', body, 'adding the action',
+      (x: { number: number | null; title: string; headingName: string | null }) => `Saved: #${x.number ?? '?'} “${x.title}” added, first under ${x.headingName ? `“${x.headingName}”` : 'No heading (Unsorted)'}. It is open on the Drafting page; it reads “Defined ◐” until it has a statement and a heading with a kind.`)
+    if (!r.ok) return r.error
+    setAdding(false)
+    const made = r.result as { id: string; number: number | null } | null
+    if (made) {
+      organisingScroll.current = scrollParent()?.scrollTop ?? null
+      setOpen(new Set([made.id]))
+      if (draftFilter !== 'all') setDraftFilter('all')
+      onPage?.('drafting', made.number)
+      setTimeout(() => document.querySelector(`[data-action-id="${made.id}"]`)?.scrollIntoView?.({ block: 'start' }), 120)
+    }
+    return null
   }
 
   // ── one line ──
   const renderRow = (a: CanonicalAction) => {
     const h = a.headingId ? headingById.get(a.headingId) : undefined
     const c = h ? colourFor(h.colourKey) : null
-    const isOpen = open.has(a.id)
+    // 318 — a record opens on Drafting only; on Organising a title flips to Drafting with the action open
+    const isOpen = !org && open.has(a.id)
     const originals = setAside.filter((s) => s.mergedIntoId === a.id)
     // 26-S browser pass D — an OPENED record is ONE box: a 2px border and a light grey fill (border and fill, never colour alone).
     const boxClass = isOpen ? 'border-2 border-zinc-900 bg-zinc-100' : `border bg-white ${dragging === a.id ? 'border-zinc-900 shadow' : 'border-zinc-200'}`
-    // Steps 2–4: the heading menu, the tick box and the drag handle are step 1's tools — absent here, not greyed.
-    const headingSelect = step !== 1 ? null : (
+    // The heading menu: on an Organising row, and in an opened record's band on Drafting (a heading is part of "Defined"). The tick box and
+    // the drag handle are Organising's only — absent on Drafting, not greyed.
+    const headingSelect = (
       <select value={a.headingId ?? ''} disabled={disabled} aria-label={`Heading for action ${a.number ?? ''}`}
         onChange={(e) => {
           if (e.target.value === '__new') { e.target.value = a.headingId ?? ''; setSelected(new Set([a.id])); setBulkNewOpen(true); return }
@@ -353,8 +454,8 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
     return (
       <li key={a.id} data-action-id={a.id} data-open={isOpen ? 'true' : undefined} className={`rounded-lg ${boxClass}`} style={c ? { borderLeft: `6px solid ${c.hex}` } : undefined}>
         <div className="flex items-start gap-1.5 px-2 py-1.5">
-          {step === 1 && <input type="checkbox" checked={selected.has(a.id)} onChange={() => toggleSel(a.id)} aria-label={`Select action ${a.number ?? ''}`} className="mt-1 w-4 h-4 accent-zinc-900 shrink-0" />}
-          {step === 1 && (
+          {org && <input type="checkbox" checked={selected.has(a.id)} onChange={() => toggleSel(a.id)} aria-label={`Select action ${a.number ?? ''}`} className="mt-1 w-4 h-4 accent-zinc-900 shrink-0" />}
+          {org && (
             <button type="button" disabled={disabled} onPointerDown={onPointerDownDrag(a.id)}
               onKeyDown={(e) => { if (e.key === 'ArrowUp') { e.preventDefault(); nudge(a.id, -1) } if (e.key === 'ArrowDown') { e.preventDefault(); nudge(a.id, 1) } }}
               title="Drag to reorder — or use the arrow keys" aria-label={`Reorder action ${a.number ?? ''}`}
@@ -368,15 +469,19 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
             {isOpen ? (
               <OpenTitle a={a} disabled={disabled} ops={ops} />
             ) : (
-              <button type="button" onClick={() => toggleOpen(a.id)} aria-expanded={isOpen} className="text-left w-full">
+              // 318 — on Organising the title goes to Drafting with this action open; on Drafting it opens the record in place
+              <button type="button" onClick={() => (org ? flipTo(a) : toggleOpen(a.id))} aria-expanded={org ? undefined : isOpen} className="text-left w-full" data-row-title>
                 <span className={`text-sm ${a.title ? 'font-medium text-zinc-900' : 'text-zinc-700'}`} data-shown-value>{actionLabel(a)}</span>
-                <span className="text-[11px] text-zinc-400 ml-1.5">{WORKSPACE_UI.openRecord}</span>
+                <span className="text-[11px] text-zinc-400 ml-1.5">{org ? `${PAGE_UI.openInDrafting} → ${PAGE_UI.drafting}` : WORKSPACE_UI.openRecord}</span>
               </button>
             )}
-            {/* 26-S2 §3b — THE ROW SHOWS ONLY THIS STEP'S TAGS. Step 1: heading, verdict, causes, avenue. Step 2: who. Step 3: cost. Step 4: sequence. The CLOSED row keeps a two-line snippet. */}
-            {!isOpen && step === 1 && a.title && <span className="block text-[11px] text-zinc-500 mt-0.5 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }} data-row-summary>{a.practicalStep.length > 240 ? `${a.practicalStep.slice(0, 239)}…` : a.practicalStep}</span>}
+            {/* 26-X §4b / §5a — the progress strip, on every row of both pages (Organising shows how drafting stands; it has no drafting control). */}
+            {!isOpen && <div className="mt-0.5"><ProgressStrip p={development.byId.get(a.id)} /></div>}
+            {/* Organising: the closed row keeps a two-line snippet and step 1's tags — heading, avenue, causes, conditions, the policy verdict. */}
+            {!isOpen && org && a.title && <span className="block text-[11px] text-zinc-500 mt-0.5 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }} data-row-summary>{a.practicalStep.length > 240 ? `${a.practicalStep.slice(0, 239)}…` : a.practicalStep}</span>}
             {!isOpen && <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5 text-[11px] text-zinc-500 items-center">
-              {step === 1 && (
+              {!org && h && <HeadingMark h={h} />}
+              {org && (
                 <>
                   {h && <HeadingMark h={h} />}
                   {a.avenue && <span>{AVENUE_LABEL[a.avenue]}</span>}
@@ -399,49 +504,31 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
                   )}
                 </>
               )}
-              {step === 2 && (
-                <>
-                  {a.whoImplements?.trim()
-                    ? <span title={a.whoImplements}>Who: {a.whoImplements.length > 60 ? `${a.whoImplements.slice(0, 59)}…` : a.whoImplements}</span>
-                    : <span className="font-semibold text-zinc-800">Who: not yet answered</span>}
-                  {/* 26-S2 §5 — "specific enough" is computed in step 2 and shown here only; the missing slots are named */}
-                  <span className={specificEnough(a) ? '' : 'font-semibold text-zinc-800'} data-specific-tag><span aria-hidden>{specificEnough(a) ? '✓' : '○'}</span> {specificTag(a)}</span>
-                  <span>{answeredCount(a)} of 7 answered</span>
-                  {proposalCount(a) > 0 && <span className="font-semibold text-zinc-700">Lex has proposed {proposalCount(a)} answer{proposalCount(a) === 1 ? '' : 's'}</span>}
-                </>
-              )}
-              {step === 3 && (() => {
-                const parts = [cost(a.implementationCost) && `${COST_LINE_LABEL_SHORT.implementationCost} ${cost(a.implementationCost)}`, cost(a.enforcementCost) && `${COST_LINE_LABEL_SHORT.enforcementCost} ${cost(a.enforcementCost)}`, cost(a.regulatoryFriction) && `${COST_LINE_LABEL_SHORT.regulatoryFriction} ${cost(a.regulatoryFriction)}`].filter(Boolean)
-                return a.noCostReason?.trim() ? <span title={a.noCostReason}><span className="font-semibold">No cost</span>, because {a.noCostReason.length > 70 ? `${a.noCostReason.slice(0, 69)}…` : a.noCostReason}</span>
-                  : parts.length || costLineIds.has(a.id) ? <span>{parts.join(' · ') || 'cost lines recorded'}</span> : <span className="font-semibold text-zinc-800">Cost: not yet answered</span>
-              })()}
-              {step === 4 && (() => {
-                // 262 — dependency only: what it must come after (with the reasons), and what it comes before. No Now / Next / Later.
-                const after = afterOf(live, a.id, becauseFor(live))
-                return (
-                  <>
-                    <span className={after.length ? '' : 'font-semibold text-zinc-800'} data-order-tag>{afterWords(after)}</span>
-                    {a.beforeIds.length > 0 && <span>comes before {a.beforeIds.map((id) => `#${byId.get(id)?.number ?? '?'}`).join(', ')}</span>}
-                  </>
-                )
-              })()}
-              {a.facetProposal && proposalStep(a.facetProposal).includes(step) && <span className="font-semibold text-zinc-700">Lex has proposed {step === 1 ? 'causes or an avenue' : 'what it comes before'}</span>}
+              {/* 26-X 308 — the old steps 2–4 tags (Who, cost, order) left the row with the step tabs; their data is on the record. */}
+              {org && a.facetProposal && proposalStep(a.facetProposal).includes(1) && <span className="font-semibold text-zinc-700">Lex has proposed causes or an avenue</span>}
             </div>}
-            {a.titleProposal && (
-              <p className="mt-1 text-[11px] text-zinc-700 bg-zinc-50 border border-zinc-200 rounded px-1.5 py-1">
-                <span className="font-semibold">Lex suggests the title:</span> “{a.titleProposal}”{' '}
-                <button disabled={disabled} onClick={() => void ops.run('acceptTitles', { ids: [a.id] })} className="underline font-medium ml-1">Use it</button>
-                <button disabled={disabled} onClick={() => { toggleOpen(a.id) }} className="underline ml-2">Edit</button>
-                <button disabled={disabled} onClick={() => void ops.run('dismissTitles', { ids: [a.id] })} className="underline ml-2 text-zinc-500">No</button>
+            {/* 323 — a proposal waiting is shown on its row, under the statement, never hidden: "Lex proposes: … — Accept · Not this".
+                Only on a row with no title: a title the owner wrote is never replaced. */}
+            {!isOpen && a.titleProposal && hasNoTitle(a) && (
+              <p className="mt-1 text-[11px] text-zinc-800 bg-zinc-50 border border-zinc-300 rounded px-1.5 py-1" data-title-proposal>
+                <span className="font-semibold">{ORGANISING_TOOLBAR_UI.lexProposes}</span> <em>{a.titleProposal}</em> —{' '}
+                <button disabled={disabled} data-title-accept onClick={() => void ops.run('acceptTitles', { ids: [a.id] }, undefined, (x: { accepted: number }) => x.accepted ? `Saved: #${a.number ?? '?'} is titled “${a.titleProposal}”.` : `Nothing changed: #${a.number ?? '?'} already has a title of yours, which is kept.`)} className="underline font-semibold">{ORGANISING_TOOLBAR_UI.acceptTitle}</button>
+                {' · '}
+                <button disabled={disabled} data-title-not-this onClick={() => void ops.run('dismissTitles', { ids: [a.id] }, undefined, () => `Saved: Lex’s title for #${a.number ?? '?'} set aside; it stays untitled.`)} className="underline">{ORGANISING_TOOLBAR_UI.notThisTitle}</button>
               </p>
             )}
           </div>
           {isOpen ? (
             // 18 Oct (CCh B) — opened: Close is on the title line; the heading menu moved down beside the policy test.
             <button type="button" onClick={() => toggleOpen(a.id)} aria-expanded className="shrink-0 text-xs font-semibold px-2 py-0.5 rounded border-2 border-zinc-900 bg-white">{WORKSPACE_UI.closeRecord}</button>
-          ) : headingSelect}
+          ) : org ? (
+            <span className="shrink-0 flex items-center gap-1.5">
+              {headingSelect}
+              <button type="button" onClick={() => flipTo(a)} data-open-in-drafting className="text-[11px] font-medium px-1.5 py-0.5 rounded border border-zinc-300 bg-white">{PAGE_UI.openInDrafting}</button>
+            </span>
+          ) : null}
         </div>
-        {isOpen && <OpenAction a={a} originals={originals} step={step} hasCostLines={costLineIds.has(a.id)} headingSelect={headingSelect} ctx={{ ideaId, live, byId, causeLite, disabled, ops, renderFull, headingName, conditions }} />}
+        {isOpen && <OpenAction a={a} originals={originals} step={step} hasCostLines={costLineIds.has(a.id)} headingSelect={headingSelect} onBack={onPage ? backToOrganising : undefined} ctx={{ ideaId, live, byId, causeLite, disabled, ops, renderFull, headingName, conditions }} />}
       </li>
     )
   }
@@ -452,26 +539,10 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   //   (Classify) and the derived order. Steps 2 and 3 have no toolbar yet: their questions are the opened record's (who; the cost ranges).
   const modes = STEP_GROUP_MODES[step]
   const views = STEP_VIEWS[step].filter((v) => v !== 'conditions' || activeConditions(conditions).length > 0)
-  const classifyWords = step === 1 ? 'causes and avenue' : 'what each must come before'
-  // 26-S2 §5 — step 2's one tool: "Classify with Lex" proposes the seven answers for every action that has none (one pass, chunked; the price measured).
-  const [confirmSlots, setConfirmSlots] = useState(false)
-  const needAnswers = live.filter((a) => ALL_SLOTS.some((k) => !slotAnswered(a, k) && !slotProposal(a, k))).length
-  const slotsWaiting = live.reduce((n, a) => n + proposalCount(a), 0)
-  const slotPrice = SLOT_RUNS.length
-    ? `Measured on a copy of a real idea: ${(SLOT_RUNS.reduce((n, r) => n + r.pence, 0) / SLOT_RUNS.reduce((n, r) => n + r.actions, 0)).toFixed(2)}p per action (n=${SLOT_RUNS.length}). The price of this run is shown when it finishes.`
-    : 'The price of this run is shown when it finishes.'
-  // one request does a dozen actions (a request has a time limit); the screen goes on until none is left or a round makes no progress
-  const classifySlots = async () => {
-    let proposed = 0, acts = 0, pence = 0, unpriced = false
-    for (let round = 0; round < 40; round++) {
-      const r = await ops.run('proposeSlots', {}, `Lex is proposing answers${acts ? ` (${acts} actions done so far)` : ''}`)
-      if (!r.ok || !r.result) { if (acts) ops.setNote(`Lex proposed ${proposed} answers for ${acts} actions before it stopped. Press the button again to continue; nothing you wrote was changed.`); return }
-      proposed += r.result.proposed ?? 0; acts += r.result.actions ?? 0
-      if (r.result.pence == null) unpriced = true; else pence += r.result.pence
-      if (!r.result.remaining || !r.result.proposed) break
-    }
-    ops.setNote(`Lex proposed ${proposed} answer${proposed === 1 ? '' : 's'} for ${acts} action${acts === 1 ? '' : 's'}${unpriced ? '' : ` (${pence.toFixed(1)}p)`}. Each sits beside its slot: use it, edit it or dismiss it. Nothing you wrote was changed.`)
-  }
+  const classifyWords = 'causes and avenue'
+  // 26-X 308 — step 2's bulk "Classify with Lex" (the seven answers for every action) and step 4's ordering classification left with the step
+  // tabs. The per-action "Ask Lex" stays on the record's "Who, how and against"; the whole-set view of those answers is the Deepening's
+  // "Who delivers and who resists" (315, part X3). The data and the route ops are untouched.
   // 190 (UI A, 18 Oct (6) C) - Hide all / Show all headings: the same control on every step (a heading's hidden state is per idea, so it holds across steps)
   // 26-V2c (268, revised) — "Ask Lex to propose kinds": for headings with no kind and no proposal waiting; asks first, at the measured price
   const [askKinds, setAskKinds] = useState(false)
@@ -493,102 +564,181 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       <button type="button" disabled={disabled} data-hide-all-headings onClick={() => void ops.run('setHeadingsHidden', { hidden: !allHeadingsHidden }, undefined,
         (r: { changed: number }) => `Saved: ${allHeadingsHidden ? 'every heading is shown' : 'every heading is hidden'} (${r.changed} changed).`)}
         className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{allHeadingsHidden ? WORKSPACE_UI.showAllHeadings : WORKSPACE_UI.hideAllHeadings}</button>
-      {KindsAsk}
     </>
   ) : null
-  const Step2Toolbar = (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-1.5">
-        {views.length > 1 && (
-          <div role="tablist" aria-label="View" className="inline-flex rounded-lg border border-zinc-300 overflow-hidden" data-step2-views>
-            {views.map((v) => (
-              <button key={v} role="tab" aria-selected={view === v} onClick={() => setView(v)}
-                className={`text-xs px-2.5 py-1 ${view === v ? 'bg-zinc-900 text-white font-semibold' : 'bg-white text-zinc-700 hover:bg-zinc-50'}`}>{view === v ? '● ' : '○ '}{VIEW_LABEL[v]}</button>
-            ))}
-          </div>
-        )}
-        {HideAll}
-        <button disabled={disabled || needAnswers === 0} title={`Lex proposes an answer for every slot that has none, on every action — Who, Incentive now, What changes it, Skill, How, Against, What tells us it worked. Yours are never changed. It works through the list a dozen actions at a time. ${slotPrice}`} onClick={() => { const est = slotPriceEstimate(needAnswers); if (est != null && est > SLOT_CONFIRM_ABOVE_PENCE) setConfirmSlots(true); else void classifySlots() }}
-          className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40" data-classify-slots>{WORKSPACE_UI.classifyWithLex}{needAnswers ? ` (${needAnswers} with open slots)` : ''}</button>
-        {confirmSlots && (
-          <span className="inline-flex flex-wrap items-center gap-1.5 rounded border-2 border-zinc-900 bg-white px-2 py-1 text-xs" data-confirm-slots role="alert">
-            <span>This is {needAnswers} actions, in about {Math.ceil(needAnswers / 12)} requests: estimated <span className="font-semibold">£{((slotPriceEstimate(needAnswers) ?? 0) / 100).toFixed(2)}</span> ({(slotPriceEstimate(1) ?? 0).toFixed(2)}p an action, measured n={SLOT_RUNS.length}). Go on?</span>
-            <button type="button" disabled={disabled} onClick={() => { setConfirmSlots(false); void classifySlots() }} className="font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Go on</button>
-            <button type="button" onClick={() => setConfirmSlots(false)} className="underline text-zinc-700">Cancel</button>
-          </span>
-        )}
-        {slotsWaiting > 0 && (
-          <>
-            <span className="text-[11px] text-zinc-700 font-semibold">{slotsWaiting} answer{slotsWaiting === 1 ? '' : 's'} from Lex waiting for you</span>
-            <button disabled={disabled} onClick={() => void ops.run('dismissSlots', {}, undefined, (r: { dismissed?: number }) => `Saved: ${r?.dismissed ?? 0} of Lex’s proposed answers dismissed. Your own answers were not touched.`)} className="text-[11px] underline text-zinc-600 disabled:opacity-40">{WORKSPACE_UI.dismissThemAll}</button>
-          </>
-        )}
-      </div>
+  // ── 26-X §5a — the Drafting page's head: the counts, then the filters (one per stage of the strip), each with its count ──
+  const dc = development.dev?.counts
+  const DraftingBar = (
+    <div className="space-y-1.5" data-drafting-bar>
+      {development.error && <p className="text-xs font-semibold text-zinc-900 bg-white border-2 border-zinc-900 rounded px-2 py-1.5" role="alert">⚠ Not read: {development.error}</p>}
+      <p className="text-sm font-semibold text-zinc-900" data-drafting-counts>
+        {dc ? draftingLine(dc) : 'Reading how far each action has got…'}
+        {development.dev && development.dev.parked > 0 && <span className="font-normal text-zinc-600"> · {development.dev.parked} in Later phase, not counted</span>}
+      </p>
+      {dc && (
+        <div role="group" aria-label="Show the actions that are" className="flex flex-wrap items-center gap-1" data-drafting-filters>
+          {(['all', ...DRAFTING_STAGES] as const).map((k) => {
+            const here = draftFilter === k
+            const n = k === 'all' ? dc.total : dc.byStage[k]
+            return (
+              <button key={k} type="button" onClick={() => setDraftFilter(k)} aria-pressed={here} data-drafting-filter={k}
+                className={`text-xs rounded px-2 py-0.5 ${here ? 'border-2 border-zinc-900 bg-white font-bold' : 'border border-zinc-300 bg-zinc-50'}`}>
+                <span aria-hidden>{here ? '●' : '○'}</span> {DRAFTING_FILTER_WORD[k]} ({n})
+              </button>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
-  const Toolbar = step === 3 ? (HideAll && <div className="flex flex-wrap items-center gap-1.5">{HideAll}</div>) : step === 2 ? Step2Toolbar : (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-1.5">
-        {views.length > 1 && (
-          <div role="tablist" aria-label="View" className="inline-flex rounded-lg border border-zinc-300 overflow-hidden">
-            {views.map((v) => (
-              <button key={v} role="tab" aria-selected={view === v} onClick={() => setView(v)}
-                className={`text-xs px-2.5 py-1 ${view === v ? 'bg-zinc-900 text-white font-semibold' : 'bg-white text-zinc-700 hover:bg-zinc-50'}`}>{view === v ? '● ' : '○ '}{VIEW_LABEL[v]}</button>
-            ))}
+  // 26-X addendum 321 — the find box (284) and Show are on the View row (they were below the toolbar)
+  const ViewRowFind = (
+    <>
+        {/* 190 (UI B) - the find box: title, statement and commentary; the list (and the board's cards, 255) filter as you type; "n of m actions match"; one press clears it. */}
+        {org && (view === 'list' || view === 'board') && unparked.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5" data-find-box>
+            <input type="search" value={find} onChange={(e) => setFind(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setFind('') }}
+              placeholder="Find in the actions — title, statement, Action details" aria-label="Find in the actions"
+              className="text-xs p-1.5 rounded border border-zinc-300 w-80 max-w-full focus:outline-none focus:border-blue-400" />
+            {find.trim() && (
+              <>
+                <span className="text-[11px] font-semibold text-zinc-800" data-find-count role="status">{shown.length} of {unparked.length} action{unparked.length === 1 ? '' : 's'} match</span>
+                <button type="button" onClick={() => setFind('')} className="text-[11px] underline text-zinc-700" data-find-clear>Clear</button>
+              </>
+            )}
+            {/* 284 - the number itself first: action N wherever it is now, and where it went; the text matches are the list below */}
+            {find.trim() && numberQuery(find) != null && (
+              <div className="basis-full text-[11px] rounded border-2 border-zinc-700 bg-white px-2 py-1 flex flex-wrap items-start gap-2" data-find-number role="status">
+                {numberHit ? (
+                  <>
+                    <span className="font-semibold">#{numberHit.action.number}</span>
+                    <span className="flex-1 min-w-0">{actionLabel(numberHit.action)} <span className="text-zinc-700" data-find-where>— {numberHit.where}</span></span>
+                    {numberHit.place === 'list' && <button type="button" className="underline font-medium" data-find-show onClick={() => openByNumber(numberHit.action.number!)}>Open it</button>}
+                    {numberHit.place === 'parked' && <button type="button" className="underline font-medium" data-find-show onClick={() => { setShowParked(true); setTimeout(() => document.querySelector(`[data-parked-id="${numberHit.action.id}"]`)?.scrollIntoView?.({ block: 'center' }), 50) }}>Show it in Later phase</button>}
+                    {numberHit.place === 'setAside' && org && <button type="button" className="underline font-medium" data-find-show onClick={() => { setShowSetAside(true); setTimeout(() => document.querySelector(`[data-set-aside-id="${numberHit.action.id}"]`)?.scrollIntoView?.({ block: 'center' }), 50) }}>Show it in Ruled out and merged away</button>}
+                    {numberHit.goTo?.number != null && <button type="button" className="underline font-medium" data-find-goto onClick={() => openByNumber(numberHit.goTo!.number!)}>Go to #{numberHit.goTo.number}</button>}
+                  </>
+                ) : <span data-find-where>No action #{numberQuery(find)} on this idea — not in the list, Later phase, or the ruled-out and merged-away actions.</span>}
+              </div>
+            )}
           </div>
         )}
-        {view === 'list' && modes.length > 1 && (
-          <label className="text-[11px] text-zinc-600 flex items-center gap-1">{WORKSPACE_UI.group}
-            <select value={mode} onChange={(e) => setMode(e.target.value as GroupMode)} className="border border-zinc-300 rounded px-1 py-0.5 text-xs">
-              {modes.map((m) => <option key={m} value={m}>{GROUP_MODE_LABEL[m]}</option>)}
-            </select></label>
+  
+        {org && view === 'list' && unparked.length > 0 && (
+          <label className="text-[11px] text-zinc-600 flex flex-wrap items-center gap-1" data-list-filter title="Unreviewed: a proposal of Lex’s is waiting for you (a title, or this step’s classification), or the action has not been tested against the policy.">{WORKSPACE_UI.listFilter}
+            <select value={filter} onChange={(e) => setFilter(e.target.value as Filter)} className="border border-zinc-300 rounded px-1 py-0.5 text-xs" aria-label="Filter the list">
+              {filterKeys.map((k) => <option key={k} value={k}>{FILTER_LABEL[k]} ({filterCounts[k]})</option>)}
+            </select>
+            {filter !== 'all' && <span className="font-semibold text-zinc-800" data-shown-value>{shown.length} of {unparked.length} shown{shown.length === 0 ? ' — none match' : ''}</span>}
+            {/* 184 - the filter's own help text: what each choice means, in words (the definition of "Unreviewed" is Lex's reading, confirmed by CCh) */}
+            <span className="basis-full text-[10px] text-zinc-500" data-filter-help>
+              <span className="font-semibold">Unreviewed</span> — Lex has a proposal waiting for you (a title, this step’s classification{step === 2 ? ' or answers' : ''}), or the action has not been tested against the policy. <span className="font-semibold">Conflicts</span> — the policy test says the action conflicts with your Guiding Policy.{step === 1 ? '' : ' '}{step !== 1 && <><span className="font-semibold">Not yet specific</span> — Who and Against are not both answered (draft text, for a legislative action).</>}
+            </span>
+          </label>
         )}
-        {/* 190 (UI A) - one control for every heading: hides the lot, or shows the lot. A hidden heading keeps its actions; the list just does not show them. */}
-        {HideAll}
-        {step === 1 && (
-          <>
-            <button disabled={disabled || untitled === 0} onClick={async () => {
+    </>
+  )
+  // ══ 26-X addendum 321 — THE ORGANISING TOOLBAR IS THREE LABELLED ROWS: View · Add · Lex and checks. "Add action" and "Add heading" are the
+  //    page's primary (filled) buttons. Every label is in screen-labels.ts and has a field-guide entry that names its row. ══
+  const rowLabel = (word: string) => <span className="text-[11px] font-bold uppercase tracking-wide text-zinc-700 w-28 shrink-0 mt-1" data-toolbar-row-label>{word}</span>
+  const titlePrice = titleProposalPrice(toAskTitles)
+  const Toolbar = !org ? DraftingBar : (
+    <div className="space-y-2 rounded-lg border border-zinc-200 bg-zinc-50/60 p-2" data-organising-toolbar>
+      {/* Row 1 — View. Nothing on this row changes the actions. */}
+      <div className="flex items-start gap-2" data-toolbar-row="view">
+        {rowLabel(ORGANISING_TOOLBAR_UI.rowView)}
+        <div className="flex-1 min-w-0 space-y-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {views.length > 1 && (
+              <div role="tablist" aria-label="View" className="inline-flex rounded-lg border border-zinc-300 overflow-hidden">
+                {views.map((v) => (
+                  <button key={v} role="tab" aria-selected={view === v} onClick={() => setView(v)}
+                    className={`text-xs px-2.5 py-1 ${view === v ? 'bg-zinc-900 text-white font-semibold' : 'bg-white text-zinc-700 hover:bg-zinc-50'}`}>{view === v ? '● ' : '○ '}{VIEW_LABEL[v]}</button>
+                ))}
+              </div>
+            )}
+            {view === 'list' && modes.length > 1 && (
+              <label className="text-[11px] text-zinc-600 flex items-center gap-1">{WORKSPACE_UI.group}
+                <select value={mode} onChange={(e) => setMode(e.target.value as GroupMode)} className="border border-zinc-300 rounded px-1 py-0.5 text-xs">
+                  {modes.map((m) => <option key={m} value={m}>{GROUP_MODE_LABEL[m]}</option>)}
+                </select></label>
+            )}
+            {/* 190 (UI A) - one control for every heading: hides the lot, or shows the lot. A hidden heading keeps its actions; the list just does not show them. */}
+            {HideAll}
+          </div>
+          {ViewRowFind}
+        </div>
+      </div>
+
+      {/* Row 2 — Add. */}
+      <div className="flex items-start gap-2" data-toolbar-row="add">
+        {rowLabel(ORGANISING_TOOLBAR_UI.rowAdd)}
+        <div className="flex-1 min-w-0 flex flex-wrap items-center gap-1.5">
+          <button type="button" disabled={disabled} onClick={() => setAdding(true)} data-add-action
+            className="text-xs font-semibold px-3 py-1 rounded-lg bg-zinc-900 text-white border-2 border-zinc-900 disabled:opacity-40">+ {ORGANISING_TOOLBAR_UI.addAction}</button>
+          {/* the name box opens on press (it was always shown, with its counter) */}
+          {headingBoxOpen ? (
+            <span className="inline-flex flex-wrap items-center gap-1 rounded border-2 border-zinc-900 bg-white p-1" data-add-heading-box>
+              <BoundedInput value={newHeading} onChange={setNewHeading} max={LIMITS.headingName} placeholder="New heading — e.g. legislation, practical…" aria-label="New heading name"
+                onEnter={() => void addHeading()} disabled={disabled} autoFocus
+                className="text-xs p-1.5 rounded border border-zinc-300 w-60 focus:outline-none focus:border-blue-400" />
+              <button disabled={disabled || !newHeading.trim()} onClick={() => void addHeading()} className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-zinc-900 text-white disabled:opacity-40">{COMMON_UI.save}</button>
+              <button type="button" onClick={() => { setHeadingBoxOpen(false); setNewHeading('') }} className="text-xs underline text-zinc-600">{COMMON_UI.cancel}</button>
+            </span>
+          ) : (
+            <button type="button" disabled={disabled} onClick={() => setHeadingBoxOpen(true)} data-add-heading
+              className="text-xs font-semibold px-3 py-1 rounded-lg bg-zinc-900 text-white border-2 border-zinc-900 disabled:opacity-40">+ {WORKSPACE_UI.addHeading}</button>
+          )}
+          <button disabled={disabled} onClick={async () => {
+            const r = await ops.run('suggestHeadings', {}, 'Lex is reading your guiding policy')
+            if (r.ok && r.result) setSuggestions(r.result.suggestions)
+          }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 bg-white hover:bg-zinc-50">{WORKSPACE_UI.suggestHeadings}</button>
+          {importSlot}
+        </div>
+      </div>
+
+      {/* Row 3 — Lex and checks. Each that spends says its price first or when it finishes. */}
+      <div className="flex items-start gap-2" data-toolbar-row="lex">
+        {rowLabel(ORGANISING_TOOLBAR_UI.rowLex)}
+        <div className="flex-1 min-w-0 flex flex-wrap items-center gap-1.5">
+          {/* 323 — the count's meaning is in the label; pressing it also shows the Untitled filter, so the N are on screen */}
+          {untitled > 0 && (
+            <button disabled={disabled} data-title-them onClick={async () => {
+              setView('list'); setFind(''); setFilter('untitled')
+              if (toAskTitles === 0) { ops.setNote(`Every untitled action already has a title proposal waiting on its row: Accept or Not this. Nothing was asked.`); return }
               const r = await ops.run('proposeTitles', {}, 'Lex is writing titles')
-              if (r.ok && r.result) ops.setNote(`Lex proposed ${r.result.proposed} title${r.result.proposed === 1 ? '' : 's'}${r.result.skipped ? `; ${r.result.skipped} it could not title` : ''}${r.result.asTopics ? `; ${r.result.asTopics} read like a topic rather than an action — worth a look` : ''}. Nothing is saved until you accept.`)
-            }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{WORKSPACE_UI.titleTheseForMe}{untitled ? ` (${untitled})` : ''}</button>
-            {titleProposals > 0 && <button disabled={disabled} onClick={() => void ops.run('acceptTitles', {})} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white">Use all {titleProposals} proposed titles</button>}
-          </>
-        )}
-        <button disabled={disabled || live.length === 0} title={`Lex proposes the ${classifyWords} for every action that has none. You accept or correct.`} onClick={async () => {
-          const r = await ops.run('proposeFacets', {}, 'Lex is classifying')
-          if (r.ok && r.result) ops.setNote(`Lex proposed the ${classifyWords} for ${r.result.proposed} action${r.result.proposed === 1 ? '' : 's'}. Open an action to correct it, or accept the lot.`)
-        }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{WORKSPACE_UI.classifyWithLex}</button>
-        {facetProposals > 0 && <button disabled={disabled} onClick={() => void ops.run('acceptFacets', { step }, undefined,
-          (r: { accepted: number; refused?: string[] }) => `Saved: ${r.accepted} accepted.${r.refused?.length ? ` Not taken, because the order would go round in a circle: ${r.refused.join(' ')}` : ''}`)} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white">Accept all {facetProposals} proposed {step === 1 ? 'classifications' : 'orderings'}</button>}
-        {step === 1 && (
+              if (r.ok && r.result) ops.setNote(`Lex proposed ${r.result.proposed} title${r.result.proposed === 1 ? '' : 's'}${r.result.pence != null ? ` (${Number(r.result.pence).toFixed(1)}p)` : ''}${r.result.skipped ? `; ${r.result.skipped} it could not title` : ''}${r.result.asTopics ? `; ${r.result.asTopics} read like a topic rather than an action — worth a look` : ''}. Each waits on its row, under the statement: Accept or Not this. Nothing is saved until you accept.`)
+            }} title={`Lex proposes a title for each action with no title and no proposal waiting${titlePrice.pence != null ? ` — about ${titlePrice.pence}p (the mean of ${titlePrice.runs} measured runs)` : ''}. A title you wrote is never replaced.`}
+              className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 bg-white text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">
+              <span data-title-count>{untitledWords(untitled)}</span> · {WORKSPACE_UI.titleThemWithLex}{toAskTitles > 0 && titlePrice.pence != null ? ` — about ${titlePrice.pence}p` : ''}
+            </button>
+          )}
+          {titleProposals > 0 && <button disabled={disabled} data-accept-all-titles onClick={() => void ops.run('acceptTitles', {}, undefined, (x: { accepted: number; keptYours: number }) => `Saved: ${x.accepted} title${x.accepted === 1 ? '' : 's'} accepted.${x.keptYours ? ` ${x.keptYours} row${x.keptYours === 1 ? '' : 's'} you had titled since kept your title.` : ''}`)}
+            className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white">{withCount(ORGANISING_TOOLBAR_UI.acceptAllTitles, titleProposals)}</button>}
+          <button disabled={disabled || live.length === 0} title={`Lex proposes the ${classifyWords} for every action that has none. You accept or correct.`} onClick={async () => {
+            const r = await ops.run('proposeFacets', {}, 'Lex is classifying')
+            if (r.ok && r.result) ops.setNote(`Lex proposed the ${classifyWords} for ${r.result.proposed} action${r.result.proposed === 1 ? '' : 's'}. Open an action to correct it, or accept the lot.`)
+          }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 bg-white text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{WORKSPACE_UI.classifyWithLex}</button>
+          {facetProposals > 0 && <button disabled={disabled} onClick={() => void ops.run('acceptFacets', { step }, undefined,
+            (r: { accepted: number; refused?: string[] }) => `Saved: ${r.accepted} accepted.${r.refused?.length ? ` Not taken, because the order would go round in a circle: ${r.refused.join(' ')}` : ''}`)} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-zinc-900 text-white">Accept all {facetProposals} proposed {step === 1 ? 'classifications' : 'orderings'}</button>}
           <button disabled={disabled || live.length < 2} onClick={async () => {
             const r = await ops.run('findDuplicates', {}, 'finding duplicates')
             if (r.ok) { setDupes(r.result); markDuplicatesChecked() }
-          }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{WORKSPACE_UI.findDuplicates}</button>
-        )}
-        {step === 1 && headingPlan && <ResortTool plan={headingPlan} undoable={structure?.resortUndoable ?? 0} ops={ops} disabled={disabled} />}
-        {step === 1 && untestedCount > 0 && (
-          <button disabled={disabled} title="Runs the same test the import uses, on the actions that read ? Not tested. Measured once on a real idea: 14 actions for 3.9p in about 40 seconds (n=1). The price of this run is shown when it finishes." onClick={() => void ops.run('testPolicy', {}, 'Lex is testing the actions against your Guiding Policy', testedWords)}
-            className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">Test against the policy ({untestedCount} untested)</button>
-        )}
-        {step === 1 && <SetDigestButton state={digests} disabled={disabled || live.length === 0} onOpened={() => setSetDigestOpen(true)} />}
-        {step === 1 && <button type="button" disabled={disabled || pack.busy || live.length === 0} data-print-all onClick={() => void pack.print(undefined, 'all the actions')} title="A printable pack of every action with everything the record holds, every paragraph numbered. No model is called." className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{WORKSPACE_UI.printAll}</button>}
+          }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 bg-white text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{WORKSPACE_UI.findDuplicates}</button>
+          {headingPlan && <ResortTool plan={headingPlan} undoable={structure?.resortUndoable ?? 0} ops={ops} disabled={disabled} />}
+          {untestedCount > 0 && (
+            <button disabled={disabled} data-test-policy title="Runs the same test the import uses, on the actions that read ? Not tested. Measured once on a real idea: 14 actions for 3.9p in about 40 seconds (n=1). The price of this run is shown when it finishes." onClick={() => { setView('list'); setFind(''); setFilter('unreviewed'); void ops.run('testPolicy', {}, 'Lex is testing the actions against your Guiding Policy', testedWords) }}
+              className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 bg-white text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{ORGANISING_TOOLBAR_UI.testAgainstPolicy} ({untestedCount} untested)</button>
+          )}
+          <SetDigestButton state={digests} disabled={disabled || live.length === 0} onOpened={() => setSetDigestOpen(true)} />
+          {KindsAsk}
+          {gapSlot}
+          <button type="button" disabled={disabled || pack.busy || live.length === 0} data-print-all onClick={() => void pack.print(undefined, 'all the actions')} title="A printable pack of every action with everything the record holds, every paragraph numbered. No model is called." className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 bg-white text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{WORKSPACE_UI.printAll}</button>
+        </div>
       </div>
+      {adding && <AddActionForm headings={headings} disabled={disabled} onAdd={addOwnAction} onClose={() => setAdding(false)} />}
 
-      {step === 1 && (
-      <div className="flex flex-wrap items-center gap-1.5">
-        <BoundedInput value={newHeading} onChange={setNewHeading} max={LIMITS.headingName} placeholder="New heading — e.g. legislation, practical…" aria-label="New heading name"
-          onEnter={() => void addHeading()} disabled={disabled}
-          className="text-xs p-1.5 rounded border border-zinc-300 w-60 focus:outline-none focus:border-blue-400" />
-        <button disabled={disabled || !newHeading.trim()} onClick={() => void addHeading()} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 disabled:opacity-40">{WORKSPACE_UI.addHeading}</button>
-        <button disabled={disabled} onClick={async () => {
-          const r = await ops.run('suggestHeadings', {}, 'Lex is reading your guiding policy')
-          if (r.ok && r.result) setSuggestions(r.result.suggestions)
-        }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 hover:bg-zinc-50">{WORKSPACE_UI.suggestHeadings}</button>
-      </div>
-      )}
-
-      {step === 1 && suggestions && (
+      {org && suggestions && (
         <div className="rounded-lg border border-zinc-200 bg-white p-2">
           <p className="text-[11px] font-semibold text-zinc-700">Starting headings from your guiding policy — add, rename later, or ignore.</p>
           <ul className="mt-1 space-y-1">
@@ -635,7 +785,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   ) : null
 
   // ── bulk bar ──
-  const BulkBar = step === 1 && selIds.length > 0 && (
+  const BulkBar = org && selIds.length > 0 && (
     <div className="rounded-lg border-2 border-zinc-900 bg-white p-2 flex flex-wrap items-start gap-1.5" data-bulk-bar>
       <span className="text-xs font-semibold mt-0.5">{selIds.length} selected</span>
       <select disabled={disabled} defaultValue="" onChange={(e) => {
@@ -668,56 +818,14 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   )
 
   return (
-    <div className="space-y-2">
+    <div ref={rootRef} className="space-y-2" data-actions-page={page}>
       {Toolbar}
-      {step === 1 && <HeldFromConsolidation ideaId={ideaId} onChanged={onChanged} />}
-      {step === 1 && <ConditionsPanel doc={conditions} actions={unparked} ops={ops} disabled={disabled} />}
+      {org && <HeldFromConsolidation ideaId={ideaId} onChanged={onChanged} />}
+      {org && <ConditionsPanel doc={conditions} actions={unparked} ops={ops} disabled={disabled} />}
       {(Status || BulkBar) && <div className="sticky top-0 z-20 space-y-1" data-sticky-top>{Status}{BulkBar}</div>}
-      {step === 1 && pair && <PairPanel key={`${pair.a}-${pair.b}-${pair.mode}`} ideaId={ideaId} a={pair.a} b={pair.b} mode={pair.mode} ops={ops} onClose={() => { setPair(null); setSelected(new Set()) }} byNumber={(n) => live.find((x) => x.number === n)} />}
-      {step === 1 && dupes && <DuplicatesPanel data={dupes} onClose={() => setDupes(null)} onMerge={(a, b) => setPair({ a, b, mode: 'merge' })} causes={causeLite} />}
+      {org && pair && <PairPanel key={`${pair.a}-${pair.b}-${pair.mode}`} ideaId={ideaId} a={pair.a} b={pair.b} mode={pair.mode} ops={ops} onClose={() => { setPair(null); setSelected(new Set()) }} byNumber={(n) => live.find((x) => x.number === n)} />}
+      {org && dupes && <DuplicatesPanel data={dupes} onClose={() => setDupes(null)} onMerge={(a, b) => setPair({ a, b, mode: 'merge' })} causes={causeLite} />}
 
-      {/* 190 (UI B) - the find box: title, statement and commentary; the list (and the board's cards, 255) filter as you type; "n of m actions match"; one press clears it. */}
-      {(view === 'list' || view === 'board') && unparked.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5" data-find-box>
-          <input type="search" value={find} onChange={(e) => setFind(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setFind('') }}
-            placeholder="Find in the actions — title, statement, Action details" aria-label="Find in the actions"
-            className="text-xs p-1.5 rounded border border-zinc-300 w-80 max-w-full focus:outline-none focus:border-blue-400" />
-          {find.trim() && (
-            <>
-              <span className="text-[11px] font-semibold text-zinc-800" data-find-count role="status">{shown.length} of {unparked.length} action{unparked.length === 1 ? '' : 's'} match</span>
-              <button type="button" onClick={() => setFind('')} className="text-[11px] underline text-zinc-700" data-find-clear>Clear</button>
-            </>
-          )}
-          {/* 284 - the number itself first: action N wherever it is now, and where it went; the text matches are the list below */}
-          {find.trim() && numberQuery(find) != null && (
-            <div className="basis-full text-[11px] rounded border-2 border-zinc-700 bg-white px-2 py-1 flex flex-wrap items-start gap-2" data-find-number role="status">
-              {numberHit ? (
-                <>
-                  <span className="font-semibold">#{numberHit.action.number}</span>
-                  <span className="flex-1 min-w-0">{actionLabel(numberHit.action)} <span className="text-zinc-700" data-find-where>— {numberHit.where}</span></span>
-                  {numberHit.place === 'list' && <button type="button" className="underline font-medium" data-find-show onClick={() => openByNumber(numberHit.action.number!)}>Open it</button>}
-                  {numberHit.place === 'parked' && <button type="button" className="underline font-medium" data-find-show onClick={() => { setShowParked(true); setTimeout(() => document.querySelector(`[data-parked-id="${numberHit.action.id}"]`)?.scrollIntoView?.({ block: 'center' }), 50) }}>Show it in Later phase</button>}
-                  {numberHit.place === 'setAside' && step === 1 && <button type="button" className="underline font-medium" data-find-show onClick={() => { setShowSetAside(true); setTimeout(() => document.querySelector(`[data-set-aside-id="${numberHit.action.id}"]`)?.scrollIntoView?.({ block: 'center' }), 50) }}>Show it in Ruled out and merged away</button>}
-                  {numberHit.goTo?.number != null && <button type="button" className="underline font-medium" data-find-goto onClick={() => openByNumber(numberHit.goTo!.number!)}>Go to #{numberHit.goTo.number}</button>}
-                </>
-              ) : <span data-find-where>No action #{numberQuery(find)} on this idea — not in the list, Later phase, or the ruled-out and merged-away actions.</span>}
-            </div>
-          )}
-        </div>
-      )}
-
-      {view === 'list' && unparked.length > 0 && (
-        <label className="text-[11px] text-zinc-600 flex flex-wrap items-center gap-1" data-list-filter title="Unreviewed: a proposal of Lex’s is waiting for you (a title, or this step’s classification), or the action has not been tested against the policy.">{WORKSPACE_UI.listFilter}
-          <select value={filter} onChange={(e) => setFilter(e.target.value as Filter)} className="border border-zinc-300 rounded px-1 py-0.5 text-xs" aria-label="Filter the list">
-            {filterKeys.map((k) => <option key={k} value={k}>{FILTER_LABEL[k]} ({filterCounts[k]})</option>)}
-          </select>
-          {filter !== 'all' && <span className="font-semibold text-zinc-800" data-shown-value>{shown.length} of {unparked.length} shown{shown.length === 0 ? ' — none match' : ''}</span>}
-          {/* 184 - the filter's own help text: what each choice means, in words (the definition of "Unreviewed" is Lex's reading, confirmed by CCh) */}
-          <span className="basis-full text-[10px] text-zinc-500" data-filter-help>
-            <span className="font-semibold">Unreviewed</span> — Lex has a proposal waiting for you (a title, this step’s classification{step === 2 ? ' or answers' : ''}), or the action has not been tested against the policy. <span className="font-semibold">Conflicts</span> — the policy test says the action conflicts with your Guiding Policy.{step === 1 ? '' : ' '}{step !== 1 && <><span className="font-semibold">Not yet specific</span> — Who and Against are not both answered (draft text, for a legislative action).</>}
-          </span>
-        </label>
-      )}
 
       {view === 'list' && (
         <>
@@ -727,23 +835,27 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
               const h = g.key.startsWith('h:') ? headingById.get(g.key.slice(2)) : undefined
               return (
                 <section key={g.key} aria-label={g.label}>
-                  <GroupHeader g={g} h={h} compact={step !== 1} ops={ops} disabled={disabled} archived={h ? archivedByHeading.get(h.id) ?? 0 : 0}
-                    onConsolidate={step === 1 && h && g.actions.length >= 2 ? async () => {
+                  <GroupHeader g={g} h={h} compact={!org} ops={ops} disabled={disabled} archived={h ? archivedByHeading.get(h.id) ?? 0 : 0}
+                    onConsolidate={org && h && g.actions.length >= 2 ? async () => {
                       const r = await ops.run('consolidatePlan', { headingId: h.id }, 'reading the heading')
                       if (r.ok && r.result) setConsolidate({ headingId: h.id, phase: 'confirm', heading: r.result.heading, actions: r.result.actions, estimate: r.result.estimate })
                     } : undefined}
-                    onShowArchived={step === 1 ? () => { setShowSetAside(true); setTimeout(() => document.getElementById('set-aside-block')?.scrollIntoView?.({ block: 'start' }), 0) } : undefined} />
+                    onShowArchived={org ? () => { setShowSetAside(true); setTimeout(() => document.getElementById('set-aside-block')?.scrollIntoView?.({ block: 'start' }), 0) } : undefined} />
                   {consolidate && h && consolidate.headingId === h.id && <ConsolidateCard s={consolidate} ops={ops} disabled={disabled} setS={setConsolidate} onClose={() => setConsolidate(null)} />}
-                  {step === 1 && h && <HeadingDigest headingId={h.id} headingName={h.name} actionCount={g.actions.length} state={digests} onOpenAction={openByNumber} disabled={disabled}
+                  {org && h && <HeadingDigest headingId={h.id} headingName={h.name} actionCount={g.actions.length} state={digests} onOpenAction={openByNumber} disabled={disabled}
                     extra={<button type="button" disabled={disabled || pack.busy || g.actions.length === 0} data-print-heading onClick={() => void pack.print({ headingId: h.id }, `the heading “${h.name}”`)} title="Print this heading as an Actions Pack (Word and PDF), every paragraph numbered." className="text-[11px] font-medium px-1.5 py-0.5 rounded border border-zinc-300 text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{WORKSPACE_UI.printHeading}</button>} />}
-                  {h && !g.hidden && <DraftAllButton actions={g.actions as never} run={ops.run as never} disabled={disabled} headingName={h.name} />}
+                  {/* §4b — no drafting control on Organising: "Draft all legislative actions" is a Drafting tool */}
+                  {!org && h && !g.hidden && <DraftAllButton actions={g.actions as never} run={ops.run as never} disabled={disabled} headingName={h.name} />}
                   {!g.hidden && <ul className="space-y-1">{g.actions.map((a) => renderRow(a))}</ul>}
-                  {g.hidden && <p className="text-[11px] text-zinc-400 pl-2">Hidden — {g.actions.length} action{g.actions.length === 1 ? '' : 's'} not shown.</p>}
+                  {/* 26-X — an action OPENED on Drafting (a flip, a deep link #N, a new "Add action") is drawn even under a hidden heading:
+                      hidden hides the list's rows, never the record the user asked for. The note counts the rest. */}
+                  {g.hidden && !org && g.actions.some((a) => open.has(a.id)) && <ul className="space-y-1" data-open-under-hidden>{g.actions.filter((a) => open.has(a.id)).map((a) => renderRow(a))}</ul>}
+                  {g.hidden && (() => { const rest = g.actions.length - (!org ? g.actions.filter((a) => open.has(a.id)).length : 0); return rest > 0 || org ? <p className="text-[11px] text-zinc-400 pl-2">Hidden — {rest} {!org && rest !== g.actions.length ? 'more ' : ''}action{rest === 1 ? '' : 's'} not shown.</p> : null })()}
                 </section>
               )
             })}
           </div>
-          {step === 1 && parked.length > 0 && (
+          {org && parked.length > 0 && (
             <CollapsedBlock title={WORKSPACE_UI.laterPhaseBlock} count={parked.length} open={showParked} onToggle={() => setShowParked((v) => !v)} hint="Parked for later — still yours, still in the proposal.">
               <ul className="space-y-1">{parked.map((a) => (
                 <li key={a.id} data-parked-id={a.id} className="flex items-start gap-2 text-[11px] rounded border border-zinc-200 bg-white px-2 py-1">
@@ -756,7 +868,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       )}
 
       {/* 26-V1b §7a (255) — the board: the same cards as the list (live, not parked, through the find box); its writes are the list's own */}
-      {view === 'board' && step === 1 && (
+      {view === 'board' && org && (
         <ActionsBoard ideaId={ideaId} actions={unparked.filter(found)} headings={headings} conditions={conditions} ops={ops} disabled={disabled} headingName={headingName}
           pairs={dupes?.pairs ?? null}
           onFindPairs={async () => { const r = await ops.run('findDuplicates', {}, 'finding duplicates'); if (r.ok) { setDupes(r.result); markDuplicatesChecked() } }}
@@ -768,12 +880,12 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       {view === 'who' && <IncentiveMap ideaId={ideaId} actions={unparked} onOpenAction={openByNumber} onChanged={onChanged} disabled={disabled} />}
 
       {/* 26-T1 - the whole-set digest, at the foot of step 1 */}
-      {step === 1 && <SetDigest state={digests} open={setDigestOpen} setOpen={setSetDigestOpen} onOpenAction={openByNumber} disabled={disabled} />}
+      {org && <SetDigest state={digests} open={setDigestOpen} setOpen={setSetDigestOpen} onOpenAction={openByNumber} disabled={disabled} />}
 
       {/* 26-S2 §3c — this step's checklist at the foot of the list. ADVISORY: it says what is unfinished and never blocks moving on. */}
-      {checklist.length > 0 && <StepChecklist step={step} lines={checklist} />}
+      {org && checklist.length > 0 && <StepChecklist step={step} lines={checklist} />}
 
-      {step === 1 && setAside.length > 0 && (
+      {org && setAside.length > 0 && (
         <CollapsedBlock id="set-aside-block" title={WORKSPACE_UI.ruledOutBlock} count={setAside.length} open={showSetAside} onToggle={() => setShowSetAside((v) => !v)} hint="Kept, with the reason. Nothing here is deleted.">
           <ul className="space-y-1">{setAside.map((a) => (
             <li key={a.id} data-set-aside-id={a.id} className="flex items-start gap-2 text-[11px] rounded border border-zinc-200 bg-white px-2 py-1">
@@ -783,7 +895,7 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
             </li>))}</ul>
         </CollapsedBlock>
       )}
-      {step === 1 && archivedHeadings.length > 0 && (
+      {org && archivedHeadings.length > 0 && (
         <CollapsedBlock id="retired-headings-block" title={WORKSPACE_UI.retiredHeadingsBlock} count={archivedHeadings.length} open={showRetired} onToggle={() => setShowRetired((v) => !v)} hint="Archived by a re-sort. Kept; nothing is deleted.">
           <ul className="space-y-1">{archivedHeadings.map((h) => (
             <li key={h.id} className="flex items-start gap-2 text-[11px] rounded border border-zinc-200 bg-white px-2 py-1" data-retired-heading>
@@ -833,7 +945,7 @@ function OpenTitle({ a, disabled, ops }: { a: CanonicalAction; disabled: boolean
   )
 }
 
-function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { a: CanonicalAction; originals: CanonicalAction[]; ctx: OpenCtx; step: ActionsStep; hasCostLines: boolean; headingSelect: ReactNode }) {
+function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect, onBack }: { a: CanonicalAction; originals: CanonicalAction[]; ctx: OpenCtx; step: ActionsStep; hasCostLines: boolean; headingSelect: ReactNode; onBack?: () => void }) {
   const { live, byId, causeLite, disabled, ops, renderFull } = ctx
   const [keepNote, setKeepNote] = useState(a.conflictNote ?? '')
   const [why, setWhy] = useState('')
@@ -981,33 +1093,38 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect }: { 
     after: others.filter((o) => o.beforeIds.includes(a.id)).map((o) => o.number),
     comments: facts.comments,
   })
-  // 265 (24 Oct) — EVERY section of the record is closed when it opens, the current step's too; the band above names each one with its
-  // state, and each closed line says the same. The current step's line ends "this step" (data-step-current), the others "from step N".
-  const here = (line: string, n: number) => (n === step ? line.replace(/ · from step \d$/, ' · this step') : line)
-  const closed = (key: string, n: number | null, line: ReactNode, body: ReactNode) => (
-    <details data-record-section={key} {...(n != null ? { 'data-step-section': n, ...(n === step ? { 'data-step-current': 'true' } : {}) } : {})} className="rounded border border-zinc-200 bg-white scroll-mt-10">
+  // 265 (24 Oct) — every section of the record is closed when it opens; the band above names each one with its state, and each closed line
+  // says the same. 26-X 308: there are no steps, so a line no longer says "this step" or "from step N" — EXCEPT the Drafts, which open at
+  // the top of the record, open (§5a).
+  const here = (line: string, _n: number) => line.replace(/ · from step \d$/, '')
+  const closed = (key: string, n: number | null, line: ReactNode, body: ReactNode, opened = false) => (
+    <details data-record-section={key} {...(n != null ? { 'data-step-section': n } : {})} open={opened || undefined} className="rounded border border-zinc-200 bg-white scroll-mt-10">
       <summary className="cursor-pointer px-2 py-1 text-[11px] text-zinc-700">{line}</summary>
       <div className="px-2 pb-2 pt-1 space-y-2">{body}</div>
     </details>
   )
   const stepPart = (n: 2 | 3 | 4, key: RecordSection) =>
     closed(key, n, here(otherStepLine(n, a, hasCostLines, headingName, afterOf(live, a.id, becauseFor(live))), n), section[n])
-  const titled = (key: RecordSection, title: string, body: ReactNode) =>
-    closed(key, null, <><span className="font-semibold">{title}</span> · <span data-section-state>{states[key]}</span></>, body)
+  const titled = (key: RecordSection, title: string, body: ReactNode, opened = false) =>
+    closed(key, null, <><span className="font-semibold">{title}</span> · <span data-section-state>{states[key]}</span></>, body, opened)
   return (
-    <div ref={box} className="border-t-2 border-zinc-300 px-2.5 py-2 space-y-2" data-record-order="26v1b">
+    <div ref={box} className="border-t-2 border-zinc-300 px-2.5 py-2 space-y-2" data-record-order="26x">
+      {/* 318 — the way back, at the top of the record: Organising at the same scroll position, with its find box and filters as they were */}
+      {onBack && <p><button type="button" onClick={onBack} data-back-to-organising className="text-xs font-semibold px-2 py-0.5 rounded border-2 border-zinc-900 bg-white">{PAGE_UI.backToOrganising}</button></p>}
+      {/* §5a — the Drafts section, OPEN, at the top of the record (5c's full order, with the Brief above the Draft, is part X2) */}
+      {titled('documents', sectionLabel('documents'), <DocumentsSection ideaId={ctx.ideaId} a={a} facts={facts} disabled={disabled} onChanged={() => void ops.refresh()} />, true)}
       {renderFull(a, 1, (
         <div className="space-y-2">
           <JumpBand states={states} onJump={jump} headingSelect={headingSelect} />
           {closed('policy', 1, here(otherStepLine(1, a, hasCostLines, headingName), 1), policyBlock)}
         </div>
       ))}
-      {titled('documents', sectionLabel('documents'), <DocumentsSection ideaId={ctx.ideaId} a={a} facts={facts} disabled={disabled} onChanged={() => void ops.refresh()} />)}
       {titled('law', sectionLabel('law'), <LawSection facts={facts} number={a.number} />)}
+      {/* CCh-Lex 4 Nov (2), item 1 — "Who, how and against" stays a record section until X3 moves it to the Deepening */}
       {stepPart(2, 'who')}
       {stepPart(3, 'costs')}
       {stepPart(4, 'order')}
-      {closed('prune', null, `${RECORD_UI.pruneLine} · ${step === 1 ? 'this step' : 'from step 1'}`, pruneBlock)}
+      {closed('prune', null, RECORD_UI.pruneLine, pruneBlock)}
       {/* 26-T2 §6 - the comment thread, at the foot of the record on every step */}
       <div data-record-section="comments" className="scroll-mt-10"><ActionComments ideaId={ctx.ideaId} actionId={a.id} number={a.number} /></div>
     </div>

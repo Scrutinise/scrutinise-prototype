@@ -11,6 +11,7 @@ import { enterSpendFor } from '@/lib/lex/build-context'
 import { claimPass, runPass, PassAlreadyRunning } from '@/lib/lex/deepening'
 import { settleAbandonedRuns } from '@/lib/lex/deepening-settle'
 import { isPassKey } from '@/lib/lex/deepening-config'
+import { developmentState } from '@/lib/lex/development'
 
 type Params = { params: Promise<{ id: string; passKey: string }> }
 
@@ -27,6 +28,16 @@ export async function POST(_req: Request, { params }: Params) {
 
   if (!isPassKey(passKey)) {
     return NextResponse.json({ error: `Unknown pass: ${passKey}` }, { status: 404 })
+  }
+
+  // 26-X decision 317 — THE LOCK. Nothing in the Deepening runs until every live action is accepted or needs no draft, unless the owner
+  // has overridden the lock with a reason. Refused in words, with the count, before anything is claimed or spent.
+  const dev = await developmentState(id)
+  if (!dev.deepeningOpen) {
+    return NextResponse.json({
+      error: `That Deepening pass was not run. The Deepening opens when every live action is accepted or needs no draft: ${dev.counts.toGo} ${dev.counts.toGo === 1 ? 'action is' : 'actions are'} still to go (Drafting). The owner can open it early with a reason (“Deepen now”). Nothing was run or spent.`,
+      locked: true, toGo: dev.counts.toGo,
+    }, { status: 423 })
   }
 
   // Clear any run that died without reporting back BEFORE claiming, or an abandoned row

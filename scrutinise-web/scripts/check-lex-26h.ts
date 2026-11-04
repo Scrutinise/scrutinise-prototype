@@ -50,12 +50,16 @@ const text = (m: DocumentModel, n = 6) =>
 
 async function main() {
   section('A · the copy')
-  ok('seven stages, in the brief\'s order and names',
-    SEVEN_STAGES.map((s) => s.name).join('|') === 'The First Pass|The First Draft|The Deepening|Private Scrutiny|Public Scrutiny|Submission|In Force')
-  ok('Stage 2 is "The First Draft", never "First Scrutiny" (§2a)', SEVEN_STAGES[1].name === 'The First Draft' && !SEVEN_STAGES.some((s) => /First Scrutiny/i.test(s.name)))
+  // ⚠ MOVED BY 26-X DECISION 316 (4 Nov 2026, amends 135): the seven are Creation · Development · Private Scrutiny · Public Scrutiny ·
+  // Promotion · Submission · In Force. "The First Pass" is Creation's content; "The First Draft" and "The Deepening" are inside Development.
+  // Was: 'The First Pass|The First Draft|The Deepening|Private Scrutiny|Public Scrutiny|Submission|In Force', stage 2 "The First Draft".
+  ok('seven stages, in the brief\'s order and names (316)',
+    SEVEN_STAGES.map((s) => s.name).join('|') === 'Creation|Development|Private Scrutiny|Public Scrutiny|Promotion|Submission|In Force')
+  ok('Stage 2 is "Development", never "First Scrutiny" (§2a; 316)', SEVEN_STAGES[1].name === 'Development' && !SEVEN_STAGES.some((s) => /First Scrutiny/i.test(s.name)))
   ok('Stage 6 is "Submission", not "Parliamentary submission" (§2b)', SEVEN_STAGES[5].name === 'Submission')
-  ok('only In Force is marked not yet available (§3)', SEVEN_STAGES.filter((s) => !s.available).map((s) => s.name).join() === 'In Force')
-  ok('the stage sentence is the brief\'s form', stageSentence(2) === 'This is a Stage 2 document: The First Draft.')
+  // 316: Promotion (new) has no plan built behind it yet (26-X §3a item 7: "not yet available"), so it is marked as In Force is
+  ok('only Promotion and In Force are marked not yet available (§3; 316)', SEVEN_STAGES.filter((s) => !s.available).map((s) => s.name).join() === 'Promotion,In Force')
+  ok('the stage sentence is the brief\'s form', stageSentence(2) === 'This is a Stage 2 document: Development.')
   ok('review status defaults to First Scrutiny', reviewStatus().label === 'First Scrutiny')
   ok('a recorded private review names its number and date (§5)', reviewStatus({ privateReview: { reviewers: 4, date: '2027-05-12' }, publicReview: null }).label === 'Privately reviewed — 4 reviewers, 12 May 2027')
   ok('a recorded public review beats a private one, one reviewer is singular',
@@ -69,7 +73,9 @@ async function main() {
   ok('135: built, kernel not complete → Stage 2', documentStage({ kind: 'KERNEL', progress: P(true, false, false) }) === 2)
   ok('135: kernel complete but the Deepening not entered → still Stage 2', documentStage({ kind: 'KERNEL', progress: P(true, true, false) }) === 2)
   ok('135: Deepening entered but the kernel NOT complete → still Stage 2', documentStage({ kind: 'KERNEL', progress: P(true, false, true) }) === 2)
-  ok('135: built, kernel complete AND Deepening entered → Stage 3', documentStage({ kind: 'KERNEL', progress: P(true, true, true) }) === 3)
+  // ⚠ MOVED BY 316: the Deepening is inside Development, so a deepened idea's documents are Stage 2 too (Stage 3 is Private Scrutiny).
+  // Was: built + kernel complete + Deepening entered → Stage 3.
+  ok('135 as amended by 316: built, kernel complete AND Deepening entered → still Stage 2, Development', documentStage({ kind: 'KERNEL', progress: P(true, true, true) }) === 2)
   ok('135: the document stack\'s list of Deepening pass keys is the Deepening\'s own (no drift)', [...DEEPENING_PASS_KEYS].sort().join() === [...PASS_KEYS].sort().join(), ` vs `)
   const KEYS = ['EVIDENCE_PRECEDENT', 'LEGAL']
   const prog = (statuses: string[], passes: { passKey: string; status: string }[]) => kernelProgressOf({ built: true, fieldStatuses: statuses, deepeningPassKeys: KEYS, passes })
@@ -87,9 +93,10 @@ async function main() {
   const bt = text(wrapped, banner.length)
   ok('the banner is FIRST and in the brief\'s order: stage (bold) → review status → seven stages → caveat',
     wrapped.blocks[0].kind === 'paragraph' && (wrapped.blocks[0] as { runs: { bold?: boolean }[] }).runs[0].bold === true
-    && bt.indexOf('This is a Stage 2 document') < bt.indexOf('Review status') && bt.indexOf('Review status') < bt.indexOf('1 · The First Pass')
+    && bt.indexOf('This is a Stage 2 document') < bt.indexOf('Review status') && bt.indexOf('Review status') < bt.indexOf('1 · Creation')
     && bt.indexOf('7 · In Force') < bt.indexOf(STAGE_CAVEAT_HEADING) && wrapped.blocks[banner.length] === empty.blocks[0])
-  ok('this stage is marked in WORDS, and In Force says it is not yet available', /2 · The First Draft — what you propose, specifically — this document/.test(bt) && new RegExp(`7 · In Force — did it work \\(${NOT_YET_AVAILABLE}\\)`).test(bt))
+  // 316: stage 2 is Development; its line now says both halves of what it does (what you propose, and what it would take)
+  ok('this stage is marked in WORDS, and In Force says it is not yet available', /2 · Development — what you propose, specifically, and what it would actually take — this document/.test(bt) && new RegExp(`7 · In Force — did it work \\(${NOT_YET_AVAILABLE}\\)`).test(bt))
   ok('the caveat is verbatim', bt.includes(STAGE_CAVEAT) && STAGE_CAVEAT.includes('Vagueness is not caution; it is the absence of a proposal.'))
   ok('the banner never calls stage 2 "First Scrutiny"', !/Stage 2[^\n]{0,40}First Scrutiny/.test(bt) && !/First Scrutiny[^\n]{0,40}Stage 2 document/.test(bt))
   ok('the FAQ carries the seven stages, In Force marked, the caveat, and says First Scrutiny is a review status not a stage',
@@ -123,16 +130,18 @@ async function main() {
     ok(`${b.kind}: nothing in the document names stage 2 "First Scrutiny"`, !/First Scrutiny[^\n]{0,40}(The First Draft|Stage 2)|Stage 2[^\n]{0,40}First Scrutiny/.test(text(b.model, 400)))
   }
   // Charlie's stated expectation for this idea (Decision 135), asserted as written and not derived: the One-Page Summary
-  // of 452c5ade opens "This is a Stage 2 document: The First Draft."
+  // of 452c5ade opens "This is a Stage 2 document: The First Draft." — ⚠ MOVED BY 316: stage 2 is now named "Development".
   const onePage = built.find((b) => b.kind === 'ONE_PAGE_SUMMARY')
   const onePageFirst = onePage && onePage.model.blocks[0].kind === 'paragraph' ? runsToText(onePage.model.blocks[0].runs) : ''
-  ok('135: the One-Page Summary of 452c5ade opens "This is a Stage 2 document: The First Draft."', onePageFirst === 'This is a Stage 2 document: The First Draft.', onePageFirst)
-  control('135: a Stage 3 opening must not satisfy that expectation (must be FALSE)', ('This is a Stage 3 document: The Deepening.' as string) === 'This is a Stage 2 document: The First Draft.')
+  ok('135/316: the One-Page Summary of 452c5ade opens "This is a Stage 2 document: Development."', onePageFirst === 'This is a Stage 2 document: Development.', onePageFirst)
+  control('135: a Stage 3 opening must not satisfy that expectation (must be FALSE)', ('This is a Stage 3 document: Private Scrutiny.' as string) === 'This is a Stage 2 document: Development.')
 
-  // Decision 136 — the bar and the documents say the same thing.
-  ok('136: the workspace bar names its stages from the documents\' words',
-    LEX_STAGES.map((s) => s.name).join('|') === SEVEN_STAGES.slice(0, 3).map((s) => s.name).join('|'), LEX_STAGES.map((s) => s.name).join('|'))
-  control('136: the old bar names must not match the documents (must be FALSE)', ['The Idea', 'The Strategy', 'The Deepening'].join('|') === SEVEN_STAGES.slice(0, 3).map((s) => s.name).join('|'))
+  // Decision 136 — the bar and the documents say the same thing. ⚠ MOVED BY 316: the workspace's first two screens ARE lifecycle stages 1
+  // and 2 (Creation, Development); its third is the Deepening, Development's checklist line, which is no lifecycle stage. Was: the bar's
+  // three names equal the documents' first three.
+  ok('136/316: the workspace bar names its first two screens from the documents\' words, and the third is the Deepening',
+    LEX_STAGES.slice(0, 2).map((s) => s.name).join('|') === SEVEN_STAGES.slice(0, 2).map((s) => s.name).join('|') && LEX_STAGES[2].name === 'The Deepening', LEX_STAGES.map((s) => s.name).join('|'))
+  control('136: the old bar names must not match the documents (must be FALSE)', ['The Idea', 'The Strategy'].join('|') === SEVEN_STAGES.slice(0, 2).map((s) => s.name).join('|'))
 
   control('a built document with the banner stripped must fail', /^This is a Stage/.test(text({ ...built[0].model, blocks: built[0].model.blocks.slice(banner.length) }, 1)))
 

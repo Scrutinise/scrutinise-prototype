@@ -6,6 +6,10 @@
 
 export const LIMITS = {
   ruleOutReason: 600,
+  /** 26-X §5c (313) — "Needs no draft, because…": a stated reason, 300 characters, with its counter. */
+  noDraftReason: 300,
+  /** 26-X §3b (317) — the owner's reason for deepening before every action is drafted. */
+  deepenOverrideReason: 600,
   classificationLink: 200,
   actionTitle: 110,
   headingName: 60,

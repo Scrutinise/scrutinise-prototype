@@ -19,7 +19,7 @@
 import { prisma } from '@/lib/prisma'
 import { computeCanonicalState } from '@/lib/lex/state'
 import { pendingMaterialSince } from '@/lib/lex/update-pass'
-import { clampStep, STEPS } from '@/lib/lex/action-steps'
+import { PAGE_UI } from '@/lib/lex/screen-labels'
 import { listDocuments } from '@/lib/lex/source-registry'
 import { KIND_WORD, dNumberWords, type DocumentKind, type DocumentStatus } from '@/lib/lex/action-documents-pure'
 
@@ -108,9 +108,9 @@ export async function buildSnapshot(ideaId: string, ui: UiContext = {}): Promise
 
   // ── actions ──
   const actions = state?.actions ?? []
-  // 26-S2 §3d — the snapshot carries the step the user is on, so Lex proposes and names only what that step offers.
-  const step = clampStep(state?.actionsStep)
-  lines.push('', `COHERENT ACTIONS (${actions.length}) — the user is in STEP ${step} of 4, “${STEPS[step].label}”:`)
+  // 26-X 308 (was 26-S2 §3d's step) — there are no steps: the list is shown on two pages, Organising and Drafting. Which one the user has
+  // open is the browser's, not stored, so the snapshot says both exist rather than guessing.
+  lines.push('', `COHERENT ACTIONS (${actions.length}) — shown on two pages, ${PAGE_UI.organising} and ${PAGE_UI.drafting}:`)
   // 26-Q — addressed by NUMBER, as the user sees it ("put 7 and 12 under Transparency"), with the title, heading and what is parked.
   const headingName = new Map((state?.actionHeadings ?? []).map((h) => [h.id, h.name]))
   const untitled = actions.filter((a) => !a.title?.trim()).length

@@ -70,6 +70,23 @@ export async function resolveActions(ideaId: string, refs: Array<string | number
   return { rows: out, missing }
 }
 
+// ── 26-X addendum 322 — "Add action" (the form) and Lex's add_action: ONE writer, field-machine's addAction ─────────────────────────
+/** A new action, first under its heading (null = Unsorted). The number is the trigger's (159); the kind is the heading's. Worded refusals. */
+export async function addActionAtHeading(ideaId: string, input: { title: string; practicalStep: string; headingId: string | null; source: 'USER' | 'LEX'; commentary?: string | null; whoImplements?: string | null }): Promise<Result<{ id: string; number: number | null; title: string; headingId: string | null; headingName: string | null }>> {
+  const title = clip(input.title, LIMITS.actionTitle)
+  if (!title) return fail('An action needs a title. Nothing was added.')
+  if (input.practicalStep.length > LIMITS.actionStatement) return fail(`The statement is limited to ${LIMITS.actionStatement} characters; put the rest in the Action details once it is added. Nothing was added.`)
+  const { addAction, AddActionError } = await import('./field-machine')
+  try {
+    const row = await addAction(ideaId, { practicalStep: input.practicalStep, title, headingId: input.headingId, source: input.source, commentary: input.commentary, whoImplements: input.whoImplements, place: 'topOfHeading' })
+    const h = row.headingId ? await prisma.actionHeading.findFirst({ where: { id: row.headingId }, select: { name: true } }) : null
+    return { ok: true, data: { id: row.id, number: row.number, title, headingId: row.headingId, headingName: h?.name ?? null } }
+  } catch (e) {
+    if (e instanceof AddActionError) return fail(`${e.message} Nothing was added.`)
+    throw e
+  }
+}
+
 // ── headings (§3) ──────────────────────────────────────────────────────────────────────────────────────────
 
 export async function createHeading(ideaId: string, name: string, colourKey?: string): Promise<Result<{ id: string; name: string; created: boolean }>> {
@@ -152,10 +169,17 @@ export async function setTitle(ideaId: string, actionId: string, title: string |
   return { ok: true, data: null }
 }
 
-export async function acceptTitleProposals(ideaId: string, ids?: string[]): Promise<Result<{ accepted: number }>> {
-  const rows = await prisma.lexCoherentAction.findMany({ where: { ideaId, status: 'LIVE', titleProposal: { not: null }, ...(ids ? { id: { in: ids } } : {}) }, select: { id: true, titleProposal: true } })
-  for (const r of rows) await prisma.lexCoherentAction.update({ where: { id: r.id }, data: { title: r.titleProposal, titleProposal: null } })
-  return { ok: true, data: { accepted: rows.length } }
+/** 26-X addendum 323 — A TITLE THE OWNER WROTE IS NEVER REPLACED. A proposal waiting on a row that has since been given a title is cleared
+ *  and counted as `keptYours`; only an untitled row takes its proposal. */
+export async function acceptTitleProposals(ideaId: string, ids?: string[]): Promise<Result<{ accepted: number; keptYours: number }>> {
+  const rows = await prisma.lexCoherentAction.findMany({ where: { ideaId, status: 'LIVE', titleProposal: { not: null }, ...(ids ? { id: { in: ids } } : {}) }, select: { id: true, title: true, titleProposal: true } })
+  let accepted = 0, keptYours = 0
+  for (const r of rows) {
+    if (r.title?.trim()) { keptYours++; await prisma.lexCoherentAction.update({ where: { id: r.id }, data: { titleProposal: null } }); continue }
+    accepted++
+    await prisma.lexCoherentAction.update({ where: { id: r.id }, data: { title: r.titleProposal, titleProposal: null } })
+  }
+  return { ok: true, data: { accepted, keptYours } }
 }
 export async function dismissTitleProposals(ideaId: string, ids?: string[]): Promise<Result<{ dismissed: number }>> {
   const r = await prisma.lexCoherentAction.updateMany({ where: { ideaId, titleProposal: { not: null }, ...(ids ? { id: { in: ids } } : {}) }, data: { titleProposal: null } })
@@ -186,7 +210,8 @@ const TITLE_SYSTEM = [
 ].join('\n')
 
 export async function proposeTitles(ideaId: string, userId: string | null): Promise<Result<{ proposed: number; skipped: number; asTopics: number; pence: number | null }>> {
-  const rows = (await liveRows(ideaId)).filter((r) => !r.title?.trim())
+  // 323 — untitled rows WITHOUT a proposal already waiting (a waiting proposal is on its row; asking again would only pay twice)
+  const rows = (await liveRows(ideaId)).filter((r) => !r.title?.trim() && !r.titleProposal)
   if (!rows.length) return { ok: true, data: { proposed: 0, skipped: 0, asTopics: 0, pence: 0 } }
   let proposed = 0, skipped = 0, asTopics = 0, pence = 0, unpriced = false
   for (let i = 0; i < rows.length; i += BATCH) {
@@ -420,9 +445,11 @@ function facetSystem(step: 1 | 4, withConditions = false): string {
   ].join('\n')
 }
 
-/** The step "Classify with Lex" works for: the one asked for, else the idea's own. Steps 2 and 3 have nothing to classify. */
-async function facetStep(ideaId: string, asked?: ActionsStep): Promise<Result<1 | 4>> {
-  const step = asked ?? clampStep((await prisma.idea.findUnique({ where: { id: ideaId }, select: { actionsStep: true } }))?.actionsStep)
+/** The step "Classify with Lex" works for: the one asked for, else step 1 (causes and avenue). Steps 2 and 3 have nothing to classify.
+ *  ⚠ 26-X 308: there is no step bar any more, so the stored `Idea.actionsStep` is no longer read — an idea last left on step 2 would
+ *  otherwise have the Organising page's "Classify with Lex" refused with words about a step the screen no longer shows. */
+async function facetStep(_ideaId: string, asked?: ActionsStep): Promise<Result<1 | 4>> {
+  const step = asked ?? 1
   if (step === 1 || step === 4) return { ok: true, data: step }
   return fail(`Classifying is a job for step 1 (causes and avenue) or step 4 (what must come before what); you are in step ${step}, which has its own questions. Nothing was proposed.`)
 }

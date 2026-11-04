@@ -74,8 +74,11 @@ function partA() {
   ok('…and the REAL claim "has successfully filed" with no filing tool is flagged as unconfirmed', real.some((v) => v.kind === 'unconfirmed-claim'))
   // Decision 136 renamed the bar's stages; the checker's labels come from LEX_STAGES, so the OLD name is now unknown
   // (the transcript above is verbatim and still says it) and the NEW names are real.
-  ok('"The First Pass" (a real stage name) is NOT flagged as an unknown control',
-    !check('Go to “The First Pass” and add the file there.', []).some((v) => v.kind === 'unknown-control'))
+  // ⚠ MOVED BY 26-X DECISION 316: "The First Pass" is no longer a stage name — the screen that holds the file upload is "Creation".
+  ok('"Creation" (a real stage name, 316) is NOT flagged as an unknown control',
+    !check('Go to “Creation” and add the file there.', []).some((v) => v.kind === 'unknown-control'))
+  ok('…and the retired "The First Pass" IS flagged now, as a name on no screen (316)',
+    check('Go to “The First Pass” and add the file there.', []).some((v) => v.kind === 'unknown-control' && /The First Pass/.test(v.detail)))
   ok('…and the retired "The Idea" IS flagged now, as a name on no screen',
     check('Go to “The Idea” and add the file there.', []).some((v) => v.kind === 'unknown-control' && /The Idea/.test(v.detail)))
   control('a reply naming only a real control is flagged unknown (must be FALSE)', () => check('Press “Add research” above the box.', []).some((v) => v.kind === 'unknown-control'))

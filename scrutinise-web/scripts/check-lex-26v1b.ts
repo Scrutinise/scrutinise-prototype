@@ -174,12 +174,15 @@ async function partB(): Promise<{ copyId: string; userId: string; docId: string 
   const act = { ...row, beforeIds: [], targetCauseIds: [], facetProposal: null, policyTest: { verdict: 'FITS', reason: 'It fits.', from: [] }, commentary: 'The owner’s own detail.\n\nParts of this action, quoted\n• [#12] “A merged component” (a component title) — fixture', number: 59, id: 'a59' }
   const html = renderToStaticMarkup(React.createElement(ActionsWorkspace, {
     ideaId: copy.id, actions: [act] as never, setAside: [] as never, headings: [{ id: 'h1', name: 'Primary legislation', colourKey: 'blue', hidden: false, orderIndex: 0 }] as never,
-    causes: [] as never, busy: false, onChanged: () => {}, initiallyOpen: ['a59'], step: 1 as never, costLineActionIds: [],
+    // 26-X 318: a record opens on the Drafting page (Organising flips to it), so the record is rendered there
+    causes: [] as never, busy: false, onChanged: () => {}, initiallyOpen: ['a59'], page: 'drafting' as never, onPage: () => {}, costLineActionIds: [],
     renderFull: (x: unknown, st: number, between?: React.ReactNode) => React.createElement(FP.ActionCard, { action: x as never, step: st as never, between, benchmarks: [], costLines: [], busy: false, api: {} as never, costLinesApi: {} as never }),
   }))
   const at = (re: RegExp) => html.search(re)
-  const order = [at(/data-statement/), at(/data-jump-band/), at(/data-record-section="policy"/), at(/data-record-section="detail"/), at(/data-record-section="documents"/), at(/data-record-section="law"/), at(/data-record-section="who"/), at(/data-record-section="costs"/), at(/data-record-section="order"/), at(/data-record-section="comments"/)]
-  ok('Statement → jump band → policy test → Detail → Documents → Law → Who, how and against → Costs → Order → Comments', order.every((p, i) => p >= 0 && (i === 0 || p > order[i - 1])), order.join(','))
+  // ⚠ MOVED BY 26-X §5a: the Drafts (the documents section) open AT THE TOP of the record, under "← Back to Organising"; the rest keeps its
+  // 26-V1b order. Was: Statement → jump band → policy test → Detail → Documents → Law → …
+  const order = [at(/data-back-to-organising/), at(/data-record-section="documents"/), at(/data-statement/), at(/data-jump-band/), at(/data-record-section="policy"/), at(/data-record-section="detail"/), at(/data-record-section="law"/), at(/data-record-section="who"/), at(/data-record-section="costs"/), at(/data-record-section="order"/), at(/data-record-section="comments"/)]
+  ok('26-X §5a: Back to Organising → Drafts → Statement → jump band → policy test → Detail → Law → Who, how and against → Costs → Order → Comments', order.every((p, i) => p >= 0 && (i === 0 || p > order[i - 1])), order.join(','))
   ok('the band names each section with its state in words, the heading menu at its right', /data-band="documents"/.test(html) && /data-band="comments"/.test(html) && /Heading for action 59/.test(html.slice(at(/data-jump-band/), at(/data-record-section="policy"/))))
   ok('"Action details" is the label, and "Commentary" is nowhere on the record (257, 266)', />Action details<\/span>/.test(html) && !/Commentary/.test(textOf(html)))
   {
@@ -189,12 +192,16 @@ async function partB(): Promise<{ copyId: string; userId: string; docId: string 
     // the comments wrapper is a <div> round ActionComments' own <details>, which is the thing that must be closed
     const comments = /<details[^>]*data-action-comments[^>]*>/.exec(html)?.[0] ?? '<missing>'
     const isOpen = (t: string) => /\sopen(?:=|\s|>)/.test(t)
-    const others = sections.filter((t) => !/data-record-section="(?:comments|detail)"/.test(t))
+    // ⚠ MOVED BY 26-X §5a: the Drafts open OPEN at the top, as Action details does (290). Was: every section but Action details closed.
+    const others = sections.filter((t) => !/data-record-section="(?:comments|detail|documents)"/.test(t))
     const notClosed = [...others, comments].filter((t) => !t.startsWith('<details') || isOpen(t))
     const detail = sections.find((t) => /data-record-section="detail"/.test(t)) ?? '<missing>'
-    ok('265: every record section but Action details opens closed — a <details> with no "open"', sections.length >= 9 && notClosed.length === 0, `${sections.length} sections; not closed: ${notClosed.join(' | ').slice(0, 300)}`)
+    const drafts = sections.find((t) => /data-record-section="documents"/.test(t)) ?? '<missing>'
+    ok('265/26-X: every record section but Action details and the Drafts opens closed — a <details> with no "open"', sections.length >= 9 && notClosed.length === 0, `${sections.length} sections; not closed: ${notClosed.join(' | ').slice(0, 300)}`)
     ok('290: Action details opens OPEN — a <details> carrying "open"', detail.startsWith('<details') && isOpen(detail), detail.slice(0, 200))
-    ok('265: the closed lines carry the states the band shows ("Action details · 4 words"-style, "this step" on the current one)', /Action details<\/span> · <span data-section-state="true">1 part</.test(html) && /Documents<\/span> · <span data-section-state="true">/.test(html) && /this step/.test(textOf(html)), (html.match(/.{50}data-section-state.{30}/g) ?? []).join(' | ').slice(0, 400) || 'no data-section-state at all')
+    ok('26-X §5a: the Drafts open OPEN', drafts.startsWith('<details') && isOpen(drafts), drafts.slice(0, 200))
+    // ⚠ MOVED BY 26-X 308: there are no steps, so no line says "this step" (was: "this step" on the current step's line)
+    ok('265: the closed lines carry the states the band shows ("Action details · 4 words"-style); no line says "this step" or "from step N" (308)', /Action details<\/span> · <span data-section-state="true">1 part</.test(html) && /Documents<\/span> · <span data-section-state="true">/.test(html) && !/this step|from step \d/.test(textOf(html)), (html.match(/.{50}data-section-state.{30}/g) ?? []).join(' | ').slice(0, 400) || 'no data-section-state at all')
   }
   ok('2d: the quoted parts are one collapsible list, "Parts of this action, quoted (1)"', /Parts of this action, quoted \(1\)/.test(textOf(html)) && detailParts(act.commentary).parts[0].title === 'a component title')
   const facts = await actionDocuments(copy.id, a59.id)
@@ -394,14 +401,16 @@ async function partD(copyId: string, userId: string): Promise<{ a202: string; a3
   await prisma.lexCoherentAction.update({ where: { id: a202 }, data: { sequence: 'LATER' } })
   const st = await computeCanonicalState(copyId)
   const step4 = (open: string[]) => renderToStaticMarkup(React.createElement(ActionsWorkspace, {
-    ideaId: copyId, actions: st!.actions as never, setAside: [] as never, headings: st!.actionHeadings as never, causes: [] as never, busy: false, onChanged: () => {}, initiallyOpen: open, step: 4 as never, costLineActionIds: [],
+    // 26-X 308: step 4 has no page; Order is a section of the record, which opens on Drafting
+    ideaId: copyId, actions: st!.actions as never, setAside: [] as never, headings: st!.actionHeadings as never, causes: [] as never, busy: false, onChanged: () => {}, initiallyOpen: open, page: 'drafting' as never, onPage: () => {}, costLineActionIds: [],
     renderFull: (_x: unknown, _s: number, between?: React.ReactNode) => React.createElement('div', null, between),
   }))
   const closed = textOf(step4([]))
   const html4 = step4([a202])
   const t4 = `${closed} ${textOf(html4)}`
-  ok('step 4, the list: #202’s row reads "must come after #59 (the Code must exist before the duty bites)"', closed.includes(`must come after #59 (${BECAUSE})`))
-  ok('step 4, #202 opened: "Must come after #59" with its because line in an editable box (300, counted), Remove, and Add', /data-order-after="59"/.test(html4) && html4.includes(`value="${BECAUSE}"`) && /Must come after #59/.test(textOf(html4)) && /Remove/.test(textOf(html4)) && /data-order-add/.test(html4))
+  // ⚠ MOVED BY 26-X 308: the order tag left the ROW with the step tabs; the record's Order section line says it. Was: #202's ROW read it.
+  ok('the record: #202’s Order section line reads "must come after #59 (the Code must exist before the duty bites)"', textOf(html4).includes(`must come after #59 (${BECAUSE})`) && !closed.includes(`must come after #59 (${BECAUSE})`))
+  ok('#202 opened: "Must come after #59" with its because line in an editable box (300, counted), Remove, and Add', /data-order-after="59"/.test(html4) && html4.includes(`value="${BECAUSE}"`) && /Must come after #59/.test(textOf(html4)) && /Remove/.test(textOf(html4)) && /data-order-add/.test(html4))
   ok('…and no Now / Next / Later, no "Sequence", anywhere on step 4 — although #202’s column still says LATER', !/\b(Now|Next|Later)\b/.test(t4.replace(/Later phase/g, '')) && !/Sequence/.test(t4) && (await prisma.lexCoherentAction.findUniqueOrThrow({ where: { id: a202 } })).sequence === 'LATER', (/.{30}\b(Now|Next|Later|Sequence)\b.{30}/.exec(t4) ?? [''])[0])
   const order = renderToStaticMarkup(React.createElement(OV.OrderView, { actions: st!.actions as never }))
   const ot = textOf(order)

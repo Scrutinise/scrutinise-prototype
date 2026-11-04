@@ -1,104 +1,85 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// SPRINT 25-K §1 — THE PERSISTENT STAGE INDICATOR.
+// SPRINT 25-K §1 → LEX 26-X §2–§3 (decisions 316, 317) — THE PERSISTENT STAGE INDICATOR.
 //
-// One component, rendered by EVERY screen of the Lex surface, so the three stages cannot
-// drift into describing each other differently. It does three things §1 asks for and they
-// are separate:
+// One component, rendered by every screen of the Lex surface. Two rows:
 //
-//   1. IT SAYS WHICH STAGE YOU ARE IN — by number and by name, in words, not by highlight.
-//   2. IT SAYS WHAT THAT STAGE IS FOR, in one line, always visible.
-//   3. IT SAYS HOW TO MOVE — the other two are links, both directions, nothing locked.
+//   1. THE LIFECYCLE — the seven stages (Creation · Development · Private Scrutiny · Public Scrutiny · Promotion · Submission · In Force),
+//      each with one line of state from the data, the current one marked.
+//   2. THE DEVELOPMENT CHECKLIST (§3a) — on the Development screens: seven lines, state in words and shape, each opening its page. It
+//      replaces the old "Stage N of 3" line (§3c). On the Creation screen, that screen's one-line purpose instead.
 //
-// ⚠ IT REPLACES `SurfaceSwitch`, WHICH NAMED THE SCREENS "the build" and "the proposal".
-// Those are implementation words. See `lib/lex/stages.ts` for why that is the whole sprint.
+// ⚠⚠ THE CURRENT STAGE IS NOT MARKED BY COLOUR (docs/CLAUDE.md §21; Charlie is colour blind). Four cues, any one of which survives
+// greyscale: the WORDS "You are here"; a FILLED disc (●) against hollow ones (○); a filled dark BACKGROUND against white (lightness);
+// `border-2` WEIGHT. The checklist's current line carries the words, the weight and bold type. A locked line carries 🔒 AND the word.
 //
-// ⚠⚠ THE CURRENT STAGE IS NOT MARKED BY COLOUR. Charlie is colour blind (docs/CLAUDE.md
-// §21, "Colour is never the only cue"), and a bar whose only "where am I" signal is a hue
-// is a bar that answers the question for everyone except the person who asked it. Four
-// cues carry it, and any one of them survives greyscale:
-//
-//   · the WORDS "You are here", printed in the current tile
-//   · a FILLED numbered disc (●1) against hollow ones (○2, ○3) — different characters
-//   · a filled dark BACKGROUND against white — a lightness difference, which every form
-//     of colour blindness preserves
-//   · `border-2` WEIGHT, the same 2px the approval frame uses
-//
-// ⚠ NOT A CLIENT COMPONENT AND NOT STATEFUL. The three stages are separate routes with
-// separate server state; a soft transition would leave whichever one the user came from
-// holding stale state that looks current. A full navigation is the honest one here.
+// ⚠ NOT A CLIENT COMPONENT AND NOT STATEFUL: every link is a full navigation, so no screen holds stale state that looks current.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { StageContext } from '@/lib/lex/stage-context'
+import { LEX_STAGES } from '@/lib/lex/stages'
+import { LIFECYCLE_UI } from '@/lib/lex/screen-labels'
 
 export default function StageBar({ context }: { context: StageContext | null }) {
   // ⚠ NULL ONLY WHEN THE PAGE COULD NOT COMPUTE IT — never as "there is nothing to show".
-  // A stage with nothing in it renders and says so; that is the point.
   if (!context) return null
-
-  const here = context.stages.find((s) => s.key === context.here) ?? context.stages[0]
+  const screen = LEX_STAGES.find((s) => s.key === context.here) ?? LEX_STAGES[0]
 
   return (
-    <nav aria-label="Where you are" className="w-full">
+    <nav aria-label="Where you are" className="w-full" data-lifecycle-bar>
       <ol className="flex flex-wrap items-stretch gap-1.5">
-        {context.stages.map((s) => {
-          const current = s.key === context.here
+        {context.lifecycle.map((s) => {
+          const current = s.key === context.current
           const body = (
             <>
               <span className="flex items-baseline gap-1.5">
-                {/* A FILLED disc when you are here, a hollow one when you are not. Two
-                    different characters, not one character recoloured. */}
                 <span aria-hidden className="text-[11px] leading-none">{current ? '●' : '○'}</span>
-                <span className={`text-[13px] ${current ? 'font-bold' : 'font-medium'}`}>
-                  {s.n} · {s.name}
-                </span>
+                <span className={`text-[13px] ${current ? 'font-bold' : 'font-medium'}`}>{s.name}</span>
               </span>
-              <span className={`block text-[11px] mt-0.5 ${current ? 'text-white/75' : 'text-zinc-500'}`}>
-                {current
-                  ? 'You are here'
-                  : s.available
-                    ? s.detail ?? 'nothing here yet'
-                    : s.unavailableReason}
-              </span>
+              {current && <span className="block text-[10px] font-semibold uppercase tracking-wide text-white/90" data-you-are-here>{LIFECYCLE_UI.youAreHere}</span>}
+              <span className={`block text-[11px] mt-0.5 ${current ? 'text-white/80' : 'text-zinc-600'}`} data-stage-state={s.key}>{s.state}</span>
             </>
           )
-
           const shell = current
             ? 'border-2 border-zinc-900 bg-zinc-900 text-white'
-            : s.available
+            : s.href
               ? 'border-2 border-zinc-200 bg-white text-zinc-700 hover:border-zinc-400 hover:bg-zinc-50'
-              : 'border-2 border-dashed border-zinc-200 bg-white text-zinc-400'
-
+              : 'border-2 border-dashed border-zinc-200 bg-white text-zinc-500'
           return (
-            <li key={s.key} className="flex-1 min-w-[9.5rem]">
-              {s.available && !current ? (
-                <a
-                  href={s.href}
-                  className={`block h-full rounded-xl px-2.5 py-1.5 transition-colors ${shell}`}
-                >
-                  {body}
-                </a>
+            <li key={s.key} className="flex-1 min-w-[7.5rem]" data-lifecycle-stage={s.key}>
+              {s.href && !(current && context.here !== 'deepening') ? (
+                <a href={s.href} {...(current ? { 'aria-current': 'step' as const } : {})} className={`block h-full rounded-xl px-2.5 py-1.5 transition-colors ${shell}`}>{body}</a>
               ) : (
-                <div
-                  // `aria-current="step"` is the screen-reader half. The words in the tile
-                  // are the sighted half — §21: aria is never the second cue.
-                  {...(current ? { 'aria-current': 'step' as const } : {})}
-                  className={`h-full rounded-xl px-2.5 py-1.5 ${shell}`}
-                >
-                  {body}
-                </div>
+                <div {...(current ? { 'aria-current': 'step' as const } : {})} className={`h-full rounded-xl px-2.5 py-1.5 ${shell}`}>{body}</div>
               )}
             </li>
           )
         })}
       </ol>
 
-      {/* §1 — WHAT THIS STAGE IS FOR, IN ONE LINE, ALWAYS VISIBLE. Not a tooltip, not a
-          first-visit modal: the sentence a user needs is the one telling them what they are
-          supposed to be doing right now, and they need it every time they look up. */}
-      <p className="mt-1.5 text-xs text-zinc-600">
-        <span className="font-semibold text-zinc-800">Stage {here.n} of 3, {here.name}.</span>{' '}
-        {here.purpose}
-      </p>
+      {context.checklist ? (
+        // §3a — the Development checklist: one line each, state in words and shape, each opening its page.
+        <ol className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-zinc-700" aria-label="Development — the checklist" data-development-checklist>
+          {context.checklist.map((l) => {
+            const here = l.key === context.checklistHere
+            const inner = (
+              <>
+                <span aria-hidden>{l.mark}</span> <span className={here ? 'font-bold' : 'font-semibold'}>{l.n}. {l.label}</span> — <span data-checklist-state>{l.state}</span>
+                {here && <span className="ml-1 text-[10px] font-semibold uppercase tracking-wide">· {LIFECYCLE_UI.youAreHere}</span>}
+              </>
+            )
+            const box = here ? 'border-2 border-zinc-900 rounded px-1.5 py-0.5 bg-white' : 'px-1.5 py-0.5'
+            return (
+              <li key={l.key} data-checklist-line={l.key} {...(here ? { 'aria-current': 'step' as const } : {})}>
+                {l.href ? <a href={l.href} className={`inline-block hover:underline ${box}`}>{inner}</a> : <span className={`inline-block text-zinc-500 ${box}`}>{inner}</span>}
+              </li>
+            )
+          })}
+        </ol>
+      ) : (
+        <p className="mt-1.5 text-xs text-zinc-600">
+          <span className="font-semibold text-zinc-800">{screen.name}.</span> {screen.purpose}
+        </p>
+      )}
     </nav>
   )
 }

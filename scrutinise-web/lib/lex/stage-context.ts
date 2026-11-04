@@ -1,148 +1,84 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// SPRINT 25-K §1 — WHAT IS ON EACH STAGE, COUNTED.
+// SPRINT 25-K §1 → LEX 26-X §2–§3 (decisions 316, 317) — WHAT THE STAGE BAR SAYS, COUNTED. SERVER ONLY.
 //
-// ⚠⚠ SPLIT OUT OF `stages.ts` BECAUSE A CLIENT COMPONENT IMPORTS THAT ONE. `CreateIdeaClient`
-// needs the stage NAMES; putting the prisma query beside them dragged `lib/prisma` →
-// `@prisma/adapter-pg` → `pg` → `require('tls')` into the browser bundle and broke
-// `next build`. ⚠ `tsc --noEmit` was clean throughout — a package-boundary fault is
-// invisible to the type checker (docs/CLAUDE.md §20, check 0, the same shape one level
-// down). The vocabulary is pure and shared; the reads live here and are server-only.
+// ⚠⚠ SPLIT OUT OF `stages.ts` BECAUSE A CLIENT COMPONENT IMPORTS THAT ONE. `CreateIdeaClient` needs the stage NAMES; putting the prisma
+// query beside them dragged `lib/prisma` → `pg` → `require('tls')` into the browser bundle and broke `next build` (CLAUDE.md §28).
 //
-// ⚠ THE COUNTS ARE WHAT MAKE THE BAR AN INVITATION RATHER THAN A LABEL. "The Strategy" tells
-// a user where a link goes; "The Strategy — 23 fields, 10 decisions waiting" tells them
-// whether to press it.
+// 26-X: THE BAR IS THE SEVEN-STAGE LIFECYCLE — Creation · Development · Private Scrutiny · Public Scrutiny · Promotion · Submission · In
+// Force — each with ONE LINE OF STATE read from the data, the current one marked. Inside Development, the CHECKLIST (§3a): seven lines, each
+// with its state in words and a shape, each opening its page. The checklist replaces the old "Stage N of 3" line (§3c).
+// ⚠ A STATE LINE IS COUNTED OR SAYS WHY IT CANNOT BE. Private Scrutiny, Public Scrutiny and Promotion have nothing built behind them yet,
+//   so they read "not yet open"; nothing on the platform records a submission yet, so Submission reads "not submitted" (2b defines what
+//   one will record); In Force reads "not yet available" (decision 102). Those words are the truth, not placeholders.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '@/lib/prisma'
-import { countDocuments } from './source-registry'
-import { LEX_STAGES, stageHref, type LexStage, type LexStageKey } from './stages'
+import { LEX_STAGES, LIFECYCLE_KEYS, lifecycleOfScreen, stageHref, type ActionsPage, type LexStage, type LexStageKey, type LifecycleKey } from './stages'
+import { LIFECYCLE_STAGE_WORD, LIFECYCLE_UI } from './screen-labels'
+import { developmentChecklist, developmentState, type ChecklistKey, type ChecklistLine } from './development'
 
 export interface LexStageView extends LexStage {
   href: string
-  /** Counted, never a label. Null when there is nothing yet to count. */
   detail: string | null
-  /** False in exactly one case: no idea exists, so this stage has nothing in it. */
   available: boolean
-  /** Why not, in words. Null when it is available. An inert control that says nothing
-   *  is the defect this sprint exists to remove, one level up. */
   unavailableReason: string | null
+}
+
+export interface LifecycleStageView {
+  key: LifecycleKey
+  n: number
+  name: string
+  /** One line of state, from the data (§2a). */
+  state: string
+  /** Where pressing it goes; null when there is nothing built behind it yet. */
+  href: string | null
 }
 
 export interface StageContext {
   ideaId: string | null
-  /** Which stage the user is looking at RIGHT NOW. */
+  /** Which SCREEN the user is on (the URL's stage). */
   here: LexStageKey
-  /** All three, in order, always — the indicator is persistent (§1). */
+  /** 316 — the seven lifecycle stages and which one the user is in. */
+  lifecycle: LifecycleStageView[]
+  current: LifecycleKey
+  /** §3 — the Development checklist; null on the Creation screen or before an idea exists. */
+  checklist: ChecklistLine[] | null
+  /** The checklist line the user is on (the Organising or Drafting page, or the Deepening), or null. */
+  checklistHere: ChecklistKey | null
+  /** The three screens, kept for the screens that link between them (BuildIdeaClient, Lex's controls). */
   stages: LexStageView[]
 }
 
-function plural(n: number, one: string, many = `${one}s`): string {
-  return `${n} ${n === 1 ? one : many}`
-}
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
 
-/**
- * Stage 2's counts.
- *
- * ⚠ "DECISIONS WAITING" IS UNRESOLVED FORKS PLUS OPEN ISSUES, and both belong in it (25-G
- * §2, kept): 25-C turns a fork into a decision and the verification passes put their
- * failures on the same list, so a user with four forks and eleven issues has fifteen
- * things waiting whatever the internal table is called. Counting only the forks told the
- * second build's user there were four when there were twenty-one.
- */
-async function strategyCounts(ideaId: string): Promise<{ fields: number; waiting: number }> {
-  const [fields, forks, issues] = await Promise.all([
-    prisma.ideaFieldState.count({
-      where: { ideaId, status: { in: ['AWAITING_CONFIRMATION', 'ACCEPTED'] } },
-    }),
-    // Unresolved DECISION POINTS, not unresolved rows: a fork with two alternatives is one
-    // decision and would otherwise be counted twice.
-    prisma.buildFork.findMany({
-      where: { ideaId, resolved: false }, select: { forkKey: true }, distinct: ['forkKey'],
-    }),
-    prisma.deepeningIssue.count({ where: { ideaId, status: 'OPEN' } }),
-  ])
-  return { fields, waiting: forks.length + issues }
-}
-
-/** Stage 1's counts — what the user has actually handed over. */
-async function ideaCounts(ideaId: string): Promise<{ material: number; runs: number }> {
-  const [material, runs] = await Promise.all([
-    // 26-J §2b — an archived document is no longer "handed over".
-    countDocuments(ideaId),
-    prisma.ideaBuild.count({ where: { ideaId } }),
-  ])
-  return { material, runs }
-}
-
-/** Stage 3's counts — how much deepening has actually happened. */
-async function deepeningCounts(ideaId: string): Promise<{ run: number; open: number }> {
-  const [run, open] = await Promise.all([
-    prisma.deepeningPass.count({ where: { ideaId, status: 'RUN' } }),
-    prisma.deepeningIssue.count({ where: { ideaId, status: 'OPEN' } }),
-  ])
-  return { run, open }
-}
-
-/**
- * The whole bar, for one screen.
- *
- * ⚠ THREE ROWS, ALWAYS. The old switch returned null when the other surface had nothing on
- * it, so a user at stage 1 saw no indication that stages 2 and 3 existed — which is half of
- * "I don't know where I am". A stage with nothing in it says so; it does not vanish.
- *
- * ⚠ ONE ROUND TRIP OF READS, ALL COUNTS. No model call, nothing written. This runs on every
- * render of both surfaces, so it has to stay a handful of indexed counts.
- */
-export async function stageContext(ideaId: string | null, here: LexStageKey): Promise<StageContext> {
+export async function stageContext(ideaId: string | null, here: LexStageKey, page: ActionsPage | null = null): Promise<StageContext> {
+  const current = lifecycleOfScreen(here)
+  const screens: LexStageView[] = LEX_STAGES.map((s) => ({
+    ...s, href: stageHref(s.key, ideaId), detail: null,
+    available: !!ideaId || s.key === 'idea', unavailableReason: ideaId || s.key === 'idea' ? null : 'Opens once you’ve told me the idea.',
+  }))
+  const idle: Record<Exclude<LifecycleKey, 'creation' | 'development'>, string> = {
+    privateScrutiny: LIFECYCLE_UI.notYetOpen, publicScrutiny: LIFECYCLE_UI.notYetOpen, promotion: LIFECYCLE_UI.notYetOpen,
+    submission: LIFECYCLE_UI.notSubmitted, inForce: LIFECYCLE_UI.notYetAvailable,
+  }
   if (!ideaId) {
     return {
-      ideaId: null,
-      here,
-      stages: LEX_STAGES.map((s) => ({
-        ...s,
-        href: stageHref(s.key, null),
-        detail: null,
-        available: s.key === 'idea',
-        unavailableReason: s.key === 'idea' ? null : 'Opens once you’ve told me the idea.',
-      })),
+      ideaId: null, here, current, checklist: null, checklistHere: null, stages: screens,
+      lifecycle: LIFECYCLE_KEYS.map((k, i) => ({ key: k, n: i + 1, name: LIFECYCLE_STAGE_WORD[k],
+        state: k === 'creation' ? 'tell Lex the idea' : k === 'development' ? 'opens once Lex has built the idea' : idle[k], href: k === 'creation' ? stageHref('idea', null) : null })),
     }
   }
-
-  const [idea, strategy, deepening] = await Promise.all([
-    ideaCounts(ideaId), strategyCounts(ideaId), deepeningCounts(ideaId),
-  ])
-
-  const detailFor = (key: LexStageKey): string | null => {
-    switch (key) {
-      case 'idea':
-        return idea.runs
-          ? `${plural(idea.runs, 'run')}${idea.material ? `, ${plural(idea.material, 'document')}` : ''}`
-          : idea.material ? plural(idea.material, 'document') : 'nothing built yet'
-      case 'strategy':
-        if (!strategy.fields) return 'nothing drafted yet'
-        return strategy.waiting
-          ? `${plural(strategy.fields, 'field')}, ${plural(strategy.waiting, 'decision')} waiting`
-          : `${plural(strategy.fields, 'field')} — nothing waiting on you`
-      case 'deepening':
-        if (!deepening.run) return 'no passes run yet'
-        return deepening.open
-          ? `${plural(deepening.run, 'pass', 'passes')} run, ${plural(deepening.open, 'issue')} open`
-          : `${plural(deepening.run, 'pass', 'passes')} run — nothing open`
-    }
-  }
-
+  const [runs, dev] = await Promise.all([prisma.ideaBuild.count({ where: { ideaId } }), developmentState(ideaId)])
+  const checklist = here === 'idea' ? null : await developmentChecklist(ideaId, dev)
+  const lifecycle: LifecycleStageView[] = LIFECYCLE_KEYS.map((k, i) => ({
+    key: k, n: i + 1, name: LIFECYCLE_STAGE_WORD[k],
+    state: k === 'creation' ? `Lex’s first pass · ${plural(runs, 'run')}`
+      : k === 'development' ? `Organising ${plural(dev.counts.total, 'action')} · ${dev.counts.drafted} drafted · ${dev.counts.accepted} accepted`
+      : idle[k],
+    href: k === 'creation' ? stageHref('idea', ideaId) : k === 'development' ? stageHref('strategy', ideaId) : null,
+  }))
   return {
-    ideaId,
-    here,
-    stages: LEX_STAGES.map((s) => ({
-      ...s,
-      href: stageHref(s.key, ideaId),
-      detail: detailFor(s.key),
-      // Once an idea exists every stage is reachable. §1: "Nothing is locked behind
-      // completion." An empty stage 3 is a stage that says it is empty, not one you
-      // cannot open.
-      available: true,
-      unavailableReason: null,
-    })),
+    ideaId, here, current, lifecycle, checklist, stages: screens,
+    checklistHere: here === 'deepening' ? 'deepening' : here === 'strategy' && page ? page : null,
   }
 }

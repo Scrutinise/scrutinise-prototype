@@ -368,7 +368,9 @@ async function partE() {
 function partF() {
   section('F · the screen — Hide all / Show all headings and the find box exist (behaviour is asserted in a real browser by check:lex-26s-browser)')
   const w = read('components/lex/ActionsWorkspace.tsx')
-  ok('"Hide all headings" / "Show all headings" is one control in the toolbar, next to Group', /data-hide-all-headings/.test(w) && /Show all headings/.test(w) && /Hide all headings/.test(w) && w.indexOf('data-hide-all-headings') > w.indexOf('Group'))
+  // ⚠ 26-X: this read the words from a COMMENT (the labels print from WORKSPACE_UI since 26-W-b); it went red when the comment left with the
+  // step-2 toolbar. It now reads the label constants the control renders.
+  ok('"Hide all headings" / "Show all headings" is one control in the toolbar, next to Group', /data-hide-all-headings/.test(w) && /WORKSPACE_UI\.showAllHeadings/.test(w) && /WORKSPACE_UI\.hideAllHeadings/.test(w) && w.indexOf('data-hide-all-headings') > w.indexOf('Group'))
   ok('it writes through one op for every heading', /setHeadingsHidden/.test(w) && /setHeadingsHidden/.test(read('lib/lex/action-structure-schema.ts')) && /case 'setHeadingsHidden'/.test(read('app/api/ideas/[id]/action-structure/route.ts')))
   ok('the find box matches title, statement and commentary, every word, and says "n of m actions match" with a one-press Clear', /data-find-box/.test(w) && /a\.title/.test(w) && /a\.practicalStep/.test(w) && /a\.commentary/.test(w) && /actions? match/.test(w) && /data-find-clear/.test(w))
   ok('"Consolidate this heading" is on a heading\'s own header and "Re-sort into headings" beside Classify (step 1 only)', /data-consolidate-button/.test(w) && /ResortTool/.test(w))
@@ -388,7 +390,8 @@ function partF() {
   control('199 the ban missing the old words when they are put back (must be FALSE)', !banned.test('Folded 2 components into their mechanism'))
   ok('199 the ruled-out row says “part of #n” and its button is plain “Restore”', /`part of #\$\{byIdAll\.get\(a\.foldedIntoId\)\?\.number \?\? '\?'\}`/.test(w) && !/'Unfold'/.test(w))
   ok('199 Lex\'s controls list names “Consolidate this heading” in the same plain words', /label: 'Consolidate this heading', file: 'components\/lex\/ActionsWorkspace.tsx'[^\n]*tucked into that action’s Commentary[^\n]*joined into one/.test(read('lib/lex/agent/controls.ts')))
-  ok('the conditions view is a step-1 view and the conditions panel is step 1\'s', /1: \['list', 'board', 'coverage', 'conditions'\]/.test(w) /* 26-V1b 255: the board joined step 1's views */ && /step === 1 && <ConditionsPanel/.test(w))
+  // ⚠ MOVED BY 26-X 308: step 1's tools are the Organising page's (`org`), so the conditions panel is gated on the page, not the step
+  ok('the conditions view is a step-1 (Organising) view and the conditions panel is Organising\'s', /1: \['list', 'board', 'coverage', 'conditions'\]/.test(w) /* 26-V1b 255: the board joined step 1's views */ && /org && <ConditionsPanel/.test(w))
   control('the find box also offered in step 3 (must be FALSE: it is a list tool, in every step the list is; this asserts it is not step-gated by mistake)', /step === 3 && .*data-find-box/.test(w))
 }
 

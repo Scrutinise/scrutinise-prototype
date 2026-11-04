@@ -18,7 +18,7 @@ import { buildInitialQuestions, INITIAL_QUESTIONS_KIND } from './build-initial-q
 import { buildCommitteeEvidence, COMMITTEE_EVIDENCE_KIND } from './build-committee-evidence'
 import { buildOnePageSummary, ONE_PAGE_SUMMARY_KIND } from './build-one-page-summary'
 import { withStageBanner, documentStage } from './stage-banner'
-import { readKernelProgress } from './stage-facts'
+import { readKernelProgress, readDeepenedEarly } from './stage-facts'
 import { syncRegistry } from '@/lib/lex/source-registry'
 import { renderDocx } from './render-docx'
 import { renderPdf } from './render-pdf'
@@ -52,20 +52,22 @@ export function isExportKind(v: unknown): v is ExportKind {
 export async function buildFor(kind: ExportKind, ideaId: string) {
   // Decision 135 — the stage is the kernel's progress (stage-facts.ts), not whether a pass has run.
   const progress = () => readKernelProgress(ideaId)
+  // 26-X decision 317 — an override of the Deepening's lock is printed on every output (null when none is in force)
+  const opts = { deepenedEarly: await readDeepenedEarly(ideaId) }
   if (kind === INITIAL_QUESTIONS_KIND) {
     const b = await buildInitialQuestions(ideaId)
-    return { model: withStageBanner(b.model, documentStage({ kind: 'FIRST_PASS', progress: await progress() })), fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
+    return { model: withStageBanner(b.model, documentStage({ kind: 'FIRST_PASS', progress: await progress() }), undefined, opts), fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
   }
   if (kind === COMMITTEE_EVIDENCE_KIND) {
     const b = await buildCommitteeEvidence(ideaId)
-    return { model: withStageBanner(b.model, documentStage({ kind: 'KERNEL', progress: await progress() })), fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
+    return { model: withStageBanner(b.model, documentStage({ kind: 'KERNEL', progress: await progress() }), undefined, opts), fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
   }
   if (kind === ONE_PAGE_SUMMARY_KIND) {
     const b = await buildOnePageSummary(ideaId)
-    return { model: withStageBanner(b.model, documentStage({ kind: 'KERNEL', progress: await progress() })), fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
+    return { model: withStageBanner(b.model, documentStage({ kind: 'KERNEL', progress: await progress() }), undefined, opts), fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
   }
   const b = await buildInitialBackground(ideaId)
-  return { model: withStageBanner(b.model, documentStage({ kind: 'FIRST_PASS', progress: await progress() })), fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
+  return { model: withStageBanner(b.model, documentStage({ kind: 'FIRST_PASS', progress: await progress() }), undefined, opts), fingerprint: b.fingerprint, sourceLabel: b.sourceLabel }
 }
 
 export interface ExportStatus {

@@ -34,6 +34,7 @@ import { renderPdf } from './render-pdf'
 import { buildMeetingPackDocument, type MeetingPackSection } from './build-meeting-pack'
 import { buildProposalDocument, buildSummaryDocument, type ProposalBuildResult } from './build-proposal'
 import { withStageBanner, documentStage, kernelProgressOf } from './stage-banner'
+import { readDeepenedEarly } from './stage-facts'
 import { DEEPENING_PASS_KEYS } from '@/lib/lex/pass-keys'
 import { syncRegistry } from '@/lib/lex/source-registry'
 import { buildEvidencePackDocument } from './build-evidence-pack'
@@ -144,7 +145,8 @@ export function buildFor(
   kind: ProposalKind,
   snapshot: ProposalSnapshot,
   onlineViewUrl?: string | null,
-  opts: { sections?: MeetingPackSection[]; selection?: PackSelection } = {},
+  /** 26-X 317 — `deepenedEarly`: the override line for the working copy; a stored version is rendered without it (it is historic). */
+  opts: { sections?: MeetingPackSection[]; selection?: PackSelection; deepenedEarly?: string | null } = {},
 ): ProposalBuildResult {
   // ⚠ 26-H §4 — the stage banner goes on every kind, here, the one place a kind maps to a builder. Built from
   // the kernel, so its stage is the kernel's progress (Decision 135), read from the snapshot's OWN fields and
@@ -160,7 +162,7 @@ export function buildFor(
       passes: snapshot.passes ?? [],
     }),
   })
-  const bannered = (r: ProposalBuildResult): ProposalBuildResult => ({ ...r, model: withStageBanner(r.model, stage) })
+  const bannered = (r: ProposalBuildResult): ProposalBuildResult => ({ ...r, model: withStageBanner(r.model, stage, undefined, { deepenedEarly: opts.deepenedEarly ?? null }) })
   switch (kind) {
     case 'PROPOSAL': return bannered(buildProposalDocument(snapshot))
     case 'EVIDENCE_PACK': return bannered(buildEvidencePackDocument(snapshot))
@@ -291,11 +293,14 @@ export async function generateProposalExport(
   // come from the same snapshot, and without this the second press would be answered with the first's cached file.
   const sel = opts.selection
   const selKey = sel?.actionIds?.length ? `ids:${[...sel.actionIds].sort().join(',')}` : sel?.headingId ? `heading:${sel.headingId}` : ''
-  const hash = kind === 'MEETING_PACK' && opts.sections?.length
+  // 26-X decision 317 — the override line is part of what is printed, so a new override (or the lock opening) re-renders the working copy
+  const deepenedEarly = await readDeepenedEarly(ideaId)
+  const base = kind === 'MEETING_PACK' && opts.sections?.length
     ? `${snapshotHash(snapshot)}:${[...opts.sections].sort().join(',')}`
     : kind === 'ACTIONS_PACK' && selKey
       ? `${snapshotHash(snapshot)}:${selKey}`
       : snapshotHash(snapshot)
+  const hash = deepenedEarly ? `${base}:deepened:${deepenedEarly}` : base
 
   const existing = await prisma.document.findUnique({
     where: { ideaId_kind: { ideaId, kind } },
@@ -308,7 +313,7 @@ export async function generateProposalExport(
     return (await readProposalExportStatus(ideaId)).find((s) => s.kind === kind)!
   }
 
-  const result = buildFor(kind, snapshot, opts.onlineViewUrl, { sections: opts.sections, selection: opts.selection })
+  const result = buildFor(kind, snapshot, opts.onlineViewUrl, { sections: opts.sections, selection: opts.selection, deepenedEarly })
 
   try {
     const { docx, pdf } = await renderPair(result)

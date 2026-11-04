@@ -2,9 +2,9 @@
 // LEX 26-H §1–§5 — THE STAGE BANNER: ON EVERY GENERATED DOCUMENT, BEFORE ANYTHING ELSE.
 //
 // ⚠⚠ TWO DIFFERENT THINGS, KEPT APART (BRIEF_26H §1). The STAGE says where the work has got to
-// (The First Pass … In Force). The REVIEW STATUS says whether anyone outside has looked at it.
-// "First Scrutiny" is a review status, true of everything made in stages 1–3. It is NOT the name of
-// stage 2 — that is "The First Draft" — and it must never be used as one.
+// (Creation … In Force — decision 316). The REVIEW STATUS says whether anyone outside has looked at it.
+// "First Scrutiny" is a review status, true of everything made in stages 1–2. It is NOT the name of
+// stage 2 — that is "Development" — and it must never be used as one.
 //
 // ⚠ NOT `Idea.stage` (STAGE_1…5: Create/Draft/Develop/Campaign/Legislate — docs/CLAUDE.md §3), which is the
 // platform's visibility ladder and a different thing. This is the seven-stage model Charlie adopted on 25 Sep
@@ -17,6 +17,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { Block, DocumentModel } from './model'
+// 26-X — the stage names, from the one label table. Pure (it imports only input-limits, itself import-free), so this file stays client-safe.
+import { LIFECYCLE_STAGE_WORD } from '../lex/screen-labels'
 
 export type SevenStageNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7
 
@@ -29,18 +31,23 @@ export interface SevenStage {
   available: boolean
 }
 
+// ⚠⚠ 26-X DECISION 316 (amends 135) — THE SEVEN, RENAMED AND RENUMBERED: Creation · Development · Private Scrutiny · Public Scrutiny ·
+// Promotion · Submission · In Force. "The First Pass" is Creation's content and "The First Draft" and "The Deepening" are both inside
+// Development (its checklist), so neither is a stage name any more. Promotion is new, and not yet available (its plan is §3a item 7).
+// The names are read from screen-labels.ts, the one table the stage bar and the FAQ also read. Historic documents keep the banner they were
+// printed with: their rendered files are stored and served until regenerated (export.ts), and a regeneration is a new version.
 export const SEVEN_STAGES: readonly SevenStage[] = [
-  { n: 1, name: 'The First Pass', does: 'what is already there', available: true },
-  { n: 2, name: 'The First Draft', does: 'what you propose, specifically', available: true },
-  { n: 3, name: 'The Deepening', does: 'what it would actually take', available: true },
-  { n: 4, name: 'Private Scrutiny', does: 'what your allies say is wrong', available: true },
-  { n: 5, name: 'Public Scrutiny', does: 'what your opponents say is wrong', available: true },
+  { n: 1, name: LIFECYCLE_STAGE_WORD.creation, does: 'what is already there', available: true },
+  { n: 2, name: LIFECYCLE_STAGE_WORD.development, does: 'what you propose, specifically, and what it would actually take', available: true },
+  { n: 3, name: LIFECYCLE_STAGE_WORD.privateScrutiny, does: 'what your allies say is wrong', available: true },
+  { n: 4, name: LIFECYCLE_STAGE_WORD.publicScrutiny, does: 'what your opponents say is wrong', available: true },
+  { n: 5, name: LIFECYCLE_STAGE_WORD.promotion, does: 'winning the support it needs', available: false },
   // §2b — "Submission", not "Parliamentary submission": a select committee inquiry, a consultation, a
-  // department and a private member's bill are all doors.
-  { n: 6, name: 'Submission', does: 'into the system that decides', available: true },
+  // department and a private member's bill are all doors. 26-X §2b: lodged with a decision-maker, recorded with the body, the date and the form.
+  { n: 6, name: LIFECYCLE_STAGE_WORD.submission, does: 'into the system that decides', available: true },
   // §3 — marked as not yet available, in the same form everywhere. Needs post-implementation review
   // tracking, which sits with Search and does not exist.
-  { n: 7, name: 'In Force', does: 'did it work', available: false },
+  { n: 7, name: LIFECYCLE_STAGE_WORD.inForce, does: 'did it work', available: false },
 ]
 
 export const NOT_YET_AVAILABLE = 'not yet available'
@@ -135,8 +142,8 @@ export function reviewStatus(rec: ReviewRecord = NO_REVIEW_RECORDED): ReviewStat
  * disappears. States plainly what removes it, and that the platform cannot yet tell.
  */
 export const REVIEW_COUNTERPARTS_NOTE =
-  'Other review statuses: “Privately reviewed” (through Stage 4, with the number of reviewers and the date) and '
-  + '“Publicly reviewed” (through Stage 5, likewise). The platform does not yet record either, so every '
+  'Other review statuses: “Privately reviewed” (through Stage 3, Private Scrutiny, with the number of reviewers and the date) and '
+  + '“Publicly reviewed” (through Stage 4, Public Scrutiny, likewise). The platform does not yet record either, so every '
   + 'document is First Scrutiny until it does.'
 
 // ── the banner ───────────────────────────────────────────────────────────────
@@ -158,10 +165,12 @@ export function stageListLines(current: SevenStageNumber): string[] {
  * §4 — the blocks that open every generated document, in the brief's order: the stage in bold; the review
  * status; the seven stages with this one marked; the caveat verbatim.
  */
-export function stageBannerBlocks(stage: SevenStageNumber, record: ReviewRecord = NO_REVIEW_RECORDED): Block[] {
+export function stageBannerBlocks(stage: SevenStageNumber, record: ReviewRecord = NO_REVIEW_RECORDED, opts: BannerOpts = {}): Block[] {
   const rs = reviewStatus(record)
   return [
     { kind: 'paragraph', runs: [{ text: stageSentence(stage), bold: true }] },
+    // 26-X decision 317 — when the owner opened the Deepening early, every output says so, with the count and the reason.
+    ...(opts.deepenedEarly ? [{ kind: 'paragraph', runs: [{ text: opts.deepenedEarly, bold: true }] } as Block] : []),
     {
       kind: 'paragraph',
       runs: [
@@ -178,8 +187,13 @@ export function stageBannerBlocks(stage: SevenStageNumber, record: ReviewRecord 
 }
 
 /** Put the banner at the very top of a document. The only place a builder's output is given one. */
-export function withStageBanner(model: DocumentModel, stage: SevenStageNumber, record: ReviewRecord = NO_REVIEW_RECORDED): DocumentModel {
-  return { ...model, blocks: [...stageBannerBlocks(stage, record), ...model.blocks] }
+export interface BannerOpts {
+  /** 317 — "Deepened with 13 actions undrafted — reason: …" (lib/lex/development.ts `overrideLine`), or null when no override is in force. */
+  deepenedEarly?: string | null
+}
+
+export function withStageBanner(model: DocumentModel, stage: SevenStageNumber, record: ReviewRecord = NO_REVIEW_RECORDED, opts: BannerOpts = {}): DocumentModel {
+  return { ...model, blocks: [...stageBannerBlocks(stage, record, opts), ...model.blocks] }
 }
 
 /**
@@ -204,9 +218,10 @@ export interface KernelProgress {
   enteredDeepening: boolean
 }
 
+// ⚠ 26-X decision 316 amends 135: the Deepening is inside Development, so a built idea is Stage 2 whether or not it has been deepened.
+// `kernelComplete` and `enteredDeepening` stay in the facts (the checklist reads the same progress) and no longer move the number.
 export function stageFromProgress(p: KernelProgress): SevenStageNumber {
-  if (!p.built) return 1
-  return p.kernelComplete && p.enteredDeepening ? 3 : 2
+  return p.built ? 2 : 1
 }
 
 /**

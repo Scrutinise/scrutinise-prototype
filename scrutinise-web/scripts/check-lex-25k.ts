@@ -160,7 +160,10 @@ const NAV_ORDER = ['My ideas', 'Browse', 'Central', 'About', 'Support', 'Admin']
  */
 function stageTableProperty(stages: ReadonlyArray<{ n: number; name: string; purpose: string }>): string | null {
   const names = stages.map((s) => s.name)
-  const want = ['The First Pass', 'The First Draft', 'The Deepening'] // Decision 136 — the bar says what the documents say
+  // ⚠ MOVED BY 26-X DECISION 316 (4 Nov 2026): "The First Pass" and "The First Draft" are no longer stage names. The three SCREENS are
+  // Creation and Development (two of the seven lifecycle stages) and the Deepening (Development's checklist line 6). Was: decision 136's
+  // ['The First Pass', 'The First Draft', 'The Deepening'].
+  const want = ['Creation', 'Development', 'The Deepening'] // Decision 316 — the bar says what the documents say
   if (names.join(' | ') !== want.join(' | ')) return `the stages are ${names.join(' | ')}`
   if (stages.map((s) => s.n).join('') !== '123') return 'the stages are not numbered 1, 2, 3'
   const mute = stages.filter((s) => s.purpose.trim().length < 20)
@@ -200,10 +203,12 @@ const CHECKS: Check[] = [
   },
   {
     name: '§1 the indicator says which stage, what it is for, and how to move',
+    // ⚠ MOVED BY 26-X §2–§3c (316): "Stage N of 3" is gone — the bar is the seven lifecycle stages, each with its state line, and the
+    // Development checklist replaces the old one-line "Stage N of 3, name. purpose" (the Creation screen keeps its purpose line).
     run: (src) => {
       const s = src['components/lex/StageBar.tsx']
-      if (!/Stage \{here\.n\} of 3/.test(s)) return 'it does not say which stage of how many'
-      if (!/\{here\.purpose\}/.test(s)) return 'it does not say what this stage is for'
+      if (!/context\.lifecycle\.map/.test(s) || !/\{s\.state\}/.test(s)) return 'it does not show the seven stages with their state lines'
+      if (!/context\.checklist/.test(s) || !/\{screen\.purpose\}/.test(s)) return 'it does not say what this stage is for (the checklist, or the screen’s purpose)'
       if (!/href=\{s\.href\}/.test(s)) return 'the other stages are not links — there is no way to move'
       return null
     },
@@ -221,13 +226,14 @@ const CHECKS: Check[] = [
     // and a 2px border weight.
     run: (src) => {
       const s = src['components/lex/StageBar.tsx']
-      if (!/You are here/.test(s)) return 'there is no worded cue'
+      // 26-X: the words come from screen-labels (LIFECYCLE_UI.youAreHere); a bare "You are here" in a comment must not satisfy this
+      if (!/\{LIFECYCLE_UI\.youAreHere\}/.test(s)) return 'there is no worded cue'
       if (!/\{current \? '●' : '○'\}/.test(s)) return 'the filled/hollow glyph pair is gone'
       return /border-2/.test(s) ? null : 'the weight cue is gone'
     },
     break: (src) => ({
       ...src,
-      'components/lex/StageBar.tsx': src['components/lex/StageBar.tsx'].split('You are here').join('x'),
+      'components/lex/StageBar.tsx': src['components/lex/StageBar.tsx'].split('{LIFECYCLE_UI.youAreHere}').join('x'),
     }),
   },
   {

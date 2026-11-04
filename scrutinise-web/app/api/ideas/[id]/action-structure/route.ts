@@ -121,6 +121,7 @@ export async function POST(req: Request, { params }: Params) {
         break
       }
       case 'answerKindProposal': result = await HK.answerKindProposal(id, b.headingId, b.accept); break
+      case 'addAction': result = await S.addActionAtHeading(id, { title: b.title, practicalStep: b.practicalStep ?? '', headingId: b.headingId, source: 'USER' }); break
     }
   } catch (err) {
     console.error('[action-structure] failed', b.op, err)

@@ -1,5 +1,44 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-04 11:03 UTC - LEX 26-X X1 + addendum 1 (decisions 308, 310, 316, 317, 318, 321, 322, 323): the seven-stage lifecycle, the Development checklist and the Deepening lock, Organising / Drafting over one action list, the progress strip, the three-row toolbar, "Add action", the counted title button
+
+**Brief:** `docs/BRIEF_26X.md` part X1 and `docs/BRIEF_26X_ADDENDUM_1.md`, as sized in `docs/LEX_26X_REPORT.md` §0; CCh-Lex 4 Nov (2) and (3).
+Full write-up: `docs/LEX_26X_REPORT.md` § X1.
+
+**Schema (with the code that reads it):** `Idea.deepenOverride jsonb` — `prisma/lex_26x_deepen_override.sql`, applied to Neon
+`ep-old-dust-aboxi69a` after `whichdb`, before this commit. "Needs no draft" adds NO column: it is the existing `setNeeds` mode `nothing`
+(`LexCoherentAction.record.documentNeeds`). ⚠ For CCh: `entity_list_v5.md` does not list `Idea.deepenOverride`.
+
+- **316** the bar shows the seven lifecycle stages (Creation · Development · Private Scrutiny · Public Scrutiny · Promotion · Submission ·
+  In Force), each with a state line from the data; the document banners, FAQ, "How this works" and Lex's prompt use the same names.
+- **317** the Development checklist (seven lines, each a link) and the Deepening lock: the pass route refuses with 423 in words while any
+  live, un-parked action is neither accepted nor "needs no draft"; the owner's "Deepen now" records a reason (appended, never replacing)
+  and every document generated while it is in force prints "Deepened with N actions undrafted — reason: …".
+- **308 / 318** Organising (step 1's tools only) and Drafting (counts, filters, the record with its Drafts open at the top) over one list;
+  a title flips to Drafting with the action open; "← Back to Organising" restores the place; `/ideas/[id]/drafting#N` deep-links. The step
+  tabs are gone (`ActionsSteps.tsx` deleted; `Idea.actionsStep` kept, unread).
+- **310** the progress strip on every row of both pages, derived from the documents tree (Defined · Briefed · Drafted · Reviewed · Accepted).
+- **321** the Organising toolbar is three labelled rows — View · Add · Lex and checks; Import and Check for gaps moved onto it.
+- **322** "Add action" (title, statement, heading; the kind from the heading): USER, the trigger's number, first under its heading, open on
+  Drafting — through field-machine's `addAction`, the writer the import, the gap check and Lex's `add_action` share; Lex's tool gained
+  `title` and `heading` (an existing heading only) and places the same way.
+- **323** "N actions have no title · Title them with Lex — about 1.7p" applies an Untitled filter; a proposal shows on its row ("Lex
+  proposes: … — Accept · Not this"); "Accept all N proposed titles" only while proposals wait; **an owner's title is never replaced**
+  (`acceptTitleProposals` used to overwrite one).
+- **Fixed on the way:** an action opened on Drafting under a HIDDEN heading was not drawn, so a deep link, a flip or a new action under
+  a hidden heading opened nothing (found by 26v1b's #202 on 452c5ade).
+- **Decided, not in the brief (report §X1):** the title limit stays 110 (`LIMITS.actionTitle`), not 120; "Defined ◐" = begun but not
+  all three set.
+- **Labels:** every new word is in `lib/lex/screen-labels.ts`; the field guide has an entry for each, naming its toolbar row.
+
+**Checks (run one at a time, 4 Nov):** check:lex-26x (new) 110 ran, 110 passed, 10 controls 0 dead, 1 not run (historic documents keep
+their banner — by construction, not read back) · 25k 18 · 26h 78 · 26p 126 · 26q 74 (part C not run) · 26s 70 (3 not run, no --live)
+· 26s-browser --db 97 · 26s2 214/1 · 26s2-structure 107 · 26s2-browser 33 · 26t1 98 · 26t2 72 · 26u 67 · 26v 66 · 26v1b 80 · 26v2b 47
+· 26v2c 44 · 26v2d 62 · 26w 66 (H not run, live) · 26w-b 60 · prompt-examples 0 of 26 found in output · client-boundary clean ·
+verify:stages-ui 24 · verify:lex-26q-ui 25 · tsc (web, scripts) clean. ⚠ The one red, 26s2 "no ledger row since 29 Sep belongs to a
+deleted idea and lacks a purpose", is a spend-data finding that was red before this sprint's code ran; not touched. Moved assertions
+carry a "MOVED BY 26-X" note each (25k, 26h, 26p, 26s, 26s-browser, 26s2, 26s2-structure, 26v1b, verify-lex-26q-ui, verify-stages-ui).
+
 ## 2026-11-04 04:04 UTC - INGEST 307 (decision 296), part 2: the other core-docs entries re-run as full text; Green Book path fixed
 
 Charlie, 4 Nov: "go ahead and push. The headings are fine. yes rebuild the search index". 8bf19b3 pushed; Ingest and Ops deployments read back `meta.commitHash = 8bf19b3`, SUCCESS.

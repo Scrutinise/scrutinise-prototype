@@ -12,13 +12,14 @@ import ActionGapCheck from './ActionGapCheck'
 import ActionImport from './ActionImport'
 import RefTextarea, { IdeaIdContext } from './RefTextarea'
 import ActionsWorkspace from './ActionsWorkspace'
-import ActionsSteps from './ActionsSteps'
+import ActionsPages from './ActionsPages'
+import type { ActionsPage, KernelSection } from '@/lib/lex/stages'
 import BoundedInput from './BoundedInput'
 import { LIMITS } from '@/lib/lex/input-limits'
 import { plainFoldHeader, FOLD_HEADER } from '@/lib/lex/action-resort-pure'
 import { detailParts, detailState, withOwnText, DETAIL_LABEL } from '@/lib/lex/record-layout-pure'
 import ChatMarkdown from './ChatMarkdown'
-import { COST_LINE_LABEL, clampStep, type ActionsStep } from '@/lib/lex/action-steps'
+import { COST_LINE_LABEL, type ActionsStep } from '@/lib/lex/action-steps'
 import GuidingPolicyScreen from './GuidingPolicyScreen'
 import DiagnosisGuideButton from './DiagnosisGuideModal'
 import { useSectionChecklists } from './useSectionChecklists'
@@ -1814,14 +1815,18 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
 }
 
 // The actions loop + costing estimator (§18).
-function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLinesApi, ideaId, setAside, headings, causes, onChanged, step = 1, structure }: {
+function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLinesApi, ideaId, setAside, headings, causes, onChanged, page = 'organising', onPage, structure, importSlot, gapSlot }: {
   structure?: React.ComponentProps<typeof ActionsWorkspace>['structure']
+  /** 26-X addendum 321 — placed on the Organising toolbar's rows. */
+  importSlot?: React.ReactNode; gapSlot?: React.ReactNode
   field: CanonicalField; actions: CanonicalAction[]; benchmarks: CanonicalBenchmark[]
   costLines: CanonicalCostLine[]; busy: boolean; api: ActionsApi; costLinesApi: CostLinesApi
   /** 26-Q — the workspace needs the idea to reach its route, and the state it reads. */
   ideaId?: string; setAside: CanonicalAction[]; headings: CanonicalActionHeading[]; causes: CanonicalCause[]; onChanged?: () => void | Promise<boolean | void>
-  /** 26-S2 §3 — the step the user is on; the screen shows only that step's tools. */
-  step?: ActionsStep
+  /** 26-X 308 — the page the user is on; Organising shows only its tools, Drafting only the strips and the records. */
+  page?: ActionsPage
+  /** 318 — the flip between the two pages. */
+  onPage?: (p: ActionsPage) => void
 }) {
   const [draftStep, setDraftStep] = useState('')
   const terminal = isTerminal(field)
@@ -1842,7 +1847,7 @@ function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLi
       {ideaId && onChanged ? (
         <ActionsWorkspace
           ideaId={ideaId} actions={actions} setAside={setAside} headings={headings} causes={causes} busy={busy} onChanged={onChanged}
-          step={step} costLineActionIds={[...new Set(costLines.map((l) => l.actionId))]} structure={structure}
+          page={page} onPage={onPage} costLineActionIds={[...new Set(costLines.map((l) => l.actionId))]} structure={structure} importSlot={importSlot} gapSlot={gapSlot}
           renderFull={(a, s, between) => <ActionCard action={a} step={s} between={between} benchmarks={benchmarks} costLines={costLines.filter((l) => l.actionId === a.id)} busy={busy} api={api} costLinesApi={costLinesApi} />}
         />
       ) : (
@@ -1852,8 +1857,8 @@ function ActionsField({ field, actions, benchmarks, costLines, busy, api, costLi
           ))}
         </div>
       )}
-      {/* "Add an action" is a step-1 tool (sorting the list); the others do not offer it. */}
-      {step === 1 && (
+      {/* "Add an action" is an Organising tool (sorting the list); Drafting does not offer it. */}
+      {page === 'organising' && (
         <div className="mt-2 flex gap-1.5">
           <input value={draftStep} onChange={(e) => setDraftStep(e.target.value)} placeholder="Add an action…"
             className="flex-1 text-sm p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
@@ -1881,7 +1886,7 @@ export default function FieldsPanel({
   onSubmitBox, onAcceptStructured, onAcceptOutput, onSkip, onReopen, onGoToPage,
   onUseLexVersion, onKeepMine, onEditRedraft,
   causesApi, policyApi, actionsApi, costLinesApi, deepening, ideaId, onSuggestionChanged,
-  setAsideActions, actionHeadings, actionsStep, archivedCauses = 0, actionsStructure,
+  setAsideActions, actionHeadings, actionsPage = null, kernelSection = null, archivedCauses = 0, actionsStructure,
 }: {
   /** 26-S2 188 + 190 - the conditions, the instrument-heading plan, the retired headings and the re-sort's Undo count, from the canonical state. */
   actionsStructure?: React.ComponentProps<typeof ActionsWorkspace>['structure']
@@ -1890,8 +1895,10 @@ export default function FieldsPanel({
   /** 26-Q — ruled-out / merged-away actions, and the user's headings (both from the canonical state). */
   setAsideActions?: CanonicalAction[]
   actionHeadings?: CanonicalActionHeading[]
-  /** 26-S2 §3a — the step (1–4) the user was on; the Coherent Actions screen opens there. */
-  actionsStep?: number
+  /** 26-X 318 — open the Coherent Actions section on this page (the Development checklist's link, or a deep link). Null: as it always opened. */
+  actionsPage?: ActionsPage | null
+  /** 26-X §3a — open the problem, the causes or the guiding policy (the checklist's first three lines). */
+  kernelSection?: KernelSection | null
   /** 26-N - take Lex's redraft (offered beside the user's words) into the editor, still pending. */
   onEditRedraft?: (key: string) => void
   /** 26-M addendum — an accepted suggestion became a real action; the parent re-reads the state. */
@@ -1931,8 +1938,16 @@ export default function FieldsPanel({
   /** 25-O §5 — the causes commentary fetches its own data and needs the idea. */
   ideaId: string
 }) {
+  // 26-X §3a / 318 — a checklist link names a section; that section opens on arrival (and only that one), and its field comes into view.
+  const linkedPage = actionsPage ? 'COHERENT_ACTIONS' : kernelSection === 'policy' ? 'GUIDING_POLICY' : kernelSection ? 'DIAGNOSIS' : null
+  const linkedField = actionsPage ? 'actions' : kernelSection === 'policy' ? 'policyOptions' : kernelSection === 'causes' ? 'causes' : kernelSection === 'problem' ? 'challenge' : null
   /** Sections the user has opened that would otherwise be closed (finished ones). */
-  const [manualExpanded, setManualExpanded] = useState<Set<string>>(new Set())
+  const [manualExpanded, setManualExpanded] = useState<Set<string>>(new Set(linkedPage ? [linkedPage] : []))
+  useEffect(() => {
+    if (!linkedField) return
+    const t = setTimeout(() => document.getElementById(`field-${linkedField}`)?.scrollIntoView?.({ block: 'start' }), 60)
+    return () => clearTimeout(t)
+  }, [linkedField])
   /**
    * 25-N §1c — sections the user has CLOSED that would otherwise be open.
    *
@@ -2048,18 +2063,22 @@ export default function FieldsPanel({
           {/* 26-N §8 - "Check for gaps": the free check, then four models; suggestions with Accept / Dismiss. */}
           {/* ══ 26-S2 §3 — THE FOUR STEPS. The bar, the step's intro, then ONLY that step's tools. "Check for gaps" and "Import actions from a
               document" are step 1's (§4), so they are absent in the others — not greyed. ══ */}
+          {/* ══ 26-X 308 / 318 — THE FOUR STEPS ARE GONE. Two pages over ONE action list: ORGANISING (step 1's tools, and only those — §4a)
+              and DRAFTING (the same list with its progress strips; opening a row opens the record with its Drafts at the top). The data
+              behind the old steps 2–4 is untouched; Who, how and against, Costs and Order are sections of the record (CCh-Lex 4 Nov (2)). ══ */}
           {ideaId ? (
-            <ActionsSteps ideaId={ideaId} initialStep={clampStep(actionsStep)}>
-              {(step) => (
+            <ActionsPages ideaId={ideaId} initialPage={actionsPage ?? 'organising'}>
+              {(page, setPage) => (
                 <>
-                  {step === 1 && <ActionGapCheck ideaId={ideaId} onChanged={onSuggestionChanged} />}
-                  {/* 26-S §3a (decision 140) — "Import actions from a document": a visible control, beside "Check for gaps". */}
-                  {step === 1 && <ActionImport ideaId={ideaId} onChanged={onSuggestionChanged} />}
+                  {/* 26-X addendum 321 — "Check for gaps" (row 3, Lex and checks) and "Import actions from a document" (row 2, Add) are ON the
+                      Organising toolbar now; they were above the list. */}
                   <ActionsField field={f} actions={actions} benchmarks={benchmarks} costLines={costLines} busy={busy} api={actionsApi} costLinesApi={costLinesApi}
-                    ideaId={ideaId} setAside={setAsideActions ?? []} headings={actionHeadings ?? []} causes={causes} onChanged={onSuggestionChanged} step={step} structure={actionsStructure} />
+                    ideaId={ideaId} setAside={setAsideActions ?? []} headings={actionHeadings ?? []} causes={causes} onChanged={onSuggestionChanged} page={page} onPage={setPage} structure={actionsStructure}
+                    importSlot={page === 'organising' ? <ActionImport ideaId={ideaId} onChanged={onSuggestionChanged} inline /> : undefined}
+                    gapSlot={page === 'organising' ? <ActionGapCheck ideaId={ideaId} onChanged={onSuggestionChanged} inline /> : undefined} />
                 </>
               )}
-            </ActionsSteps>
+            </ActionsPages>
           ) : (
             <ActionsField field={f} actions={actions} benchmarks={benchmarks} costLines={costLines} busy={busy} api={actionsApi} costLinesApi={costLinesApi}
               ideaId={ideaId} setAside={setAsideActions ?? []} headings={actionHeadings ?? []} causes={causes} onChanged={onSuggestionChanged} />
@@ -2322,7 +2341,7 @@ export default function FieldsPanel({
                   // non-terminal one above it, which is what `currentIdx` points at.
                   const blocker = queued ? page.fields[currentIdx]?.label : undefined
                   return (
-                    <div key={f.key} ref={f.key === currentFieldKey ? activeRef : undefined}>
+                    <div key={f.key} id={`field-${f.key}`} className="scroll-mt-2" ref={f.key === currentFieldKey ? activeRef : undefined}>
                       {queued ? <QueuedField field={f} waitingOn={blocker} /> : renderField(f)}
                     </div>
                   )
