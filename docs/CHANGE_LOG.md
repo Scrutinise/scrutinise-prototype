@@ -1,5 +1,21 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-04 04:04 UTC - INGEST 307 (decision 296), part 2: the other core-docs entries re-run as full text; Green Book path fixed
+
+Charlie, 4 Nov: "go ahead and push. The headings are fine. yes rebuild the search index". 8bf19b3 pushed; Ingest and Ops deployments read back `meta.commitHash = 8bf19b3`, SUCCESS.
+
+- **The set is 56, not 59.** 55 live documents (the white papers, PACE codes A–I, Cabinet Manual, Green/Magenta/Orange Books) plus the old Aqua Book's `unavailable` marker.
+- **Two are left out of the run, deliberately.** On gov.uk the Green Book's old path is now a `redirect` (to `the-green-book--2`), and `white-paper-of-bank-of-china-on-cross-border-e-commerce-service` is `gone`. On either one the full-text path stores nothing, so `marker()` would overwrite row `:1` with `unavailable` while leaving the text in row `:2`. Both keep what they hold now. The Green Book is ingested at its new path (seed STATIC_PATHS updated).
+- **PREDICTION (dry run through the same four steps, no writes):** 53 documents → 2,359 sections plus the Green Book's new path → 89, so **2,448 sections**. The collection goes from 584 to **~2,864**. That total keeps the 5 rows left in place: the old Green Book's 2, the Bank of China paper's 2, and the old Aqua Book marker. 32 of the 53 documents split by heading; the rest stay one section per body and per PDF, as before.
+- **RESULT (03:04 UTC):** **2,448 sections stored, exactly the prediction.** Every row was read back from R2: 0 missing text, 0 `unavailable`. The collection is **2,864** rows (2,863 compiled + the old Aqua marker), 3,078,054 words.
+- **Search, keyword:** `fts-refresh --corpus=govuk-core-docs --from=db` rewrote 2,863 rows, with 0 unreadable bodies. ⚠ `--from=db` does not remove index rows whose id is gone from the DB. Where a document now has fewer sections, its leftover row stays searchable: here that was 1 row (`higher-education-…:3`, 3 rows → 2), deleted by id. Index now equals DB at 2,863.
+- **Search, vector:** `vec-replace` went 978 → 4,720 chunks, all embedded for **$0.1988** (plan said $0.20). G1/G2/G3 were red after `--chunk` (498 orphans, 4,240 un-embedded) and green after `--embed`.
+- **Index jobs (rented boxes, both destroyed, 0 servers left):** `fts-index` covers 18,275,065 rows with 0 un-indexed; the sample query went 6,197 → 2,051 ms; €0.056 for 11.4 min, peak 15.7 GB. `vector-reindex` covers 22,674,550 rows with 0 un-indexed (verify ✅); about €0.19 for 38 min, peak 6.3 GB.
+- ⚠ **The heavy-job runner was broken by Hetzner, and is fixed here.** `GET /datacenters` now returns **410 `deprecated_api_endpoint`** (Hetzner changelog 2026-06-02), so `run.ts` died before creating anything. `availablePlacements()` now reads `server_types[].locations[].available`. It throws if that field ever disappears, rather than returning "nothing available".
+- ⚠ The vector run's local orchestrator was killed partway (this machine ran low on memory). **The box carried on**, because the job does not depend on the orchestrator. Its R2 log (`_ops/heavy-job/vector-reindex-2026-11-04T03-24-14-080Z.log`) was followed to `EXIT_CODE=0`, and that one labelled server was then deleted by id. **If an orchestrator dies, the box is still billing. List the servers; do not assume teardown ran.**
+- **Serving, proved two-sided:** `fts-serve` and `vector-serve` were restarted with `v33-restart-serve.ts` (`started_at` 25 Oct → 03:59 / 04:03 today). Same three queries, scoped to `govuk-core-docs`. Keyword went from **0/15 heading sections before to 14/15 after**: "role of the Accounting Officer" returned Cabinet Manual PDFs before, and returns MPM 3.2 / 3.8 and the Ministerial Code's "The role of the Accounting Officer" after. Vector returns `managing-public-money:38–40` and `ministerial-code:51`, ids that exist only in the new data.
+- **Left for a decision:** the old Green Book path's 2 rows (now duplicated by `the-green-book--2`), the Bank of China paper's 2 rows (gone from gov.uk), and the old Aqua marker. Deleting them is a corpus_sections delete plus an index delete, so it was not done unasked.
+
 ## 2026-11-03 13:12 UTC - LEX 26-W-b follow-up: Lex may remove a cost line (Charlie, 3 Nov)
 
 Charlie's decision on the question 26-W-b flagged: `remove_cost_line` (the same as "delete" on a cost line in step 3) is now OFFERED to Lex,

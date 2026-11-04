@@ -23,7 +23,8 @@ import { fetchGovukContent, searchByQuery } from './sources/govuk-content'
 const CORPUS = 'govuk-core-docs'
 
 const STATIC_PATHS = [
-  'government/publications/the-green-book-appraisal-and-evaluation-in-central-government',
+  // The old path (…-appraisal-and-evaluation-in-central-government) is a redirect to this (4 Nov 2026).
+  'government/publications/the-green-book--2',
   'government/publications/the-magenta-book',
   // The publications path redirects here (checked 3 Nov 2026); the page body IS the book.
   'guidance/the-aqua-book',

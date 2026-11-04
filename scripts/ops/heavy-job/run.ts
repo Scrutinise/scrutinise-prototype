@@ -123,27 +123,25 @@ const LOCATIONS = (process.env.HETZNER_LOCATIONS ?? 'fsn1,nbg1,hel1').split(',')
  *
  * Asking rather than guessing, because guessing cost three failed attempts on 4 Aug:
  * cx53 was out of stock in every EU region, and cpx51 is not offered in fsn1 at all.
- * Hetzner publishes both facts — /datacenters lists `server_types.available` per
- * datacenter — so the runner reads them instead of probing combinations.
+ * Hetzner publishes both facts — each server type carries `locations[].available` — so
+ * the runner reads them instead of probing combinations.
+ * ⚠ It used to read GET /datacenters (`server_types.available` per datacenter). That endpoint
+ * was REMOVED (HTTP 410 deprecated_api_endpoint, Hetzner changelog 2026-06-02) and the runner
+ * died before creating anything — found 4 Nov 2026 on the brief-307 fts-index run.
  */
 async function availablePlacements(): Promise<Map<string, string[]>> {
-  const [{ server_types }, { datacenters }] = await Promise.all([
-    hz<{ server_types: Array<ServerType & { id: number; architecture?: string }> }>('GET', '/server_types?per_page=100'),
-    hz<{ datacenters: Array<{ name: string; location: { name: string }; server_types: { available: number[] } }> }>('GET', '/datacenters?per_page=50'),
-  ])
-  const byId = new Map(server_types.map((t) => [t.id, t]))
+  const { server_types } = await hz<{ server_types: Array<ServerType & {
+    id: number; architecture?: string; locations?: Array<{ name: string; available: boolean; deprecation: unknown }>
+  }> }>('GET', '/server_types?per_page=100')
   const out = new Map<string, string[]>()
-  for (const dc of datacenters) {
-    if (!LOCATIONS.includes(dc.location.name)) continue
-    for (const id of dc.server_types.available) {
-      const t = byId.get(id)
-      if (!t || t.architecture === 'arm') continue // Lance native bindings are untested on ARM
-      if (!out.has(t.name)) out.set(t.name, [])
-      // The API's `datacenter` field was deprecated 2025-12-16 and is now rejected, so
-      // collapse datacenters to their LOCATION, which is what create still accepts.
-      const locs = out.get(t.name)!
-      if (!locs.includes(dc.location.name)) locs.push(dc.location.name)
-    }
+  for (const t of server_types) {
+    if (t.architecture === 'arm') continue // Lance native bindings are untested on ARM
+    // In LOCATIONS order, so the preferred region is tried first.
+    const locs = LOCATIONS.filter((l) => t.locations?.some((x) => x.name === l && x.available && !x.deprecation))
+    if (locs.length) out.set(t.name, locs)
+  }
+  if (!server_types.some((t) => Array.isArray(t.locations))) {
+    throw new Error('Hetzner /server_types no longer carries `locations` — placement cannot be read; see availablePlacements()')
   }
   return out
 }
