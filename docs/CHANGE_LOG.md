@@ -1,5 +1,20 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-07 02:51 UTC - LEX 325: costing-params re-anchored to HMT's October 2026 discounting guidance; the per-year STPR schedule; the health rate superseded
+
+**Brief:** CCh-Lex 5 Nov (1). It was built on top of CBA-1's edits to the same file. Charlie (7 Nov): the CBA-1 session was gone after a reboot, so those edits were committed by this session in `c2805ed` (every hunk CBA-1's; CHANGE_LOG 4 Nov 03:13 and 10:36).
+**Sources:** the October 2026 PDFs, as read back by CBA-1 on 4 Nov and committed in `docs/ingest_traces/cba1_pilot_readback.txt`: *Discounting: Green Book supplementary guidance* ("GB discounting") and the October 2026 Green Book.
+
+- **`STPR_DISCOUNT_RATE` 0.035 → 0.03**, cited to GB discounting 2.1 and Green Book 6.54 (it was "HM Treasury Green Book" with no paragraph).
+- **New `STPR_SCHEDULE`**: 3.00% for years 1–30, 2.50% for 31–75 and 2.25% for 76–125 (GB discounting 3.8). Also `stprRateForYear()` and `discountFactor()`. These use FORWARD rates (para 3.9), so year 40 uses 3.00% to year 30 and then 2.50%. They return null after year 125 (para 3.10) and for a fractional or negative year. A caller must say why it cannot discount; it never gets a substitute number.
+- **⚠ The 1.5% health discount rate no longer exists.** The October Green Book discounts health effects at the STPR, the same as everything else (GB discounting 3.1–3.2: "should not use different discount rates for different types of proposals"). Instead, the real values of future health effects are **uprated by 2% a year** (Green Book 8.58). `HEALTH_DISCOUNT_RATE` is kept for history but is now `SUPERSEDED` / `verified:false`, a new `ParamStatus` value, so it cannot drive a figure. New `HEALTH_VALUE_UPRATE` = 0.02 (8.58). Its old "§6.58" citation pointed at a different sentence in the October edition. Further detail sits in the Green Book's health guidance, which is not held (NOT CHECKED).
+- The seed JSON (`docs/cost-benchmarks-seed-v1.json`) was edited first, then mirrored in the code (the file's own rule).
+- **Nothing reads these yet.** No file imports `costing-params.ts`, and 0 stored uses of 3.5% / 1.5% / Green Book paragraphs were found on 58 live ideas (probe of 4 Nov). So no user-visible number changes in this commit.
+
+**Check, `npm run check:costing-params` (new): 11 run, 11 passed.** Its answer key is Annex A of GB discounting, a published factor for every year 0–125, **parsed from the committed read-back and not retyped**. `discountFactor()` reproduces all 126 factors to 4 dp (worst |Δ| 4.93e-5). Three controls stay false: a spot-rate reading at year 40 (0.3724 vs key 0.3218), the old 3.5% at year 10 (0.7089 vs key 0.7441), and a factor for year 126. **I watched it fail once:** with the 31–75 rate set to 2.51%, it gave 2 FAIL out of 11 (y31… rates; y33… factors). Then I reverted it. Web tsc clean, scripts tsc clean, `check-clean-build --fast` PASS.
+
+**Also (CCh's instruction):** `entity_list_v5.md` now lists `Idea.deepenOverride` (26-X addition, decision 317). **313 measured (read-only):** of 452c5ade's 58 LIVE actions, **1 holds more than one instrument: #207**, with its document 2, a code text (ACCEPTED), and its document 1, a draft clause (DRAFTED); neither is superseded. It is also the only action whose Action details read as an instrument (`instrumentLike`: 5 provisions, 17,946 chars). The other drafted actions (#38, #202 clause; #203 consequential schedule) hold one each. ⚠ This counts documents and instrument-shaped text. It cannot see an Action details that *describes* two instruments in prose (#38's are 14,872 chars, with 0 instrument headings).
+
 ## 2026-11-04 11:03 UTC - LEX 26-X X1 + addendum 1 (decisions 308, 310, 316, 317, 318, 321, 322, 323): the seven-stage lifecycle, the Development checklist and the Deepening lock, Organising / Drafting over one action list, the progress strip, the three-row toolbar, "Add action", the counted title button
 
 **Brief:** `docs/BRIEF_26X.md` part X1 and `docs/BRIEF_26X_ADDENDUM_1.md`, as sized in `docs/LEX_26X_REPORT.md` §0; CCh-Lex 4 Nov (2) and (3).

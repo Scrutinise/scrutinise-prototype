@@ -2023,6 +2023,14 @@ Uniques: `(ideaId, n)`, `(ideaId, replyNo)`, `(ideaId, turnId, role)` — the la
 |---|---|---|---|
 | **Idea** | `lexMessages` | relation | LexMessage[] (Prisma relation only; no column) |
 
+### 26-X addition (4 Nov 2026) — the Deepening lock override. Written 7 Nov at CCh's instruction (CCh-Lex, 5 Nov (1))
+
+*Additive and nullable, applied by `prisma/lex_26x_deepen_override.sql` and committed with `schema.prisma` in `be8f957`. Not indexed (the CLAUDE.md §21 register is unchanged).*
+
+| Entity | Field | Type | Notes | Migration |
+|---|---|---|---|---|
+| **Idea** | `deepenOverride` | JSON nullable | Decision 317: the owner's OVERRIDES of the Deepening's lock ("Deepen now" before every action is ready). `[{ reason, by, at, toGo }]`, appended, never edited. The last entry is the one in force. `toGo` = how many actions were still to go when it was made. `reason` is required, 3–600 characters (`LIMITS.deepenOverrideReason`). NULL = never overridden. Read and written by `lib/lex/development.ts` (`deepenOverridesOf`), set through `POST /api/ideas/[id]/development` `{ op: 'override', reason }` | `lex_26x_deepen_override.sql` |
+
 ***
 
 *entity_list_v5.md — Scrutinise — 13 April 2026* *v5.0 — V2 field additions: GuidingPolicy Rumelt fields (linkToDiagnosis, whatThisPolicyRulesOut, whyThisApproachNotOthers, conditionsForSuccess); CoherentAction benefit mirrors (benefitFinancial, benefitSocial, benefitOngoing, netCostOngoing, netCostOneOff); ResourcesCommitted human capital (humanCapitalCommitted, humanCapitalAnnualRequirement); TargetOrganisation type changed from String to TargetOrganisationType enum; Section 23 field labels added; Contents page added.* *CCh-only: never edited directly by CC without explicit Charlie instruction.*

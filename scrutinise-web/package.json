@@ -43,6 +43,7 @@
     "check:lex-general": "tsx --env-file=.env scripts/check-lex-general.ts",
     "check:legislation-guide": "tsx --env-file=.env scripts/check-legislation-guide.ts",
     "check:llm-guards": "tsx scripts/check-llm-guards.ts",
+    "check:costing-params": "tsx scripts/check-costing-params.ts",
     "check:stream-coverage": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-stream-coverage.ts",
     "check:dense-degraded": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-dense-degraded.ts",
     "check:issued-queries": "tsx --env-file=.env --tsconfig tsconfig.json scripts/audit-s16-queries.ts --check",

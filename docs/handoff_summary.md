@@ -1014,6 +1014,17 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-11-07 02:51 UTC (laptop): 325 done; CBA-1's held edits committed (c2805ed); deepenOverride in the entity list; 313 measured.**
+See CHANGE_LOG 02:51.
+- **325:** STPR 3.00% + the declining schedule `STPR_SCHEDULE` / `discountFactor()` (GB discounting Oct 2026, 3.8–3.10). They reproduce
+  Annex A for years 0–125 (`npm run check:costing-params`, 11/11, seen failing once). ⚠ **The 1.5% health discount rate is SUPERSEDED.** The
+  October Green Book discounts health at the STPR and uprates health values by 2% a year instead (8.58, `HEALTH_VALUE_UPRATE`). Nothing imports
+  the file yet, so no screen changed.
+- **CBA-1's edits** (optimism-bias rename, PSSRU licence, its traces and scripts) were committed by this session on Charlie's word (`c2805ed`).
+  The CBA-1 session no longer exists after the reboot.
+- **313:** 1 of 58 LIVE actions on 452c5ade holds more than one instrument: **#207** (code text + draft clause).
+- **Next:** X2 (the Brief on every draft, §5c–e, #207 split as a proposal, companions 313), then X3.
+
 **▶ 2026-11-04 (laptop): 26-X part X1 + addendum 1 (321–323) — the lifecycle, the checklist, Organising / Drafting, the strip, the lock,
 the three-row toolbar, "Add action", the counted title button.** See CHANGE_LOG (26-X X1) and `docs/LEX_26X_REPORT.md` § X1.
 - **Schema:** `Idea.deepenOverride jsonb` (`prisma/lex_26x_deepen_override.sql`, applied to Neon first). "Needs no draft" reuses
