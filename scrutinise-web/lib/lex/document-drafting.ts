@@ -24,7 +24,8 @@ import { parseRecord, SLOT_KEYS, SLOT_UI } from './action-record'
 import { currentVersion, INSTRUMENT_WORD } from './action-draft-pure'
 import { draftWithLex, DRAFT_MODEL } from './action-draft'
 import { draftExplanatoryNote } from './explanatory-note'
-import { draftFor, documentTree, generateCollisionReport, generateSchedule, writeTextProposal } from './action-documents'
+import { draftFor, documentTree, generateCollisionReport, generateSchedule, writeTextProposal, briefForAction } from './action-documents'
+import { briefPromptBlock, type Brief } from './action-brief-pure'
 import { KIND_WORD, type DocumentKind } from './action-documents-pure'
 import { refsIn } from './action-digest-pure'
 import { resolveRefs } from './source-registry'
@@ -52,6 +53,8 @@ export interface KindInput {
   sources: Array<{ number: number; title: string; citation: string | null; snippet: string | null }>
   /** 26-W §4a — for a code: the held text of the existing code it is modelled on (the filed source's whole text, from read-source's reader). */
   model?: { ref: number | null; title: string; text: string; total: number } | null
+  /** 26-X X2 (309) — the owner's saved Brief for this draft, read FIRST; null when none is saved. */
+  brief?: { v: number; brief: Brief } | null
 }
 
 /** 26-W — the Action details are given whole up to here (#207's are 17,946 characters; the old 8,000 cut lost most of its clauses). */
@@ -109,6 +112,8 @@ export async function composeKindDocument(kind: TemplateKind, input: KindInput, 
   // 26-W — the Action details keep their line breaks: the clause numbers ("8.", "E2.") are at the start of lines, and a code cites them.
   const detail = input.detail?.trim() ? input.detail.trim().slice(0, DETAIL_CHARS) : ''
   const user = [
+    // 26-X X2 (§5d) — the drafter reads the Brief FIRST, then the Action details
+    input.brief ? briefPromptBlock(kind, input.brief.brief, input.brief.v) : '',
     `THE GUIDING POLICY:\n${clip(input.policy ?? '(not settled)', 3000)}`,
     `<action>\nAction #${input.number ?? '?'}${input.title ? ` — ${input.title}` : ''} (avenue: ${input.avenue ?? 'not set'}${input.heading ? `; heading: ${input.heading}` : ''})\nSTATEMENT:\n${input.statement}\n${detail ? `ACTION DETAILS${input.detail!.trim().length > DETAIL_CHARS ? ` (the first ${DETAIL_CHARS.toLocaleString('en-GB')} of ${input.detail!.trim().length.toLocaleString('en-GB')} characters)` : ''}:\n${detail}\n` : 'ACTION DETAILS: none written.\n'}${input.who ? `Who: ${clip(input.who, 300)}\n` : ''}${input.slots.join('\n')}\n</action>`,
     kind === 'CODE_TEXT' ? (input.model
@@ -142,6 +147,7 @@ export async function composeKindDocument(kind: TemplateKind, input: KindInput, 
   }
   const reason = [
     clip(res.value.reason, 1500),
+    input.brief ? `Drafted from the Brief, version ${input.brief.v}.` : 'No Brief was saved for this draft, so it was drafted from the Action details alone.',
     kind === 'CODE_TEXT' ? (input.model ? `Modelled on the form of [Ref: ${input.model.ref ?? '?'}] ${input.model.title}.` : 'No existing code is held in full on this idea, so the form is not modelled on one.') : '',
     untraced.length ? `Duty ${untraced.join(', ')} ${untraced.length === 1 ? 'does' : 'do'} not cite a clause the Action details hold.` : '',
     missing.length ? `Lex wrote nothing under ${missing.map((m) => `“${m}”`).join(', ')}; the document says so there.` : '',
@@ -155,7 +161,11 @@ export async function composeKindDocument(kind: TemplateKind, input: KindInput, 
 export async function draftKindDocument(ideaId: string, actionId: string, kind: TemplateKind, userId: string | null, opts: { call?: Call; instruction?: string; modelRef?: number | null } = {}): Promise<Result<{ d: string; v: number; pence: number | null; reason: string }>> {
   const input = await kindInput(ideaId, actionId)
   if (!input) return fail('That action is not on this idea’s live list. Nothing was drafted.')
-  if (kind === 'CODE_TEXT') input.model = await modelSourceFor(ideaId, input.detail, opts.modelRef)
+  const saved = await briefForAction(actionId, kind)
+  input.brief = saved ? { v: saved.v, brief: saved.brief } : null
+  // a Brief naming the source the draft is modelled on decides it (§5d "Modelled on"); otherwise 26-W's own choice
+  const briefRef = saved?.brief.modelledOn && 'ref' in saved.brief.modelledOn ? saved.brief.modelledOn.ref : null
+  if (kind === 'CODE_TEXT') input.model = await modelSourceFor(ideaId, input.detail, opts.modelRef ?? briefRef)
   const r = await composeKindDocument(kind, input, { ideaId, userId, call: opts.call, instruction: opts.instruction })
   if (!r.ok) return fail((r as { error: string }).error)
   const fresh = await prisma.lexCoherentAction.findFirst({ where: { id: actionId, ideaId, status: 'LIVE' }, select: { id: true } })

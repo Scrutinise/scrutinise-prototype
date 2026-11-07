@@ -31,12 +31,33 @@ import { draftExplanatoryNote } from '@/lib/lex/explanatory-note'
 import { planFor, queueDrafting, draftRunView, stopDraftRun, type DraftScope } from '@/lib/lex/document-drafting'
 import { reviewDocument, reviewPlan, risksView } from '@/lib/lex/document-review'
 import { PASS_KEYS, type PassKey } from '@/lib/lex/deepening-config'
+import { briefView, saveBrief, prefillBrief, useBriefProposal, setAsideBriefProposal, draftIt } from '@/lib/lex/action-brief'
+import { BRIEF_KINDS, TONES } from '@/lib/lex/action-brief-pure'
+import { BRIEF_UI, BRIEF_FIELD_WORD } from '@/lib/lex/screen-labels'
 
 export const maxDuration = 300
 type Params = { params: Promise<{ id: string }> }
 
 const KIND = z.enum(D.DOCUMENT_KINDS)
+// 26-X X2 (309) — the Brief. The SHAPE is checked here; the LIMITS (the ones every box shows) are checked by briefProblems in saveBrief,
+// because it names the field the person knows — "“Must include, point 1” is 6,001 characters; the limit is 6,000" — where this
+// schema's own wording could only name "brief.mustInclude.0" (found by check:lex-26x2's first run). Still enforced; never cut.
+const BRIEF_KIND = z.enum(BRIEF_KINDS)
+const BRIEF = z.object({
+  must: z.string().optional(),
+  modelledOn: z.union([z.object({ ref: z.number().int().positive() }), z.object({ corpusId: z.string().trim().min(1) }), z.null()]).optional(),
+  tone: z.enum(TONES).nullable().optional(),
+  mustInclude: z.array(z.string()).optional(),
+  mustNot: z.array(z.string()).optional(),
+  kind: z.record(z.string(), z.string()).optional(),
+})
 const Body = z.discriminatedUnion('op', [
+  z.object({ op: z.literal('brief'), actionId: z.string().min(1) }),
+  z.object({ op: z.literal('saveBrief'), actionId: z.string().min(1), kind: BRIEF_KIND, brief: BRIEF }),
+  z.object({ op: z.literal('prefillBrief'), actionId: z.string().min(1), kind: BRIEF_KIND }),
+  z.object({ op: z.literal('useBrief'), documentId: z.string().min(1), edited: BRIEF.optional() }),
+  z.object({ op: z.literal('setAsideBrief'), documentId: z.string().min(1) }),
+  z.object({ op: z.literal('draftIt'), actionId: z.string().min(1), kind: BRIEF_KIND, agreedPence: z.number().min(0).max(5000) }),
   z.object({ op: z.literal('open'), documentId: z.string().min(1) }),
   z.object({ op: z.literal('view'), documentId: z.string().min(1) }),
   z.object({ op: z.literal('forAction'), actionId: z.string().min(1) }),
@@ -61,13 +82,17 @@ const Body = z.discriminatedUnion('op', [
 ])
 const scopeOf = (b: { headingId?: string | null; actionId?: string }): DraftScope => (b.actionId ? { actionId: b.actionId } : { headingId: b.headingId ?? null })
 const OP_WORDS: Record<string, string> = {
+  brief: 'Reading the Brief', saveBrief: `“${BRIEF_UI.saveBrief}”`, prefillBrief: `“${BRIEF_UI.askLexForBrief}”`, useBrief: `“${BRIEF_UI.useBrief}”`, setAsideBrief: `“${BRIEF_UI.setAside}”`, draftIt: `“${BRIEF_UI.draftIt}”`,
   open: 'Opening that document', view: 'Opening that document', forAction: 'Reading that action’s documents', accept: 'Accepting that document', addByHand: 'Adding that document', saveText: 'Saving that document',
   setNeeds: 'Changing what that action needs', generate: 'Generating that document',
   draftNote: '“Draft the explanatory note”', useProposal: 'Using Lex’s proposal', setAsideProposal: 'Setting Lex’s proposal aside',
   draftPlan: 'Listing what needs drafting', draftQueue: 'Starting the drafting', draftRun: 'Reading the drafting run', draftStop: 'Stopping the drafting run',
   reviewPlan: 'Pricing the review', review: '“Review this document”', risks: 'Reading the risks',
 }
-const INPUT_WORDS = { documentId: 'the document', actionId: 'the action', kind: 'the kind of document', title: 'the title', body: 'the text', mode: 'the choice', kinds: 'the kinds of document', reason: 'the reason', what: 'what to generate', headingId: 'the heading', agreedPence: 'the price you agreed', runId: 'the drafting run', passes: 'the review passes', again: 'whether to review again' }
+const INPUT_WORDS = {
+  brief: 'the Brief', edited: 'the Brief as you edited it', must: `“${BRIEF_FIELD_WORD.must}”`, modelledOn: `“${BRIEF_FIELD_WORD.modelledOn}”`, tone: `“${BRIEF_FIELD_WORD.tone}”`,
+  mustInclude: `“${BRIEF_FIELD_WORD.mustInclude}”`, mustNot: `“${BRIEF_FIELD_WORD.mustNot}”`,
+  documentId: 'the document', actionId: 'the action', kind: 'the kind of document', title: 'the title', body: 'the text', mode: 'the choice', kinds: 'the kinds of document', reason: 'the reason', what: 'what to generate', headingId: 'the heading', agreedPence: 'the price you agreed', runId: 'the drafting run', passes: 'the review passes', again: 'whether to review again' }
 
 export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
@@ -95,6 +120,12 @@ export async function POST(req: Request, { params }: Params) {
   let result: { ok: true; data: unknown } | { ok: false; error: string }
   try {
     switch (b.op) {
+      case 'brief': result = await briefView(id, b.actionId); break
+      case 'saveBrief': result = await saveBrief(id, b.actionId, b.kind, b.brief, { userId: uid, author }); break
+      case 'prefillBrief': result = await prefillBrief(id, b.actionId, b.kind, uid); break
+      case 'useBrief': result = await useBriefProposal(id, b.documentId, { userId: uid, author }, b.edited); break
+      case 'setAsideBrief': result = await setAsideBriefProposal(id, b.documentId); break
+      case 'draftIt': result = await draftIt(id, b.actionId, b.kind, uid, b.agreedPence); break
       case 'open': result = await D.openDocument(id, b.documentId); break
       case 'view': result = await documentView(id, b.documentId); break
       case 'forAction': result = await actionDocuments(id, b.actionId); break

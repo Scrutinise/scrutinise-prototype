@@ -26,6 +26,7 @@ import {
   GENERATED_KINDS, KIND_WORD, collisionBody, dNumber, needsDocuments, partsOf, scheduleBody, scheduleRows,
   type DocumentKind, type DocumentStatus, type EffectRow, type Needs, type NeedsOverride, type ScheduleRow,
 } from './action-documents-pure'
+import { parseBrief, type Brief, type BriefKind } from './action-brief-pure'
 
 export * from './action-documents-pure'
 
@@ -88,10 +89,33 @@ async function nextNumber(tx: Tx, actionId: string): Promise<number> {
   return (top._max.number ?? 0) + 1
 }
 
-async function documentOfKind(tx: Tx, ideaId: string, actionId: string, kind: DocumentKind, title: string) {
+/** The action's live document of a kind, made if there is none. 26-X X2: a document made to hold a Brief is made BRIEFED (no draft yet). */
+export async function documentOfKind(tx: Tx, ideaId: string, actionId: string, kind: DocumentKind, title: string, opts: { status?: 'BRIEFED' } = {}) {
   const found = await tx.actionDocument.findFirst({ where: { actionId, kind, status: { not: 'SUPERSEDED' } }, orderBy: { number: 'asc' } })
   if (found) return found
-  return tx.actionDocument.create({ data: { ideaId, actionId, kind, title, number: await nextNumber(tx, actionId) } })
+  return tx.actionDocument.create({ data: { ideaId, actionId, kind, title, number: await nextNumber(tx, actionId), ...(opts.status ? { status: opts.status } : {}) } })
+}
+
+/** 26-X X2 (309) — the document's latest saved Brief version, or null. A draft records it as `payload.briefV` ("drafted from Brief version N"). */
+export async function latestBriefV(tx: Tx | typeof prisma, documentId: string): Promise<number | null> {
+  const top = await tx.actionDocumentVersion.aggregate({ where: { documentId, role: 'BRIEF' }, _max: { v: true } })
+  return top._max.v ?? null
+}
+/** 26-X X2 — the action's current saved Brief for a kind (its live document of that kind), or null. What the drafters read first (§5d). */
+export async function briefForAction(actionId: string, kind: BriefKind): Promise<{ documentId: string; v: number; brief: Brief } | null> {
+  const doc = await prisma.actionDocument.findFirst({ where: { actionId, kind, status: { not: 'SUPERSEDED' } }, orderBy: { number: 'asc' }, select: { id: true } })
+  if (!doc) return null
+  const row = await prisma.actionDocumentVersion.findFirst({ where: { documentId: doc.id, role: 'BRIEF' }, orderBy: { v: 'desc' } })
+  return row ? { documentId: doc.id, v: row.v, brief: parseBrief(kind, row.payload) } : null
+}
+
+/** The payload a draft row is written with: its own payload, plus the Brief version it was drafted from (none when there is no Brief). */
+const withBriefV = (payload: unknown, briefV: number | null): unknown =>
+  briefV == null ? payload : { ...((payload && typeof payload === 'object' ? payload : {}) as object), briefV }
+/** The Brief version a stored draft row was drafted from. */
+export const briefVOf = (payload: unknown): number | null => {
+  const v = (payload as { briefV?: unknown } | null)?.briefV
+  return Number.isInteger(v) ? (v as number) : null
 }
 
 async function appendVersion(tx: Tx, documentId: string, v: { author: Author; userId?: string | null; body: string; payload?: unknown; sources?: unknown[]; effectsLoadDate?: string | null; at?: Date }) {
@@ -115,10 +139,15 @@ const draftBody = (ins: DraftInstruction) => ins.clause || ins.plainWording
 export async function writeDraftVersion(ideaId: string, actionId: string, ins: DraftInstruction, by: 'USER' | 'LEX', opts: { userId?: string | null; author?: Author; legislative: boolean; acceptProposal?: boolean }): Promise<number> {
   return prisma.$transaction(async (tx) => {
     const doc = await documentOfKind(tx, ideaId, actionId, 'DRAFT_CLAUSE', DRAFT_TITLE(opts.legislative))
+    // X2 — the version records the Brief it was drafted from: a used proposal keeps the Brief version IT was drafted from; the owner's
+    // own version is drafted from the Brief as it stands now.
+    let briefV = await latestBriefV(tx, doc.id)
     if (opts.acceptProposal) {
+      const pending = await tx.actionDocumentVersion.findFirst({ where: { documentId: doc.id, role: 'PROPOSAL', answer: null }, orderBy: { v: 'desc' }, select: { payload: true } })
+      if (pending) briefV = briefVOf(pending.payload)
       await tx.actionDocumentVersion.updateMany({ where: { documentId: doc.id, role: 'PROPOSAL', answer: null }, data: { answer: 'ACCEPTED', answeredAt: new Date() } })
     }
-    const row = await appendVersion(tx, doc.id, { author: by === 'LEX' ? 'LEX' : (opts.author ?? 'OWNER'), userId: opts.userId, body: draftBody(ins), payload: ins, sources: ins.citations })
+    const row = await appendVersion(tx, doc.id, { author: by === 'LEX' ? 'LEX' : (opts.author ?? 'OWNER'), userId: opts.userId, body: draftBody(ins), payload: withBriefV(ins, briefV), sources: ins.citations })
     return row.v
   })
 }
@@ -130,8 +159,9 @@ export async function writeDraftProposal(ideaId: string, actionId: string, p: Dr
     await tx.actionDocumentVersion.updateMany({ where: { documentId: doc.id, role: 'PROPOSAL', answer: null }, data: { answer: 'DISMISSED', answeredAt: new Date() } })
     const top = await tx.actionDocumentVersion.aggregate({ where: { documentId: doc.id, role: 'PROPOSAL' }, _max: { v: true } })
     const { at, reason, pence, ...ins } = p
+    const briefV = await latestBriefV(tx, doc.id)
     await tx.actionDocumentVersion.create({
-      data: { documentId: doc.id, role: 'PROPOSAL', v: (top._max.v ?? 0) + 1, author: 'LEX', body: draftBody(ins), payload: ins as never, sources: ins.citations as never, reason, pence: pence ?? null, createdAt: new Date(at) },
+      data: { documentId: doc.id, role: 'PROPOSAL', v: (top._max.v ?? 0) + 1, author: 'LEX', body: draftBody(ins), payload: withBriefV(ins, briefV) as never, sources: ins.citations as never, reason, pence: pence ?? null, createdAt: new Date(at) },
     })
   })
 }
@@ -162,8 +192,10 @@ export async function addDocumentByHand(ideaId: string, actionId: string, input:
   if (GENERATED_KINDS.has(input.kind)) return fail(`A ${KIND_WORD[input.kind]} is generated from the data, not written by hand. Use “Generate” on the action instead. Nothing was added.`)
   if (!input.title.trim()) return fail('A document needs a title. Nothing was added.')
   const doc = await prisma.$transaction(async (tx) => {
-    const d = await tx.actionDocument.create({ data: { ideaId, actionId, kind: input.kind, title: input.title.trim(), number: await nextNumber(tx, actionId) } })
-    await appendVersion(tx, d.id, { author: by.author, userId: by.userId, body: input.body })
+    // X2 — a kind briefed but not yet drafted already has its document (BRIEFED): the hand-written text is its first version, not a second document
+    const briefed = await tx.actionDocument.findFirst({ where: { actionId, kind: input.kind, status: 'BRIEFED' }, orderBy: { number: 'asc' } })
+    const d = briefed ?? await tx.actionDocument.create({ data: { ideaId, actionId, kind: input.kind, title: input.title.trim(), number: await nextNumber(tx, actionId) } })
+    await appendVersion(tx, d.id, { author: by.author, userId: by.userId, body: input.body, payload: withBriefV(null, await latestBriefV(tx, d.id)) })
     return d
   })
   return { ok: true, data: { d: dNumber(a.number, doc.number) } }
@@ -175,7 +207,7 @@ export async function saveDocumentText(ideaId: string, documentId: string, body:
   if (!doc) return fail('That document is not on this idea. Nothing was saved.')
   if (doc.kind === 'DRAFT_CLAUSE') return fail('A draft clause is edited through its drafting instruction (the action’s “Draft text”), so the clause always traces to it. Nothing was saved.')
   if (GENERATED_KINDS.has(doc.kind as DocumentKind)) return fail(`A ${KIND_WORD[doc.kind as DocumentKind]} is generated; it cannot be typed over. Nothing was saved.`)
-  const row = await prisma.$transaction((tx) => appendVersion(tx, doc.id, { author: by.author, userId: by.userId, body }))
+  const row = await prisma.$transaction(async (tx) => appendVersion(tx, doc.id, { author: by.author, userId: by.userId, body, payload: withBriefV(null, await latestBriefV(tx, doc.id)) }))
   return { ok: true, data: { v: row.v } }
 }
 
@@ -188,7 +220,8 @@ export async function writeTextProposal(ideaId: string, actionId: string, kind: 
     await tx.actionDocumentVersion.updateMany({ where: { documentId: doc.id, role: 'PROPOSAL', answer: null }, data: { answer: 'DISMISSED', answeredAt: new Date() } })
     const top = await tx.actionDocumentVersion.aggregate({ where: { documentId: doc.id, role: 'PROPOSAL' }, _max: { v: true } })
     const v = (top._max.v ?? 0) + 1
-    await tx.actionDocumentVersion.create({ data: { documentId: doc.id, role: 'PROPOSAL', v, author: 'LEX', body: p.body, payload: (p.payload ?? Prisma.DbNull) as never, sources: p.sources as never, reason: p.reason, pence: p.pence } })
+    const payload = withBriefV(p.payload ?? null, await latestBriefV(tx, doc.id))
+    await tx.actionDocumentVersion.create({ data: { documentId: doc.id, role: 'PROPOSAL', v, author: 'LEX', body: p.body, payload: (payload ?? Prisma.DbNull) as never, sources: p.sources as never, reason: p.reason, pence: p.pence } })
     const a = await tx.lexCoherentAction.findUnique({ where: { id: actionId }, select: { number: true } })
     return { documentId: doc.id, d: dNumber(a?.number ?? null, doc.number), v }
   })
@@ -368,6 +401,11 @@ export interface TreeDocument {
   issues: number
   /** 26-V2d — how many of the five review passes have read the current version. */
   reviewed: number
+  /** 26-X X2 (309) — the latest saved Brief on this document (null: none), and whether Lex's proposed Brief is waiting beside it. */
+  brief: { v: number; author: string; at: string } | null
+  briefProposalWaiting: boolean
+  /** The Brief version the current draft version was drafted from (`payload.briefV`); null when it was drafted before any Brief. */
+  draftedFromBriefV: number | null
 }
 /** `issues`: open issues attached to the action itself, not to one of its documents (those are counted on the document). */
 export interface TreeActionRow { id: string; number: number | null; title: string | null; statement: string; headingId: string | null; avenue: string | null; needs: Needs; documents: TreeDocument[]; missing: DocumentKind[]; issues: number }
@@ -399,6 +437,7 @@ export async function documentTree(ideaId: string, opts: { recordStale?: boolean
     const documents: TreeDocument[] = docs.filter((d) => d.actionId === a.id).map((d) => {
       const vs = d.versions.filter((x) => x.role === 'VERSION')
       const last = vs.at(-1)
+      const brief = d.versions.filter((x) => x.role === 'BRIEF').at(-1)
       const stale = staleWhy(d.kind, last, { loadDate, draftV, schedule })
       if (opts.recordStale && (stale ?? null) !== (d.staleReason ?? null)) staleWrites.push({ id: d.id, reason: stale })
       return {
@@ -407,10 +446,15 @@ export async function documentTree(ideaId: string, opts: { recordStale?: boolean
         proposalWaiting: d.versions.some((x) => x.role === 'PROPOSAL' && !x.answer),
         parts: last ? partsOf(d.kind as DocumentKind, last.body).map((p) => ({ n: p.n, title: p.title, issues: issuesOnPart(d.id, p.n) })) : [], stale, issues: issuesOn(a.id, d.id),
         reviewed: reviewed.get(d.id) ?? 0,
+        brief: brief ? { v: brief.v, author: brief.author, at: brief.createdAt.toISOString() } : null,
+        briefProposalWaiting: d.versions.some((x) => x.role === 'BRIEF_PROPOSAL' && !x.answer),
+        draftedFromBriefV: last ? briefVOf(last.payload) : null,
       }
     })
     const live = documents.filter((d) => d.status !== 'SUPERSEDED')
-    return { id: a.id, number: a.number, title: a.title, statement: a.practicalStep, headingId: a.headingId, avenue: a.avenue, needs, documents, missing: needs.kinds.filter((k) => !live.some((d) => d.kind === k)), issues: issuesOn(a.id, null) }
+    // X2 — a document that holds only a Brief (BRIEFED, nothing drafted, no proposal waiting) is still MISSING its draft: the plan offers it.
+    const present = (d: TreeDocument) => d.status !== 'BRIEFED' || d.current != null || d.proposalWaiting
+    return { id: a.id, number: a.number, title: a.title, statement: a.practicalStep, headingId: a.headingId, avenue: a.avenue, needs, documents, missing: needs.kinds.filter((k) => !live.some((d) => d.kind === k && present(d))), issues: issuesOn(a.id, null) }
   }
   const rows = actions.map(rowOf)
   if (staleWrites.length) {
@@ -430,8 +474,9 @@ export async function documentTree(ideaId: string, opts: { recordStale?: boolean
 /** §6 — what the Actions Pack prints after each action's record: its documents in number order, current version, with status words. */
 export interface PackDocument { d: string; number: number; kind: DocumentKind; title: string; status: DocumentStatus; stale: string | null; v: number | null; author: string | null; at: string | null; body: string; sources: unknown[] }
 export async function packDocuments(ideaId: string): Promise<Map<string, PackDocument[]>> {
+  // X2 — a BRIEFED document has no draft to print; its Brief is not a document of the action
   const docs = await prisma.actionDocument.findMany({
-    where: { ideaId, status: { not: 'SUPERSEDED' } },
+    where: { ideaId, status: { notIn: ['SUPERSEDED', 'BRIEFED'] } },
     include: { versions: { where: { role: 'VERSION' }, orderBy: { v: 'desc' }, take: 1 } }, orderBy: [{ number: 'asc' }],
   })
   const nums = new Map((await prisma.lexCoherentAction.findMany({ where: { id: { in: [...new Set(docs.map((d) => d.actionId))] } }, select: { id: true, number: true } })).map((a) => [a.id, a.number]))

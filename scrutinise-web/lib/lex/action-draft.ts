@@ -24,7 +24,8 @@ import {
   INSTRUMENTS, RELATIONS, EXTENTS, CLAUSE_CAVEAT, addVersion, currentVersion, withCaveat, validateInstruction, isDocUri, isProvisionPath,
   type ActionDraft, type DraftInstruction, type DraftProposal,
 } from './action-draft-pure'
-import { draftFor, writeDraftVersion, writeDraftProposal, dismissDraftProposal } from './action-documents'
+import { draftFor, writeDraftVersion, writeDraftProposal, dismissDraftProposal, briefForAction } from './action-documents'
+import { briefPromptBlock } from './action-brief-pure'
 import type { Result } from './action-structure'
 import { writeInstructionRows, type LawRowsReport } from './action-law-rows'
 import { effectsLoadDate } from './statutory-graph'
@@ -212,11 +213,14 @@ export async function draftWithLex(ideaId: string, actionId: string, userId: str
   const rec = parseRecord(row.record)
   const slots = SLOT_KEYS.map((k) => (rec[k]?.text ? `${SLOT_UI[k].label}: ${clip(rec[k]!.text, 500)}` : '')).filter(Boolean)
   const current = (await draftFor(row.id))?.versions.at(-1)
+  // 26-X X2 (§5d) — the clause's Brief: its common fields (saved Brief rows) are read FIRST; its per-kind fields are the instruction, in place
+  const brief = await briefForAction(row.id, 'DRAFT_CLAUSE')
   // §4a — the held text of each section the owner's current instruction amends, so quoted old words can be quoted exactly (free).
   const amended = legislative ? await Promise.all((current?.provisions ?? []).filter((p) => (p.relation === 'amends' || p.relation === 'repeals') && p.provisionPath)
     .slice(0, 4).map(async (p) => ({ p, held: await heldSectionText(p.docUri, p.provisionPath).catch(() => ({ text: null, reason: 'could not be read' })) }))) : []
 
   const user = [
+    brief ? briefPromptBlock('DRAFT_CLAUSE', brief.brief, brief.v) : '',
     `THE GUIDING POLICY:\n${clip(idea?.chosenApproach ?? '(not settled)', 3000)}`,
     conditions.length ? `CONDITIONS FOR SUCCESS:\n${conditions.map((c, i) => `${i + 1}. ${clip((c as { text?: string }).text ?? '', 300)}`).join('\n')}` : '',
     `<action>\nAction #${row.number ?? '?'}${row.title ? ` — ${row.title}` : ''} (avenue: ${row.avenue ?? 'not set'})\nSTATEMENT:\n${row.practicalStep}\n${row.commentary?.trim() ? `DETAIL:\n${clip(row.commentary, 6000)}\n` : ''}${row.whoImplements ? `Who: ${clip(row.whoImplements, 300)}\n` : ''}${slots.join('\n')}${current ? `\nTHE OWNER'S CURRENT INSTRUCTION (version ${current.v}) — keep what it settles:\n${JSON.stringify({ ...current, clause: clip(current.clause, 3000) })}` : ''}\n</action>`,
@@ -249,7 +253,7 @@ export async function draftWithLex(ideaId: string, actionId: string, userId: str
     extent: (v.extent ?? []).filter((e) => (EXTENTS as readonly string[]).includes(e)),
     precedents: (v.precedents ?? []).filter((p) => isDocUri(p.docUri)).map((p) => ({ docUri: p.docUri, provisionPath: p.provisionPath && isProvisionPath(p.provisionPath) ? p.provisionPath : null, how: clip(p.how, 300) })),
     clause: legislative && v.clause?.trim() ? withCaveat(v.clause) : '', plainWording: legislative ? '' : clip(v.plainWording, 4000), purpose: clip(v.purpose, 300), citations,
-    at: new Date().toISOString(), reason: `${clip(v.reason, 1500)}${dropped.length ? ` Left out because they could not be checked: ${dropped.join('; ')}.` : ''}`, pence: priced.pence ?? null,
+    at: new Date().toISOString(), reason: `${clip(v.reason, 1500)}${brief ? ` Drafted from the Brief, version ${brief.v}.` : ''}${dropped.length ? ` Left out because they could not be checked: ${dropped.join('; ')}.` : ''}`, pence: priced.pence ?? null,
   }
   const fresh = await load(ideaId, actionId) // re-read: a version the user saved while this ran is kept, untouched (a proposal sits beside it)
   if (!fresh) return fail('The action was ruled out or merged while Lex was drafting. Nothing was written.')

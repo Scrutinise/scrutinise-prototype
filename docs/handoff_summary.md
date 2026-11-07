@@ -1014,6 +1014,14 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-11-07 17:49 UTC (laptop): 26-X X2 built and committed: the Brief, "Draft it", companions, Briefed on the strip.** See CHANGE_LOG 17:49 and
+`docs/LEX_26X_REPORT.md` § X2. Schema `prisma/lex_26x_brief.sql` (three CHECKs widened) was applied to Neon before the commit. The clause's Brief is
+READ IN PLACE (Charlie, 7 Nov). Prefill measured at 1.5p.
+- **#207's split** is a proposal script (`scripts/propose-26x-207-split.ts`, dry run by default). It is written to production with `--apply` after
+  the deploy (see the next entry if done). ⚠ **Open for Charlie:** #207's one instrument. Its derived need is a draft clause, but it holds the Code.
+- **Only Charlie can confirm (§9):** #207 with its Brief above the Draft; the split; the strips.
+- **Next:** X3 (Who, how and against moves to the Deepening).
+
 **▶ 2026-11-07 02:51 UTC (laptop): 325 done; CBA-1's held edits committed (c2805ed); deepenOverride in the entity list; 313 measured.**
 See CHANGE_LOG 02:51.
 - **325:** STPR 3.00% + the declining schedule `STPR_SCHEDULE` / `discountFactor()` (GB discounting Oct 2026, 3.8–3.10). They reproduce

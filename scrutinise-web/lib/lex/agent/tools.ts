@@ -31,6 +31,8 @@ import { readSourceText, SOURCE_PART_CHARS } from '@/lib/lex/source-text'
 import * as DOCS from '@/lib/lex/action-documents'
 import * as DRAFT from '@/lib/lex/action-draft'
 import * as DD from '@/lib/lex/document-drafting'
+import * as BRIEF from '@/lib/lex/action-brief'
+import * as BRIEF_PURE from '@/lib/lex/action-brief-pure'
 import * as REV from '@/lib/lex/document-review'
 import { draftExplanatoryNote } from '@/lib/lex/explanatory-note'
 import { statuteOnward } from './onward-tool'  // GRAPH 8 — one step of the onward reader
@@ -1799,7 +1801,7 @@ const listDocumentsTool: ToolDefinition = {
       ok: true,
       data: rows.filter(({ a }) => action != null || a.documents.length || a.missing.length).slice(0, 80).map(({ heading, a }) => ({
         action: a.number, heading, needs: a.needs.kinds.map((k) => DOCS.KIND_WORD[k]), needsWhy: a.needs.why, missing: a.missing.map((k) => DOCS.KIND_WORD[k]),
-        documents: a.documents.map((d) => ({ d: d.d, kind: DOCS.KIND_WORD[d.kind], title: d.title, status: d.status, acceptedAtVersion: d.acceptedV, currentVersion: d.current?.v ?? null, versions: d.versions, proposalWaiting: d.proposalWaiting, parts: d.parts.length, stale: d.stale })),
+        documents: a.documents.map((d) => ({ d: d.d, kind: DOCS.KIND_WORD[d.kind], title: d.title, status: d.status, acceptedAtVersion: d.acceptedV, currentVersion: d.current?.v ?? null, versions: d.versions, proposalWaiting: d.proposalWaiting, parts: d.parts.length, stale: d.stale, briefVersion: d.brief?.v ?? null, draftedFromBriefVersion: d.draftedFromBriefV, briefProposalWaiting: d.briefProposalWaiting })),
       })),
     }
   },
@@ -2401,7 +2403,72 @@ export const INVENTORY_TOOLS: ToolDefinition[] = [
   setDocumentNeedsTool, notebookNotesTool,
 ]
 
-export const DOCUMENT_TOOLS: ToolDefinition[] = [listDocumentsTool, readDocumentTool, proposeDocumentText, draftDocumentTool, redraftDocumentTool, useProposalTool, acceptDocumentTool, setAsideProposalTool, reviewDocumentTool, generateDocumentTool]
+// ══ 26-X X2 (309) — THE BRIEF: parity with the screen. read_brief reads what the record's Brief section shows (briefView); propose_brief
+// writes through the SAME writer as "Ask Lex to write the Brief" (writeBriefProposal) — always a proposal beside the owner's Brief, never
+// over it. Saving, using and setting aside a Brief are the owner's, on the screen.
+const readBriefTool: ToolDefinition = {
+  name: 'read_brief', category: 'see', tier: 'free',
+  description: 'Read an action\'s Brief — the owner\'s instructions for its draft: what it must do, what it is modelled on, its tone and form, what it must include and must not, and the kind\'s own fields; its version; whether a proposed Brief of yours is waiting; whether the draft was drafted from the latest Brief. A draft clause\'s per-kind fields are its drafting instruction.',
+  schema: z.object({ action: z.number().int().describe('the action number, as in #207') }),
+  describe: (i) => `Read the Brief of #${(i as { action?: number })?.action ?? '?'}`,
+  async run(ctx, { action }) {
+    const { rows } = await actionsByNumbers(ctx, [action])
+    if (!rows.length) return fail(`there is no live action #${action} on this idea.`)
+    const v = await BRIEF.briefView(ctx.ideaId, rows[0].id)
+    if (!v.ok) return fail((v as { error: string }).error)
+    return {
+      ok: true,
+      data: {
+        action, why: v.data.why,
+        briefs: v.data.kinds.map((k) => ({
+          kind: DOCS.KIND_WORD[k.kind], d: k.d, version: k.current?.v ?? null, by: k.current?.author ?? null, text: k.current?.body ?? null,
+          proposalWaiting: k.proposal ? { proposal: k.proposal.v, reason: clip(k.proposal.reason, 400), split: !!k.proposal.split } : null,
+          drafting_instruction: k.instruction ? { version: k.instruction.v, instrument: k.instruction.instrument, dutyOnWhom: k.instruction.dutyOnWhom, provisions: k.instruction.provisions } : null,
+          draftedFromBriefVersion: k.draft?.draftedFromBriefV ?? null, briefChangedSinceDraft: k.changed, empty: k.empty,
+        })),
+      },
+    }
+  },
+}
+
+const proposeBriefTool: ToolDefinition = {
+  name: 'propose_brief', category: 'draft', tier: 'free',
+  description: 'Write an action\'s Brief as YOUR PROPOSAL, beside the owner\'s Brief (never over it); the owner uses it, edits it or sets it aside on the screen. '
+    + 'The Brief is what the draft must do, what it must include and must not, its tone and form, what it is modelled on, and the kind\'s own fields '
+    + '(code text: issuedBy, laidBefore, appliesTo, revisionRule; specification: users, records, measures; costing: basis, priceYear). Take every field from the owner\'s own words; leave out what is not settled. '
+    + 'A draft clause\'s instrument, provisions and duty are its drafting instruction, not the Brief.',
+  schema: z.object({
+    action: z.number().int(),
+    kind: z.enum(['DRAFT_CLAUSE', 'CODE_TEXT', 'SPECIFICATION', 'COSTING', 'OPERATING_TEXT', 'BACKGROUND_NOTE']).optional().describe('which draft; default: the action\'s own'),
+    must: z.string().max(LIMITS.briefMust).optional(),
+    mustInclude: z.array(z.string().max(LIMITS.briefPoint)).max(LIMITS.briefPoints).optional(),
+    mustNot: z.array(z.string().max(LIMITS.briefPoint)).max(LIMITS.briefPoints).optional(),
+    tone: z.enum(['statutory', 'code', 'guidance', 'specification', 'plain-rules']).optional(),
+    modelledOnRef: z.number().int().positive().optional().describe('a source the action cites, as in [Ref: 12] → 12'),
+    fields: z.record(z.string(), z.string().max(LIMITS.briefField)).optional(),
+    reason: z.string().max(600).describe('one line: where each field came from, and what is not settled'),
+    provenance: ProvenanceSchema,
+  }),
+  describe: (i) => `Propose a Brief for #${(i as { action?: number })?.action ?? '?'}`,
+  async run(ctx, input) {
+    const prov = await checkProvenance(ctx, input.provenance)
+    if (provFailed(prov)) return fail(prov.error)
+    const { rows } = await actionsByNumbers(ctx, [input.action])
+    if (!rows.length) return fail(`there is no live action #${input.action} on this idea.`)
+    const view = await BRIEF.briefView(ctx.ideaId, rows[0].id)
+    if (!view.ok) return fail((view as { error: string }).error)
+    const kind = input.kind ?? view.data.kinds[0]?.kind
+    if (!kind || !view.data.kinds.some((k) => k.kind === kind)) return fail(`#${input.action} has no draft of that kind to brief${view.data.why ? ` — ${view.data.why}` : ''}. Nothing was proposed.`)
+    const raw = { must: input.must, mustInclude: input.mustInclude, mustNot: input.mustNot, tone: input.tone ?? null, kind: input.fields ?? {}, modelledOn: input.modelledOnRef ? { ref: input.modelledOnRef } : null }
+    const problems = BRIEF_PURE.briefProblems(kind, raw)
+    if (problems.length) return fail(`the Brief was not proposed: ${problems.join('; ')}.`)
+    const w = await BRIEF.writeBriefProposal(ctx.ideaId, rows[0].id, kind, BRIEF_PURE.parseBrief(kind, raw), { reason: `Lex’s Brief from chat, ${new Date().toISOString().slice(0, 10)}: ${clip(input.reason, 500)} Written from ${prov.line}.`, pence: null })
+    if (!w.ok) return fail((w as { error: string }).error)
+    return { ok: true, data: { d: w.data.d, proposal: w.data.v, say: `My proposed Brief for #${input.action} is waiting beside yours on the record — use it, edit it or set it aside.` }, ui: [{ type: 'open_panel', panel: 'actions' }] }
+  },
+}
+
+export const DOCUMENT_TOOLS: ToolDefinition[] = [listDocumentsTool, readDocumentTool, proposeDocumentText, draftDocumentTool, redraftDocumentTool, useProposalTool, acceptDocumentTool, setAsideProposalTool, reviewDocumentTool, generateDocumentTool, readBriefTool, proposeBriefTool]
 
 export const MODEL_TOOLS: ToolDefinition[] = [
   ...DOCUMENT_TOOLS, ...INVENTORY_TOOLS,

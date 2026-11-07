@@ -10,10 +10,13 @@ import { FOLD_HEADER, isImportedHeadLine } from './action-resort-pure'
 
 export const DETAIL_LABEL = 'Action details'
 
-/** 2a — top to bottom. The jump band names every section but the statement (it sits under it). */
+/** 2a — top to bottom. The jump band names every section but the statement (it sits under it).
+ *  26-X X2 (§5c): the record's order is Statement → The Brief → "Draft it" → the Draft (with its companions) → Action details → Law →
+ *  Costs → Order → Comments; "Who, how and against" stays until X3 moves it (CCh-Lex 4 Nov (2), item 1). "Documents" is renamed in X3 (§7). */
 export const RECORD_SECTIONS = [
-  { key: 'detail', label: 'Action details' },
+  { key: 'brief', label: 'The Brief' },
   { key: 'documents', label: 'Documents' },
+  { key: 'detail', label: 'Action details' },
   { key: 'law', label: 'Law' },
   { key: 'who', label: 'Who, how and against' },
   { key: 'costs', label: 'Costs' },
@@ -87,6 +90,8 @@ export interface BandInput {
   /** Numbers of the actions this one must come after. */
   after: Array<number | null>
   comments: number | null
+  /** 26-X X2 — how many kinds of the draft have a saved Brief, of how many (absent on a caller written before X2: "reading…"). */
+  brief?: { briefed: number; of: number } | null
 }
 /** The Action details' state in words: the band's and the closed box's own summary say the same thing (265). */
 export function detailState(detail: string | null | undefined): string {
@@ -97,6 +102,7 @@ export function detailState(detail: string | null | undefined): string {
 
 export function bandStates(b: BandInput): Record<RecordSection, string> {
   return {
+    brief: b.brief == null ? 'reading…' : !b.brief.of ? 'none needed' : b.brief.briefed >= b.brief.of ? 'written' : b.brief.briefed ? `${b.brief.briefed} of ${b.brief.of} written` : 'not written',
     detail: detailState(b.detail),
     documents: !b.documents ? 'reading…' : b.documents.needed
       ? `${b.documents.needed} needed, ${b.documents.drafted} drafted${b.documents.accepted ? `, ${b.documents.accepted} accepted` : ''}`

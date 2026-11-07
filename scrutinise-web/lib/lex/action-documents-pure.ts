@@ -24,8 +24,10 @@ export const NOTE_CAVEAT = 'Drafted by Lex from the clause; not settled; not the
 /** Built from data with no model call: they cost nothing and are regenerated, never drafted (§4, §5). */
 export const GENERATED_KINDS: ReadonlySet<DocumentKind> = new Set(['COLLISION_REPORT', 'CONSEQUENTIAL_SCHEDULE'])
 
-export type DocumentStatus = 'DRAFTED' | 'ACCEPTED' | 'SUPERSEDED'
-export const STATUS_WORD: Record<DocumentStatus | 'NONE', string> = { NONE: 'no document yet', DRAFTED: 'drafted, not accepted', ACCEPTED: 'accepted', SUPERSEDED: 'superseded' }
+// 26-X X2 (309) — BRIEFED: the document has a Brief and no draft yet (prisma/lex_26x_brief.sql widens the CHECK). A first version takes it
+// to DRAFTED like any other (appendVersion); a Brief saved later never changes a drafted or accepted document's status.
+export type DocumentStatus = 'BRIEFED' | 'DRAFTED' | 'ACCEPTED' | 'SUPERSEDED'
+export const STATUS_WORD: Record<DocumentStatus | 'NONE', string> = { NONE: 'no document yet', BRIEFED: 'briefed, not drafted yet', DRAFTED: 'drafted, not accepted', ACCEPTED: 'accepted', SUPERSEDED: 'superseded' }
 
 // ── numbers ──────────────────────────────────────────────────────────────────────────────────────────────────
 export const documentNumber = (action: number | null, doc: number) => `${action ?? '?'}.${doc}`
@@ -251,7 +253,8 @@ export function treeCounts(actions: TreeAction[]) {
   let needDocs = 0, drafted = 0, accepted = 0, missing = 0
   for (const a of actions) {
     if (a.needs.kinds.length) needDocs++
-    const live = a.documents.filter((d) => d.status !== 'SUPERSEDED')
+    // 26-X X2 — a BRIEFED document holds a Brief, not a draft: the kind is still missing
+    const live = a.documents.filter((d) => d.status !== 'SUPERSEDED' && d.status !== 'BRIEFED')
     drafted += live.filter((d) => d.status === 'DRAFTED').length
     accepted += live.filter((d) => d.status === 'ACCEPTED').length
     missing += a.needs.kinds.filter((k) => !live.some((d) => d.kind === k)).length

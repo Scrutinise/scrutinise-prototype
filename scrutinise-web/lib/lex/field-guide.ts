@@ -16,7 +16,7 @@ import {
   COMMON_UI, RECORD_UI, DOCUMENT_UI, DOCUMENT_TAB_WORD, INSTRUCTION_FIELD, INSTRUCTION_EDITOR, TOUCH_BLOCK, TREE_UI, TREE_FILTER_WORD,
   PROVISION_COLUMNS, PRECEDENT_COLUMNS, STATEMENT_LABEL, COMMENTARY_LABEL, FACET_WORD, WORKSPACE_UI, WORKSPACE_VIEW_WORD, NOTEBOOK_UI, shown,
   LIFECYCLE_STAGE_WORD, LIFECYCLE_UI, PROGRESS_WORD, CHECKLIST_WORD, PAGE_UI, DRAFTING_FILTER_WORD, DEEPENING_LOCK_UI,
-  ORGANISING_TOOLBAR_UI, ADD_ACTION_UI,
+  ORGANISING_TOOLBAR_UI, ADD_ACTION_UI, BRIEF_UI, BRIEF_FIELD_WORD, TONE_WORD,
 } from './screen-labels'
 import { EXTENTS } from './action-draft-pure'
 import { RECORD_SECTIONS, type RecordSection } from './record-layout-pure'
@@ -293,6 +293,7 @@ const FILTERS: Record<keyof typeof TREE_FILTER_WORD, GuideText> = {
 
 // ── labels held in the older tables ────────────────────────────────────────────────────────────────────────────
 const SECTIONS: Record<RecordSection, GuideText> = {
+  brief: { purpose: 'The Brief: the owner\'s instructions for the action\'s draft — what it must do, what it is modelled on, its tone and form, what it must include and must not, and the kind\'s own fields.', fits: 'Under the statement and above the Draft, with "Draft it" between them. The drafter reads it first, then the Action details. A draft clause\'s own fields are its drafting instruction.', limits: 'Every save is a version; the earlier ones are kept.', tool: 'read_brief, propose_brief' },
   detail: { purpose: 'The action\'s full explanation: what it does and why, its parts and reasoning.', fits: 'The statement is the headline; an instrument\'s text goes in a document, never here.', limits: 'No limit; more than 3,000 characters of instrument-like text from Lex is refused.', tool: 'set_action_detail, add_action_details_section' },
   documents: { purpose: 'The action\'s documents: each with its number, kind, status and version, and what is still needed.', fits: 'Opens each document in the document view.', tool: 'list_documents, read_document' },
   law: { purpose: 'The law rows this action\'s drafting instruction wrote.', fits: 'The idea\'s whole law is on the Overview\'s Law tab.', tool: 'read_document' },
@@ -346,7 +347,7 @@ const LIFECYCLE_UI_G: Record<keyof typeof LIFECYCLE_UI, GuideText> = {
 }
 const PROGRESS_G: Record<keyof typeof PROGRESS_WORD, GuideText> = {
   defined: { purpose: 'The action has its statement, a heading, and the heading’s kind.', fits: 'The first state of the strip; ◐ while it is begun but not all three are set (an action just added with only its title reads ◐).', tool: 'assign_action_heading, set_heading_kind' },
-  briefed: { purpose: 'The action has a Brief for its draft, or needs no draft.', fits: 'Until the Brief on every draft is built, only a draft clause’s drafting instruction counts as its Brief, so other kinds read ○ here.', tool: 'redraft_document' },
+  briefed: { purpose: 'The action has a saved Brief for its draft, or needs no draft.', fits: 'A draft clause also counts once it has a drafting instruction (its own fields are the instruction). ◐ when only some kinds of the draft are briefed.', tool: 'read_brief, propose_brief' },
   drafted: { purpose: 'The action’s draft (its instrument) has a version.', fits: 'Companions — the collision report, the explanatory note — are not the draft; a costing is the draft only of a financial action.', tool: 'draft_document, list_documents' },
   reviewed: { purpose: 'All five review passes have read the draft’s current version.', fits: '◐ when some have; a new version needs reading again.', tool: 'review_document' },
   accepted: { purpose: 'The owner has accepted the draft at its current version.', fits: '◐ when it was accepted at an earlier version and has changed since. Accepted or "needs no draft" counts as done for the Deepening.', tool: 'accept_document' },
@@ -385,6 +386,48 @@ const LOCK_G: Record<keyof typeof DEEPENING_LOCK_UI, GuideText> = {
   overrideReason: { purpose: 'The owner’s reason for deepening early.', fits: 'Printed on the Deepening page and on every output it produces.', limits: 'The box shows its limit.', tool: none('the owner’s decision, made on the screen') },
   recordOverride: { purpose: 'Records the reason and opens the Deepening.', fits: 'An override is added to the record, never replacing an earlier one.', tool: none('the owner’s decision, made on the screen') },
 }
+
+// 26-X X2 (309) — the Brief
+const BRIEF_G: Record<keyof typeof BRIEF_UI, GuideText> = {
+  section: { purpose: 'The Brief for the action\'s draft, with its version and who wrote it.', fits: 'Above "Draft it" and the Draft.', tool: 'read_brief' },
+  sectionDraft: { purpose: 'The Draft: the instrument itself, with its companions under it.', fits: 'Below "Draft it".', tool: 'list_documents, read_document' },
+  editBrief: { purpose: 'Opens the Brief form for an action that has no Brief yet.', fits: 'Saved as version 1.', tool: none('the owner writes the Brief on the screen; Lex can propose one with propose_brief') },
+  editBriefAgain: { purpose: 'Opens the saved Brief to change it.', fits: 'Saving makes a new version; the earlier ones are kept.', tool: none('the owner writes the Brief on the screen; Lex can propose one with propose_brief') },
+  saveBrief: { purpose: 'Saves the Brief as a new version.', fits: 'A field over its limit, or an empty Brief, is refused in words; nothing is cut.', tool: none('the owner saves on the screen') },
+  askLexForBrief: { purpose: 'Lex writes a Brief from the statement, Action details, answers and conditions.', fits: 'It waits as a proposal beside the saved Brief; an owner\'s Brief is never overwritten. Asks first, at the measured price.', tool: 'propose_brief' },
+  lexProposesBrief: { purpose: 'Lex\'s proposed Brief, waiting beside the saved one.', fits: 'Use it, edit it then save, or set it aside — nothing changes until the owner does.', tool: 'read_brief' },
+  useBrief: { purpose: 'Takes Lex\'s proposed Brief as the next version.', fits: 'The proposal is kept, marked used.', tool: none('the owner\'s answer, on the screen') },
+  editThenSave: { purpose: 'Opens Lex\'s proposed Brief in the form so the owner can change it before saving.', fits: 'The saved version is the owner\'s.', tool: none('the owner\'s answer, on the screen') },
+  setAside: { purpose: 'Sets Lex\'s proposed Brief aside.', fits: 'It is kept; the saved Brief is unchanged.', tool: none('the owner\'s answer, on the screen') },
+  addPoint: { purpose: 'Adds a numbered point to "Must include" or "Must not".', fits: 'Points keep their order.', limits: 'Up to 60 points.', tool: 'propose_brief' },
+  removePoint: { purpose: 'Takes a point out of the form before saving.', fits: 'Earlier saved versions keep it.', tool: none('the owner edits on the screen') },
+  draftIt: { purpose: 'Lex drafts the action\'s draft from its Brief; the result waits as a proposal.', fits: 'Between the Brief and the Draft. Refused while the Brief is empty. Asks first, at the measured price for the kind; the draft records the Brief version it followed.', tool: 'draft_document, redraft_document' },
+  briefEmpty: { purpose: 'Says why "Draft it" cannot run: there is no Brief.', fits: 'Write the Brief, or ask Lex to prefill it.', tool: 'propose_brief' },
+  briefChanged: { purpose: 'Says the Brief was saved again after the draft was drafted, or the draft was written before any Brief.', fits: 'Draft it again, or accept the draft as it is.', tool: 'read_brief' },
+  draftedFrom: { purpose: 'Names the Brief version the draft was drafted from.', fits: 'Shown under "Draft it".', tool: 'read_brief' },
+  noBriefYet: { purpose: 'Says the draft has no Brief yet.', fits: 'The strip reads "Briefed ○".', tool: 'read_brief' },
+  instructionIsBrief: { purpose: 'A draft clause\'s own Brief fields: its drafting instruction (instrument, provisions, duty, enforcement, commencement, extent).', fits: 'Read in place from the clause\'s versions; editing it makes a new clause version.', tool: 'redraft_document' },
+  editInstruction: { purpose: 'Opens the drafting instruction\'s editor.', fits: 'Saving writes a new version of the clause and its law rows.', tool: 'redraft_document' },
+  companionOf: { purpose: 'Says which draft a collision report, explanatory note or schedule goes with.', fits: 'One instrument per action; the rest are its companions (313).', tool: 'list_documents' },
+  acceptSplit: { purpose: 'Uses a proposed split of the Action details: the paragraphs that are the Brief go into it, and the rest stay as the Action details.', fits: 'The old Action details are kept in the history. Refused if the details have changed since the split was proposed.', tool: none('the owner\'s answer, on the screen') },
+}
+const BRIEF_FIELD_G: Record<keyof typeof BRIEF_FIELD_WORD, GuideText> = {
+  must: { purpose: 'What the draft must do, in the owner\'s words.', fits: 'The first thing the drafter reads.', limits: 'No limit of its own; the box counts.', tool: 'propose_brief' },
+  modelledOn: { purpose: 'The source the draft takes its form from: a [Ref: n] held in full, a corpus section, or none.', fits: 'Its form, never its duties.', tool: 'propose_brief' },
+  tone: { purpose: 'The draft\'s tone and form: statutory, code, guidance, specification or plain rules.', fits: 'One choice, or not said.', tool: 'propose_brief' },
+  mustInclude: { purpose: 'Numbered points the draft must carry.', fits: 'The drafter carries out each, and says in its gaps any it could not.', limits: 'Up to 60 points of 6,000 characters each.', tool: 'propose_brief' },
+  mustNot: { purpose: 'Numbered points the draft must not contain.', fits: 'Nothing listed here may appear in the draft.', limits: 'Up to 60 points of 6,000 characters each.', tool: 'propose_brief' },
+  issuedBy: { purpose: 'A code text\'s Brief: who issues the code.', fits: 'Code text only.', limits: '1,000 characters.', tool: 'propose_brief' },
+  laidBefore: { purpose: 'A code text\'s Brief: whether and before whom it is laid.', fits: 'Code text only.', limits: '1,000 characters.', tool: 'propose_brief' },
+  appliesTo: { purpose: 'A code text\'s Brief: the bodies or people it applies to.', fits: 'Code text only.', limits: '1,000 characters.', tool: 'propose_brief' },
+  revisionRule: { purpose: 'A code text\'s Brief: how and when the code may be changed.', fits: 'Code text only.', limits: '1,000 characters.', tool: 'propose_brief' },
+  users: { purpose: 'A specification\'s Brief: who uses the system.', fits: 'Specification only.', limits: '1,000 characters.', tool: 'propose_brief' },
+  records: { purpose: 'A specification\'s Brief: what it records.', fits: 'Specification only.', limits: '1,000 characters.', tool: 'propose_brief' },
+  measures: { purpose: 'A specification\'s Brief: what it measures.', fits: 'Specification only.', limits: '1,000 characters.', tool: 'propose_brief' },
+  basis: { purpose: 'A costing\'s Brief: what the figures rest on.', fits: 'Costing only; the figures come from the cost lines.', limits: '1,000 characters.', tool: 'propose_brief' },
+  priceYear: { purpose: 'A costing\'s Brief: the price year the figures are in.', fits: 'Costing only.', limits: '1,000 characters.', tool: 'propose_brief' },
+}
+const TONE_G: Record<keyof typeof TONE_WORD, GuideText> = Object.fromEntries((Object.keys(TONE_WORD) as Array<keyof typeof TONE_WORD>).map((t) => [t, { purpose: `"Tone and form": the draft reads as ${TONE_WORD[t]}.`, fits: 'One of the five choices in the Brief.', tool: 'propose_brief' }])) as Record<keyof typeof TONE_WORD, GuideText>
 
 // ── assembled ──────────────────────────────────────────────────────────────────────────────────────────────────
 const fromTable = <K extends string>(area: GuideArea, prefix: string, labels: Record<K, Lbl>, texts: Record<K, GuideText>): GuideEntry[] =>
@@ -435,6 +478,10 @@ export function guideEntries(): GuideEntry[] {
     // 26-X addendum 321–323
     ...fromTable('workspace', 'toolbar', ORGANISING_TOOLBAR_UI, TOOLBAR_G),
     ...fromTable('workspace', 'addAction', ADD_ACTION_UI, ADD_ACTION_G),
+    // 26-X X2
+    ...fromTable('record', 'brief', BRIEF_UI, BRIEF_G),
+    ...fromTable('record', 'briefField', BRIEF_FIELD_WORD, BRIEF_FIELD_G),
+    ...fromTable('record', 'tone', TONE_WORD, TONE_G),
   ]
 }
 

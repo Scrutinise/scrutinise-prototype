@@ -24,7 +24,9 @@ import { RECORD_SECTIONS, bandFits, type RecordSection } from '@/lib/lex/record-
 import { draftPrice, DRAFT_CONFIRM_ABOVE_PENCE, EMPTY_INSTRUCTION } from '@/lib/lex/action-draft-pure'
 import { explainFailure } from '@/lib/api-rejection'
 import { COMMON_UI, RECORD_UI, PAGE_UI, PROGRESS_WORD } from '@/lib/lex/screen-labels'
-import { NO_DRAFT_GLYPH } from '@/lib/lex/action-progress-pure'
+import { NO_DRAFT_GLYPH, draftKindsOf } from '@/lib/lex/action-progress-pure'
+import { briefChanged } from '@/lib/lex/action-brief-pure'
+import { BRIEF_UI } from '@/lib/lex/screen-labels'
 import { LIMITS } from '@/lib/lex/input-limits'
 import BoundedInput from './BoundedInput'
 import DocumentView, { noteAskWords } from './DocumentView'
@@ -116,23 +118,25 @@ export function DocumentsSection({ ideaId, a, facts, disabled, onChanged }: {
 
   if (docsError) return <p className="text-xs" role="alert">Not read: {docsError}</p>
   if (!docs) return <p className="text-xs text-zinc-500">Reading this action’s documents…</p>
-  const live = docs.documents.filter((d) => d.status !== 'SUPERSEDED')
+  // 26-X X2 — a BRIEFED document holds only a Brief (shown in the Brief above); the Draft lists what has been drafted
+  const live = docs.documents.filter((d) => d.status !== 'SUPERSEDED' && (d.status !== 'BRIEFED' || d.current || d.proposalWaiting))
   const needed = docs.needs.kinds
-  const noDraft = docs.needs.overridden && needed.length === 0
+  // 313 — one instrument per action: the draft's kinds; everything else needed is a COMPANION of that draft, and says so
+  const draftKinds = draftKindsOf(needed)
+  const draftDoc = live.find((d) => draftKinds.includes(d.kind))
+  const companionOf = (k: DocumentKind) => (!draftKinds.includes(k) ? ` · ${BRIEF_UI.companionOf} ${draftDoc ? draftDoc.d : `the ${draftKinds.map((x) => KIND_WORD[x]).join(' and ') || 'draft'}, not drafted yet`}` : '')
   return (
     <div className="space-y-1.5 text-xs" data-record-documents>
-      {/* 26-X §5c (313) — "Needs no draft, because…": a stated state with a reason, the same store as the tree's "Needs no document". */}
-      <NoDraftBox noDraft={noDraft} why={docs.needs.why} busy={busy} disabled={disabled}
-        onSave={(reason) => post('action-documents', { op: 'setNeeds', actionId: a.id, mode: 'nothing', reason }, PAGE_UI.needsNoDraftBecause, () => `Saved: #${a.number ?? '?'} needs no draft, with your reason. It counts as done for the Deepening.`)}
-        onClear={() => post('action-documents', { op: 'setNeeds', actionId: a.id, mode: 'derived' }, PAGE_UI.needsDraftAfterAll, () => `Saved: #${a.number ?? '?'} needs a draft again; what it needs is worked out from its avenue and instrument.`)} />
       <p data-needs-line>{needsLine(needed.length, live.filter((d) => needed.includes(d.kind)).length, live.filter((d) => needed.includes(d.kind) && d.status === 'ACCEPTED').length)} · {docs.needs.why}{docs.needs.overridden ? ' (set by hand)' : ''}</p>
       <ul className="space-y-1">
         {live.map((d) => (
-          <li key={d.id} data-record-document={d.d}>
+          <li key={d.id} data-record-document={d.d} {...(draftKinds.includes(d.kind) ? { 'data-the-draft': '' } : { 'data-companion': d.kind })}>
             <button type="button" onClick={() => setOpen(open === d.id ? null : d.id)} aria-expanded={open === d.id}
               className={`w-full text-left rounded px-1.5 py-1 ${open === d.id ? 'border-2 border-zinc-900' : 'border border-zinc-200'}`}>
               <span aria-hidden>●</span> <span className="font-semibold">{d.d}</span> {d.title} — {KIND_WORD[d.kind]} · <span className="font-semibold" data-doc-status>{statusWords(d.status, d.acceptedV, d.current?.v ?? null)}</span>
               {d.current ? ` · version ${d.current.v}` : ''}{d.kind === 'DRAFT_CLAUSE' ? ` · ${docs.lawRows} law row${docs.lawRows === 1 ? '' : 's'}` : ''}{d.stale ? ' · out of date' : ''}{d.proposalWaiting ? ' · Lex’s proposal waiting' : ''}
+              {companionOf(d.kind)}
+              {draftKinds.includes(d.kind) && briefChanged(d.draftedFromBriefV, d.brief?.v ?? null, !!d.current) ? <span className="font-semibold" data-brief-changed> · ⚠ {BRIEF_UI.briefChanged}</span> : ''}
               {open === d.id && <span className="ml-1 font-semibold">open</span>}
             </button>
             {open === d.id && <div className="mt-1"><DocumentView ideaId={ideaId} documentId={d.id} readOnly={disabled} onChanged={() => void changed()} /></div>}
@@ -140,9 +144,12 @@ export function DocumentsSection({ ideaId, a, facts, disabled, onChanged }: {
         ))}
         {docs.missing.map((k) => (
           <li key={k} data-record-missing={k}>
-            <span aria-hidden>○</span> {KIND_WORD[k]} — <span className="font-semibold">{RECORD_UI.noneYet}</span>
+            <span aria-hidden>○</span> {KIND_WORD[k]} — <span className="font-semibold">{RECORD_UI.noneYet}</span>{companionOf(k)}
             {!disabled && (GENERATED_KINDS.has(k)
               ? k === 'COLLISION_REPORT' && <> · <button type="button" disabled={busy} className="underline disabled:opacity-40" onClick={() => void post('action-documents', { op: 'generate', what: 'collision', actionId: a.id }, 'Generating the collision report', (r) => `Saved: ${String(r?.d ?? 'the collision report')} generated, ${String(r?.rows ?? 0)} rows.`)}>{RECORD_UI.generateFree}</button></>
+              : draftKinds.includes(k)
+                // 26-X X2 (§5c) — the draft itself is drafted with "Draft it", the one button between the Brief and the Draft
+                ? <> · <span data-draft-it-pointer>{BRIEF_UI.draftIt} is above, under the Brief</span>{k !== 'DRAFT_CLAUSE' && <> · <button type="button" disabled={busy} className="underline disabled:opacity-40" onClick={() => setAdding(k)}>{RECORD_UI.writeIt}</button></>}</>
               : k === 'DRAFT_CLAUSE'
                 ? <> · <button type="button" disabled={busy} className="underline disabled:opacity-40" onClick={() => setWriting(true)}>{RECORD_UI.writeInstruction}</button>
                     {' · '}{asking
@@ -178,7 +185,32 @@ export function DocumentsSection({ ideaId, a, facts, disabled, onChanged }: {
   )
 }
 
-// ── 26-X §5c (313) — "Needs no draft, because…" ─────────────────────────────────────────────────────────────────
+// ── 26-X §5c (313) — "Needs no draft, because…", BESIDE "Draft it" (X2: it was at the head of the Documents list in X1) ─────────────
+/** The same store as the tree's "Needs no document" (`setNeeds` mode nothing). Reads the record's facts; refreshes them on a change. */
+export function NoDraftControl({ ideaId, a, facts, disabled, onChanged }: { ideaId: string; a: { id: string; number: number | null }; facts: ReturnType<typeof useRecordFacts>; disabled: boolean; onChanged: () => void }) {
+  const [busy, setBusy] = useState(false)
+  const [said, setSaid] = useState<string | null>(null)
+  const docs = facts.docs
+  if (!docs) return null
+  const post = async (payload: Record<string, unknown>, label: string, ok: string) => {
+    setBusy(true); setSaid(null)
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/action-documents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...payload, actionId: a.id }) })
+      const body = await res.json().catch(() => null)
+      if (!res.ok) { setSaid(`Not done: ${explainFailure(body, res.status, label)}`); return false }
+      setSaid(ok); await facts.reload(); onChanged(); return true
+    } finally { setBusy(false) }
+  }
+  return (
+    <div className="space-y-1 text-xs" data-no-draft-control>
+      <NoDraftBox noDraft={docs.needs.overridden && docs.needs.kinds.length === 0} why={docs.needs.why} busy={busy} disabled={disabled}
+        onSave={(reason) => post({ op: 'setNeeds', mode: 'nothing', reason }, PAGE_UI.needsNoDraftBecause, `Saved: #${a.number ?? '?'} needs no draft, with your reason. It counts as done for the Deepening.`)}
+        onClear={() => post({ op: 'setNeeds', mode: 'derived' }, PAGE_UI.needsDraftAfterAll, `Saved: #${a.number ?? '?'} needs a draft again; what it needs is worked out from its avenue and instrument.`)} />
+      {said && <p className="border border-zinc-300 rounded px-2 py-1" role="status">{said} <button type="button" className="underline ml-1" onClick={() => setSaid(null)}>{COMMON_UI.ok}</button></p>}
+    </div>
+  )
+}
+
 function NoDraftBox({ noDraft, why, busy, disabled, onSave, onClear }: { noDraft: boolean; why: string; busy: boolean; disabled: boolean; onSave: (reason: string) => Promise<boolean>; onClear: () => Promise<boolean> }) {
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState('')

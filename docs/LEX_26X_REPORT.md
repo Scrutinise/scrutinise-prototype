@@ -1,5 +1,67 @@
 # LEX 26-X — REPORT
 
+## X2 — built 7 Nov 2026 (CCh-Lex 5 Nov (1): "Then X2 as sized"; Charlie, 7 Nov: "continue with x2")
+
+**Before it: 325** (`65f3b6c`, live) and CBA-1's held edits committed by this session (`c2805ed`, live). **313 measured first:** of 452c5ade's
+58 live actions, **1 holds more than one instrument — #207** (an accepted code text and a drafted clause); it is also the only action
+whose Action details read as an instrument (`instrumentLike`, 5 provisions).
+
+**One decision asked, and Charlie's answer (7 Nov): a draft clause's Brief is READ IN PLACE.** 26-U keeps the drafting instruction (the
+clause's Brief) and the clause in the same version row, and the law rows, the collision report and the schedule all read those rows.
+So the clause's Brief = new Brief rows for the common fields + the existing instruction, read where it is. **No production row was
+rewritten.** The "migration" (§8 item 6) is therefore an assertion that nothing moved: the clause versions are the same rows, text and
+instruction before and after every Brief write and the clause drafter (check:lex-26x2 B), and on the real data the Brief reads each live
+clause's own current instruction (G).
+
+**Schema — no table, no column** (`prisma/lex_26x_brief.sql`, applied to Neon `ep-old-dust-aboxi69a` after `whichdb`, constraints read
+back): `action_document_version.role` gains `BRIEF` (every save a version, its own series) and `BRIEF_PROPOSAL` (Lex's Brief beside, or
+§5e's split); an answer may sit on either proposal role; `action_document.status` gains `BRIEFED` (a Brief, no draft yet — CCh call 2).
+A draft row records the Brief version it was drafted from as `payload.briefV` (a used proposal keeps the version IT was drafted from).
+
+**§5d the Brief** (`lib/lex/action-brief-pure.ts`, `action-brief.ts`, `components/lex/BriefSection.tsx`). Common fields — What this
+draft must do (counter, no limit of its own) · Modelled on ([Ref: n], a corpus section, or none) · Tone and form (statutory · code ·
+guidance · specification · plain rules) · Must include · Must not (numbered points, 60 × 6,000) — then the kind's own: code text issued
+by · laid before · applies to · revision rule; specification users · records · measures; costing basis · price year; operating text and
+background note the common fields only; a draft clause its instruction. Refusals name the field the person knows and its limit
+("“Must include, point 1” is 6,001 characters; the limit is 6,000") — the route's generic wording named `brief.mustInclude.0` on the
+first run, so the limits are worded by the Brief's own check. **"Ask Lex to write the Brief"** — a proposal beside the Brief, never
+over it (Use it · Edit it, then save · Set it aside), **measured: 1.5p** (n=4 on scratch copies: 0.83, 2.83, 1.64, 0.85p; 5–16 s),
+asked first. **The drafters read the Brief FIRST** (code text, specification, costing, operating text, background note, and the clause):
+the block opens the prompt, names its version, says what to do with each field, and every draft's reason says "Drafted from the Brief,
+version N" — or that no Brief was saved. "Modelled on" decides a code's model source.
+
+**§5c the record**, top to bottom: statement → **The Brief** → **"Draft it"** (asks first at the kind's measured price; DISABLED with
+"write the Brief first — or ask Lex to prefill it" while the Brief is empty; refused below the price) with **"Needs no draft, because…"**
+beside it → **the Draft** with its **companions**, each saying "companion of D.n.m" (313) and "⚠ Brief changed since this draft" when it
+has → Action details → Law → Who, how and against (until X3) → Costs → Order → Comments. The jump band follows. ⚠ This REVERSES X1's
+"Drafts open above the statement" (§5a); the X1 assertion is moved with the reversal written above it. The draft's own kinds are drafted
+with "Draft it" (the Drafts list points there); companions keep their own controls.
+
+**§5f the strip** — Briefed is now real: ● when every kind of the draft has a saved Brief (a clause also once it has an instruction),
+◐ when some do. A briefed-only document is not a draft: the kind stays "missing", the plan offers it, the pack does not print it.
+
+**§5e #207 — PROPOSED, nothing moved.** `scripts/propose-26x-207-split.ts` splits by the text's own structure, never by paraphrase: the
+heading and the three decisions under it → "What this draft must do"; items 1–15 → 15 "Must include" points, each with its lettered
+parts (8a–8k, 12.a–12.i); the Issues, the open point and Part Two (A–H, marked "CHECK") stay as the Action details (8,210 of 17,946
+characters). A LOSSLESS test runs before anything is written (every non-empty line kept, word for word) and is shown failing on a split
+that drops item 8. Tone, "Modelled on" and the code's own fields are left for Charlie (Part Two B1/B2/A1 hold them and stay where they
+are). "Accept the split" moves the text and writes a FieldRevision (`origin BRIEF_SPLIT`) with the old details; it is REFUSED if the
+details changed since. **The sweep** (§5e's last line): 1 of 58 live actions has instrument-like Action details — #207.
+⚠ **Found on the way (313): #207's need is derived as a DRAFT CLAUSE** (avenue + instruction), while the instrument it holds and Charlie
+calls it is the Code. The Brief section therefore shows a Brief for every instrument an action HOLDS as well as the derived one, so #207
+shows both. Which is #207's one instrument is Charlie's (his own H3: "Check the avenue of #207").
+
+**Lex** — `read_brief` (what the Brief section reads) and `propose_brief` (the prefill's own writer: always a proposal), on the buttons'
+path (26-W parity); `list_documents` carries each document's Brief version. Saving, using and setting aside are the owner's. Every new
+label is in `screen-labels.ts` (BRIEF_UI, BRIEF_FIELD_WORD, TONE_WORD) with a guide entry each (typed; a missing one is a compile error).
+
+**Checks** — `check:lex-26x2` (new): 67 ran, 67 passed, 7 controls, 0 dead, 0 not run. ⚠ Its first run passed "the clause versions
+are untouched" over **zero rows**: `scratchCopy` copies no documents. Now it writes a clause version first (26-U's own `saveVersion`),
+requires ≥1 row, and carries a control for the empty comparison; the cold read checks the real clause on 452c5ade. Regression: see
+CHANGE_LOG.
+
+**Only Charlie can confirm (§9):** #207 with its Brief above its Draft and "Draft it" between them; the proposed split; the strips.
+
 ## X1 — built 4 Nov 2026 (CCh-Lex 4 Nov (2): go on X1 with the three recommendations)
 
 **The lifecycle bar (§2, 316).** `StageBar` shows the seven stages — Creation · Development · Private Scrutiny · Public Scrutiny ·

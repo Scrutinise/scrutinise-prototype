@@ -41,6 +41,15 @@ export const LIMITS = {
   /** 26-V2d: answering an issue in the Risks view — how it was dealt with, and why it is dismissed (the triage route's own numbers since 19-E). */
   issueNote: 4000,
   issueDismissReason: 2000,
+  /** 26-X X2 (309): the Brief. "What this draft must do" is free text with a counter and no limit of its own (the document-text cap
+   *  is the server's backstop); a Must include / Must not point can hold a clause and its lettered parts (#207's item 8 carries
+   *  8a–8k under it); a per-kind field ("Issued by") is a line or two. */
+  briefMust: 200000,
+  briefPoint: 6000,
+  briefPoints: 60,
+  briefField: 1000,
+  /** a corpus section id given as "Modelled on" */
+  briefCorpusId: 200,
 } as const
 
 export type LimitKey = keyof typeof LIMITS

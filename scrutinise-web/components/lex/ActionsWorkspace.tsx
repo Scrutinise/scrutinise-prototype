@@ -32,7 +32,8 @@ import IncentiveMap from './IncentiveMap'
 import { usePackPrint, PackStatus } from './ActionsPackPrint'
 import ActionComments from './ActionComments'
 import { DraftAllButton } from './ActionDraftSection'
-import { useRecordFacts, JumpBand, DocumentsSection, LawSection } from './ActionRecordSections'
+import { useRecordFacts, JumpBand, DocumentsSection, LawSection, NoDraftControl } from './ActionRecordSections'
+import BriefSection from './BriefSection'
 import { bandStates, sectionLabel, type RecordSection } from '@/lib/lex/record-layout-pure'
 
 import { ConditionsPanel, ConditionsCoverageView, ConditionChooser, ResortTool, ConsolidateCard, type ConsolidateCardState } from './ActionsStructureTools'
@@ -55,7 +56,7 @@ import type { ActionsPage } from '@/lib/lex/stages'
 import { PAGE_UI, DRAFTING_FILTER_WORD, ORGANISING_TOOLBAR_UI, withCount } from '@/lib/lex/screen-labels'
 import { titleProposalPrice, untitledWords } from '@/lib/lex/title-proposal-pure'
 import AddActionForm from './AddActionForm'
-import { DRAFTING_STAGES, draftingLine, type Progress, type DraftingCounts, type DraftingStage } from '@/lib/lex/action-progress-pure'
+import { DRAFTING_STAGES, draftingLine, draftKindsOf, type Progress, type DraftingCounts, type DraftingStage } from '@/lib/lex/action-progress-pure'
 import ProgressStrip from './ProgressStrip'
 
 // ── talking to the route ─────────────────────────────────────────────────────────────────────────────────
@@ -1092,6 +1093,12 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect, onBa
     costs: a.noCostReason?.trim() ? 'no cost' : hasCostRange(a) || hasCostLines ? 'answered' : 'not answered',
     after: others.filter((o) => o.beforeIds.includes(a.id)).map((o) => o.number),
     comments: facts.comments,
+    // 26-X X2 — the Brief's state: the kinds of the draft that have a saved Brief (a clause's instruction counts, read in place)
+    brief: facts.docs ? (() => {
+      const kinds = draftKindsOf(needed)
+      const briefed = kinds.filter((k) => docsLive.some((d) => d.kind === k && (d.brief || (k === 'DRAFT_CLAUSE' && d.current)))).length
+      return { briefed, of: kinds.length }
+    })() : null,
   })
   // 265 (24 Oct) — every section of the record is closed when it opens; the band above names each one with its state, and each closed line
   // says the same. 26-X 308: there are no steps, so a line no longer says "this step" or "from step N" — EXCEPT the Drafts, which open at
@@ -1111,11 +1118,15 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect, onBa
     <div ref={box} className="border-t-2 border-zinc-300 px-2.5 py-2 space-y-2" data-record-order="26x">
       {/* 318 — the way back, at the top of the record: Organising at the same scroll position, with its find box and filters as they were */}
       {onBack && <p><button type="button" onClick={onBack} data-back-to-organising className="text-xs font-semibold px-2 py-0.5 rounded border-2 border-zinc-900 bg-white">{PAGE_UI.backToOrganising}</button></p>}
-      {/* §5a — the Drafts section, OPEN, at the top of the record (5c's full order, with the Brief above the Draft, is part X2) */}
-      {titled('documents', sectionLabel('documents'), <DocumentsSection ideaId={ctx.ideaId} a={a} facts={facts} disabled={disabled} onChanged={() => void ops.refresh()} />, true)}
+      {/* 26-X X2 (§5c) — top to bottom: the statement (the card's), then the Brief, "Draft it" with "Needs no draft, because…" beside it,
+          the Draft with its companions — both OPEN — then the Action details (the card's), Law, Who/how/against (until X3), Costs, Order,
+          Comments. ⚠ REVERSES X1's "Drafts open ABOVE the statement" (§5a): §5c puts the statement first and the Brief above the Draft. */}
       {renderFull(a, 1, (
         <div className="space-y-2">
           <JumpBand states={states} onJump={jump} headingSelect={headingSelect} />
+          {titled('brief', sectionLabel('brief'), <BriefSection ideaId={ctx.ideaId} a={a} disabled={disabled} onChanged={() => { void facts.reload(); void ops.refresh() }}
+            besideDraftIt={<NoDraftControl ideaId={ctx.ideaId} a={a} facts={facts} disabled={disabled} onChanged={() => void ops.refresh()} />} />, true)}
+          {titled('documents', sectionLabel('documents'), <DocumentsSection ideaId={ctx.ideaId} a={a} facts={facts} disabled={disabled} onChanged={() => void ops.refresh()} />, true)}
           {closed('policy', 1, here(otherStepLine(1, a, hasCostLines, headingName), 1), policyBlock)}
         </div>
       ))}

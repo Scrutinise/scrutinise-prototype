@@ -8,9 +8,9 @@
 // passes read its current version. Nothing here writes, and no second store exists to drift from the first.
 //
 //   Defined   the statement, a heading, and the heading's KIND (CCh-Lex 4 Nov (2), item 3)
-//   Briefed   a Brief exists, or the action "needs no draft" (with its reason). ⚠ X1: the Brief on every draft is X2 (BRIEF_26X §5d). Until it
-//             lands, the one Brief that exists is a draft clause's drafting instruction (26-U), whose versions ARE that kind's Brief — so a
-//             clause action is Briefed once it has one, and every other kind reads "no Brief yet". Said on the field guide's entry, not hidden.
+//   Briefed   every kind of the draft has a saved Brief (X2, BRIEF_26X §5d: a BRIEF version on its document), or the action "needs no draft"
+//             (with its reason). A draft clause's Brief also counts once it has a drafting instruction, because its per-kind fields ARE the
+//             instruction, read in place (Charlie, 7 Nov). ◐ when some kinds of the draft are briefed and not all.
 //   Drafted   the action's draft (its instrument) has a version
 //   Reviewed  all five review passes read the CURRENT version of the draft
 //   Accepted  the draft is accepted AT its current version (26-V1b 263: a new version moves an accepted draft back to "drafted")
@@ -40,7 +40,8 @@ export interface ProgressInput {
   headingKind: string | null
   /** The tree's `needs`: the kinds it needs, and whether that was set by hand. `kinds: []` + overridden = "needs no draft". */
   needs: { kinds: DocumentKind[]; why: string; overridden: boolean }
-  documents: Array<{ kind: DocumentKind; status: DocumentStatus; acceptedV: number | null; current: { v: number } | null; reviewed: number }>
+  /** `brief`: the latest saved Brief on that document (26-X X2); absent on a fixture written before X2 reads as none. */
+  documents: Array<{ kind: DocumentKind; status: DocumentStatus; acceptedV: number | null; current: { v: number } | null; reviewed: number; brief?: { v: number } | null }>
 }
 
 export interface Progress {
@@ -83,9 +84,9 @@ export function progressOf(a: ProgressInput, passes: number): Progress {
   const reviewed = mark(all(drafts, (d) => !!d?.current && d.reviewed >= passes), some(present, (d) => d.reviewed > 0))
   // accepted at the current version; an earlier acceptance since changed is "in progress", said as such on the guide
   const accepted = mark(drafts.length > 0 && all(drafts, (d) => d?.status === 'ACCEPTED'), some(present, (d) => d.status === 'ACCEPTED' || d.acceptedV != null))
-  // X1: only a draft clause's instruction is a Brief (see the header). A clause document with a version holds one.
-  const clauseBrief = live.some((d) => d.kind === 'DRAFT_CLAUSE' && !!d.current)
-  const briefed: Mark = noDraft || clauseBrief ? 'done' : 'none'
+  // X2: a kind is briefed when its document holds a saved Brief; a clause also once it has an instruction (its versions, read in place)
+  const briefedKind = (d: (typeof drafts)[number]) => !!d && (!!d.brief || (d.kind === 'DRAFT_CLAUSE' && !!d.current))
+  const briefed: Mark = noDraft ? 'done' : mark(drafts.length > 0 && all(drafts, briefedKind), some(drafts, briefedKind))
   const marks: Record<ProgressKey, Mark> = noDraft
     ? { defined, briefed: 'done', drafted: 'none', reviewed: 'none', accepted: 'none' }
     : { defined, briefed, drafted, reviewed, accepted }

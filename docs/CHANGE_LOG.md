@@ -1,5 +1,44 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-07 17:49 UTC - LEX 26-X X2 (decisions 309, 313, 310): the Brief on every draft, "Draft it" between the Brief and the Draft, companions, #207's split as a proposal, the clause's Brief read in place, Briefed on the strip
+
+**Brief:** `docs/BRIEF_26X.md` §5c–e, §8 item 6, §5f; CCh-Lex 5 Nov (1) ("Then X2 as sized"); Charlie, 7 Nov: "continue with x2", and the clause's Brief "Read in place".
+Full write-up: `docs/LEX_26X_REPORT.md` § X2.
+
+**Schema (with the code that reads it), no table, no column:** `prisma/lex_26x_brief.sql`. It was applied to Neon `ep-old-dust-aboxi69a` after `whichdb`, before this commit, and the constraints were read back. It widens three CHECK constraints:
+- `action_document_version.role` gains `BRIEF` and `BRIEF_PROPOSAL`;
+- an answer may sit on either proposal role;
+- `action_document.status` gains `BRIEFED`.
+
+No existing row was rewritten. A draft records its Brief version as `payload.briefV`.
+
+- **The Brief** has the common fields (must do · modelled on · tone and form · must include · must not) plus each kind's own fields. Every save is a version.
+  - The draft clause's Brief is its existing drafting instruction, read where it is, so the clause rows are untouched.
+  - Refusals name the field and its limit in words.
+  - **"Ask Lex to write the Brief"** always lands as a proposal beside the Brief, never over it. **Measured at 1.5p** (n=4: 0.83, 2.83, 1.64, 0.85p).
+- **The record, top to bottom:** statement → the Brief → "Draft it", with "Needs no draft, because…" beside it → the Draft and its companions ("companion of D.n.m"; "⚠ Brief changed since this draft") → Action details → Law → … → Comments.
+  - "Draft it" is disabled while the Brief is empty, with "write the Brief first — or ask Lex to prefill it".
+  - This reverses X1's "Drafts above the statement". The moved assertions say so.
+- **The drafters read the Brief first.** The block opens the prompt, and every draft's reason names the Brief version it used, or says none was saved. "Modelled on" decides a code's model source.
+- **The strip:** Briefed is real now. ● = every draft kind is briefed, ◐ = some are. A briefed-only document is not a draft: it is not counted, still offered as missing, and not printed.
+- **Lex:** new `read_brief` and `propose_brief` tools, on the buttons' path. `list_documents` now carries each document's Brief versions.
+- **#207 (313): PROPOSED, not yet written.** `scripts/propose-26x-207-split.ts` is a dry run by default.
+  - The split: the heading and its decisions become "must do"; items 1–15 become 15 "Must include" points; 8,210 of 17,946 characters stay as the Action details.
+  - It is lossless, tested before writing, and the test is shown failing on a split that drops item 8.
+  - Accepting it writes a FieldRevision (`BRIEF_SPLIT`). It is refused if the details have changed since.
+  - The sweep found 1 of 58 live actions with instrument-like details: #207.
+  - ⚠ #207's need is derived as a draft clause, but the instrument it holds is the Code. The Brief section shows both. Which one it needs is Charlie's call.
+
+**Checks:**
+- `check:lex-26x2` (new): 67 ran, 67 passed, 7 controls, 0 dead, 0 not run.
+  - ⚠ Its first run passed "clause versions untouched" over zero rows, because scratch copies carry no documents. It now writes a clause version first, requires ≥1 row, and has a control for the empty case.
+- Regression, the whole suite:
+  - 26x 110 (1 not run, historic banners) · 26w-b 60 · 26w 66 (H live, not run) · 26v 66 · 26v1b 81 · 26v2b 47 · 26v2c 44 · 26v2d 62 · 26u 67 · 26t1 98 (4 not run) · 26t2 72 (4 not run) · 26s2 214/1 · 26s2-structure 107;
+  - prompt-examples green · client-boundary green · llm-guards 9 · costing-params 11 · tsc (web, scripts) clean.
+- ⚠ The one red is 26s2's ledger row 9900 (24 Oct, an idea since deleted). It is the same as at X1 and not touched.
+- Moved assertions each carry a "MOVED BY 26-X X2" note: 26x part D, and 26v1b's record order and open-sections rule (the Brief now opens OPEN).
+- ⚠ 26v1b's "the band at 360 px puts the rest under ≡ More" failed once in three runs. It waits a fixed 200 ms and is timing-flaky. Not changed.
+
 ## 2026-11-07 02:51 UTC - LEX 325: costing-params re-anchored to HMT's October 2026 discounting guidance; the per-year STPR schedule; the health rate superseded
 
 **Brief:** CCh-Lex 5 Nov (1). It was built on top of CBA-1's edits to the same file. Charlie (7 Nov): the CBA-1 session was gone after a reboot, so those edits were committed by this session in `c2805ed` (every hunk CBA-1's; CHANGE_LOG 4 Nov 03:13 and 10:36).

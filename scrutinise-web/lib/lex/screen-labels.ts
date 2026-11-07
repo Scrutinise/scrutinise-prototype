@@ -345,6 +345,56 @@ export const ADD_ACTION_UI = {
   save: 'Add the action',
 } as const
 
+/** 26-X X2 (309) — the Brief on every draft: its section, its controls, and "Draft it" between the Brief and the Draft (§5c). */
+export const BRIEF_UI = {
+  section: 'The Brief',
+  sectionDraft: 'The Draft',
+  editBrief: 'Write the Brief',
+  editBriefAgain: 'Edit the Brief',
+  saveBrief: 'Save the Brief',
+  askLexForBrief: 'Ask Lex to write the Brief',
+  lexProposesBrief: 'Lex’s proposed Brief',
+  useBrief: 'Use it',
+  editThenSave: 'Edit it, then save',
+  setAside: 'Set it aside',
+  addPoint: 'Add a point',
+  removePoint: 'Take this point out',
+  draftIt: 'Draft it',
+  briefEmpty: 'write the Brief first — or ask Lex to prefill it',
+  briefChanged: 'Brief changed since this draft',
+  draftedFrom: 'drafted from Brief version N',
+  noBriefYet: 'no Brief yet',
+  instructionIsBrief: 'Its drafting instruction',
+  editInstruction: 'Edit the drafting instruction',
+  companionOf: 'companion of',
+  acceptSplit: 'Accept the split',
+} as const
+/** 309 §5d — the Brief's fields: the common ones on every kind, then each kind's own. */
+export const BRIEF_FIELD_WORD = {
+  must: 'What this draft must do',
+  modelledOn: 'Modelled on',
+  tone: 'Tone and form',
+  mustInclude: 'Must include',
+  mustNot: 'Must not',
+  issuedBy: 'Issued by',
+  laidBefore: 'Laid before',
+  appliesTo: 'Applies to',
+  revisionRule: 'Revision rule',
+  users: 'Users',
+  records: 'Records',
+  measures: 'Measures',
+  basis: 'Basis',
+  priceYear: 'Price year',
+} as const
+/** 309 §5d — "Tone and form", the short list. */
+export const TONE_WORD = {
+  statutory: 'statutory',
+  code: 'code',
+  guidance: 'guidance',
+  specification: 'specification',
+  'plain-rules': 'plain rules',
+} as const
+
 /** A template label with "N" in it, shown with the count in place of the N. */
 export const withCount = (l: string, n: number): string => l.replace(/\bN\b/, String(n))
 

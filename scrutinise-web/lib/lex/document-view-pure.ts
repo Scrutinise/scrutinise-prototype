@@ -11,7 +11,7 @@
 import type { DraftInstruction, DraftProvision } from './action-draft-pure'
 import type { DocumentStatus } from './action-documents-pure'
 
-const STATUS_PLAIN: Record<DocumentStatus, string> = { DRAFTED: 'drafted, not accepted', ACCEPTED: 'accepted', SUPERSEDED: 'superseded' }
+const STATUS_PLAIN: Record<DocumentStatus, string> = { BRIEFED: 'briefed, not drafted yet', DRAFTED: 'drafted, not accepted', ACCEPTED: 'accepted', SUPERSEDED: 'superseded' }
 
 /** A document's status in words, everywhere it is shown (the tree, the record, the strip). */
 export function statusWords(status: DocumentStatus, acceptedV: number | null, currentV: number | null): string {
