@@ -64,7 +64,7 @@
     "stpr_discount_rate": { "value": 0.035, "unit": "real, per year, first 30 years", "source": "HM Treasury Green Book", "status": "VERIFIED; under formal HMT review announced 2026 — re-check on review conclusion" },
     "eandcb_rpc_scrutiny_threshold": { "value": 5000000, "unit": "GBP per year, +/-", "source": "Better Regulation Framework", "status": "VERIFIED; measures above ±£5m EANDCB require independent RPC scrutiny" },
     "health_discount_rate": { "value": 0.015, "unit": "real, per year (risk-to-life/health values)", "source": "Green Book", "status": "TRAINING-RECALL — VERIFY in Phase 2b before use" },
-    "optimism_bias_uplifts": { "value": "standard buildings 24% / non-standard buildings 51% / standard civil 44% / non-standard civil 66% / equipment & development 200% (upper-bound capex)", "source": "Green Book supplementary guidance on optimism bias", "status": "TRAINING-RECALL — VERIFY in Phase 2b before use; apply to implementationCost" }
+    "optimism_bias_capex_upper": { "value": "standard buildings 24% / non-standard buildings 51% / standard civil 44% / non-standard civil 66% / equipment & development 200%", "column": "Table 1 › Optimism Bias (%) › Capital Expenditure › Upper (third of four columns; the first two are Works Duration Upper/Lower)", "source": "HMT Supplementary Green Book Guidance — Optimism Bias (2013), Table 1, PDF p.2", "status": "VERIFIED 2026-07-04 (costing-params.ts); headings re-read from the page 2026-11-04. Renamed from optimism_bias_uplifts 2026-11-04. Apply to implementationCost" }
   },
 
   "_pending": [

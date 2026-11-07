@@ -1,7 +1,15 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // M5 — PSSRU/CoReC "Unit Costs of Health and Social Care 2025" → HEALTH service
-// unit costs (2024/25 prices). Openly published NIHR-funded manual (Kent
-// Academic Repository); individual values extracted with full per-row citation.
+// unit costs (2024/25 prices), from the Kent Academic Repository; individual values
+// extracted with full per-row citation.
+//
+// ⚠ LICENCE: all-rights-reserved-presumed (decision, 4 Nov 2026). The KAR record
+// (kar.kent.ac.uk/115569, re-read 4 Nov) states no licence, no Creative Commons
+// designation and no copyright notice; its only line is "freely available online",
+// which is ACCESS, not reuse. Absent a statement the default is all rights reserved.
+// So these rows are treated like BAILII: cite the source, quote the specific line with
+// a link to the publisher, do NOT republish the figure. Never describe them as "openly
+// published". Relax only if PSSRU confirm terms in writing.
 //
 // The manual is a PDF, so extraction is VERIFY-THEN-INSERT: every expected value
 // is asserted present in the PDF text at its labelled location (anchored regex)
@@ -15,6 +23,7 @@
 import { join } from 'path'
 import { PDFParse } from 'pdf-parse'
 import { neonPrisma, download, CACHE_DIR, APPLY } from './util'
+import { PSSRU_LICENCE_NOTE } from './pssru-licence'
 
 const SOURCE_URL =
   'https://kar.kent.ac.uk/115569/1/The%20unit%20costs%20of%20health%20and%20social%20care%202025_Final%20%281st%20June%202026%29.pdf'
@@ -88,7 +97,7 @@ async function main() {
       const data = {
         domain: 'health', metric: r.metric, unit: r.unit, low: r.low, high: r.high,
         source: SOURCE, sourceUrl: PUB_URL, year: 2026, method: r.method,
-        notes: 'Openly published NIHR-funded manual; value cited with edition + table.',
+        notes: PSSRU_LICENCE_NOTE,
         priceYear: 2024, category: 'SERVICE_UNIT_COST' as never, region: 'England',
         uprateMethod: 'GDP_DEFLATOR' as never, confidence: 'OFFICIAL_CURRENT' as never,
       }

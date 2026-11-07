@@ -1,0 +1,757 @@
+[
+  {
+    "path": "government/publications/the-green-book-appraisal-and-evaluation-in-central-government",
+    "status": 200,
+    "title": null,
+    "documentType": "redirect",
+    "updated": "2026-10-06T11:39:59+01:00",
+    "first": "2026-10-06T11:39:59+01:00",
+    "withdrawn": false,
+    "attachments": [],
+    "collectionDocs": []
+  },
+  {
+    "path": "government/collections/the-green-book-and-accompanying-guidance-and-documents",
+    "status": 200,
+    "title": null,
+    "documentType": "redirect",
+    "updated": "2026-10-06T17:07:52+01:00",
+    "first": "2026-10-06T17:07:52+01:00",
+    "withdrawn": false,
+    "attachments": [],
+    "collectionDocs": []
+  },
+  {
+    "path": "government/publications/green-book-supplementary-guidance-optimism-bias",
+    "status": 200,
+    "title": "Green Book supplementary guidance: optimism bias",
+    "documentType": "guidance",
+    "updated": "2013-04-21T01:00:00+01:00",
+    "first": "2013-04-21T01:00:00+01:00",
+    "withdrawn": false,
+    "attachments": [
+      {
+        "title": "Optimism bias",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/5a74dae740f0b65f61322c72/Optimism_bias.pdf",
+        "pages": 15
+      }
+    ],
+    "collectionDocs": []
+  },
+  {
+    "path": "government/publications/green-book-supplementary-guidance-discounting",
+    "status": 200,
+    "title": "Green Book supplementary guidance: discounting",
+    "documentType": "guidance",
+    "updated": "2026-10-28T13:30:57+00:00",
+    "first": "2013-04-21T01:00:00+01:00",
+    "withdrawn": false,
+    "attachments": [
+      {
+        "title": "Green Book supplementary guidance: discounting ",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/6ae0b34016428df537606216/Green_Book_supplementary_guidance_-_discounting.pdf",
+        "pages": 16
+      },
+      {
+        "title": "Social discount rates for Cost-Benefit Analysis: A Report for HM Treasury",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/6983375013622473b51ca9ca/Social_Discount_Rates_for_Cost-Benefit_Analysis_A_Report_for_HM_Treasury.pdf",
+        "pages": 20
+      },
+      {
+        "title": "Environmental Discount Rate Review: Conclusion  ",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/698337675a7e802e96d343d6/Environmental_discount_rate_review_conclusion.pdf",
+        "pages": 6
+      }
+    ],
+    "collectionDocs": []
+  },
+  {
+    "path": "government/publications/managing-public-money",
+    "status": 200,
+    "title": "Managing public money",
+    "documentType": "guidance",
+    "updated": "2026-08-13T15:53:06+01:00",
+    "first": "2012-05-14T00:00:00+01:00",
+    "withdrawn": false,
+    "attachments": [
+      {
+        "title": "Managing Public Money ",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/69e0b17861d2e8e9b9e42e13/Managing_Public_Money_-_April_2026.pdf",
+        "pages": 298
+      },
+      {
+        "title": "Template for special severance cases",
+        "type": "application/msword",
+        "url": "https://assets.publishing.service.gov.uk/media/5a7f116ce5274a2e87db398a/severance_template__3_.doc",
+        "pages": null
+      },
+      {
+        "title": "Delegated Authority Guidance: Expenditure categories subject  to specific controls",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/69e0b1be20b52e41448688cc/Delegated_Authority_Guidance_-_expenditure_categories_subject_to_specific_controls_-_April_2026.pdf",
+        "pages": 20
+      },
+      {
+        "title": "Delegated Authority Guidance: Expenditure categories subject to specific controls",
+        "url": "/government/publications/managing-public-money/delegated-authority-guidance-expenditure-categories-subject-to-specific-controls",
+        "pages": null
+      },
+      {
+        "title": "Template Delegated Authority Letter – Departments",
+        "type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "url": "https://assets.publishing.service.gov.uk/media/6a79d84b29aec7cd59ccc0ac/Template_Delegated_Authority_Letter_-_Departments.docx",
+        "pages": null
+      },
+      {
+        "title": "Template Delegated Authority Letter – Arms Length Bodies",
+        "type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "url": "https://assets.publishing.service.gov.uk/media/6a79d85b9fad0e27bebabe9b/Template_Delegated_Authority_Letter_-_Arms_Length_Bodies.docx",
+        "pages": null
+      }
+    ],
+    "collectionDocs": []
+  },
+  {
+    "path": "government/publications/the-magenta-book",
+    "status": 200,
+    "title": "The Magenta Book",
+    "documentType": "guidance",
+    "updated": "2026-05-15T11:08:50+01:00",
+    "first": "2011-04-27T00:00:00+01:00",
+    "withdrawn": false,
+    "attachments": [
+      {
+        "title": "Magenta Book: Central Government guidance on evaluation (PDF)",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/6a3157a0141f0690ad5fa438/CCS0126982978-001_PN10541411_Magenta_Book_Update_V2_Accessible_2__1_.pdf",
+        "pages": 160
+      },
+      {
+        "title": "Magenta Book: Central Government guidance on evaluation (HTML)",
+        "url": "/government/publications/the-magenta-book/magenta-book-central-government-guidance-on-evaluation-html",
+        "pages": null
+      },
+      {
+        "title": "Magenta Book Annex A analytical methods for use within an evaluation (PDF)",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/6a049bf75f39105e0848a21e/CCS0126982978-004_PN10640792_Magenta_Book_Annex_A_WEB_ACCESSIBLE__4_.pdf",
+        "pages": 60
+      },
+      {
+        "title": "Magenta Book Annex A analytical methods for use within an evaluation (HTML)",
+        "url": "/government/publications/the-magenta-book/magenta-book-annex-a-analytical-methods-for-use-within-an-evaluation-html",
+        "pages": null
+      },
+      {
+        "title": "Government analytical evaluation capabilities framework (PDF)",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/5e96c443e90e071a13b0892e/Magenta_Book_supplementary_guide._Government_Analytical_Evaluation_Capabilities_Framework.pdf",
+        "pages": 28
+      },
+      {
+        "title": "Government analytical evaluation capabilities framework (HTML)",
+        "url": "/government/publications/the-magenta-book/government-analytical-evaluation-capabilities-framework-html",
+        "pages": null
+      },
+      {
+        "title": "Government analytical evaluation capabilities framework – accessible version (PDF)",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/5e96c459e90e071a145ec512/Magenta_Book_supplementary_guide._Government_Analytical_Evaluation_Capabilities_Framework._Accessible_version.pdf",
+        "pages": 9
+      },
+      {
+        "title": "Government analytical evaluation capabilities framework – accessible version (HTML)",
+        "url": "/government/publications/the-magenta-book/government-analytical-evaluation-capabilities-framework-accessible-version-html",
+        "pages": null
+      },
+      {
+        "title": "Government analytical evaluation capabilities framework interactive tool",
+        "type": "application/vnd.ms-excel.sheet.macroEnabled.12",
+        "url": "https://assets.publishing.service.gov.uk/media/5e8364f3e90e0706ed8a2bad/Magenta_Book_supplementary_guide._Government_Analytical_Evaluation_Capabilities_Framework_Interactive_Tool.xlsm",
+        "pages": null
+      },
+      {
+        "title": "Supplementary Guide: Guidance for conducting regulatory post implementation review (PDF)",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/5e96cefad3bf7f4120cb18ac/Magenta_Book_supplementary_guide._Guidance_for_Conducting_Regulatory_Post_Implementation_Reviews.pdf",
+        "pages": 45
+      },
+      {
+        "title": "Supplementary Guide: Guidance for conducting regulatory post implementation review (HTML)",
+        "url": "/government/publications/the-magenta-book/supplementary-guide-guidance-for-conducting-regulatory-post-implementation-review-html",
+        "pages": null
+      },
+      {
+        "title": "Supplementary Guide: Handling complexity in policy evaluation (PDF)",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/5e96c98ed3bf7f412d7f7bb0/Magenta_Book_supplementary_guide._Handling_Complexity_in_policy_evaluation.pdf",
+        "pages": 67
+      },
+      {
+        "title": "Supplementary Guide: Handling complexity in policy evaluation (HTML)",
+        "url": "/government/publications/the-magenta-book/supplementary-guide-handling-complexity-in-policy-evaluation-html",
+        "pages": null
+      },
+      {
+        "title": "Quality in qualitative evaluation (QQE) (PDF)",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/5a7ade3040f0b66eab99d32e/Magenta_Book_quality_in_qualitative_evaluation__QQE_.pdf",
+        "pages": 28
+      },
+      {
+        "title": "Quality in qualitative evaluation (QQE) (HTML)",
+        "url": "/government/publications/the-magenta-book/quality-in-qualitative-evaluation-qqe-html",
+        "pages": null
+      },
+      {
+        "title": "Quality in policy impact evaluation (QPIE) (PDF)",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/5a7b477ded915d3ed906358a/Magenta_Book_quality_in_policy_impact_evaluation__QPIE_.pdf",
+        "pages": 32
+      },
+      {
+        "title": "Quality in policy impact evaluation (QPIE) (HTML)",
+        "url": "/government/publications/the-magenta-book/quality-in-policy-impact-evaluation-qpie-html",
+        "pages": null
+      },
+      {
+        "title": "Supplementary Guide: Realist evaluation (PDF)",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/5e96c869d3bf7f41224bf3c3/Magenta_Book_supplementary_guide._Realist_Evaluation.pdf",
+        "pages": 15
+      },
+      {
+        "title": "Supplementary Guide: Realist evaluation (HTML)",
+        "url": "/government/publications/the-magenta-book/supplementary-guide-realist-evaluation-html",
+        "pages": null
+      },
+      {
+        "title": "Guidance on the Impact Evaluation of AI Interventions (PDF)",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/672c84ebbd79990dfa67cab4/2024-11-05_Guidance_on_the_impact_evaluation_of_AI_interventions_FINAL_PDF_WITH_ACCESSIBILITY_CHANGES.pdf",
+        "pages": 54
+      },
+      {
+        "title": "Guidance on the Impact Evaluation of AI Interventions (HTML)",
+        "url": "/government/publications/the-magenta-book/guidance-on-the-impact-evaluation-of-ai-interventions-html",
+        "pages": null
+      },
+      {
+        "title": "Transparency in Government Evaluation Research (T I G E R) (PDF)",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/6a049c2222977ebc82cb3f1b/CCS0126982978-003_PN10640791__Magenta_Book_Transparency_Annex_Accessible__1_.pdf",
+        "pages": 45
+      },
+      {
+        "title": "Transparency in Government Evaluation Research (T I G E R) (HTML)",
+        "url": "/government/publications/the-magenta-book/transparency-in-government-evaluation-research-t-i-g-e-r-html",
+        "pages": null
+      },
+      {
+        "title": "Test and Learn (PDF)",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/6a1d3d73b95db968c8f3bc93/CCS0126982978-002_PN10640751_Magenta_Book_Test_and_Learn_Annex_Accessible__1___1_.pdf",
+        "pages": 58
+      },
+      {
+        "title": "Test and Learn (HTML)",
+        "url": "/government/publications/the-magenta-book/test-and-learn-html",
+        "pages": null
+      }
+    ],
+    "collectionDocs": []
+  },
+  {
+    "path": "government/publications/better-regulation-framework",
+    "status": 200,
+    "title": "Better Regulation Framework",
+    "documentType": "guidance",
+    "updated": "2025-09-05T14:36:45+01:00",
+    "first": "2018-02-22T00:00:00+00:00",
+    "withdrawn": false,
+    "attachments": [
+      {
+        "title": "Better Regulation Framework guidance",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/67587ba55a2e4d4b993bfa83/better-regulation-framework-guidance-2023.pdf",
+        "pages": 64
+      },
+      {
+        "title": "Measures that require scrutiny by the Regulatory Policy Committee",
+        "url": "/government/publications/better-regulation-framework/measures-that-require-scrutiny-by-the-regulatory-policy-committee",
+        "pages": null
+      },
+      {
+        "title": "Sending an options assessment to the Regulatory Policy Committee for scrutiny",
+        "url": "/government/publications/better-regulation-framework/sending-an-options-assessment-to-the-regulatory-policy-committee-for-scrutiny",
+        "pages": null
+      },
+      {
+        "title": "Types of assessment which may be required under the Better Regulation Framework",
+        "url": "/government/publications/better-regulation-framework/types-of-assessment-which-may-be-required-under-the-better-regulation-framework",
+        "pages": null
+      }
+    ],
+    "collectionDocs": []
+  },
+  {
+    "path": "government/publications/impact-assessment-calculator--3",
+    "status": 200,
+    "title": null,
+    "documentType": "redirect",
+    "updated": "2026-05-21T09:36:06+01:00",
+    "first": "2026-05-21T09:36:06+01:00",
+    "withdrawn": false,
+    "attachments": [],
+    "collectionDocs": []
+  },
+  {
+    "path": "government/publications/impact-assessment-template-for-government-policies",
+    "status": 200,
+    "title": "Impact assessment and options assessment templates",
+    "documentType": "form",
+    "updated": "2025-07-10T09:34:46+01:00",
+    "first": "2011-08-03T00:00:00+01:00",
+    "withdrawn": false,
+    "attachments": [
+      {
+        "title": "Regulatory impact assessment template (2023 reforms)",
+        "type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "url": "https://assets.publishing.service.gov.uk/media/686e6ff5fe1a249e937cbebc/impact-assessment-template-2023-reforms.docx",
+        "pages": null
+      },
+      {
+        "title": "Options assessment template (2023 reforms)",
+        "type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "url": "https://assets.publishing.service.gov.uk/media/6810a2f3ddb2b0afb5e041d0/options_assessment_template_2023_reforms.docx",
+        "pages": null
+      }
+    ],
+    "collectionDocs": []
+  },
+  {
+    "path": "government/publications/the-aqua-book",
+    "status": 404
+  },
+  {
+    "path": "guidance/the-aqua-book",
+    "status": 200,
+    "title": "The AQuA Book",
+    "documentType": "detailed_guide",
+    "updated": "2025-07-30T00:00:00+01:00",
+    "first": "2025-07-30T00:00:00+01:00",
+    "withdrawn": false,
+    "attachments": [],
+    "collectionDocs": []
+  },
+  {
+    "path": "government/publications/orange-book",
+    "status": 200,
+    "title": "Orange Book",
+    "documentType": "guidance",
+    "updated": "2026-07-29T17:07:45+01:00",
+    "first": "2013-05-29T00:00:00+01:00",
+    "withdrawn": false,
+    "attachments": [
+      {
+        "title": "The Orange Book Management of Risk – Principles and Concepts",
+        "url": "/government/publications/orange-book/the-orange-book-management-of-risk-principles-and-concepts",
+        "pages": null
+      },
+      {
+        "title": "Orange Book: Management of risk - Principles and Concepts (PDF 462KB)",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/6453acadc33b460012f5e6b8/HMT_Orange_Book_May_2023.pdf",
+        "pages": 64
+      },
+      {
+        "title": "Quick Guide Central Government’s Assurance Directory",
+        "url": "/government/publications/orange-book/quick-guide-central-governments-assurance-directory",
+        "pages": null
+      },
+      {
+        "title": "Quick Guide Central Government's Assurance Directory PDF",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/686cc0e2fe1a249e937cbdbc/CGAD_Quick_Guide_to_the_Directory_-_April_25.pdf",
+        "pages": 12
+      },
+      {
+        "title": "Central Government’s Assurance Directory Spring 2026",
+        "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "url": "https://assets.publishing.service.gov.uk/media/6a204553dbcb60fc6ccb29ed/Central_Government_s_Assurance_Directory_-_Spring_26.xlsx",
+        "pages": null
+      }
+    ],
+    "collectionDocs": []
+  },
+  {
+    "path": "government/collections/gdp-deflators-at-market-prices-and-money-gdp",
+    "status": 200,
+    "title": "GDP deflators at market prices, and money GDP",
+    "documentType": "document_collection",
+    "updated": "2026-10-29T12:28:13+00:00",
+    "first": "2014-03-24T00:00:00+00:00",
+    "withdrawn": false,
+    "attachments": [],
+    "collectionDocs": [
+      "/government/publications/gross-domestic-product-gdp-deflators-user-guide",
+      "/government/publications/how-to-use-the-gdp-deflator-series-practical-examples",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-october-2026-budget",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-september-2026-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-june-2026-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2026-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2026-spring-statement",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-december-2025-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-november-2025-budget-2025",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-september-2025-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-june-2025-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2025-spring-statement-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-december-2024-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-october-2024-autumn-budget-2024",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-september-2024-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-june-2024-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2024-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2024-budget-2024",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-december-2023-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-november-2023-autumn-statement",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-september-2023-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-june-2023-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2023-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2023-spring-budget",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-december-2022-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-november-2022-autumn-statement",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-september-2022-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-june-2022-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2022-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2022-spring-statement",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-december-2021-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-october-2021-budget-and-spending-review",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-september-2021-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-june-2021-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2021-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2021-budget",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-december-2020-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-november-2020-spending-review",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-september-2020-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-june-2020-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2020-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2020-budget",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-december-2019-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-september-2019-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-june-2019-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2019-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2019-spring-statement",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-december-2018-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-october-2018-budget-2018",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-september-2018-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-june-2018-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2018-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2018-spring-statement",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-december-2017-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-november-2017-autumn-budget-2017",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-september-2017-quarterly-national-accounts-september-2017",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-june-2017-quarterly-national-accounts-june-2017",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2017-quarterly-national-accounts-march-2017",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2017-spring-budget-2017",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-december-2016-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-november-2016-the-autumn-statement",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-september-2016-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-june-2016-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2016-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2016",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-december-2015-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-november-2015-the-autumn-statement",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-october-2015-the-blue-book",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-july-2015-summer-budget-2015",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-june-2015-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2015-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2015-budget-2015",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-september-2015-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-december-2014-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-december-2014-autumn-statement",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-september-2014-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-june-2014-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2014-quarterly-national-accounts",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2014-budget",
+      "/government/statistics/gdp-deflators-at-market-prices-and-money-gdp-march-2013"
+    ]
+  },
+  {
+    "path": "government/statistics/civil-service-statistics-2025",
+    "status": 200,
+    "title": "Civil Service statistics: 2025",
+    "documentType": "national_statistics",
+    "updated": "2025-10-29T09:30:02+00:00",
+    "first": "2025-07-30T00:00:00+01:00",
+    "withdrawn": false,
+    "attachments": [
+      {
+        "title": "Statistical bulletin - Civil Service Statistics: 2025",
+        "url": "/government/statistics/civil-service-statistics-2025/statistical-bulletin-civil-service-statistics-2025",
+        "pages": null
+      },
+      {
+        "title": "Statistical tables - Civil Service Statistics: 2025",
+        "type": "application/vnd.oasis.opendocument.spreadsheet",
+        "url": "https://assets.publishing.service.gov.uk/media/696f6cdc7e827090d02d4219/Statistical_tables_-_Civil_Service_Statistics_2025.ods",
+        "pages": null
+      },
+      {
+        "title": "Table C - Gender Pay Gap Statistics 2025",
+        "type": "application/vnd.oasis.opendocument.spreadsheet",
+        "url": "https://assets.publishing.service.gov.uk/media/6a61fc199a419980593b2ac5/Table_C_-_Gender_Pay_Gap_Statistics_2025.ods",
+        "pages": null
+      },
+      {
+        "title": "Civil Service statistics data browser",
+        "url": "https://civil-service-statistics.jdac.service.cabinetoffice.gov.uk/",
+        "pages": null
+      },
+      {
+        "title": "Statistical bulletin - Civil Service Disability Pay Gap Statistics: 2025",
+        "url": "/government/statistics/civil-service-statistics-2025/statistical-bulletin-civil-service-disability-pay-gap-statistics-2025",
+        "pages": null
+      },
+      {
+        "title": "Table F - Disability Pay Gap Statistics 2025",
+        "type": "application/vnd.oasis.opendocument.spreadsheet",
+        "url": "https://assets.publishing.service.gov.uk/media/6a61fc4de2d191f0bc8b6da0/Table_F_-_Disability_Pay_Gap_Statistics_2025.ods",
+        "pages": null
+      },
+      {
+        "title": "Statistical bulletin - Civil Service Ethnicity Pay Gap Statistics: 2025",
+        "url": "/government/statistics/civil-service-statistics-2025/statistical-bulletin-civil-service-ethnicity-pay-gap-statistics-2025",
+        "pages": null
+      },
+      {
+        "title": "Table G - Ethnicity Pay Gap Statistics 2025",
+        "type": "application/vnd.oasis.opendocument.spreadsheet",
+        "url": "https://assets.publishing.service.gov.uk/media/6a61fc8991d54bc7d5127e9b/Table_G_-_Ethnicity_Pay_Gap_Statistics_2025.ods",
+        "pages": null
+      },
+      {
+        "title": "Ethicity Pay Gap Dashboard 2025",
+        "url": "https://shiny-public.grid.civilservice.gov.uk/app/epg-govuk-dashboard",
+        "pages": null
+      },
+      {
+        "title": "Quality and Methodology Information for Civil Service Statistics 2025",
+        "url": "/government/statistics/civil-service-statistics-2025/quality-and-methodology-information-for-civil-service-statistics-2025",
+        "pages": null
+      },
+      {
+        "title": "Civil Service Statistics: development plan 2025",
+        "url": "/government/statistics/civil-service-statistics-2025/civil-service-statistics-development-plan-2025",
+        "pages": null
+      },
+      {
+        "title": "Technical note for disability and ethnicity pay gap reporting ",
+        "url": "/government/statistics/civil-service-statistics-2025/technical-note-for-disability-and-ethnicity-pay-gap-reporting",
+        "pages": null
+      },
+      {
+        "title": "Civil Service Statistics 2025 pre-release access list",
+        "url": "/government/statistics/civil-service-statistics-2025/civil-service-statistics-2025-pre-release-access-list",
+        "pages": null
+      },
+      {
+        "title": "Civil Service Disability and Ethnicity pay gap statistics pre-release access list",
+        "url": "/government/statistics/civil-service-statistics-2025/civil-service-disability-and-ethnicity-pay-gap-statistics-pre-release-access-list",
+        "pages": null
+      }
+    ],
+    "collectionDocs": []
+  },
+  {
+    "path": "government/collections/civil-service-statistics",
+    "status": 200,
+    "title": "Civil Service statistics",
+    "documentType": "document_collection",
+    "updated": "2026-07-29T09:30:02+01:00",
+    "first": "2018-09-06T00:00:00+01:00",
+    "withdrawn": false,
+    "attachments": [],
+    "collectionDocs": [
+      "/government/statistics/civil-service-statistics-2026",
+      "/government/statistics/civil-service-statistics-2025",
+      "/government/statistics/civil-service-statistics-2024",
+      "/government/statistics/civil-service-statistics-2023",
+      "/government/statistics/civil-service-statistics-2022",
+      "/government/statistics/civil-service-statistics-2021",
+      "/government/statistics/civil-service-statistics-2020",
+      "/government/statistics/civil-service-statistics-2019",
+      "/government/statistics/civil-service-statistics-2018",
+      "/government/statistics/civil-service-statistics-2017",
+      "/government/statistics/civil-service-statistics-2016",
+      "/government/statistics/civil-service-statistics-2015",
+      "/government/statistics/civil-service-statistics-2014",
+      "/government/statistics/civil-service-statistics-2013",
+      "/government/statistics/civil-service-statistics-2012",
+      "/government/statistics/civil-service-statistics-2011",
+      "/government/statistics/civil-service-statistics-2010",
+      "/government/statistics/civil-service-statistics-2009",
+      "/government/statistics/civil-service-statistics-2008",
+      "/government/statistics/civil-service-statistics-2007",
+      "/government/statistics/civil-service-statistics-2006",
+      "/government/statistics/civil-service-statistics-data-browser",
+      "/government/collections/civil-service-statistics-ad-hoc-statistical-requests-2026",
+      "/government/collections/civil-service-statistics-ad-hoc-statistical-requests-2025",
+      "/government/collections/civil-service-statistics-ad-hoc-statistical-requests-2024",
+      "/government/collections/civil-service-statistics-ad-hoc-statistical-requests-2023",
+      "/government/collections/civil-service-statistics-ad-hoc-statistical-requests-2022",
+      "/government/collections/civil-service-statistics-ad-hoc-statistical-requests-2021",
+      "/government/collections/civil-service-statistics-ad-hoc-statistical-requests-2020",
+      "/government/collections/civil-service-statistics-ad-hoc-statistical-requests-2019",
+      "/government/collections/civil-service-statistics-ad-hoc-statistical-requests-2018"
+    ]
+  },
+  {
+    "path": "government/collections/public-expenditure-statistical-analyses-pesa",
+    "status": 200,
+    "title": "HMT Public Expenditure Statistical Analyses (PESA)",
+    "documentType": "document_collection",
+    "updated": "2026-07-16T10:34:51+01:00",
+    "first": "2013-07-17T00:00:00+01:00",
+    "withdrawn": false,
+    "attachments": [],
+    "collectionDocs": [
+      "/government/statistics/public-expenditure-statistical-analyses-2026",
+      "/government/statistics/public-expenditure-statistical-analyses-2025",
+      "/government/statistics/public-expenditure-statistical-analyses-2024",
+      "/government/statistics/public-expenditure-statistical-analyses-2023",
+      "/government/statistics/public-expenditure-statistical-analyses-2022",
+      "/government/statistics/public-expenditure-statistical-analyses-2021",
+      "/government/statistics/public-expenditure-statistical-analyses-2020",
+      "/government/statistics/public-expenditure-statistical-analyses-2019",
+      "/government/statistics/public-expenditure-statistical-analyses-2018",
+      "/government/statistics/public-expenditure-statistical-analyses-2017",
+      "/government/statistics/public-expenditure-statistical-analyses-2016",
+      "/government/statistics/public-expenditure-statistical-analyses-2015",
+      "/government/statistics/public-expenditure-statistical-analyses-2014",
+      "/government/statistics/public-expenditure-statistical-analyses-2013-update-for-2015-16",
+      "/government/statistics/public-expenditure-statistical-analyses-2013",
+      "/government/statistics/public-expenditure-statistical-analyses-2012",
+      "/government/statistics/public-expenditure-statistical-analyses-2011",
+      "/government/statistics/public-expenditure-statistical-analyses-2010"
+    ]
+  },
+  {
+    "path": "government/statistics/public-expenditure-statistical-analyses-2025",
+    "status": 200,
+    "title": "Public Expenditure Statistical Analyses 2025",
+    "documentType": "national_statistics",
+    "updated": "2025-12-18T09:30:09+00:00",
+    "first": "2025-07-17T00:00:00+01:00",
+    "withdrawn": false,
+    "attachments": [
+      {
+        "title": "Public Expenditure Analyses 2025",
+        "type": "application/pdf",
+        "url": "https://assets.publishing.service.gov.uk/media/6874fa6f92691289bdb7d393/Public_Expenditure_Statistical_Analyses_2025.pdf",
+        "pages": 248
+      },
+      {
+        "title": "PESA 2025 Chapter 1 Tables",
+        "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "url": "https://assets.publishing.service.gov.uk/media/6874fa8f92691289bdb7d394/PESA_2025_CP_Chapter_1_tables.xlsx",
+        "pages": null
+      },
+      {
+        "title": "PESA 2025 Chapter 2 Tables",
+        "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "url": "https://assets.publishing.service.gov.uk/media/6874faaa93d52d8659e46565/PESA_2025_CP_Chapter_2_tables.xlsx",
+        "pages": null
+      },
+      {
+        "title": "PESA 2025 Chapter 3 Tables",
+        "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "url": "https://assets.publishing.service.gov.uk/media/6874fac382370235232f933d/PESA_2025_CP_Chapter_3_tables.xlsx",
+        "pages": null
+      },
+      {
+        "title": "PESA 2025 Chapter 4 Tables",
+        "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "url": "https://assets.publishing.service.gov.uk/media/6874fe33b1b4ebc2c2e46574/PESA_2025_CP_Chapter_4_tables.xlsx",
+        "pages": null
+      },
+      {
+        "title": "PESA 2025 Chapter 5 Tables",
+        "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "url": "https://assets.publishing.service.gov.uk/media/6874fe4582370235232f9343/PESA_2025_CP_Chapter_5_tables.xlsx",
+        "pages": null
+      },
+      {
+        "title": "PESA 2025 Chapter 6 Tables",
+        "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "url": "https://assets.publishing.service.gov.uk/media/6874fe5782370235232f9344/PESA_2025_CP_Chapter_6_tables.xlsx",
+        "pages": null
+      },
+      {
+        "title": "PESA 2025 Chapter 7 Tables",
+        "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "url": "https://assets.publishing.service.gov.uk/media/6874fe6bb1b4ebc2c2e46575/PESA_2025_CP_Chapter_7_tables.xlsx",
+        "pages": null
+      },
+      {
+        "title": "PESA 2025 Chapter 8 Tables",
+        "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "url": "https://assets.publishing.service.gov.uk/media/6874fe7993d52d8659e4656b/PESA_2025_CP_Chapter_8_tables.xlsx",
+        "pages": null
+      },
+      {
+        "title": "PESA 2025 Chapter 9 Tables",
+        "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "url": "https://assets.publishing.service.gov.uk/media/6874fe89730a1bf28e2f932e/PESA_2025_CP_Chapter_9_tables.xlsx",
+        "pages": null
+      },
+      {
+        "title": "PESA 2025 Chapter 10 Tables",
+        "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "url": "https://assets.publishing.service.gov.uk/media/6874fea182370235232f9345/PESA_2025_CP_Chapter_10_tables.xlsx",
+        "pages": null
+      },
+      {
+        "title": "PESA 2025 Annex C Table",
+        "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "url": "https://assets.publishing.service.gov.uk/media/6874febc83d39f474eb7d392/PESA_2025_CP_Annex_C.xlsx",
+        "pages": null
+      },
+      {
+        "title": "PESA 2025 Annex D Table",
+        "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "url": "https://assets.publishing.service.gov.uk/media/6874fecd82370235232f9346/PESA_2025_CP_Annex_D.xlsx",
+        "pages": null
+      },
+      {
+        "title": "PESA 2025 Annex E Table",
+        "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "url": "https://assets.publishing.service.gov.uk/media/6874fed9b1b4ebc2c2e46577/PESA_2025_CP_Annex_E.xlsx",
+        "pages": null
+      },
+      {
+        "title": "PESA 2025 Annex G Table: NHS",
+        "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "url": "https://assets.publishing.service.gov.uk/media/6874fee8730a1bf28e2f9330/PESA_2025_CP_Annex_G_Table_NHS.xlsx",
+        "pages": null
+      },
+      {
+        "title": "PESA 2025 Annex G Table: R and D",
+        "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "url": "https://assets.publishing.service.gov.uk/media/68750a4bcf4b8439b19c1f64/PESA_2025_CP_Annex_G_Table_R_D.xlsx",
+        "pages": null
+      },
+      {
+        "title": "Public Expenditure Statistical Analyses 2025 December Update",
+        "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "url": "https://assets.publishing.service.gov.uk/media/6942790ed8156a816c41934f/PESA_2025_Dec_Chapter_1_tables___Chapter_2_tables.xlsx",
+        "pages": null
+      }
+    ],
+    "collectionDocs": []
+  }
+]

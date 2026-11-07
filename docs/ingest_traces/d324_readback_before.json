@@ -1,0 +1,196 @@
+{
+  "label": "before",
+  "at": "2026-11-04T10:22:19.443Z",
+  "host": "ep-old-dust-aboxi69a.eu-west-2.aws.neon.tech",
+  "control": "govuk-core-docs:government/publications/the-green-book--2:1",
+  "db": [
+    {
+      "id": "govuk-core-docs:government/publications/the-aqua-book-guidance-on-producing-quality-analysis-for-government:1",
+      "status": "unavailable",
+      "availability_status": "no-provisions",
+      "availability_note": "no extractable body or PDF text (document_type=redirect)",
+      "r2Key": null,
+      "wordCount": null
+    },
+    {
+      "id": "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:1",
+      "status": "compiled",
+      "availability_status": "full",
+      "availability_note": null,
+      "r2Key": "govuk-core-docs/government/publications/the-green-book-appraisal-and-evaluation-in-central-government/sections/1/compiled.txt",
+      "wordCount": 87
+    },
+    {
+      "id": "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:2",
+      "status": "compiled",
+      "availability_status": "full",
+      "availability_note": null,
+      "r2Key": "govuk-core-docs/government/publications/the-green-book-appraisal-and-evaluation-in-central-government/sections/2/compiled.txt",
+      "wordCount": 31515
+    },
+    {
+      "id": "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:1",
+      "status": "compiled",
+      "availability_status": "full",
+      "availability_note": null,
+      "r2Key": "govuk-core-docs/government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service/sections/1/compiled.txt",
+      "wordCount": 91
+    },
+    {
+      "id": "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:2",
+      "status": "compiled",
+      "availability_status": "full",
+      "availability_note": null,
+      "r2Key": "govuk-core-docs/government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service/sections/2/compiled.txt",
+      "wordCount": 17348
+    }
+  ],
+  "lance": {
+    "corpus_fts": {
+      "column": "id",
+      "total": 18275065,
+      "perId": {
+        "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:1": 1,
+        "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:2": 1,
+        "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:1": 1,
+        "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:2": 1,
+        "govuk-core-docs:government/publications/the-aqua-book-guidance-on-producing-quality-analysis-for-government:1": 0
+      },
+      "targetRows": 4,
+      "control": 1,
+      "quotedFormControl": 0
+    },
+    "corpus_vec": {
+      "column": "sectionId",
+      "total": 22674550,
+      "perId": {
+        "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:1": 1,
+        "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:2": 8,
+        "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:1": 1,
+        "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:2": 8,
+        "govuk-core-docs:government/publications/the-aqua-book-guidance-on-producing-quality-analysis-for-government:1": 0
+      },
+      "targetRows": 18,
+      "control": 1,
+      "quotedFormControl": 0
+    },
+    "corpus_chunks": {
+      "column": "sectionId",
+      "total": 22674550,
+      "perId": {
+        "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:1": 1,
+        "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:2": 8,
+        "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:1": 1,
+        "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:2": 8,
+        "govuk-core-docs:government/publications/the-aqua-book-guidance-on-producing-quality-analysis-for-government:1": 0
+      },
+      "targetRows": 18,
+      "control": 1,
+      "quotedFormControl": 0
+    }
+  },
+  "serves": {
+    "ftsStartedAt": "2026-11-04T03:59:02.235Z",
+    "vecStartedAt": "2026-11-04T04:03:52.719Z",
+    "fts": [
+      {
+        "query": "Green Book appraisal evaluation central government",
+        "status": 200,
+        "targets": [
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:2",
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:1",
+          "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:2",
+          "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:1"
+        ],
+        "control": true,
+        "all": [
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:2",
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:1",
+          "govuk-core-docs:government/publications/the-green-book--2:1",
+          "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:2",
+          "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:1"
+        ]
+      },
+      {
+        "query": "Bank of China cross-border e-commerce",
+        "status": 200,
+        "targets": [
+          "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:1",
+          "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:2",
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:2",
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:1"
+        ],
+        "control": true,
+        "all": [
+          "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:1",
+          "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:2",
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:2",
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:1",
+          "govuk-core-docs:government/publications/the-green-book--2:1"
+        ]
+      },
+      {
+        "query": "Aqua Book quality analysis government",
+        "status": 200,
+        "targets": [
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:2",
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:1",
+          "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:2",
+          "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:1"
+        ],
+        "control": true,
+        "all": [
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:2",
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:1",
+          "govuk-core-docs:government/publications/the-green-book--2:1",
+          "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:2",
+          "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:1"
+        ]
+      }
+    ],
+    "vec": [
+      {
+        "query": "Green Book appraisal evaluation central government",
+        "status": 200,
+        "targets": [
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:1",
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:2"
+        ],
+        "control": true,
+        "all": [
+          "govuk-core-docs:government/publications/the-green-book--2:1",
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:1",
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:2"
+        ]
+      },
+      {
+        "query": "Bank of China cross-border e-commerce",
+        "status": 200,
+        "targets": [
+          "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:2",
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:2"
+        ],
+        "control": true,
+        "all": [
+          "govuk-core-docs:government/publications/white-paper-of-bank-of-china-on-cross-border-e-commerce-service:2",
+          "govuk-core-docs:government/publications/the-green-book--2:1",
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:2"
+        ]
+      },
+      {
+        "query": "Aqua Book quality analysis government",
+        "status": 200,
+        "targets": [
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:1",
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:2"
+        ],
+        "control": true,
+        "all": [
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:1",
+          "govuk-core-docs:government/publications/the-green-book--2:1",
+          "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:2"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,110 @@
+[
+  {
+    "key": "green-book-2026",
+    "publisherUpdated": "2026-10-28T13:30:39+00:00",
+    "pdf": "https://assets.publishing.service.gov.uk/media/6ae0ba897b7111c482d80a3b/The_Green_Book_2026.pdf",
+    "licence": "ogl-3.0 (gov.uk terms)",
+    "paragraphs": 391,
+    "first": "0",
+    "last": "A.18",
+    "chapters": 11,
+    "restarts": 0,
+    "gaps": [],
+    "htmlTables": [
+      "Table 1. The appraisal process (5 rows)",
+      "Table 2. The Five Case Model (22 rows)",
+      "Table 3. Appraisal across the project business case process (7 rows)",
+      "Table 4. Examples of critical success factors (8 rows)",
+      "Table 5. Example options summary matrix (6 rows)",
+      "Table 6. Examples of social costs and social benefits that may be considered in shortlist appraisal (5 rows)",
+      "Table 7. Removing the effects of general price inflation (5 rows)",
+      "Table 8. Discounting and present values (6 rows)",
+      "Table 9. Main differences between treatment of costs and benefits in the economic case and financial case (5 rows)",
+      "Table 10. Summary metrics of social value (5 rows)",
+      "Table 11. Types of social costs and social benefits (18 rows)",
+      "Table 12. Generic template for an appraisal summary table (AST) (7 rows)",
+      "Table A.1. Qualitative issues to consider when appraising private finance model options (33 rows)"
+    ],
+    "wordsSource": 31479,
+    "wordsInParagraphs": 29803,
+    "keptPct": 94.7,
+    "adversarial": {
+      "pound": 41,
+      "curly": 152,
+      "dash": 20,
+      "kernSplitInSource": 179,
+      "kernSplitAfterRepair": 5
+    },
+    "wordsMin": 8,
+    "wordsMax": 941,
+    "probes": [
+      "Green Book 6.56 [Chapter 6: Shortlist appraisal › Discounting] Discounting is distinct from adjusting for inflation. The STPR is a real discount rate and must be applied only to values expressed in real terms, meaning that the effects of general inflation have already been removed. ",
+      "Green Book 6.57 [Chapter 6: Shortlist appraisal › Discounting] Table 8 shows how to apply STPR discount factors to a proposal. Suppose the proposal delivers social benefits of £1,000 in nominal terms in year 0, rising by 2% per year in nominal terms. Assume the GDP deflator is 2% ea",
+      "Green Book 6.58 [Chapter 6: Shortlist appraisal › Discounting] Discounting should not be applied retrospectively to costs and benefits that have already occurred. The values of social costs and social benefits do not increase simply because activities took place in the past.",
+      "Green Book 10.12 [Chapter 10: Monitoring and evaluation › Planning for evaluation in the appraisal process] UK government departments are required to publish business cases for projects and programmes that form part of the Government Major Projects Portfolio (GMPP). This business case may be a Summary Business Case, a Full Bus",
+      "Green Book A.1 [Annex A: Private finance models] The Balance Sheet Framework defines private finance models as delivery models that use or enable use of private sector capital to meet the full or partial costs of construction (and may also include operation or maintena",
+      "Green Book A.18 [Annex A: Private finance models] This additional analysis effectively incorporates the government’s costs of borrowing within the assessment of shortlisted options, allowing practitioners to compare the total exchequer costs of traditional procurement o"
+    ]
+  },
+  {
+    "key": "gb-discounting",
+    "publisherUpdated": "2026-10-28T13:30:57+00:00",
+    "pdf": "https://assets.publishing.service.gov.uk/media/6ae0b34016428df537606216/Green_Book_supplementary_guidance_-_discounting.pdf",
+    "licence": "ogl-3.0 (gov.uk terms)",
+    "paragraphs": 33,
+    "first": "0",
+    "last": "3.13",
+    "chapters": 2,
+    "restarts": 0,
+    "gaps": [],
+    "htmlTables": [],
+    "wordsSource": 2367,
+    "wordsInParagraphs": 2256,
+    "keptPct": 95.3,
+    "adversarial": {
+      "pound": 0,
+      "curly": 18,
+      "dash": 2,
+      "kernSplitInSource": 0,
+      "kernSplitAfterRepair": 0
+    },
+    "wordsMin": 15,
+    "wordsMax": 485,
+    "probes": [
+      "Green Book discounting 2.1 [Chapter 2: Derivation of the discount rate › Introduction] The discount rate that is used in the Green Book is known formally as the Social Time Preference Rate (STPR). The STPR is currently set at 3.00% in real terms for the first 30 years of a proposal.",
+      "Green Book discounting 3.8 [Chapter 3: Discounting in appraisal › Proposals with time horizons beyond 30 years] When conducting an appraisal, practitioners should use a discount rate of: • 3.00% for years 1 to 30 • 2.50% for years 31 to 75 • 2.25% for years 76 to 125"
+    ]
+  },
+  {
+    "key": "gb-optimism-bias",
+    "publisherUpdated": "2013-04-21T01:00:00+01:00",
+    "pdf": "https://assets.publishing.service.gov.uk/media/5a74dae740f0b65f61322c72/Optimism_bias.pdf",
+    "licence": "ogl-3.0 (gov.uk terms)",
+    "paragraphs": 31,
+    "first": "1.1",
+    "last": "APPENDIX",
+    "chapters": 0,
+    "restarts": 0,
+    "gaps": [],
+    "htmlTables": [],
+    "wordsSource": 4845,
+    "wordsInParagraphs": 4721,
+    "keptPct": 97.4,
+    "adversarial": {
+      "pound": 32,
+      "curly": 8,
+      "dash": 17,
+      "kernSplitInSource": 0,
+      "kernSplitAfterRepair": 0
+    },
+    "wordsMin": 16,
+    "wordsMax": 2323,
+    "probes": [
+      "Green Book optimism bias 3.1 [Chapter 3 › Introduction] Table 1 provides adjustment percentages for generic project categories that should be used in the absence of more robust evidence. It has been prepared from the results of a study by Mott MacDonald into the size and caus",
+      "Green Book optimism bias 3.3 [Chapter 3 › Introduction] Project appraisers should note that the upper bound percentages in table 1 relate to the average historic optimism bias found at the outline business case stage for traditionally procured projects. Higher optimism bias a",
+      "Green Book optimism bias 4.1 [Chapter 4] Due to a lack of available data, Mott MacDonald was unable to recommend sound upper and lower bound optimism bias levels for operating expenditure (except for outsourcing projects) or benefits shortfall. Optimism bias sh",
+      "Green Book optimism bias Example 1 (Part 1) – Capital Expenditure [Annex]  Suppose we examine the capital expenditure and works duration optimism bias levels for a non- standard building (e.g. a specialist hospital). For simplicity, suppose the initial estimated NPC of capital expenditure (i.e",
+      "Green Book optimism bias APPENDIX [Annex]  CONTRIBUTORY FACTORS Procurement 1. Complexity of Contract Structure • Details of risk transfer had to be clarified • Payment mechanism had to be defined • Unforeseen amount of negotiation required on terms of contract "
+    ]
+  }
+]

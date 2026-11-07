@@ -1,0 +1,3358 @@
+{
+  "host": "ep-old-dust-aboxi69a.eu-west-2.aws.neon.tech",
+  "at": "2026-11-04T03:00:43.120Z",
+  "items": {
+    "green-book": [
+      {
+        "corpus": "committees-reports",
+        "doc": "publication:25865",
+        "sections": 48,
+        "fmt": "pdf",
+        "words": 17903,
+        "url": "http://www.publications.parliament.uk/pa/cm200809/cmselect/cmmemest/142/142.pdf",
+        "titles": [
+          "Report: First Report – Revised Green Book and audit of Members' Allowances — Members Estimate Committee",
+          "Report: First Report – Revised Green Book and audit of Members' Allowances — Members Estimate Committee",
+          "Report: First Report – Revised Green Book and audit of Members' Allowances — Members Estimate Committee — ¶5",
+          "Report: First Report – Revised Green Book and audit of Members' Allowances — Members Estimate Committee — Revised Green Book and audit of Members’ allowances 5",
+          "Report: First Report – Revised Green Book and audit of Members' Allowances — Members Estimate Committee — Revised Green Book and audit of Members’ allowances 7",
+          "Report: First Report – Revised Green Book and audit of Members' Allowances — Members Estimate Committee — 8 Revised Green Book and audit of Members’ allowances"
+        ]
+      },
+      {
+        "corpus": "committees-reports",
+        "doc": "publication:25867",
+        "sections": 1,
+        "fmt": "pdf",
+        "words": 179,
+        "url": "http://www.publications.parliament.uk/pa/cm200708/cmselect/cmmemest/578/578ii.pdf",
+        "titles": [
+          "Report: Third Report – Review of Allowances (Papers from the Department of Resources) — Members Estimate Committee — Improved Green Book. Mix of principles and examples as now"
+        ]
+      },
+      {
+        "corpus": "committees-reports",
+        "doc": "publication:6411",
+        "sections": 1,
+        "fmt": "pdf",
+        "words": 1742,
+        "url": "https://committees.parliament.uk/publications/6411/",
+        "titles": [
+          "Correspondence: Letter to the Chair from Tom Scholar regarding the 2020 Green Book Review"
+        ]
+      },
+      {
+        "corpus": "committees-reports",
+        "doc": "publication:5767",
+        "sections": 1,
+        "fmt": "pdf",
+        "words": 1025,
+        "url": "https://committees.parliament.uk/publications/5767/",
+        "titles": [
+          "Correspondence: Letter from the Chair to the Permanent Secretary of HM Treasury, relating to the Green Book"
+        ]
+      },
+      {
+        "corpus": "govuk-core-docs",
+        "doc": "government/publications/the-green-book-appraisal-and-evaluation-in-central-government",
+        "sections": 2,
+        "fmt": "html",
+        "words": 31602,
+        "url": "https://assets.publishing.service.gov.uk/media/698dbcd17da91680ad7f4308/The_Green_Book_2026.pdf",
+        "titles": [
+          "The Green Book",
+          "The Green Book (2026)"
+        ]
+      },
+      {
+        "corpus": "hmrc-codes-guidance",
+        "doc": null,
+        "sections": 5,
+        "fmt": null,
+        "words": 2401,
+        "url": "https://www.gov.uk/government/news/new-green-book-to-ensure-that-investment-in-all-parts-of-the-uk-given-a-fair-hearing",
+        "titles": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/the-green-book-international-guidance",
+        "sections": 6,
+        "fmt": "html",
+        "words": 203029,
+        "url": "https://assets.publishing.service.gov.uk/media/5fb25b608fa8f55df27c18a8/Project_Business_Case_2018__International_.pdf",
+        "titles": [
+          "The Green Book: International Guidance",
+          "Infrastructure Business Case: international guidance",
+          "Infrastructure Business Case: international guidance annexes",
+          "Infrastructure Business Case: international case studies",
+          "Business case guidance for projects (international version)",
+          "Business case guidance for programmes (international version)"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/green-book-supplementary-guidance-valuing-infrastructure-spend",
+        "sections": 3,
+        "fmt": "html",
+        "words": 19513,
+        "url": "https://assets.publishing.service.gov.uk/media/5a75bdc3e5274a545822dde0/PU1798_Valuing_Infrastructure_Spend_-_lastest_draft.pdf",
+        "titles": [
+          "Green Book supplementary guidance: valuing infrastructure spend",
+          "Valuing infrastructure spend - March 2015",
+          "Valuing infrastructure spend - November 2011"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/rotavirus-the-green-book-chapter-27b",
+        "sections": 3,
+        "fmt": "html",
+        "words": 6921,
+        "url": "https://assets.publishing.service.gov.uk/media/5a7484e4e5274a7f99028d58/Green_Book_Chapter_27b_PATCH_v2_1.pdf",
+        "titles": [
+          "Rotavirus: the green book, chapter 27b",
+          "Rotavirus: the green book, chapter 27b",
+          "Update patch to chapter 27b: 28 August 2015"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/hepatitis-b-the-green-book-chapter-18",
+        "sections": 2,
+        "fmt": "html",
+        "words": 15225,
+        "url": "https://assets.publishing.service.gov.uk/media/699c8d35e1c6bad1576fbc01/Green-book-on-immunisation-hepatitis-B-chapter_-_05022026.pdf",
+        "titles": [
+          "Hepatitis B: the green book, chapter 18",
+          "Hepatitis B: the green book, chapter 18 "
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/human-papillomavirus-hpv-the-green-book-chapter-18a",
+        "sections": 2,
+        "fmt": "html",
+        "words": 11100,
+        "url": "https://assets.publishing.service.gov.uk/media/649032b6b32b9e000ca969a7/HPV-green-book-chapter-18a-June-2023.pdf",
+        "titles": [
+          "Human papillomavirus (HPV): the green book, chapter 18a",
+          "Human papillomavirus (HPV): the green book, chapter 18a"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/immunisation-against-infectious-disease-the-green-book-front-cover-and-contents-page",
+        "sections": 2,
+        "fmt": "html",
+        "words": 485,
+        "url": "https://assets.publishing.service.gov.uk/media/6196386dd3bf7f054f43e02d/Greenbook-cover-Nov21.pdf",
+        "titles": [
+          "Immunisation against infectious disease: the green book front cover and contents page",
+          "Immunisation against infectious disease: the green book front cover and contents page"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/immunisation-by-nurses-and-other-health-professionals-the-green-book-chapter-5",
+        "sections": 2,
+        "fmt": "html",
+        "words": 1480,
+        "url": "https://assets.publishing.service.gov.uk/media/5a7b4b7de5274a34770eaba9/Green-Book-Chapter-5.pdf",
+        "titles": [
+          "Immunisation by nurses and other health professionals: the green book, chapter 5",
+          "Immunisation by nurses and other health professionals: the green book, chapter 5"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/immunisation-of-healthcare-and-laboratory-staff-the-green-book-chapter-12",
+        "sections": 2,
+        "fmt": "html",
+        "words": 2506,
+        "url": "https://assets.publishing.service.gov.uk/media/5a7abc09e5274a319e77a5b9/Green-Book-Chapter-12.pdf",
+        "titles": [
+          "Immunisation of healthcare and laboratory staff: the green book, chapter 12",
+          "Immunisation of healthcare and laboratory staff: the green book, chapter 12"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/immunisation-of-individuals-with-underlying-medical-conditions-the-green-book-chapter-7",
+        "sections": 2,
+        "fmt": "html",
+        "words": 2718,
+        "url": "https://assets.publishing.service.gov.uk/media/5e18a52940f0b65dc1918763/Greenbook_chapter_7_Immunsing_immunosupressed.pdf",
+        "titles": [
+          "Immunisation of individuals with underlying medical conditions: the green book, chapter 7",
+          "Immunisation of individuals with underlying medical conditions: the green book, chapter 7"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/immunisation-procedures-the-green-book-chapter-4",
+        "sections": 2,
+        "fmt": "html",
+        "words": 2767,
+        "url": "https://assets.publishing.service.gov.uk/media/5a7afc62e5274a34770e88e5/Green-Book-Chapter-4.pdf",
+        "titles": [
+          "Immunisation procedures: the green book, chapter 4",
+          " Immunisation procedures: the green book, chapter 4"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/immunisation-schedule-the-green-book-chapter-11",
+        "sections": 2,
+        "fmt": "html",
+        "words": 5375,
+        "url": "https://assets.publishing.service.gov.uk/media/69cbb5ef8017673ffec0f313/Green-book-chapter-11-immunisation-schedules_30_03_26.pdf",
+        "titles": [
+          "UK immunisation schedule: the green book, chapter 11",
+          "UK immunisation schedule: the green book, chapter 11"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/immunity-and-how-vaccines-work-the-green-book-chapter-1",
+        "sections": 2,
+        "fmt": "html",
+        "words": 3382,
+        "url": "https://assets.publishing.service.gov.uk/media/5ff49153d3bf7f65de80157d/Greenbook_chapter_1_Jan21.pdf",
+        "titles": [
+          "Immunity and how vaccines work: the green book, chapter 1",
+          " Immunity and how vaccines work: the green book, chapter 1"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/influenza-the-green-book-chapter",
+        "sections": 2,
+        "fmt": "html",
+        "words": 14658,
+        "url": "https://assets.publishing.service.gov.uk/media/6a0305d5cd2e0e8b5b20b45c/Greenbook_influenza_11May2026.pdf",
+        "titles": [
+          "Influenza: the green book chapter",
+          "Influenza: the green book chapter "
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/measles-the-green-book-chapter",
+        "sections": 2,
+        "fmt": "html",
+        "words": 12240,
+        "url": "https://assets.publishing.service.gov.uk/media/69dcf3806b695d635c34dccc/UKHSA_Green_Book_on_Measles_2_4_26.pdf",
+        "titles": [
+          "Measles: the green book chapter",
+          "Measles: the green book chapter"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/meningococcal-the-green-book-chapter-22",
+        "sections": 2,
+        "fmt": "html",
+        "words": 6293,
+        "url": "https://assets.publishing.service.gov.uk/media/6849adb83a2aa5ba84d1df71/Meningococcal-green_book_chapter-22-10-6-25.pdf",
+        "titles": [
+          "Meningococcal: the green book, chapter 22",
+          "Meningococcal: the green book, chapter 22"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/mumps-the-green-book-chapter",
+        "sections": 2,
+        "fmt": "html",
+        "words": 9449,
+        "url": "https://assets.publishing.service.gov.uk/media/69dcf5cbd3e08b8871b6663b/UKHSA_Green_Book_on_Mumps_2_4_26__002_.pdf",
+        "titles": [
+          "Mumps: the green book chapter",
+          "Mumps: the green book chapter "
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/pertussis-the-green-book-chapter-24",
+        "sections": 2,
+        "fmt": "html",
+        "words": 8338,
+        "url": "https://assets.publishing.service.gov.uk/media/69457d4a033693d5d50eb84f/Green-book-chapter-Pertussis-19_12_25.pdf",
+        "titles": [
+          "Pertussis: the green book chapter",
+          "Pertussis: the green book chapter"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/pneumococcal-the-green-book-chapter-25",
+        "sections": 2,
+        "fmt": "html",
+        "words": 5452,
+        "url": "https://assets.publishing.service.gov.uk/media/684b1fbc1c8d5c94e201abae/Green_Book__Chapter_25_pneumococcal_12_6_25.pdf",
+        "titles": [
+          "Pneumococcal: the green book, chapter 25",
+          "Pneumococcal: the Green book, chapter 25"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/polio-the-green-book-chapter-26",
+        "sections": 2,
+        "fmt": "html",
+        "words": 6293,
+        "url": "https://assets.publishing.service.gov.uk/media/683da0a5a9b2749a8095e04f/Green-Book-Chapter-26-Polio-updated-02-June-2025.pdf",
+        "titles": [
+          "Polio: the green book, chapter 26",
+          "Polio: the green book, chapter 26"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/rabies-the-green-book-chapter-27",
+        "sections": 2,
+        "fmt": "html",
+        "words": 6063,
+        "url": "https://assets.publishing.service.gov.uk/media/647073aac38c550012342bea/Rabies-green-book-chapter-27-May-2023.pdf",
+        "titles": [
+          "Rabies: the green book, chapter 27",
+          "Rabies: the green book, chapter 27"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/respiratory-syncytial-virus-the-green-book",
+        "sections": 2,
+        "fmt": "html",
+        "words": 14894,
+        "url": "https://assets.publishing.service.gov.uk/media/6a2015a4730aece621f09866/Green_Book_RSV_20260603.pdf",
+        "titles": [
+          "Respiratory syncytial virus: the green book",
+          "Respiratory syncytial virus (RSV): the green book chapter"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/shingles-herpes-zoster-the-green-book-chapter-28a",
+        "sections": 2,
+        "fmt": "html",
+        "words": 5865,
+        "url": "https://assets.publishing.service.gov.uk/media/689cba1b1c63de6de5bb12a9/Green-book-chapter-Shingles_12_8_24.pdf",
+        "titles": [
+          "Shingles (herpes zoster): the green book chapter",
+          "Shingles (herpes zoster): the green book chapter"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/anthrax-the-green-book-chapter-13",
+        "sections": 2,
+        "fmt": "html",
+        "words": 2926,
+        "url": "https://assets.publishing.service.gov.uk/media/5a7ffd4b40f0b62305b88819/Green_Book_Chapter_13.pdf",
+        "titles": [
+          "Anthrax: the green book, chapter 13",
+          "Anthrax: the green book, chapter 13"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/consent-the-green-book-chapter-2",
+        "sections": 2,
+        "fmt": "html",
+        "words": 3523,
+        "url": "https://assets.publishing.service.gov.uk/media/6908d79fef26c341988b25f0/Green_Book_on_immunisation_Ch2_Consent_27_10_25.pdf",
+        "titles": [
+          "Consent: the green book, chapter 2",
+          "Consent: the green book, chapter 2"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/contraindications-and-special-considerations-the-green-book-chapter-6",
+        "sections": 2,
+        "fmt": "html",
+        "words": 4227,
+        "url": "https://assets.publishing.service.gov.uk/media/5a82ce28e5274a2e8ab5970f/Greenbook_chapter_6.pdf",
+        "titles": [
+          "Contraindications and special considerations: the green book, chapter 6",
+          "Contraindications and special considerations: the green book, chapter 6"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/covid-19-the-green-book-chapter-14a",
+        "sections": 2,
+        "fmt": "html",
+        "words": 25513,
+        "url": "https://assets.publishing.service.gov.uk/media/69ba84f46b1db9df335fcb04/Green_Book_chapter_Covid_14a_17_3_26.pdf",
+        "titles": [
+          "COVID-19: the green book chapter",
+          "COVID-19: the green book chapter"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/diphtheria-the-green-book-chapter-15",
+        "sections": 2,
+        "fmt": "html",
+        "words": 6136,
+        "url": "https://assets.publishing.service.gov.uk/media/683d87d481deb72cce2680a4/Diphtheria-green_book-chapter-15-30-05-2025.pdf",
+        "titles": [
+          "Diphtheria: the green book, chapter 15",
+          "Diphtheria: the green book, chapter 15"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/gonorrhoea-the-green-book-chapter",
+        "sections": 2,
+        "fmt": "html",
+        "words": 2833,
+        "url": "https://assets.publishing.service.gov.uk/media/684ff21577c424182b0c4e66/Green_book_chapter_gonorrhoea_16June2025.pdf",
+        "titles": [
+          "Gonorrhoea: the green book chapter",
+          "Gonorrhoea: the green book chapter"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/haemophilus-influenzae-type-hib-the-green-book-chapter-16",
+        "sections": 2,
+        "fmt": "html",
+        "words": 4718,
+        "url": "https://assets.publishing.service.gov.uk/media/69b8291de2719934bb53a2e2/Green-book-chapter-Haemophilus_influenzae_type_b__Hib__4_3_26.pdf",
+        "titles": [
+          "Haemophilus influenzae type b (Hib): the green book chapter",
+          "Haemophilus influenzae type b (Hib): the green book chapter"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/hepatitis-a-the-green-book-chapter-17",
+        "sections": 2,
+        "fmt": "html",
+        "words": 6613,
+        "url": "https://assets.publishing.service.gov.uk/media/65a1743269fbd3000d25c075/Greenbook-chapter-17-hepatitis-A-12January24.pdf",
+        "titles": [
+          "Hepatitis A: the green book, chapter 17",
+          "Hepatitis A: the green book, chapter 17"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/typhoid-the-green-book-chapter-33",
+        "sections": 2,
+        "fmt": "html",
+        "words": 4135,
+        "url": "https://assets.publishing.service.gov.uk/media/6200fd088fa8f538921d1edf/Greenbook-chapter-33-4Feb22.pdf",
+        "titles": [
+          "Typhoid: the green book, chapter 33",
+          "Typhoid: the green book, chapter 33"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/vaccine-damage-payment-scheme-the-green-book-chapter-10",
+        "sections": 2,
+        "fmt": "html",
+        "words": 112,
+        "url": "https://assets.publishing.service.gov.uk/media/5a80805ee5274a2e87dba2b7/Green_Book_Chapter_10.pdf",
+        "titles": [
+          "Vaccine Damage Payment Scheme: the green book, chapter 10",
+          "Vaccine Damage Payment Scheme: the green book, chapter 10"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/vaccine-safety-and-adverse-events-following-immunisation-the-green-book-chapter-8",
+        "sections": 2,
+        "fmt": "html",
+        "words": 4697,
+        "url": "https://assets.publishing.service.gov.uk/media/686d5f2cfe1a249e937cbe53/Green_Book_chapter_8_28May25.pdf",
+        "titles": [
+          "Vaccine safety and adverse events following immunisation: the green book, chapter 8",
+          "Vaccine safety and adverse events following immunisation: the green book, chapter 8"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/varicella-the-green-book-chapter",
+        "sections": 2,
+        "fmt": "html",
+        "words": 7822,
+        "url": "https://assets.publishing.service.gov.uk/media/69dcf8bc07ec95cc3e9894b2/UKHSA_Green_Book_on_Varicella_7_4_26__002_.pdf",
+        "titles": [
+          "Varicella: the green book chapter",
+          "Varicella: the green book chapter "
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/rubella-the-green-book-chapter",
+        "sections": 2,
+        "fmt": "html",
+        "words": 9521,
+        "url": "https://assets.publishing.service.gov.uk/media/69dceebddaa863aa5db66628/UKHSA_Green_Book_chapter_Rubella_7_4_26__002_.pdf",
+        "titles": [
+          "Rubella: the green book chapter",
+          "Rubella: the green book chapter "
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/smallpox-and-vaccinia-the-green-book-chapter-29",
+        "sections": 2,
+        "fmt": "html",
+        "words": 10878,
+        "url": "https://assets.publishing.service.gov.uk/media/68483ced944a600f13bcb899/Green-Book-chapter-29_Smallpox-and-mpox_6June2025.pdf",
+        "titles": [
+          "Smallpox and mpox: the green book, chapter 29",
+          "Smallpox and mpox: the green book, chapter 29"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/storage-distribution-and-disposal-of-vaccines-the-green-book-chapter-3",
+        "sections": 2,
+        "fmt": "html",
+        "words": 5804,
+        "url": "https://assets.publishing.service.gov.uk/media/5a7f08e3e5274a2e8ab49c03/Green_Book_Chapter_3_v3_0W.pdf",
+        "titles": [
+          "Storage, distribution and disposal of vaccines: the green book, chapter 3",
+          "Storage, distribution and disposal of vaccines: the green book, chapter 3"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/surveillance-and-monitoring-for-vaccine-safety-the-green-book-chapter-9",
+        "sections": 2,
+        "fmt": "html",
+        "words": 2410,
+        "url": "https://assets.publishing.service.gov.uk/media/5a7b44fae5274a34770ea907/Green-Book-Chapter-9.pdf",
+        "titles": [
+          "Surveillance and monitoring for vaccine safety: the green book, chapter 9",
+          "Surveillance and monitoring for vaccine safety: the green book, chapter 9"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/tetanus-the-green-book-chapter-30",
+        "sections": 2,
+        "fmt": "html",
+        "words": 6575,
+        "url": "https://assets.publishing.service.gov.uk/media/683dceaa81deb72cce2680fc/Tetanus-green_book-chapter-30-02-06-25.pdf",
+        "titles": [
+          "Tetanus: the green book, chapter 30",
+          "Tetanus: the green book, chapter 30"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/tick-borne-encephalitis-the-green-book-chapter-31",
+        "sections": 2,
+        "fmt": "html",
+        "words": 1622,
+        "url": "https://assets.publishing.service.gov.uk/media/5a7f386aed915d74e33f5141/2905811_Green_Book_Chapter_31_v3_0.pdf",
+        "titles": [
+          "Tick-borne encephalitis: the green book, chapter 31",
+          "Tick-borne encephalitis: the green book, chapter 31"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/tuberculosis-the-green-book-chapter-32",
+        "sections": 2,
+        "fmt": "html",
+        "words": 6847,
+        "url": "https://assets.publishing.service.gov.uk/media/5b645a2140f0b66875559e93/_Greenbook_chapter_32_Tuberculosis_.pdf",
+        "titles": [
+          "Tuberculosis: the green book, chapter 32",
+          "Tuberculosis: the green book, chapter 32"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/japanese-encephalitis-the-green-book-chapter-20",
+        "sections": 1,
+        "fmt": "html",
+        "words": 55,
+        "url": "https://www.gov.uk/government/publications/japanese-encephalitis-the-green-book-chapter-20",
+        "titles": [
+          "Japanese encephalitis: the green book, chapter 20"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/yellow-fever-the-green-book-chapter-35",
+        "sections": 1,
+        "fmt": "html",
+        "words": 34,
+        "url": "https://www.gov.uk/government/publications/yellow-fever-the-green-book-chapter-35",
+        "titles": [
+          "Yellow fever: the green book, chapter 35"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/dengue-the-green-book-chapter-15a",
+        "sections": 1,
+        "fmt": "html",
+        "words": 40,
+        "url": "https://www.gov.uk/government/publications/dengue-the-green-book-chapter-15a",
+        "titles": [
+          "Dengue: the green book, chapter 15a"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/cholera-the-green-book-chapter-14",
+        "sections": 1,
+        "fmt": "html",
+        "words": 70,
+        "url": "https://www.gov.uk/government/publications/cholera-the-green-book-chapter-14",
+        "titles": [
+          "Cholera: the green book, chapter 14"
+        ]
+      }
+    ],
+    "managing-public-money": [
+      {
+        "corpus": "committees-reports",
+        "doc": "publication:1424",
+        "sections": 1,
+        "fmt": "pdf",
+        "words": 132,
+        "url": "https://committees.parliament.uk/publications/1424/",
+        "titles": [
+          "Correspondence: Correspondence from the Department for Digital, Culture, Media and Sport on Managing Public Money Guidance, dated 1 June 2020"
+        ]
+      },
+      {
+        "corpus": "committees-reports",
+        "doc": "publication:28705",
+        "sections": 1,
+        "fmt": "pdf",
+        "words": 432,
+        "url": "https://committees.parliament.uk/publications/28705/",
+        "titles": [
+          "Correspondence: Correspondence from Nigel Huddleston MP, Parliamentary Under Secretary of State, Sport, Tourism, Heritage and Civil Society, re Managing Public Money guidance / Departmental Minute, dated 28 July 2022"
+        ]
+      },
+      {
+        "corpus": "early-day-motions",
+        "doc": "38101",
+        "sections": 1,
+        "fmt": "html",
+        "words": 278,
+        "url": "https://edm.parliament.uk/early-day-motion/38101",
+        "titles": [
+          "MANAGING PUBLIC MONEY AND PARLIAMENTARY ACCOUNTABILITY"
+        ]
+      },
+      {
+        "corpus": "govuk-core-docs",
+        "doc": "government/publications/managing-public-money",
+        "sections": 138,
+        "fmt": "html",
+        "words": 97910,
+        "url": "https://assets.publishing.service.gov.uk/media/5a7f116ce5274a2e87db398a/severance_template__3_.doc",
+        "titles": [
+          "Managing public money",
+          "Delegated Authority Guidance: Expenditure categories subject to specific controls › Special Payments › Extra-contractual payments",
+          "Managing Public Money › Chapter 7: Working with others › 7.14 Private finance",
+          "Managing Public Money › Chapter 7: Working with others › 7.15 Commercial activity",
+          "Managing Public Money › Chapter 7: Working with others › 7.16 Working with civil society bodies",
+          "Managing Public Money › Annex 1.1 Communications with Parliament"
+        ]
+      }
+    ],
+    "magenta-book": [
+      {
+        "corpus": "govuk-core-docs",
+        "doc": "government/publications/the-magenta-book",
+        "sections": 13,
+        "fmt": "html",
+        "words": 156569,
+        "url": "https://assets.publishing.service.gov.uk/media/5a7ade3040f0b66eab99d32e/Magenta_Book_quality_in_qualitative_evaluation__QQE_.pdf",
+        "titles": [
+          "The Magenta Book",
+          "Supplementary Guide: Realist evaluation (PDF)",
+          "Guidance on the Impact Evaluation of AI Interventions (PDF)",
+          "Transparency in Government Evaluation Research (T I G E R) (PDF)",
+          "Test and Learn (PDF)",
+          "Magenta Book: Central Government guidance on evaluation (PDF)"
+        ]
+      },
+      {
+        "corpus": "hmrc-codes-guidance",
+        "doc": null,
+        "sections": 2,
+        "fmt": null,
+        "words": 1503,
+        "url": "https://www.gov.uk/government/news/major-shift-in-government-evaluation-as-magenta-book-is-updated",
+        "titles": [
+          null,
+          null
+        ]
+      }
+    ],
+    "better-regulation-framework": [
+      {
+        "corpus": "committees-reports",
+        "doc": "publication:41654",
+        "sections": 1,
+        "fmt": "pdf",
+        "words": 682,
+        "url": "https://committees.parliament.uk/publications/41654/",
+        "titles": [
+          "Correspondence: Letter from the Minister for Enterprise, Markets and Small Business relating to the launch of the new Better Regulation Framework, 19 September 2023"
+        ]
+      }
+    ],
+    "ia-template": [
+      {
+        "corpus": "ofcom",
+        "doc": "about-ofcom/corporate-policies/draft-impact-assessment-guidance",
+        "sections": 1,
+        "fmt": "html",
+        "words": 534,
+        "url": "https://www.ofcom.org.uk/about-ofcom/corporate-policies/draft-impact-assessment-guidance",
+        "titles": [
+          "Statement: Impact assessment guidance"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/reviewing-refugee-leave-or-settlement-protection-full-equality-impact-assessment-template",
+        "sections": 2,
+        "fmt": "html",
+        "words": 4956,
+        "url": "https://assets.publishing.service.gov.uk/media/5a74875a40f0b616bcb17362/eia-reviewing-leave.pdf",
+        "titles": [
+          "Reviewing refugee leave or settlement protection: caseworker guidance",
+          "Home Office full equality impact assessment template"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/data-protection-impact-assessments-for-surveillance-cameras",
+        "sections": 1,
+        "fmt": "pdf",
+        "words": 2168,
+        "url": "https://assets.publishing.service.gov.uk/media/5ea6f1fc86650c031af37947/SCC___ICO_DPIA_guidance_V3_FINAL_PDF.pdf",
+        "titles": [
+          "Data protection impact assessment guidance"
+        ]
+      }
+    ],
+    "aqua-book": [
+      {
+        "corpus": "govuk-core-docs",
+        "doc": "guidance/the-aqua-book",
+        "sections": 79,
+        "fmt": "html",
+        "words": 14306,
+        "url": "https://www.gov.uk/guidance/the-aqua-book#accessibility",
+        "titles": [
+          "The AQuA Book › Acknowledgements",
+          "The AQuA Book › 2 Definitions and concepts › Assurance activities",
+          "The AQuA Book › 2 Definitions and concepts › Artificial Intelligence",
+          "The AQuA Book › 2 Definitions and concepts › Black box models",
+          "The AQuA Book › 2 Definitions and concepts › Business critical analysis",
+          "The AQuA Book › 2 Definitions and concepts › Business critical models"
+        ]
+      },
+      {
+        "corpus": "hmrc-codes-guidance",
+        "doc": null,
+        "sections": 1,
+        "fmt": null,
+        "words": 7713,
+        "url": "https://www.gov.uk/guidance/the-aqua-book",
+        "titles": [
+          null
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/verification-and-validation-for-the-aqua-book",
+        "sections": 2,
+        "fmt": "html",
+        "words": 7651,
+        "url": "https://assets.publishing.service.gov.uk/media/5a749eeee5274a44083b8256/R0003199E.pdf",
+        "titles": [
+          "Verification and Validation for the AQuA Book",
+          "Verification and Validation for the AQuA Book"
+        ]
+      }
+    ],
+    "orange-book": [
+      {
+        "corpus": "govuk-core-docs",
+        "doc": "government/publications/orange-book",
+        "sections": 94,
+        "fmt": "html",
+        "words": 31957,
+        "url": "https://assets.publishing.service.gov.uk/media/610d3e70e90e0706c5282b5a/Risk_Management_Skills_and_Capabilities_Framework_Final.pdf",
+        "titles": [
+          "Orange Book",
+          "The Orange Book Management of Risk – Principles and Concepts › 2. Part I: Risk Management Principles › 2.3 Main Principle",
+          "The Orange Book Management of Risk – Principles and Concepts › 2. Part I: Risk Management Principles › 2.4 Supporting Principles",
+          "The Orange Book Management of Risk – Principles and Concepts › 2. Part I: Risk Management Principles › 2.5 Civil Service Code and A Modern Civil Service",
+          "The Orange Book Management of Risk – Principles and Concepts › 3. Section B: Integration › 3.1 Main Principle",
+          "The Orange Book Management of Risk – Principles and Concepts › 3. Section B: Integration › 3.2 Supporting Principles"
+        ]
+      },
+      {
+        "corpus": "hmrc-codes-guidance",
+        "doc": null,
+        "sections": 1,
+        "fmt": null,
+        "words": 791,
+        "url": "https://www.gov.uk/government/publications/orange-book",
+        "titles": [
+          null
+        ]
+      }
+    ],
+    "gdp-deflators": [],
+    "optimism-bias": [
+      {
+        "corpus": "hmrc-codes-guidance",
+        "doc": null,
+        "sections": 1,
+        "fmt": null,
+        "words": 471,
+        "url": "https://www.gov.uk/government/publications/optimism-bias-and-contingency-at-homes-england",
+        "titles": [
+          null
+        ]
+      }
+    ],
+    "discount-rate": [
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81223",
+        "sections": 1,
+        "fmt": "html",
+        "words": 6766,
+        "url": "https://committees.parliament.uk/writtenevidence/81223/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0001"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81285",
+        "sections": 1,
+        "fmt": "html",
+        "words": 2614,
+        "url": "https://committees.parliament.uk/writtenevidence/81285/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0002"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81332",
+        "sections": 1,
+        "fmt": "html",
+        "words": 940,
+        "url": "https://committees.parliament.uk/writtenevidence/81332/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0003"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81352",
+        "sections": 1,
+        "fmt": "html",
+        "words": 3408,
+        "url": "https://committees.parliament.uk/writtenevidence/81352/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0004"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81353",
+        "sections": 1,
+        "fmt": "html",
+        "words": 2884,
+        "url": "https://committees.parliament.uk/writtenevidence/81353/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0005"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81402",
+        "sections": 1,
+        "fmt": "html",
+        "words": 1974,
+        "url": "https://committees.parliament.uk/writtenevidence/81402/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0006"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81466",
+        "sections": 1,
+        "fmt": "html",
+        "words": 3733,
+        "url": "https://committees.parliament.uk/writtenevidence/81466/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0007"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81481",
+        "sections": 1,
+        "fmt": "html",
+        "words": 3123,
+        "url": "https://committees.parliament.uk/writtenevidence/81481/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0008"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81482",
+        "sections": 1,
+        "fmt": "html",
+        "words": 3281,
+        "url": "https://committees.parliament.uk/writtenevidence/81482/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0009"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81487",
+        "sections": 1,
+        "fmt": "html",
+        "words": 3358,
+        "url": "https://committees.parliament.uk/writtenevidence/81487/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0011"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81497",
+        "sections": 1,
+        "fmt": "html",
+        "words": 1795,
+        "url": "https://committees.parliament.uk/writtenevidence/81497/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0012"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81506",
+        "sections": 1,
+        "fmt": "html",
+        "words": 2407,
+        "url": "https://committees.parliament.uk/writtenevidence/81506/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0013"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81507",
+        "sections": 1,
+        "fmt": "html",
+        "words": 521,
+        "url": "https://committees.parliament.uk/writtenevidence/81507/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0014"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81508",
+        "sections": 1,
+        "fmt": "html",
+        "words": 1870,
+        "url": "https://committees.parliament.uk/writtenevidence/81508/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0015"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81511",
+        "sections": 1,
+        "fmt": "html",
+        "words": 2877,
+        "url": "https://committees.parliament.uk/writtenevidence/81511/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0016"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81516",
+        "sections": 1,
+        "fmt": "html",
+        "words": 2849,
+        "url": "https://committees.parliament.uk/writtenevidence/81516/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0017"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81519",
+        "sections": 1,
+        "fmt": "html",
+        "words": 1670,
+        "url": "https://committees.parliament.uk/writtenevidence/81519/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0018"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81521",
+        "sections": 1,
+        "fmt": "html",
+        "words": 2419,
+        "url": "https://committees.parliament.uk/writtenevidence/81521/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0019"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81522",
+        "sections": 1,
+        "fmt": "html",
+        "words": 3269,
+        "url": "https://committees.parliament.uk/writtenevidence/81522/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0020"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81523",
+        "sections": 1,
+        "fmt": "html",
+        "words": 2946,
+        "url": "https://committees.parliament.uk/writtenevidence/81523/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0021"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81525",
+        "sections": 1,
+        "fmt": "html",
+        "words": 2244,
+        "url": "https://committees.parliament.uk/writtenevidence/81525/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0022"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81527",
+        "sections": 1,
+        "fmt": "html",
+        "words": 3171,
+        "url": "https://committees.parliament.uk/writtenevidence/81527/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0023"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81528",
+        "sections": 1,
+        "fmt": "html",
+        "words": 2796,
+        "url": "https://committees.parliament.uk/writtenevidence/81528/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0024"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81529",
+        "sections": 1,
+        "fmt": "html",
+        "words": 3678,
+        "url": "https://committees.parliament.uk/writtenevidence/81529/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0025"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81533",
+        "sections": 1,
+        "fmt": "html",
+        "words": 557,
+        "url": "https://committees.parliament.uk/writtenevidence/81533/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0026"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81534",
+        "sections": 1,
+        "fmt": "html",
+        "words": 2267,
+        "url": "https://committees.parliament.uk/writtenevidence/81534/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0027"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81535",
+        "sections": 1,
+        "fmt": "html",
+        "words": 1769,
+        "url": "https://committees.parliament.uk/writtenevidence/81535/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0028"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81536",
+        "sections": 1,
+        "fmt": "html",
+        "words": 4468,
+        "url": "https://committees.parliament.uk/writtenevidence/81536/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0029"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81537",
+        "sections": 1,
+        "fmt": "html",
+        "words": 1721,
+        "url": "https://committees.parliament.uk/writtenevidence/81537/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0030"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81538",
+        "sections": 1,
+        "fmt": "html",
+        "words": 610,
+        "url": "https://committees.parliament.uk/writtenevidence/81538/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0031"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81539",
+        "sections": 1,
+        "fmt": "html",
+        "words": 1704,
+        "url": "https://committees.parliament.uk/writtenevidence/81539/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0032"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81540",
+        "sections": 1,
+        "fmt": "html",
+        "words": 1549,
+        "url": "https://committees.parliament.uk/writtenevidence/81540/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0033"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81543",
+        "sections": 1,
+        "fmt": "html",
+        "words": 3230,
+        "url": "https://committees.parliament.uk/writtenevidence/81543/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0034"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81544",
+        "sections": 1,
+        "fmt": "html",
+        "words": 1997,
+        "url": "https://committees.parliament.uk/writtenevidence/81544/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0035"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81545",
+        "sections": 1,
+        "fmt": "html",
+        "words": 2391,
+        "url": "https://committees.parliament.uk/writtenevidence/81545/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0036"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81546",
+        "sections": 1,
+        "fmt": "html",
+        "words": 12641,
+        "url": "https://committees.parliament.uk/writtenevidence/81546/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0037"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81549",
+        "sections": 1,
+        "fmt": "html",
+        "words": 901,
+        "url": "https://committees.parliament.uk/writtenevidence/81549/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0038"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81570",
+        "sections": 1,
+        "fmt": "html",
+        "words": 1907,
+        "url": "https://committees.parliament.uk/writtenevidence/81570/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0039"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:81657",
+        "sections": 1,
+        "fmt": "html",
+        "words": 3024,
+        "url": "https://committees.parliament.uk/writtenevidence/81657/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0040"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:83372",
+        "sections": 1,
+        "fmt": "html",
+        "words": 1581,
+        "url": "https://committees.parliament.uk/writtenevidence/83372/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0041"
+        ]
+      },
+      {
+        "corpus": "committees-evidence",
+        "doc": "writtenevidence:83448",
+        "sections": 1,
+        "fmt": "html",
+        "words": 4137,
+        "url": "https://committees.parliament.uk/writtenevidence/83448/",
+        "titles": [
+          "Pre-legislative scrutiny: draft personal injury discount rate legislation inquiry — IDR0042"
+        ]
+      },
+      {
+        "corpus": "committees-reports",
+        "doc": "publication:15277",
+        "sections": 31,
+        "fmt": "pdf",
+        "words": 16015,
+        "url": "https://publications.parliament.uk/pa/cm201719/cmselect/cmjust/374/374.pdf",
+        "titles": [
+          "Report: 3rd Report - Pre-legislative scrutiny: draft personal injury discount rate clause — Justice Committee",
+          "Report: 3rd Report - Pre-legislative scrutiny: draft personal injury discount rate clause — Justice Committee",
+          "Report: 3rd Report - Pre-legislative scrutiny: draft personal injury discount rate clause — Justice Committee",
+          "Report: 3rd Report - Pre-legislative scrutiny: draft personal injury discount rate clause — Justice Committee",
+          "Report: 3rd Report - Pre-legislative scrutiny: draft personal injury discount rate clause — Justice Committee",
+          "Report: 3rd Report - Pre-legislative scrutiny: draft personal injury discount rate clause — Justice Committee"
+        ]
+      },
+      {
+        "corpus": "committees-reports",
+        "doc": "publication:33680",
+        "sections": 1,
+        "fmt": "pdf",
+        "words": 14566,
+        "url": "https://committees.parliament.uk/publications/33680/",
+        "titles": [
+          "Correspondence: Letter from Lord Bellamy KC, Parliamentary Under Secretary of State for Justice, dated 17 January 2023, on Personal Injury Discount Rate"
+        ]
+      },
+      {
+        "corpus": "committees-reports",
+        "doc": "publication:41506",
+        "sections": 1,
+        "fmt": "pdf",
+        "words": 560,
+        "url": "https://committees.parliament.uk/publications/41506/",
+        "titles": [
+          "Correspondence: Correspondence from the Parliamentary Under-Secretary of Sate on the Personal Injury Discount Rate 11.09.23"
+        ]
+      },
+      {
+        "corpus": "committees-reports",
+        "doc": "publication:43009",
+        "sections": 1,
+        "fmt": "pdf",
+        "words": 338,
+        "url": "https://committees.parliament.uk/publications/43009/",
+        "titles": [
+          "Correspondence: Parliamentary Under-Secretary of State for Justice on Personal Injury Discount Rate 16.01.24"
+        ]
+      },
+      {
+        "corpus": "committees-reports",
+        "doc": "publication:43067",
+        "sections": 1,
+        "fmt": "pdf",
+        "words": 336,
+        "url": "https://committees.parliament.uk/publications/43067/",
+        "titles": [
+          "Correspondence: Letter from Lord Bellamy KC, Parliamentary Under Secretary of State in the Ministry of Justice, dated 16 January 2024 regarding the Personal Injury Discount Rate: Publication of a call for evidence"
+        ]
+      },
+      {
+        "corpus": "committees-reports",
+        "doc": "publication:45847",
+        "sections": 1,
+        "fmt": "pdf",
+        "words": 377,
+        "url": "https://committees.parliament.uk/publications/45847/",
+        "titles": [
+          "Correspondence: Letter from the Rt Hon Shabana Mahmood MP, Lord Chancellor and Secretary of State for Justice, dated 2 December 2024 relating to the Personal Injury Discount Rate - Outcome of Review"
+        ]
+      },
+      {
+        "corpus": "committees-reports",
+        "doc": "publication:33665",
+        "sections": 1,
+        "fmt": "pdf",
+        "words": 547,
+        "url": "https://committees.parliament.uk/publications/33665/",
+        "titles": [
+          "Correspondence: Correspondence form the Parliamentary Under-Secretary of State for Justice (Personal Injury Discount Rate) 17.01.23"
+        ]
+      },
+      {
+        "corpus": "consultations",
+        "doc": null,
+        "sections": 7,
+        "fmt": "html",
+        "words": 2222,
+        "url": "https://www.gov.uk/government/consultations/damages-act-1996-the-discount-rate-review-of-the-legal-framework",
+        "titles": [
+          "Damages Act 1996: the discount rate: review of the legal framework",
+          "Personal Injury Discount Rate: Exploring the option of a dual/multiple rate",
+          "Personal injury discount rate: how it should be set in future",
+          "Private parking charges, discount rates, debt collection fees and appeals charter: further technical consultation",
+          "Public service pensions: Consultation on the discount rate methodology",
+          "Setting the Personal Injury Discount Rate - Government Actuary's advice to the Lord Chancellor"
+        ]
+      },
+      {
+        "corpus": "hmrc-codes-guidance",
+        "doc": null,
+        "sections": 2,
+        "fmt": null,
+        "words": 607,
+        "url": "https://www.gov.uk/government/consultations/personal-injury-discount-rate-exploring-the-option-of-a-dualmultiple-rate",
+        "titles": [
+          null,
+          null
+        ]
+      },
+      {
+        "corpus": "hmrc-manuals",
+        "doc": "hmrc-internal-manuals/oil-taxation-manual/ot30326",
+        "sections": 1,
+        "fmt": "html",
+        "words": 194,
+        "url": "https://www.gov.uk/hmrc-internal-manuals/oil-taxation-manual/ot30326",
+        "titles": [
+          "OT30326 — Capital gains: valuation of oil assets including shares: the discount rate and risking"
+        ]
+      },
+      {
+        "corpus": "hmrc-manuals",
+        "doc": "hmrc-internal-manuals/oil-taxation-manual/ot30328",
+        "sections": 1,
+        "fmt": "html",
+        "words": 203,
+        "url": "https://www.gov.uk/hmrc-internal-manuals/oil-taxation-manual/ot30328",
+        "titles": [
+          "OT30328 — Capital gains: valuation of oil assets including shares: the discount rate and risking - additional factors"
+        ]
+      },
+      {
+        "corpus": "hmrc-manuals",
+        "doc": "hmrc-internal-manuals/oil-taxation-manual/ot30330",
+        "sections": 1,
+        "fmt": "html",
+        "words": 383,
+        "url": "https://www.gov.uk/hmrc-internal-manuals/oil-taxation-manual/ot30330",
+        "titles": [
+          "OT30330 — Capital gains: valuation of oil assets including shares: the discount rate and risking - other methods of risking"
+        ]
+      },
+      {
+        "corpus": "ofcom",
+        "doc": "spectrum/radio-equipment/900-1800-mhz-fees-cpi",
+        "sections": 1,
+        "fmt": "html",
+        "words": 395,
+        "url": "https://www.ofcom.org.uk/spectrum/radio-equipment/900-1800-mhz-fees-cpi",
+        "titles": [
+          "Annual licence fees for 900 MHz and 1800 MHz: methodology to derive a discount rate consistent with CPI inflation"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/the-personal-injury-discount-rate-review-and-determination-of-the-rate-in-northern-ireland-by-the-government-actuary",
+        "sections": 3,
+        "fmt": "html",
+        "words": 6901,
+        "url": "https://assets.publishing.service.gov.uk/media/623867e38fa8f540f6c231e5/Appendix_D_NI_PIDR_Memo_20_Nov_2020.pdf",
+        "titles": [
+          "The Personal Injury Discount Rate – review and determination of the rate in Northern Ireland by the Government Actuary",
+          "The Personal Injury Discount Rate – review and determination of the rate in Northern Ireland by the Government Actuary",
+          "Appendix D: Prior GAD Advice - 20 November 2020"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/the-personal-injury-discount-rate-review-and-determination-of-the-rate-in-scotland-by-the-government-actuary",
+        "sections": 2,
+        "fmt": "html",
+        "words": 6094,
+        "url": "https://assets.publishing.service.gov.uk/media/5d91d14840f0b65e609df7b9/20190927_Scotland_PIDR_GA_report.pdf",
+        "titles": [
+          "The Personal Injury Discount Rate – review and determination of the rate in Scotland by the Government Actuary",
+          "The Personal Injury Discount Rate – review and determination of the rate in Scotland by the Government Actuary"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/consultations/setting-the-personal-injury-discount-rate-government-actuarys-advice-to-the-lord-chancellor",
+        "sections": 2,
+        "fmt": "html",
+        "words": 26755,
+        "url": "https://assets.publishing.service.gov.uk/media/5d2c8ae0ed915d2fe6846719/Setting_the_Personal_Injury_Discount_Rate__web_.pdf",
+        "titles": [
+          "Setting the Personal Injury Discount Rate - Government Actuary's advice to the Lord Chancellor",
+          "Setting the Personal Injury Discount Rate - Government Actuary's advice to the Lord Chancellor"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/personal-injury-discount-rate-a-gad-technical-bulletin",
+        "sections": 2,
+        "fmt": "html",
+        "words": 1586,
+        "url": "https://assets.publishing.service.gov.uk/media/5a82309ae5274a2e87dc19d0/Technical_Bulletin_Personal_Injury_Discount_Rate.pdf",
+        "titles": [
+          "Personal Injury Discount Rate - a GAD Technical Bulletin",
+          "Personal Injury Discount Rate - Technical Bulletin "
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/personal-injury-discount-rate-regulation-features-advice-scotland",
+        "sections": 2,
+        "fmt": "html",
+        "words": 13695,
+        "url": "https://assets.publishing.service.gov.uk/media/662a263655e1582b6ca7e573/Personal_Injury_Discount_Rate_Regulation_Features_Advice_Scotland.pdf",
+        "titles": [
+          "Personal Injury Discount Rate regulation features advice - Scotland",
+          "Personal Injury Discount Rate regulation features advice - Scotland"
+        ]
+      },
+      {
+        "corpus": "quangos-govuk",
+        "doc": "government/publications/review-of-the-personal-injury-discount-rate-in-northern-ireland",
+        "sections": 2,
+        "fmt": "html",
+        "words": 5173,
+        "url": "https://assets.publishing.service.gov.uk/media/66ebde50ba4b4b3f945016e7/Personal_Injury_Discount_Rate_Report_Northern_Ireland_Review_by_Government_Actuary.pdf",
+        "titles": [
+          "Review of the Personal Injury Discount Rate in Northern Ireland",
+          "The Personal Injury Discount Rate - review and determination of the rate in Northern Ireland by the Government Actuary"
+        ]
+      }
+    ],
+    "civil-service-statistics": [
+      {
+        "corpus": "hmrc-codes-guidance",
+        "doc": null,
+        "sections": 3,
+        "fmt": null,
+        "words": 806,
+        "url": "https://www.gov.uk/government/statistics/civil-service-statistics-2023",
+        "titles": [
+          null,
+          null,
+          null
+        ]
+      }
+    ],
+    "pesa": [
+      {
+        "corpus": "committees-reports",
+        "doc": "publication:2031",
+        "sections": 1,
+        "fmt": "pdf",
+        "words": 346,
+        "url": "https://committees.parliament.uk/publications/2031/",
+        "titles": [
+          "Correspondence: Correspondence from HM Treasury relating to the publication of the Public Expenditure Statistical Analysis and control breaches as result of the impact of Covid-19, dated 21 July 2020"
+        ]
+      },
+      {
+        "corpus": "consultations",
+        "doc": null,
+        "sections": 1,
+        "fmt": "html",
+        "words": 197,
+        "url": "https://www.gov.uk/government/consultations/public-expenditure-statistical-analyses-pesa-national-statistics",
+        "titles": [
+          "Public Expenditure Statistical Analyses (PESA) National Statistics"
+        ]
+      }
+    ],
+    "unit-cost-database": [],
+    "costs-of-crime": [
+      {
+        "corpus": "committees-reports",
+        "doc": "publication:53494",
+        "sections": 1,
+        "fmt": "pdf",
+        "words": 221,
+        "url": "https://committees.parliament.uk/publications/53494/",
+        "titles": [
+          "Correspondence: Letter from the Minister of State for Policing and Crime relating to publication of the Economic and Social Costs of Crime 2019 to 2020 28.05.2026"
+        ]
+      }
+    ]
+  },
+  "corpora": [
+    {
+      "corpus": "bills-api",
+      "n": 6574
+    },
+    {
+      "corpus": "building-regs",
+      "n": 21
+    },
+    {
+      "corpus": "cma-cases",
+      "n": 22898
+    },
+    {
+      "corpus": "college-of-policing",
+      "n": 332
+    },
+    {
+      "corpus": "committees-evidence",
+      "n": 142315
+    },
+    {
+      "corpus": "committees-reports",
+      "n": 344773
+    },
+    {
+      "corpus": "commons-divisions-votes",
+      "n": 2361
+    },
+    {
+      "corpus": "consultations",
+      "n": 7448
+    },
+    {
+      "corpus": "cps-guidance",
+      "n": 270
+    },
+    {
+      "corpus": "departmental-accounts",
+      "n": 551
+    },
+    {
+      "corpus": "early-day-motions",
+      "n": 60737
+    },
+    {
+      "corpus": "echr-hudoc",
+      "n": 4460
+    },
+    {
+      "corpus": "erskine-may",
+      "n": 2038
+    },
+    {
+      "corpus": "et-decisions",
+      "n": 161753
+    },
+    {
+      "corpus": "eur-lex",
+      "n": 241571
+    },
+    {
+      "corpus": "explanatory-memoranda",
+      "n": 27428
+    },
+    {
+      "corpus": "explanatory-notes",
+      "n": 18801
+    },
+    {
+      "corpus": "fca-handbook",
+      "n": 3661
+    },
+    {
+      "corpus": "govuk-core-docs",
+      "n": 1225
+    },
+    {
+      "corpus": "historic-hansard",
+      "n": 4641117
+    },
+    {
+      "corpus": "hmrc-ancillary",
+      "n": 479
+    },
+    {
+      "corpus": "hmrc-codes-guidance",
+      "n": 14067
+    },
+    {
+      "corpus": "hmrc-manuals",
+      "n": 85197
+    },
+    {
+      "corpus": "hmrc-tiins",
+      "n": 791
+    },
+    {
+      "corpus": "ico",
+      "n": 26591
+    },
+    {
+      "corpus": "impact-assessments",
+      "n": 18759
+    },
+    {
+      "corpus": "independent-reviews",
+      "n": 667
+    },
+    {
+      "corpus": "inquiry-evidence",
+      "n": 90
+    },
+    {
+      "corpus": "inquiry-reports",
+      "n": 146
+    },
+    {
+      "corpus": "lawcom",
+      "n": 263
+    },
+    {
+      "corpus": "lda-commonsoralquestions",
+      "n": 69529
+    },
+    {
+      "corpus": "lgsco",
+      "n": 40
+    },
+    {
+      "corpus": "lords-divisions-votes",
+      "n": 3284
+    },
+    {
+      "corpus": "members-interests",
+      "n": 3448
+    },
+    {
+      "corpus": "nao-reports",
+      "n": 3983
+    },
+    {
+      "corpus": "ni-judgments",
+      "n": 7927
+    },
+    {
+      "corpus": "niassembly-hansard",
+      "n": 196348
+    },
+    {
+      "corpus": "nilawcom",
+      "n": 17
+    },
+    {
+      "corpus": "ofcom",
+      "n": 4169
+    },
+    {
+      "corpus": "ofgem",
+      "n": 17161
+    },
+    {
+      "corpus": "ots-reports",
+      "n": 497
+    },
+    {
+      "corpus": "parliament-treaties",
+      "n": 328
+    },
+    {
+      "corpus": "petitions",
+      "n": 49529
+    },
+    {
+      "corpus": "planning-policy",
+      "n": 64
+    },
+    {
+      "corpus": "primary-acts-2000plus",
+      "n": 147975
+    },
+    {
+      "corpus": "primary-acts-pre-2000",
+      "n": 179435
+    },
+    {
+      "corpus": "pwdata-debates",
+      "n": 6402708
+    },
+    {
+      "corpus": "pwdata-lords",
+      "n": 759356
+    },
+    {
+      "corpus": "pwdata-lordswms",
+      "n": 21611
+    },
+    {
+      "corpus": "pwdata-lordswrans",
+      "n": 177836
+    },
+    {
+      "corpus": "pwdata-westminster",
+      "n": 243054
+    },
+    {
+      "corpus": "pwdata-wms",
+      "n": 25110
+    },
+    {
+      "corpus": "pwdata-wrans",
+      "n": 1253150
+    },
+    {
+      "corpus": "quangos-govuk",
+      "n": 171190
+    },
+    {
+      "corpus": "regional",
+      "n": 357161
+    },
+    {
+      "corpus": "retained-eu",
+      "n": 319346
+    },
+    {
+      "corpus": "scotlawcom",
+      "n": 350
+    },
+    {
+      "corpus": "scottish-courts",
+      "n": 13070
+    },
+    {
+      "corpus": "scottish-parliament-or",
+      "n": 1044188
+    },
+    {
+      "corpus": "senedd-cofnod",
+      "n": 191756
+    },
+    {
+      "corpus": "sentencing-council",
+      "n": 253
+    },
+    {
+      "corpus": "si-2010plus",
+      "n": 287078
+    },
+    {
+      "corpus": "si-pre-2010",
+      "n": 489450
+    },
+    {
+      "corpus": "tax-treaties-dta",
+      "n": 324
+    },
+    {
+      "corpus": "tax-tribunals",
+      "n": 13099
+    },
+    {
+      "corpus": "tna-caselaw",
+      "n": 74896
+    },
+    {
+      "corpus": "uk-treaties",
+      "n": 3264
+    },
+    {
+      "corpus": "uk-treaties-fcdo",
+      "n": 23372
+    }
+  ],
+  "skippedCorpora": [
+    "echr-hudoc",
+    "eur-lex",
+    "historic-hansard",
+    "ni-judgments",
+    "niassembly-hansard",
+    "primary-acts-2000plus",
+    "primary-acts-pre-2000",
+    "pwdata-debates",
+    "pwdata-lords",
+    "pwdata-lordswms",
+    "pwdata-lordswrans",
+    "pwdata-westminster",
+    "pwdata-wms",
+    "pwdata-wrans",
+    "regional",
+    "retained-eu",
+    "si-2010plus",
+    "si-pre-2010",
+    "tna-caselaw"
+  ],
+  "CostBenchmark": [
+    {
+      "id": "v1-qaly",
+      "domain": "health",
+      "metric": "Value of one QALY (quality-adjusted life year — one year of full health)",
+      "unit": "GBP per QALY",
+      "low": "70000.000000000000000000000000000000",
+      "high": "70000.000000000000000000000000000000",
+      "source": "HM Treasury Green Book (2022 clarification, carried in DHSC supplementary health appraisal guidance)",
+      "sourceUrl": "https://www.gov.uk/government/publications/the-green-book-appraisal-and-evaluation-in-central-government",
+      "year": 2022,
+      "method": "Willingness-to-pay value for cross-government appraisal. NOTE: distinct from the NICE cost-effectiveness threshold (~£20–30k/QALY), which is a different instrument for a different decision.",
+      "notes": "Price year stated as 20/21 in GB2022.",
+      "createdAt": "2026-07-03T21:39:08.979Z",
+      "updatedAt": "2026-07-03T21:39:08.979Z",
+      "priceYear": 2020,
+      "category": "HEALTH",
+      "region": "UK",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "v1-wellby",
+      "domain": "wellbeing",
+      "metric": "Value of one WELLBY (a 1-point change in life satisfaction, 0–10 scale, for one person for one year)",
+      "unit": "GBP per WELLBY",
+      "low": "10000.000000000000000000000000000000",
+      "high": "16000.000000000000000000000000000000",
+      "source": "HM Treasury, Wellbeing Guidance for Appraisal: Supplementary Green Book Guidance (Jul 2021)",
+      "sourceUrl": "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1005388/Wellbeing_guidance_for_appraisal_-_supplementary_Green_Book_guidance.pdf",
+      "year": 2021,
+      "method": "Central £13,000; low £10,000, high £16,000. Losses and gains valued equally.",
+      "notes": "central=13000 (store in method/notes since schema carries low/high).",
+      "createdAt": "2026-07-03T21:39:09.058Z",
+      "updatedAt": "2026-07-03T21:39:09.058Z",
+      "priceYear": 2019,
+      "category": "WELLBEING",
+      "region": "UK",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "v2-homicide",
+      "domain": "crime",
+      "metric": "Unit cost: homicide",
+      "unit": "GBP per offence",
+      "low": "3346680.000000000000000000000000000000",
+      "high": "3346680.000000000000000000000000000000",
+      "source": "Home Office, Economic and social costs of crime 2019 to 2020 (Table 1/3/4)",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-costs-of-crime-2019-to-2020/economic-and-social-costs-of-crime-2019-to-2020",
+      "year": 2026,
+      "method": "anticipation £68,700 + consequence £2,637,190 + response £640,780",
+      "notes": "REPLACES v1 homicide row. Multiplier 1.00 (all homicides recorded). 673 offences; £2.3bn total. | Usage: per ALL crimes (incl. unreported) — multiply police-recorded volumes by the multiplier first; consider excluding the anticipation component for marginal changes.",
+      "createdAt": "2026-07-04T10:40:06.947Z",
+      "updatedAt": "2026-07-04T10:40:06.947Z",
+      "priceYear": 2019,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "v2-violence-injury",
+      "domain": "crime",
+      "metric": "Unit cost: violence with injury",
+      "unit": "GBP per offence",
+      "low": "15720.000000000000000000000000000000",
+      "high": "15720.000000000000000000000000000000",
+      "source": "Home Office, Economic and social costs of crime 2019 to 2020 (Table 1/3/4)",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-costs-of-crime-2019-to-2020/economic-and-social-costs-of-crime-2019-to-2020",
+      "year": 2026,
+      "method": "£280 + £13,390 + £2,050",
+      "notes": "Multiplier 1.64. 885,970 offences; £13.9bn total. | Usage: per ALL crimes (incl. unreported) — multiply police-recorded volumes by the multiplier first; consider excluding the anticipation component for marginal changes.",
+      "createdAt": "2026-07-04T10:40:07.016Z",
+      "updatedAt": "2026-07-04T10:40:07.016Z",
+      "priceYear": 2019,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "v2-violence-no-injury",
+      "domain": "crime",
+      "metric": "Unit cost: violence without injury",
+      "unit": "GBP per offence",
+      "low": "7150.000000000000000000000000000000",
+      "high": "7150.000000000000000000000000000000",
+      "source": "Home Office, Economic and social costs of crime 2019 to 2020 (Table 1/3/4)",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-costs-of-crime-2019-to-2020/economic-and-social-costs-of-crime-2019-to-2020",
+      "year": 2026,
+      "method": "£120 + £5,480 + £1,540",
+      "notes": "Multiplier 0.98. | Usage: per ALL crimes (incl. unreported) — multiply police-recorded volumes by the multiplier first; consider excluding the anticipation component for marginal changes.",
+      "createdAt": "2026-07-04T10:40:07.048Z",
+      "updatedAt": "2026-07-04T10:40:07.048Z",
+      "priceYear": 2019,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "v2-rape",
+      "domain": "crime",
+      "metric": "Unit cost: rape",
+      "unit": "GBP per offence",
+      "low": "48000.000000000000000000000000000000",
+      "high": "48000.000000000000000000000000000000",
+      "source": "Home Office, Economic and social costs of crime 2019 to 2020 (Table 1/3/4)",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-costs-of-crime-2019-to-2020/economic-and-social-costs-of-crime-2019-to-2020",
+      "year": 2026,
+      "method": "£820 + £38,100 + £9,090",
+      "notes": "Multiplier 2.78. Highest non-fatal unit cost. Physical/emotional harms component £26,340. | Usage: per ALL crimes (incl. unreported) — multiply police-recorded volumes by the multiplier first; consider excluding the anticipation component for marginal changes.",
+      "createdAt": "2026-07-04T10:40:07.097Z",
+      "updatedAt": "2026-07-04T10:40:07.097Z",
+      "priceYear": 2019,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "v2-other-sexual",
+      "domain": "crime",
+      "metric": "Unit cost: other sexual offences",
+      "unit": "GBP per offence",
+      "low": "6540.000000000000000000000000000000",
+      "high": "6540.000000000000000000000000000000",
+      "source": "Home Office, Economic and social costs of crime 2019 to 2020 (Table 1/3/4)",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-costs-of-crime-2019-to-2020/economic-and-social-costs-of-crime-2019-to-2020",
+      "year": 2026,
+      "method": "£130 + £5,610 + £800",
+      "notes": "Multiplier 18.07 — huge under-reporting; never use raw PRC volumes. | Usage: per ALL crimes (incl. unreported) — multiply police-recorded volumes by the multiplier first; consider excluding the anticipation component for marginal changes.",
+      "createdAt": "2026-07-04T10:40:07.134Z",
+      "updatedAt": "2026-07-04T10:40:07.134Z",
+      "priceYear": 2019,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "v2-robbery-personal",
+      "domain": "crime",
+      "metric": "Unit cost: robbery (personal)",
+      "unit": "GBP per offence",
+      "low": "10490.000000000000000000000000000000",
+      "high": "10490.000000000000000000000000000000",
+      "source": "Home Office, Economic and social costs of crime 2019 to 2020 (Table 1/3/4)",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-costs-of-crime-2019-to-2020/economic-and-social-costs-of-crime-2019-to-2020",
+      "year": 2026,
+      "method": "£480 + £8,560 + £1,450",
+      "notes": "Multiplier 2.02. | Usage: per ALL crimes (incl. unreported) — multiply police-recorded volumes by the multiplier first; consider excluding the anticipation component for marginal changes.",
+      "createdAt": "2026-07-04T10:40:07.164Z",
+      "updatedAt": "2026-07-04T10:40:07.164Z",
+      "priceYear": 2019,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "v2-burglary-domestic",
+      "domain": "crime",
+      "metric": "Unit cost: domestic burglary",
+      "unit": "GBP per offence",
+      "low": "7720.000000000000000000000000000000",
+      "high": "7720.000000000000000000000000000000",
+      "source": "Home Office, Economic and social costs of crime 2019 to 2020 (Table 1/3/4)",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-costs-of-crime-2019-to-2020/economic-and-social-costs-of-crime-2019-to-2020",
+      "year": 2026,
+      "method": "£1,030 + £5,510 + £1,180",
+      "notes": "Multiplier 2.17. | Usage: per ALL crimes (incl. unreported) — multiply police-recorded volumes by the multiplier first; consider excluding the anticipation component for marginal changes.",
+      "createdAt": "2026-07-04T10:40:07.213Z",
+      "updatedAt": "2026-07-04T10:40:07.213Z",
+      "priceYear": 2019,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "v2-vehicle-theft",
+      "domain": "crime",
+      "metric": "Unit cost: theft of a vehicle",
+      "unit": "GBP per offence",
+      "low": "20330.000000000000000000000000000000",
+      "high": "20330.000000000000000000000000000000",
+      "source": "Home Office, Economic and social costs of crime 2019 to 2020 (Table 1/3/4)",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-costs-of-crime-2019-to-2020/economic-and-social-costs-of-crime-2019-to-2020",
+      "year": 2026,
+      "method": "£2,750 + £14,960 + £2,620",
+      "notes": "Multiplier 0.71 (PRC includes business vehicles). | Usage: per ALL crimes (incl. unreported) — multiply police-recorded volumes by the multiplier first; consider excluding the anticipation component for marginal changes.",
+      "createdAt": "2026-07-04T10:40:07.249Z",
+      "updatedAt": "2026-07-04T10:40:07.249Z",
+      "priceYear": 2019,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "v2-theft-from-vehicle",
+      "domain": "crime",
+      "metric": "Unit cost: theft from a vehicle",
+      "unit": "GBP per offence",
+      "low": "1420.000000000000000000000000000000",
+      "high": "1420.000000000000000000000000000000",
+      "source": "Home Office, Economic and social costs of crime 2019 to 2020 (Table 1/3/4)",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-costs-of-crime-2019-to-2020/economic-and-social-costs-of-crime-2019-to-2020",
+      "year": 2026,
+      "method": "£170 + £1,130 + £130",
+      "notes": "Multiplier 2.22. | Usage: per ALL crimes (incl. unreported) — multiply police-recorded volumes by the multiplier first; consider excluding the anticipation component for marginal changes.",
+      "createdAt": "2026-07-04T10:40:07.283Z",
+      "updatedAt": "2026-07-04T10:40:07.283Z",
+      "priceYear": 2019,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "v2-theft-person",
+      "domain": "crime",
+      "metric": "Unit cost: theft from the person",
+      "unit": "GBP per offence",
+      "low": "1590.000000000000000000000000000000",
+      "high": "1590.000000000000000000000000000000",
+      "source": "Home Office, Economic and social costs of crime 2019 to 2020 (Table 1/3/4)",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-costs-of-crime-2019-to-2020/economic-and-social-costs-of-crime-2019-to-2020",
+      "year": 2026,
+      "method": "£290 + £1,120 + £180",
+      "notes": "Multiplier 3.43. | Usage: per ALL crimes (incl. unreported) — multiply police-recorded volumes by the multiplier first; consider excluding the anticipation component for marginal changes.",
+      "createdAt": "2026-07-04T10:40:07.336Z",
+      "updatedAt": "2026-07-04T10:40:07.336Z",
+      "priceYear": 2019,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m1-accident-fatal",
+      "domain": "transport-safety",
+      "metric": "Average value of prevention per fatal road accident (all road classes)",
+      "unit": "GBP per accident",
+      "low": "2950459.860000000000000000000000000000",
+      "high": "2950459.860000000000000000000000000000",
+      "source": "DfT TAG Data Book May 2026 v2.03, Table A4.1.4",
+      "sourceUrl": "https://www.gov.uk/government/publications/tag-data-book",
+      "year": 2026,
+      "method": "Casualty values + accident-related costs (insurance, damage, police); COBALT values.",
+      "notes": "",
+      "createdAt": "2026-07-04T10:49:47.518Z",
+      "updatedAt": "2026-07-04T10:49:47.518Z",
+      "priceYear": 2023,
+      "category": "LIFE_SAFETY",
+      "region": "UK",
+      "uprateMethod": "GDP_PER_HEAD",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m1-accident-serious",
+      "domain": "transport-safety",
+      "metric": "Average value of prevention per serious road accident (all road classes)",
+      "unit": "GBP per accident",
+      "low": "337547.570000000000000000000000000000",
+      "high": "337547.570000000000000000000000000000",
+      "source": "DfT TAG Data Book May 2026 v2.03, Table A4.1.4",
+      "sourceUrl": "https://www.gov.uk/government/publications/tag-data-book",
+      "year": 2026,
+      "method": "As fatal-accident row.",
+      "notes": "",
+      "createdAt": "2026-07-04T10:49:47.550Z",
+      "updatedAt": "2026-07-04T10:49:47.550Z",
+      "priceYear": 2023,
+      "category": "LIFE_SAFETY",
+      "region": "UK",
+      "uprateMethod": "GDP_PER_HEAD",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m1-accident-slight",
+      "domain": "transport-safety",
+      "metric": "Average value of prevention per slight road accident (all road classes)",
+      "unit": "GBP per accident",
+      "low": "34232.600000000000000000000000000000",
+      "high": "34232.600000000000000000000000000000",
+      "source": "DfT TAG Data Book May 2026 v2.03, Table A4.1.4",
+      "sourceUrl": "https://www.gov.uk/government/publications/tag-data-book",
+      "year": 2026,
+      "method": "As fatal-accident row.",
+      "notes": "",
+      "createdAt": "2026-07-04T10:49:47.581Z",
+      "updatedAt": "2026-07-04T10:49:47.581Z",
+      "priceYear": 2023,
+      "category": "LIFE_SAFETY",
+      "region": "UK",
+      "uprateMethod": "GDP_PER_HEAD",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m2-vot-working-car",
+      "domain": "transport-safety",
+      "metric": "Value of travel time: working (employers’ business), car driver",
+      "unit": "GBP per hour",
+      "low": "23.170000000000000000000000000000",
+      "high": "27.570000000000000000000000000000",
+      "source": "DfT TAG Data Book May 2026 v2.03, Table A1.3.1",
+      "sourceUrl": "https://www.gov.uk/government/publications/tag-data-book",
+      "year": 2026,
+      "method": "Range = [resource/factor cost, market price]. 2014/15 VTTS study. Grows ~1.5%/yr real in appraisal.",
+      "notes": "",
+      "createdAt": "2026-07-04T10:49:47.625Z",
+      "updatedAt": "2026-07-04T10:49:47.625Z",
+      "priceYear": 2023,
+      "category": "TIME",
+      "region": "UK",
+      "uprateMethod": "GDP_PER_HEAD",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "v2-criminal-damage",
+      "domain": "crime",
+      "metric": "Unit cost: criminal damage",
+      "unit": "GBP per offence",
+      "low": "1970.000000000000000000000000000000",
+      "high": "1970.000000000000000000000000000000",
+      "source": "Home Office, Economic and social costs of crime 2019 to 2020 (Table 1/3/4)",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-costs-of-crime-2019-to-2020/economic-and-social-costs-of-crime-2019-to-2020",
+      "year": 2026,
+      "method": "£300 + £1,430 + £240",
+      "notes": "Multiplier 1.85. | Usage: per ALL crimes (incl. unreported) — multiply police-recorded volumes by the multiplier first; consider excluding the anticipation component for marginal changes.",
+      "createdAt": "2026-07-04T10:40:07.369Z",
+      "updatedAt": "2026-07-04T10:40:07.369Z",
+      "priceYear": 2019,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "v2-cybercrime-individual",
+      "domain": "crime",
+      "metric": "Unit cost: cybercrime (individual)",
+      "unit": "GBP per offence",
+      "low": "750.000000000000000000000000000000",
+      "high": "750.000000000000000000000000000000",
+      "source": "Home Office, Economic and social costs of crime 2019 to 2020 (Table 1/3/4)",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-costs-of-crime-2019-to-2020/economic-and-social-costs-of-crime-2019-to-2020",
+      "year": 2026,
+      "method": "£150 + £600 + £0 (police component un-costable)",
+      "notes": "Multiplier 33.42. | Usage: per ALL crimes (incl. unreported) — multiply police-recorded volumes by the multiplier first; consider excluding the anticipation component for marginal changes.",
+      "createdAt": "2026-07-04T10:40:07.436Z",
+      "updatedAt": "2026-07-04T10:40:07.436Z",
+      "priceYear": 2019,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "v2-robbery-commercial",
+      "domain": "crime",
+      "metric": "Unit cost: commercial robbery",
+      "unit": "GBP per offence",
+      "low": "11150.000000000000000000000000000000",
+      "high": "11150.000000000000000000000000000000",
+      "source": "Home Office, Economic and social costs of crime 2019 to 2020 (Table 1/3/4)",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-costs-of-crime-2019-to-2020/economic-and-social-costs-of-crime-2019-to-2020",
+      "year": 2026,
+      "method": "£1,030 + £8,680 + £1,450",
+      "notes": "9-sector coverage only (~60% of enterprises). | Usage: per ALL crimes (incl. unreported) — multiply police-recorded volumes by the multiplier first; consider excluding the anticipation component for marginal changes.",
+      "createdAt": "2026-07-04T10:40:07.469Z",
+      "updatedAt": "2026-07-04T10:40:07.469Z",
+      "priceYear": 2019,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "v2-burglary-commercial",
+      "domain": "crime",
+      "metric": "Unit cost: commercial burglary",
+      "unit": "GBP per offence",
+      "low": "10020.000000000000000000000000000000",
+      "high": "10020.000000000000000000000000000000",
+      "source": "Home Office, Economic and social costs of crime 2019 to 2020 (Table 1/3/4)",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-costs-of-crime-2019-to-2020/economic-and-social-costs-of-crime-2019-to-2020",
+      "year": 2026,
+      "method": "£3,690 + £5,460 + £870",
+      "notes": "9-sector coverage only. | Usage: per ALL crimes (incl. unreported) — multiply police-recorded volumes by the multiplier first; consider excluding the anticipation component for marginal changes.",
+      "createdAt": "2026-07-04T10:40:07.499Z",
+      "updatedAt": "2026-07-04T10:40:07.499Z",
+      "priceYear": 2019,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "v2-theft-commercial",
+      "domain": "crime",
+      "metric": "Unit cost: commercial theft",
+      "unit": "GBP per offence",
+      "low": "570.000000000000000000000000000000",
+      "high": "570.000000000000000000000000000000",
+      "source": "Home Office, Economic and social costs of crime 2019 to 2020 (Table 1/3/4)",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-costs-of-crime-2019-to-2020/economic-and-social-costs-of-crime-2019-to-2020",
+      "year": 2026,
+      "method": "£110 + £380 + £90",
+      "notes": "Lowest unit cost but £5.5bn total from 9.6M incidents — volume-driven. | Usage: per ALL crimes (incl. unreported) — multiply police-recorded volumes by the multiplier first; consider excluding the anticipation component for marginal changes.",
+      "createdAt": "2026-07-04T10:40:07.531Z",
+      "updatedAt": "2026-07-04T10:40:07.531Z",
+      "priceYear": 2019,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "v2-commercial-vehicle-theft",
+      "domain": "crime",
+      "metric": "Unit cost: theft of a commercial vehicle",
+      "unit": "GBP per offence",
+      "low": "32590.000000000000000000000000000000",
+      "high": "32590.000000000000000000000000000000",
+      "source": "Home Office, Economic and social costs of crime 2019 to 2020 (Table 1/3/4)",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-costs-of-crime-2019-to-2020/economic-and-social-costs-of-crime-2019-to-2020",
+      "year": 2026,
+      "method": "£6,970 + £23,000 + £2,620",
+      "notes": "9-sector coverage only. | Usage: per ALL crimes (incl. unreported) — multiply police-recorded volumes by the multiplier first; consider excluding the anticipation component for marginal changes.",
+      "createdAt": "2026-07-04T10:40:07.563Z",
+      "updatedAt": "2026-07-04T10:40:07.563Z",
+      "priceYear": 2019,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "v2-theft-from-commercial-vehicle",
+      "domain": "crime",
+      "metric": "Unit cost: theft from a commercial vehicle",
+      "unit": "GBP per offence",
+      "low": "2300.000000000000000000000000000000",
+      "high": "2300.000000000000000000000000000000",
+      "source": "Home Office, Economic and social costs of crime 2019 to 2020 (Table 1/3/4)",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-costs-of-crime-2019-to-2020/economic-and-social-costs-of-crime-2019-to-2020",
+      "year": 2026,
+      "method": "£480 + £1,700 + £130",
+      "notes": "9-sector coverage only. | Usage: per ALL crimes (incl. unreported) — multiply police-recorded volumes by the multiplier first; consider excluding the anticipation component for marginal changes.",
+      "createdAt": "2026-07-04T10:40:07.598Z",
+      "updatedAt": "2026-07-04T10:40:07.598Z",
+      "priceYear": 2019,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "v2-criminal-damage-commercial",
+      "domain": "crime",
+      "metric": "Unit cost: commercial criminal damage",
+      "unit": "GBP per offence",
+      "low": "1100.000000000000000000000000000000",
+      "high": "1100.000000000000000000000000000000",
+      "source": "Home Office, Economic and social costs of crime 2019 to 2020 (Table 1/3/4)",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-costs-of-crime-2019-to-2020/economic-and-social-costs-of-crime-2019-to-2020",
+      "year": 2026,
+      "method": "£160 + £700 + £240",
+      "notes": "9-sector coverage only. | Usage: per ALL crimes (incl. unreported) — multiply police-recorded volumes by the multiplier first; consider excluding the anticipation component for marginal changes.",
+      "createdAt": "2026-07-04T10:40:07.633Z",
+      "updatedAt": "2026-07-04T10:40:07.633Z",
+      "priceYear": 2019,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "v2-crime-total",
+      "domain": "crime",
+      "metric": "Total cost of crime, England & Wales 2019/20 (context anchor)",
+      "unit": "GBP per year",
+      "low": "77700000000.000000000000000000000000000000",
+      "high": "77700000000.000000000000000000000000000000",
+      "source": "Home Office, Economic and social costs of crime 2019 to 2020 (Table 1/3/4)",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-costs-of-crime-2019-to-2020/economic-and-social-costs-of-crime-2019-to-2020",
+      "year": 2026,
+      "method": "£60.8bn individuals + £16.9bn commercial (9 sectors)",
+      "notes": "REPLACES v1 context anchor (was 2015/16 £59bn). Physical/emotional harms ≈47% of individual-crime cost.",
+      "createdAt": "2026-07-04T10:40:07.664Z",
+      "updatedAt": "2026-07-04T10:40:07.664Z",
+      "priceYear": 2019,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m1-vpf-casualty-fatal",
+      "domain": "transport-safety",
+      "metric": "Value of a prevented fatality (VPF) — average value of prevention per fatal casualty",
+      "unit": "GBP per casualty",
+      "low": "2652796.190000000000000000000000000000",
+      "high": "2652796.190000000000000000000000000000",
+      "source": "DfT TAG Data Book May 2026 v2.03, Table A4.1.1",
+      "sourceUrl": "https://www.gov.uk/government/publications/tag-data-book",
+      "year": 2026,
+      "method": "Willingness-to-pay + net output + medical/ambulance (NERA 2011 presentation). Uprated by GDP per head.",
+      "notes": "REPLACES the v1 provisional £2m row. CONTESTED evidence base (Thomas & Vaughan 2015 critiques) — surface to users.",
+      "createdAt": "2026-07-04T10:49:47.163Z",
+      "updatedAt": "2026-07-04T10:49:47.163Z",
+      "priceYear": 2023,
+      "category": "LIFE_SAFETY",
+      "region": "UK",
+      "uprateMethod": "GDP_PER_HEAD",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m1-casualty-serious",
+      "domain": "transport-safety",
+      "metric": "Average value of prevention per serious casualty",
+      "unit": "GBP per casualty",
+      "low": "295069.040000000000000000000000000000",
+      "high": "295069.040000000000000000000000000000",
+      "source": "DfT TAG Data Book May 2026 v2.03, Table A4.1.1",
+      "sourceUrl": "https://www.gov.uk/government/publications/tag-data-book",
+      "year": 2026,
+      "method": "WTP + net output + medical/ambulance.",
+      "notes": "",
+      "createdAt": "2026-07-04T10:49:47.415Z",
+      "updatedAt": "2026-07-04T10:49:47.415Z",
+      "priceYear": 2023,
+      "category": "LIFE_SAFETY",
+      "region": "UK",
+      "uprateMethod": "GDP_PER_HEAD",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m1-casualty-slight",
+      "domain": "transport-safety",
+      "metric": "Average value of prevention per slight casualty",
+      "unit": "GBP per casualty",
+      "low": "22667.770000000000000000000000000000",
+      "high": "22667.770000000000000000000000000000",
+      "source": "DfT TAG Data Book May 2026 v2.03, Table A4.1.1",
+      "sourceUrl": "https://www.gov.uk/government/publications/tag-data-book",
+      "year": 2026,
+      "method": "WTP + net output + medical/ambulance.",
+      "notes": "",
+      "createdAt": "2026-07-04T10:49:47.455Z",
+      "updatedAt": "2026-07-04T10:49:47.455Z",
+      "priceYear": 2023,
+      "category": "LIFE_SAFETY",
+      "region": "UK",
+      "uprateMethod": "GDP_PER_HEAD",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m1-casualty-average",
+      "domain": "transport-safety",
+      "metric": "Average value of prevention per casualty (all severities)",
+      "unit": "GBP per casualty",
+      "low": "98933.020000000000000000000000000000",
+      "high": "98933.020000000000000000000000000000",
+      "source": "DfT TAG Data Book May 2026 v2.03, Table A4.1.1",
+      "sourceUrl": "https://www.gov.uk/government/publications/tag-data-book",
+      "year": 2026,
+      "method": "Severity-weighted average.",
+      "notes": "",
+      "createdAt": "2026-07-04T10:49:47.487Z",
+      "updatedAt": "2026-07-04T10:49:47.487Z",
+      "priceYear": 2023,
+      "category": "LIFE_SAFETY",
+      "region": "UK",
+      "uprateMethod": "GDP_PER_HEAD",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m2-vot-commuting",
+      "domain": "transport-safety",
+      "metric": "Value of travel time: commuting (non-working)",
+      "unit": "GBP per hour",
+      "low": "13.040000000000000000000000000000",
+      "high": "15.510000000000000000000000000000",
+      "source": "DfT TAG Data Book May 2026 v2.03, Table A1.3.1",
+      "sourceUrl": "https://www.gov.uk/government/publications/tag-data-book",
+      "year": 2026,
+      "method": "Range = [factor cost, market price]. Appraisal uses market price for non-working time.",
+      "notes": "",
+      "createdAt": "2026-07-04T10:49:47.655Z",
+      "updatedAt": "2026-07-04T10:49:47.655Z",
+      "priceYear": 2023,
+      "category": "TIME",
+      "region": "UK",
+      "uprateMethod": "GDP_PER_HEAD",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m2-vot-other",
+      "domain": "transport-safety",
+      "metric": "Value of travel time: other non-working",
+      "unit": "GBP per hour",
+      "low": "5.950000000000000000000000000000",
+      "high": "7.080000000000000000000000000000",
+      "source": "DfT TAG Data Book May 2026 v2.03, Table A1.3.1",
+      "sourceUrl": "https://www.gov.uk/government/publications/tag-data-book",
+      "year": 2026,
+      "method": "Range = [factor cost, market price]. Appraisal uses market price for non-working time.",
+      "notes": "",
+      "createdAt": "2026-07-04T10:49:47.686Z",
+      "updatedAt": "2026-07-04T10:49:47.686Z",
+      "priceYear": 2023,
+      "category": "TIME",
+      "region": "UK",
+      "uprateMethod": "GDP_PER_HEAD",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m5-gp-consultation",
+      "domain": "health",
+      "metric": "GP — per surgery consultation lasting 10 minutes",
+      "unit": "GBP per consultation",
+      "low": "40.000000000000000000000000000000",
+      "high": "48.000000000000000000000000000000",
+      "source": "PSSRU/CoReC Unit Costs of Health and Social Care 2025 (Jones et al., University of Kent)",
+      "sourceUrl": "https://kar.kent.ac.uk/115569/",
+      "year": 2026,
+      "method": "Range = [without, with] qualification costs, including direct care staff costs (Table 9.4.2).",
+      "notes": "Openly published NIHR-funded manual; value cited with edition + table.",
+      "createdAt": "2026-07-04T11:11:02.421Z",
+      "updatedAt": "2026-07-04T11:11:02.421Z",
+      "priceYear": 2024,
+      "category": "SERVICE_UNIT_COST",
+      "region": "England",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m5-gp-hour-contact",
+      "domain": "health",
+      "metric": "GP — per hour of patient contact",
+      "unit": "GBP per hour",
+      "low": "239.000000000000000000000000000000",
+      "high": "285.000000000000000000000000000000",
+      "source": "PSSRU/CoReC Unit Costs of Health and Social Care 2025 (Jones et al., University of Kent)",
+      "sourceUrl": "https://kar.kent.ac.uk/115569/",
+      "year": 2026,
+      "method": "Range = [without, with] qualification costs, including direct care staff costs (Table 9.4.2).",
+      "notes": "Openly published NIHR-funded manual; value cited with edition + table.",
+      "createdAt": "2026-07-04T11:11:03.411Z",
+      "updatedAt": "2026-07-04T11:11:03.411Z",
+      "priceYear": 2024,
+      "category": "SERVICE_UNIT_COST",
+      "region": "England",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m5-ae-attendance",
+      "domain": "health",
+      "metric": "Emergency care (A&E) — cost per attendance",
+      "unit": "GBP per attendance",
+      "low": "280.000000000000000000000000000000",
+      "high": "280.000000000000000000000000000000",
+      "source": "PSSRU/CoReC Unit Costs of Health and Social Care 2025 (Jones et al., University of Kent)",
+      "sourceUrl": "https://kar.kent.ac.uk/115569/",
+      "year": 2026,
+      "method": "NHS National Cost Collection 2024/25, via Table 6.1.1.",
+      "notes": "Openly published NIHR-funded manual; value cited with edition + table.",
+      "createdAt": "2026-07-04T11:11:03.446Z",
+      "updatedAt": "2026-07-04T11:11:03.446Z",
+      "priceYear": 2024,
+      "category": "SERVICE_UNIT_COST",
+      "region": "England",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m5-inpatient-elective",
+      "domain": "health",
+      "metric": "Hospital elective inpatient stay",
+      "unit": "GBP per stay",
+      "low": "6620.000000000000000000000000000000",
+      "high": "6620.000000000000000000000000000000",
+      "source": "PSSRU/CoReC Unit Costs of Health and Social Care 2025 (Jones et al., University of Kent)",
+      "sourceUrl": "https://kar.kent.ac.uk/115569/",
+      "year": 2026,
+      "method": "NHS National Cost Collection 2024/25 (per stay, not per bed-day), Table 6.1.1.",
+      "notes": "Openly published NIHR-funded manual; value cited with edition + table.",
+      "createdAt": "2026-07-04T11:11:03.479Z",
+      "updatedAt": "2026-07-04T11:11:03.479Z",
+      "priceYear": 2024,
+      "category": "SERVICE_UNIT_COST",
+      "region": "England",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m5-inpatient-nonelective-long",
+      "domain": "health",
+      "metric": "Hospital non-elective inpatient stay (long stay)",
+      "unit": "GBP per stay",
+      "low": "5395.000000000000000000000000000000",
+      "high": "5395.000000000000000000000000000000",
+      "source": "PSSRU/CoReC Unit Costs of Health and Social Care 2025 (Jones et al., University of Kent)",
+      "sourceUrl": "https://kar.kent.ac.uk/115569/",
+      "year": 2026,
+      "method": "NHS National Cost Collection 2024/25 (per stay, not per bed-day), Table 6.1.1.",
+      "notes": "Openly published NIHR-funded manual; value cited with edition + table.",
+      "createdAt": "2026-07-04T11:11:03.510Z",
+      "updatedAt": "2026-07-04T11:11:03.510Z",
+      "priceYear": 2024,
+      "category": "SERVICE_UNIT_COST",
+      "region": "England",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m5-inpatient-nonelective-short",
+      "domain": "health",
+      "metric": "Hospital non-elective inpatient stay (short stay)",
+      "unit": "GBP per stay",
+      "low": "824.000000000000000000000000000000",
+      "high": "824.000000000000000000000000000000",
+      "source": "PSSRU/CoReC Unit Costs of Health and Social Care 2025 (Jones et al., University of Kent)",
+      "sourceUrl": "https://kar.kent.ac.uk/115569/",
+      "year": 2026,
+      "method": "NHS National Cost Collection 2024/25 (per stay, not per bed-day), Table 6.1.1.",
+      "notes": "Openly published NIHR-funded manual; value cited with edition + table.",
+      "createdAt": "2026-07-04T11:11:03.541Z",
+      "updatedAt": "2026-07-04T11:11:03.541Z",
+      "priceYear": 2024,
+      "category": "SERVICE_UNIT_COST",
+      "region": "England",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m5-nurse-band5-hour",
+      "domain": "health",
+      "metric": "Qualified nurse, Agenda for Change Band 5 (community/hospital) — cost per working hour",
+      "unit": "GBP per hour",
+      "low": "57.000000000000000000000000000000",
+      "high": "57.000000000000000000000000000000",
+      "source": "PSSRU/CoReC Unit Costs of Health and Social Care 2025 (Jones et al., University of Kent)",
+      "sourceUrl": "https://kar.kent.ac.uk/115569/",
+      "year": 2026,
+      "method": "Including qualification costs (Table 9.2.1; Band 4 = £47, Band 6 = £68). Community staff nurses are typically Band 5.",
+      "notes": "Openly published NIHR-funded manual; value cited with edition + table.",
+      "createdAt": "2026-07-04T11:11:03.573Z",
+      "updatedAt": "2026-07-04T11:11:03.573Z",
+      "priceYear": 2024,
+      "category": "SERVICE_UNIT_COST",
+      "region": "England",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m5-talking-therapy-contact",
+      "domain": "health",
+      "metric": "NHS Talking Therapies (formerly IAPT) — cost per care contact",
+      "unit": "GBP per contact",
+      "low": "169.000000000000000000000000000000",
+      "high": "169.000000000000000000000000000000",
+      "source": "PSSRU/CoReC Unit Costs of Health and Social Care 2025 (Jones et al., University of Kent)",
+      "sourceUrl": "https://kar.kent.ac.uk/115569/",
+      "year": 2026,
+      "method": "NHS National Cost Collection 2024/25, via Table 6.1.1.",
+      "notes": "Openly published NIHR-funded manual; value cited with edition + table.",
+      "createdAt": "2026-07-04T11:11:03.605Z",
+      "updatedAt": "2026-07-04T11:11:03.605Z",
+      "priceYear": 2024,
+      "category": "SERVICE_UNIT_COST",
+      "region": "England",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m5-social-worker-hour",
+      "domain": "health",
+      "metric": "Social worker (adult services) — cost per hour",
+      "unit": "GBP per hour",
+      "low": "54.000000000000000000000000000000",
+      "high": "61.000000000000000000000000000000",
+      "source": "PSSRU/CoReC Unit Costs of Health and Social Care 2025 (Jones et al., University of Kent)",
+      "sourceUrl": "https://kar.kent.ac.uk/115569/",
+      "year": 2026,
+      "method": "Range = [without, with] qualification costs (Table 10.1.1).",
+      "notes": "Openly published NIHR-funded manual; value cited with edition + table.",
+      "createdAt": "2026-07-04T11:11:03.637Z",
+      "updatedAt": "2026-07-04T11:11:03.637Z",
+      "priceYear": 2024,
+      "category": "SERVICE_UNIT_COST",
+      "region": "England",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m6-hourly-all",
+      "domain": "admin-burden",
+      "metric": "Median gross hourly earnings — all employees (UK)",
+      "unit": "GBP per hour",
+      "low": "17.960000000000000000000000000000",
+      "high": "23.060000000000000000000000000000",
+      "source": "ONS Annual Survey of Hours and Earnings (ASHE) 2025 provisional, hourly pay – gross",
+      "sourceUrl": "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/datasets/allemployeesashetable1",
+      "year": 2025,
+      "method": "Range = [median £17.96, mean £23.06]. Standard Cost Model wage input: admin burden = time × wage × frequency × population. Add non-wage overheads (~25-30%) per SCM practice.",
+      "notes": "ASHE 2025 provisional; employees on adult rates, pay unaffected by absence.",
+      "createdAt": "2026-07-04T11:11:05.626Z",
+      "updatedAt": "2026-07-04T11:11:05.626Z",
+      "priceYear": 2025,
+      "category": "ADMIN_BURDEN",
+      "region": "UK",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m6-hourly-professional",
+      "domain": "admin-burden",
+      "metric": "Median gross hourly earnings — professional occupations (SOC major group 2)",
+      "unit": "GBP per hour",
+      "low": "26.110000000000000000000000000000",
+      "high": "28.900000000000000000000000000000",
+      "source": "ONS Annual Survey of Hours and Earnings (ASHE) 2025 provisional, hourly pay – gross",
+      "sourceUrl": "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/datasets/allemployeesashetable1",
+      "year": 2025,
+      "method": "Range = [median £26.11, mean £28.9]. Standard Cost Model wage input: admin burden = time × wage × frequency × population. Add non-wage overheads (~25-30%) per SCM practice.",
+      "notes": "ASHE 2025 provisional; employees on adult rates, pay unaffected by absence.",
+      "createdAt": "2026-07-04T11:11:05.890Z",
+      "updatedAt": "2026-07-04T11:11:05.890Z",
+      "priceYear": 2025,
+      "category": "ADMIN_BURDEN",
+      "region": "UK",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m6-hourly-admin",
+      "domain": "admin-burden",
+      "metric": "Median gross hourly earnings — administrative and secretarial occupations (SOC major group 4)",
+      "unit": "GBP per hour",
+      "low": "15.200000000000000000000000000000",
+      "high": "17.130000000000000000000000000000",
+      "source": "ONS Annual Survey of Hours and Earnings (ASHE) 2025 provisional, hourly pay – gross",
+      "sourceUrl": "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/datasets/allemployeesashetable1",
+      "year": 2025,
+      "method": "Range = [median £15.2, mean £17.13]. Standard Cost Model wage input: admin burden = time × wage × frequency × population. Add non-wage overheads (~25-30%) per SCM practice.",
+      "notes": "ASHE 2025 provisional; employees on adult rates, pay unaffected by absence.",
+      "createdAt": "2026-07-04T11:11:05.920Z",
+      "updatedAt": "2026-07-04T11:11:05.920Z",
+      "priceYear": 2025,
+      "category": "ADMIN_BURDEN",
+      "region": "UK",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m7-carbon-2026",
+      "domain": "environment",
+      "metric": "Carbon value — emissions in 2026 (economy-wide series)",
+      "unit": "GBP per tCO2e",
+      "low": "132.000000000000000000000000000000",
+      "high": "396.000000000000000000000000000000",
+      "source": "DESNZ, Valuation of greenhouse gas emissions for policy appraisal and evaluation (Annex 1)",
+      "sourceUrl": "https://www.gov.uk/government/publications/valuing-greenhouse-gas-emissions-in-policy-appraisal/valuation-of-greenhouse-gas-emissions-for-policy-appraisal-and-evaluation",
+      "year": 2023,
+      "method": "Central £264; low/high = ±50% sensitivities. Single economy-wide series (traded/non-traded unified in the 2021 review), target-consistent abatement-cost approach.",
+      "notes": "Values rise over time toward net-zero; use the value for the year the emission change occurs.",
+      "createdAt": "2026-07-04T11:11:07.659Z",
+      "updatedAt": "2026-07-04T11:11:07.659Z",
+      "priceYear": 2020,
+      "category": "ENVIRONMENT",
+      "region": "UK",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m7-carbon-2030",
+      "domain": "environment",
+      "metric": "Carbon value — emissions in 2030 (economy-wide series)",
+      "unit": "GBP per tCO2e",
+      "low": "140.000000000000000000000000000000",
+      "high": "420.000000000000000000000000000000",
+      "source": "DESNZ, Valuation of greenhouse gas emissions for policy appraisal and evaluation (Annex 1)",
+      "sourceUrl": "https://www.gov.uk/government/publications/valuing-greenhouse-gas-emissions-in-policy-appraisal/valuation-of-greenhouse-gas-emissions-for-policy-appraisal-and-evaluation",
+      "year": 2023,
+      "method": "Central £280; low/high = ±50% sensitivities. Single economy-wide series (traded/non-traded unified in the 2021 review), target-consistent abatement-cost approach.",
+      "notes": "Values rise over time toward net-zero; use the value for the year the emission change occurs.",
+      "createdAt": "2026-07-04T11:11:07.907Z",
+      "updatedAt": "2026-07-04T11:11:07.907Z",
+      "priceYear": 2020,
+      "category": "ENVIRONMENT",
+      "region": "UK",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m8-businesses-total",
+      "domain": "business-population",
+      "metric": "UK private-sector businesses — total",
+      "unit": "businesses (count)",
+      "low": "5690265.000000000000000000000000000000",
+      "high": "5690265.000000000000000000000000000000",
+      "source": "DBT Business Population Estimates 2025, Table 1 (UK private sector, start 2025)",
+      "sourceUrl": "https://www.gov.uk/government/statistics/business-population-estimates-2025",
+      "year": 2025,
+      "method": "The N for regulatory-friction aggregation (per-business burden × affected business count). Micro incl. unregistered/no-employee businesses.",
+      "notes": "A count, not a monetary value — never uprated.",
+      "createdAt": "2026-07-04T11:11:09.871Z",
+      "updatedAt": "2026-07-04T11:11:09.871Z",
+      "priceYear": 2025,
+      "category": "EMPLOYMENT_ECONOMY",
+      "region": "UK",
+      "uprateMethod": "NONE",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m8-businesses-micro",
+      "domain": "business-population",
+      "metric": "UK private-sector businesses — micro (0–9 employees)",
+      "unit": "businesses (count)",
+      "low": "5423410.000000000000000000000000000000",
+      "high": "5423410.000000000000000000000000000000",
+      "source": "DBT Business Population Estimates 2025, Table 1 (UK private sector, start 2025)",
+      "sourceUrl": "https://www.gov.uk/government/statistics/business-population-estimates-2025",
+      "year": 2025,
+      "method": "The N for regulatory-friction aggregation (per-business burden × affected business count). Micro incl. unregistered/no-employee businesses.",
+      "notes": "A count, not a monetary value — never uprated.",
+      "createdAt": "2026-07-04T11:11:10.129Z",
+      "updatedAt": "2026-07-04T11:11:10.129Z",
+      "priceYear": 2025,
+      "category": "EMPLOYMENT_ECONOMY",
+      "region": "UK",
+      "uprateMethod": "NONE",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m8-businesses-small",
+      "domain": "business-population",
+      "metric": "UK private-sector businesses — small (10–49 employees)",
+      "unit": "businesses (count)",
+      "low": "220085.000000000000000000000000000000",
+      "high": "220085.000000000000000000000000000000",
+      "source": "DBT Business Population Estimates 2025, Table 1 (UK private sector, start 2025)",
+      "sourceUrl": "https://www.gov.uk/government/statistics/business-population-estimates-2025",
+      "year": 2025,
+      "method": "The N for regulatory-friction aggregation (per-business burden × affected business count). Micro incl. unregistered/no-employee businesses.",
+      "notes": "A count, not a monetary value — never uprated.",
+      "createdAt": "2026-07-04T11:11:10.161Z",
+      "updatedAt": "2026-07-04T11:11:10.161Z",
+      "priceYear": 2025,
+      "category": "EMPLOYMENT_ECONOMY",
+      "region": "UK",
+      "uprateMethod": "NONE",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m8-businesses-medium",
+      "domain": "business-population",
+      "metric": "UK private-sector businesses — medium (50–249 employees)",
+      "unit": "businesses (count)",
+      "low": "38435.000000000000000000000000000000",
+      "high": "38435.000000000000000000000000000000",
+      "source": "DBT Business Population Estimates 2025, Table 1 (UK private sector, start 2025)",
+      "sourceUrl": "https://www.gov.uk/government/statistics/business-population-estimates-2025",
+      "year": 2025,
+      "method": "The N for regulatory-friction aggregation (per-business burden × affected business count). Micro incl. unregistered/no-employee businesses.",
+      "notes": "A count, not a monetary value — never uprated.",
+      "createdAt": "2026-07-04T11:11:10.193Z",
+      "updatedAt": "2026-07-04T11:11:10.193Z",
+      "priceYear": 2025,
+      "category": "EMPLOYMENT_ECONOMY",
+      "region": "UK",
+      "uprateMethod": "NONE",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m8-businesses-large",
+      "domain": "business-population",
+      "metric": "UK private-sector businesses — large (250+ employees)",
+      "unit": "businesses (count)",
+      "low": "8335.000000000000000000000000000000",
+      "high": "8335.000000000000000000000000000000",
+      "source": "DBT Business Population Estimates 2025, Table 1 (UK private sector, start 2025)",
+      "sourceUrl": "https://www.gov.uk/government/statistics/business-population-estimates-2025",
+      "year": 2025,
+      "method": "The N for regulatory-friction aggregation (per-business burden × affected business count). Micro incl. unregistered/no-employee businesses.",
+      "notes": "A count, not a monetary value — never uprated.",
+      "createdAt": "2026-07-04T11:11:10.228Z",
+      "updatedAt": "2026-07-04T11:11:10.228Z",
+      "priceYear": 2025,
+      "category": "EMPLOYMENT_ECONOMY",
+      "region": "UK",
+      "uprateMethod": "NONE",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m10-fraud-individual",
+      "domain": "crime",
+      "metric": "Unit cost: fraud against individuals",
+      "unit": "GBP per offence",
+      "low": "2884.000000000000000000000000000000",
+      "high": "2884.000000000000000000000000000000",
+      "source": "Home Office, Economic and social cost of fraud 2023 to 2024",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-cost-of-fraud-2023-to-2024/economic-and-social-cost-of-fraud-2023-to-2024",
+      "year": 2026,
+      "method": "Anticipation £274 + consequence £2,256 + response £354.",
+      "notes": "SUPERSEDES the 2019/20-series fraud row (v2). Per all incidents incl. unreported (CSEW-based).",
+      "createdAt": "2026-07-04T11:11:11.971Z",
+      "updatedAt": "2026-07-04T11:11:11.971Z",
+      "priceYear": 2023,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m10-fraud-business",
+      "domain": "crime",
+      "metric": "Unit cost: fraud against businesses",
+      "unit": "GBP per offence",
+      "low": "2170.000000000000000000000000000000",
+      "high": "2170.000000000000000000000000000000",
+      "source": "Home Office, Economic and social cost of fraud 2023 to 2024",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-cost-of-fraud-2023-to-2024/economic-and-social-cost-of-fraud-2023-to-2024",
+      "year": 2026,
+      "method": "Anticipation £1,145 + consequence £763 + response £262.",
+      "notes": "Business survey coverage caveats apply — see publication.",
+      "createdAt": "2026-07-04T11:11:12.224Z",
+      "updatedAt": "2026-07-04T11:11:12.224Z",
+      "priceYear": 2023,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    },
+    {
+      "id": "m10-fraud-total",
+      "domain": "crime",
+      "metric": "Total economic and social cost of fraud, England & Wales, YE March 2024 (context anchor)",
+      "unit": "GBP per year",
+      "low": "14400000000.000000000000000000000000000000",
+      "high": "14400000000.000000000000000000000000000000",
+      "source": "Home Office, Economic and social cost of fraud 2023 to 2024",
+      "sourceUrl": "https://www.gov.uk/government/publications/economic-and-social-cost-of-fraud-2023-to-2024/economic-and-social-cost-of-fraud-2023-to-2024",
+      "year": 2026,
+      "method": "Individuals + businesses.",
+      "notes": "Context/scale anchor, not a unit cost.",
+      "createdAt": "2026-07-04T11:11:12.258Z",
+      "updatedAt": "2026-07-04T11:11:12.258Z",
+      "priceYear": 2023,
+      "category": "CRIME",
+      "region": "England and Wales",
+      "uprateMethod": "GDP_DEFLATOR",
+      "confidence": "OFFICIAL_CURRENT"
+    }
+  ],
+  "DeflatorSeries": [
+    {
+      "year": 1955,
+      "index": 3.0588,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1956,
+      "index": 3.2472,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1957,
+      "index": 3.3969,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1958,
+      "index": 3.4794,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1959,
+      "index": 3.4979,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1960,
+      "index": 3.5676,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1961,
+      "index": 3.6987,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1962,
+      "index": 3.8139,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1963,
+      "index": 3.8782,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1964,
+      "index": 4.0607,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1965,
+      "index": 4.2794,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1966,
+      "index": 4.4971,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1967,
+      "index": 4.62,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1968,
+      "index": 4.862,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1969,
+      "index": 5.1978,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1970,
+      "index": 5.7106,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1971,
+      "index": 6.1429,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1972,
+      "index": 6.6653,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1973,
+      "index": 7.251,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1974,
+      "index": 8.7249,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1975,
+      "index": 10.8582,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1976,
+      "index": 12.3731,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1977,
+      "index": 14.0735,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1978,
+      "index": 15.6579,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1979,
+      "index": 18.3002,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1980,
+      "index": 21.7929,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1981,
+      "index": 24.0883,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1982,
+      "index": 25.8635,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1983,
+      "index": 27.094,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1984,
+      "index": 28.6782,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1985,
+      "index": 30.2401,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1986,
+      "index": 31.4686,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1987,
+      "index": 33.3005,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1988,
+      "index": 35.5679,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1989,
+      "index": 38.4436,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1990,
+      "index": 41.6689,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1991,
+      "index": 44.1751,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1992,
+      "index": 45.3861,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1993,
+      "index": 46.6776,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1994,
+      "index": 47.4519,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1995,
+      "index": 48.9537,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1996,
+      "index": 50.6097,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1997,
+      "index": 50.7408,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1998,
+      "index": 51.4538,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 1999,
+      "index": 52.09,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2000,
+      "index": 52.5543,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2001,
+      "index": 53.6079,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2002,
+      "index": 54.7102,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2003,
+      "index": 56.0523,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2004,
+      "index": 57.7233,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2005,
+      "index": 59.3089,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2006,
+      "index": 61.0914,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2007,
+      "index": 62.2864,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2008,
+      "index": 64.6079,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2009,
+      "index": 65.4436,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2010,
+      "index": 66.5571,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2011,
+      "index": 67.9779,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2012,
+      "index": 69.1565,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2013,
+      "index": 70.5952,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2014,
+      "index": 71.5931,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2015,
+      "index": 72.0902,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2016,
+      "index": 73.5353,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2017,
+      "index": 74.4665,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2018,
+      "index": 76.1639,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2019,
+      "index": 78.1735,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2020,
+      "index": 82.2588,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2021,
+      "index": 82.4554,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2022,
+      "index": 88.2512,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2023,
+      "index": 92.8945,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2024,
+      "index": 96.6694,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    },
+    {
+      "year": 2025,
+      "index": 100,
+      "createdAt": "2026-07-04T10:45:54.405Z",
+      "updatedAt": "2026-07-04T10:45:54.405Z"
+    }
+  ]
+}

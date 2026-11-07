@@ -39,6 +39,40 @@ verify:stages-ui 24 · verify:lex-26q-ui 25 · tsc (web, scripts) clean. ⚠ The
 deleted idea and lacks a purpose", is a spend-data finding that was red before this sprint's code ran; not touched. Moved assertions
 carry a "MOVED BY 26-X" note each (25k, 26h, 26p, 26s, 26s-browser, 26s2, 26s2-structure, 26v1b, verify-lex-26q-ui, verify-stages-ui).
 
+## 2026-11-04 10:36 UTC - INGEST (CC-Ingest): decision 324 (five core-docs rows out of both indexes, kept in the DB); optimism-bias Table 1 column named; PSSRU licence restated
+
+**Decision 324.** The five govuk-core-docs rows 307 left over are out of the keyword and vector indexes. They are NOT deleted from `corpus_sections`, and their R2 text is untouched. Each row carries `status='unavailable'`, which is the house convention: every index builder selects `status='compiled'`, so a later rebuild cannot put them back. Each also gets its own state and reason in `availability_status` / `availability_note`:
+- Old Green Book path (`the-green-book-appraisal-and-evaluation-in-central-government:1–2`) → `superseded`. The note begins `superseded_by=govuk-core-docs:government/publications/the-green-book--2` and says the row was valid until 28 Oct. It is not a duplicate: it is the February edition, which still carries the 3.5% and 1.5% rates. Not deduped.
+- Bank of China white paper (`:1–2`) → `withdrawn` (publisher action; content API `gone`).
+- Old Aqua Book marker (`:1`) → `ingest-artefact` (a redirect row with no text; the Aqua Book is held at `guidance/the-aqua-book`). It was already `unavailable` and in **neither** index, so for this row only the state changed.
+- **Read back before and after, by id, on the Lance tables and on both running serves** (`search/d324-retire-rows.ts readback`; JSON in `docs/ingest_traces/d324_readback_{before,deleted-pre-restart,after}.json`):
+
+  | | before | after delete | after restart |
+  |---|---|---|---|
+  | `corpus_fts` (`id IN`) | 4 | 0 (total 18,275,065 → 061) | 0 |
+  | `corpus_vec` (`sectionId IN`) | 18 | 0 (22,674,550 → 532) | 0 |
+  | `corpus_chunks` (`sectionId IN`) | 18 | 0 (22,674,550 → 532) | 0 |
+  | fts-serve, 3 queries scoped to the ids | 4 targets returned | still 4 (boot snapshot) | **0** |
+  | vector-serve, same | 2 returned | still 2 | **0** |
+
+  A live control (`the-green-book--2:1`) matched 1 in every table and every query throughout. The double-quoted predicate form was counted beside it and returned **0** every time: the silent-no-op trap was visible and not used. The vector deletion was verified on its own and not inferred from the keyword result.
+- **Serves restarted** with `v33-restart-serve.ts` (`deploymentRedeploy`). `started_at`: fts 03:59 → 10:29:57, vector 04:03 → 10:30:54.
+- **Safety export** (full index rows plus the DB rows before the change): R2 `_search/hygiene-backup/d324-2026-11-04T10-26-02-408Z/`, 4/4 objects read back. No index rebuild: Lance filters deleted rows at query time, and the serves' 0 results confirm it.
+
+**Optimism bias Table 1** (2013, PDF page 2, printed "2/15"), read from the page image and not parsed. It has four columns under "Optimism Bias (%)": Works Duration Upper | Lower, then Capital Expenditure Upper | Lower. `costing-params.ts` held the third column only, so `OPTIMISM_BIAS_UPLIFTS` → **`OPTIMISM_BIAS_CAPEX_UPPER`**, mirrored in the seed JSON (`optimism_bias_capex_upper`). Nothing imported the old name. Values unchanged.
+
+**PSSRU (9 CostBenchmark rows)** now read `licence=all-rights-reserved-presumed; …` in `notes`, with the reasoning. The KAR record, re-read today, states no licence, no CC designation and no copyright notice; "freely available online" is access, not reuse. The wording "Openly published NIHR-funded manual" is gone from the rows and from the loader: `m5-pssru.ts` imports the note from `scripts/costing/pssru-licence.ts`, so a re-run cannot restore it. Re-read 9/9. ⚠ **Not yet done:** (a) `CostBenchmark` has no licence column, so the statement sits in `notes` until one exists (D-4, schema); (b) **the figures are still shown**. The three readers (`lib/lex/state.ts`, `field-machine.ts`, `cost-route.ts`) are Lex's, and `field-machine.ts` carries Lex's uncommitted work, so the BAILII-style routing (cite, quote the line, link, no figure) is Lex's change to make.
+
+**Checks:** web tsc clean; ingest tsc 24 errors, all pre-existing, none in the new file. Not committed.
+
+## 2026-11-04 03:13 UTC - INGEST-CBA-1 (CC-Ingest): report back on what Lex needs for cost–benefit analysis; dry-run pilot; nothing written to Neon or R2
+
+Executes `BRIEF_INGEST_CBA_1.md` §5. Full account in `docs/INGEST_CBA_1_REPORT.md`; artefacts in `docs/ingest_traces/cba1_*`.
+**⚠ STPR is now 3.00%, not 3.5%.** HMT's discounting guidance (updated 28 Oct 2026) sets 3.00% for years 1–30, 2.50% for 31–75 and 2.25% for 76–125 (paras 2.1, 3.8). `scrutinise-web/lib/lex/costing-params.ts:26` still holds 0.035, and its "Green Book 2026 §6.58" citation for the 1.5% health rate now points at a different sentence in the October edition. Lex's file; not touched.
+**Held:** Green Book Oct 2026 (89 heading sections, NO paragraph numbers because the HTML edition carries none; the superseded Feb 2026 edition is still held as one PDF blob), MPM (307, "Annex 4.6" addressable), Magenta 388, Aqua 79, Orange 94, deflators (`DeflatorSeries` 71 rows, June 2026 QNA; no source or date column), CostBenchmark 53 rows (GMCA 0, `m4 --apply` still gated), EN for 6 of 8 precedent instruments, IAs for 2 of 5 precedent Acts. **Not held:** GB discounting and optimism-bias guidance, Better Regulation Framework, IA template, Civil Service Statistics, PESA. NAO rows are licensed `nao-nc`.
+**Pilot (dry run, read-back in `cba1_pilot_readback.txt`):** new `scripts/ingest/cba/numbered-paras.ts`, because 307's splitter returns 0 sections for two-level-numbered HMT documents. Green Book 391 sections (1.1–10.12, A.1–A.18), 0 gaps, 94.7% of words placed, 13 tables from HTML; discounting 33; optimism bias 31. The first run placed only 60.7% (a restart rule fired on a numbered table cell) and titled 6.58 with a table row; both fixed against the read-back. Oct 2026 deflators differ from held by ≤0.68% (≤0.17% since 2020). Civil Service Statistics 2026 tables 7/20/21/25 read back cleanly: salary only, no on-costs or paybill.
+**Checks:** ingest tsc adds 0 errors (24 pre-existing elsewhere), web tsc clean. **Decisions D-1 to D-6 in the report** (write Pilot A to new docIds, mark the Feb Green Book superseded, tell Lex the STPR, schema for CS Stats / PESA / deflator dates, NAO licence, GMCA apply).
+
 ## 2026-11-04 04:04 UTC - INGEST 307 (decision 296), part 2: the other core-docs entries re-run as full text; Green Book path fixed
 
 Charlie, 4 Nov: "go ahead and push. The headings are fine. yes rebuild the search index". 8bf19b3 pushed; Ingest and Ops deployments read back `meta.commitHash = 8bf19b3`, SUCCESS.

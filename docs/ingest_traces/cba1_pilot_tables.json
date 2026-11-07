@@ -1,0 +1,558 @@
+{
+  "deflators": {
+    "source": "https://assets.publishing.service.gov.uk/media/6ae32ab0a5c2f99e3a7b82e3/GDP_Deflators_Budget_October_2026_update.xlsx",
+    "sheetHead": [
+      "GDP DEFLATORS AT MARKET PRICES, AND MONEY GDP",
+      "Forecast data are consistent with OBR EFO data as at the Budget 28 October 2026.",
+      "Outturn data are as at the Quarterly National Accounts from ONS - last updated 30 September 2026.",
+      "Financial year | Calendar year",
+      "GDP deflator at market prices  | Money GDP (3), (4) | GDP deflator at market prices  | Money GDP (3)",
+      "Financial year | 2025-26 = 100 | per cent change on previous year | Cash £ million\nNon-Season-ally Adjusted | Cash £ million\nSeasonally Adjusted | Calendar year | 2025 = 100 | per cent change on previous year | Cash £ million\nNon-Seasonally Adjusted",
+      "1955-56 | 3.0806 | 19486 | 19501 | 1955 | 3.0569 | 19083"
+    ],
+    "freshRows": 71,
+    "freshYears": [
+      1955,
+      2025
+    ],
+    "freshLatest": {
+      "year": 2025,
+      "index": 100
+    },
+    "heldRows": 71,
+    "heldYears": [
+      1955,
+      2025
+    ],
+    "heldLatest": {
+      "year": 2025,
+      "index": 100,
+      "createdAt": "2026-07-04T11:45:54.405Z",
+      "updatedAt": "2026-07-04T11:45:54.405Z"
+    },
+    "heldUpdatedAt": "2026-07-04T11:45:54.405Z",
+    "rebasedTo": 2019,
+    "worstRevisions": [
+      {
+        "year": 2008,
+        "heldRel": 0.8264680486354071,
+        "freshRel": 0.8320739368134991,
+        "pct": 0.678294604050067
+      },
+      {
+        "year": 2005,
+        "heldRel": 0.7586829296372811,
+        "freshRel": 0.7637434279168428,
+        "pct": 0.6670109583170714
+      },
+      {
+        "year": 1998,
+        "heldRel": 0.658200029421735,
+        "freshRel": 0.6625362206866254,
+        "pct": 0.6587953617534836
+      },
+      {
+        "year": 1999,
+        "heldRel": 0.6663383371602909,
+        "freshRel": 0.6706532302658718,
+        "pct": 0.6475528819142262
+      },
+      {
+        "year": 2007,
+        "heldRel": 0.7967712843866527,
+        "freshRel": 0.801922489965481,
+        "pct": 0.6465099432886312
+      },
+      {
+        "year": 2002,
+        "heldRel": 0.6998560893397379,
+        "freshRel": 0.7043319238819638,
+        "pct": 0.6395364147575577
+      }
+    ],
+    "recent": [
+      {
+        "year": 2018,
+        "heldRel": 0.9742930788566457,
+        "freshRel": 0.9742505877680394,
+        "pct": -0.00436122246256776
+      },
+      {
+        "year": 2019,
+        "heldRel": 1,
+        "freshRel": 1,
+        "pct": 0
+      },
+      {
+        "year": 2020,
+        "heldRel": 1.052259397366115,
+        "freshRel": 1.0512025459519032,
+        "pct": -0.1004363958979293
+      },
+      {
+        "year": 2021,
+        "heldRel": 1.0547743161045622,
+        "freshRel": 1.0556812043210688,
+        "pct": 0.08597936095522396
+      },
+      {
+        "year": 2022,
+        "heldRel": 1.1289145298598628,
+        "freshRel": 1.1296435590711669,
+        "pct": 0.06457789248177637
+      },
+      {
+        "year": 2023,
+        "heldRel": 1.1883118959749785,
+        "freshRel": 1.188978439352938,
+        "pct": 0.05609161872544011
+      },
+      {
+        "year": 2024,
+        "heldRel": 1.2366006383237285,
+        "freshRel": 1.2356474132459483,
+        "pct": -0.07708431066898447
+      },
+      {
+        "year": 2025,
+        "heldRel": 1.2792058689965269,
+        "freshRel": 1.2770625518008498,
+        "pct": -0.16755060679626288
+      }
+    ]
+  },
+  "css": {
+    "source": "https://assets.publishing.service.gov.uk/media/6ad7476437f279373fa3c9c9/Statistical_tables_-_Civil_Service_Statistics_2026_V2.ods",
+    "sheets": [
+      {
+        "name": "Contents",
+        "rows": 71,
+        "title": "Civil Service Statistics 2026"
+      },
+      {
+        "name": "Notes",
+        "rows": 30,
+        "title": "Notes"
+      },
+      {
+        "name": "table_1",
+        "rows": 13,
+        "title": "Table 1: Civil Service employment by responsibility level and sex, as at 31 March 2026 [note 1] [note 2] [note 3] [note 4] [note 27]"
+      },
+      {
+        "name": "table_2",
+        "rows": 12,
+        "title": "Table 2: Civil Service employment by ethnicity and responsibility level, as at 31 March 2026 [note 1] [note 2] [note 3]"
+      },
+      {
+        "name": "table_3",
+        "rows": 12,
+        "title": "Table 3: Civil Service employment by disability status and responsibility level, as at 31 March 2026 [note 1] [note 2] [note 3]"
+      },
+      {
+        "name": "table_4",
+        "rows": 13,
+        "title": "Table 4: Civil Service employment by age band and responsibility level, as at 31 March 2026 [note 1] [note 2] [note 3]"
+      },
+      {
+        "name": "table_4A",
+        "rows": 12,
+        "title": "Table 4A: Civil Service employment; percentage of employees by age band, as at 31 March 2026"
+      },
+      {
+        "name": "table_5",
+        "rows": 12,
+        "title": "Table 5: Civil Service employment by national identity and responsibility level, as at 31 March 2026 [note 1] [note 2] [note 3]"
+      },
+      {
+        "name": "table_6",
+        "rows": 25,
+        "title": "Table 6: Civil Service employment by gross salary band and sex, as at 31 March 2026 [note 1] [note 4] [note 5] [note 6] [note 27]"
+      },
+      {
+        "name": "table_6A",
+        "rows": 9,
+        "title": "Table 6A: Civil Service gross salary quartiles and mean by sex, as at 31 March 2026 [note 1] [note 4] [note 5] [note 6] [note 27]"
+      },
+      {
+        "name": "table_7",
+        "rows": 14,
+        "title": "Table 7: Median salary for employees by responsibility level and sex, as at 31 March 2026 [note 1] [note 2] [note 3] [note 4] [note 5] [note 6] [note 7] [note 8] [note 27]"
+      },
+      {
+        "name": "table_8",
+        "rows": 155,
+        "title": "Table 8: Civil Service employment; profession by government department, as at 31 March 2026 [note 1] [note 9] [note 23] [note 24]"
+      },
+      {
+        "name": "table_8A",
+        "rows": 155,
+        "title": "Table 8A: Civil Service employment; profession by government department on a full-time equivalent (FTE) basis, as at 31 March 2026 [note 1] [note 9] [note 23] [note 24]"
+      },
+      {
+        "name": "table_9",
+        "rows": 13,
+        "title": "Table 9: Entrants and leavers to the Civil Service by sex and responsibility level, from 1 April 2025 to 31 March 2026 [note 1] [note 2] [note 3] [note 4] [note 14] [note 27]"
+      },
+      {
+        "name": "table_10",
+        "rows": 22,
+        "title": "Table 10: Regional distribution of Civil Service employment, as at 31 March 2026 [note 1] [note 11] [note 12] "
+      },
+      {
+        "name": "table_11",
+        "rows": 155,
+        "title": "Table 11: Civil Service employment; QPSES VS ACSES, as at 31 March 2026"
+      },
+      {
+        "name": "table_12",
+        "rows": 155,
+        "title": "Table 12: Civil Service employment; regional distribution by government department on a full-time equivalent (FTE) basis, as at 31 March 2026 [note 1] [note 11] [note 12]"
+      },
+      {
+        "name": "table_12A",
+        "rows": 155,
+        "title": "Table 12A: Civil Service employment; regional distribution by government department, as at 31 March 2026 [note 1] [note 11] [note 12]"
+      },
+      {
+        "name": "table_13",
+        "rows": 22,
+        "title": "Table 13: Civil Service employment; regional distribution, as at 31 March 2026 [note 1] [note 4] [note 11] [note 12] [note 27]"
+      },
+      {
+        "name": "table_14",
+        "rows": 55,
+        "title": "Table 14: Civil Service employment; regional (ITL 2) distribution, as at 31 March 2026 [note 1] [note 4] [note 11] [note 12] [note 27]"
+      },
+      {
+        "name": "table_15",
+        "rows": 191,
+        "title": "Table 15: Civil Service employment; regional (ITL 3) distribution, as at 31 March 2026 [note 1] [note 4] [note 11] [note 12] [note 27]"
+      },
+      {
+        "name": "table_16",
+        "rows": 111,
+        "title": "Table 16: Civil Service employment; by region, responsibility level and sex, as at 31 March 2026 [note 1] [note 2] [note 3] [note 4] [note 11] [note 12] [note 27]"
+      },
+      {
+        "name": "table_17",
+        "rows": 112,
+        "title": "Table 17: Civil Service employment; by region, responsibility level and ethnicity, as at 31 March 2026 [note 1] [note 2] [note 3] [note 11] [note 12]"
+      },
+      {
+        "name": "table_18",
+        "rows": 112,
+        "title": "Table 18: Civil Service employment; by region, responsibility level and disability status, as at 31 March 2026 [note 1] [note 2] [note 3] [note 11] [note 12]"
+      },
+      {
+        "name": "table_19",
+        "rows": 22,
+        "title": "Table 19: Civil Service employment by region and age band, as at 31 March 2026 [note 1] [note 11] [note 12]"
+      },
+      {
+        "name": "table_20",
+        "rows": 155,
+        "title": "Table 20: Civil Service employment; responsibility level by government department, as at 31 March 2026 [note 1] [note 2] [note 3]"
+      },
+      {
+        "name": "table_21",
+        "rows": 155,
+        "title": "Table 21: Civil Service employment; responsibility level by government department, as at 31 March 2026 [note 1] [note 2] [note 3]"
+      },
+      {
+        "name": "table_22",
+        "rows": 155,
+        "title": "Table 22: Civil Service employment by responsibility level, government department and sex, as at 31 March 2026 [note 1] [note 2] [note 3] [note 4] [note 27]"
+      },
+      {
+        "name": "table_23",
+        "rows": 13,
+        "title": "Table 23: Civil Service employment by responsibility level, age band and sex, as at 31 March 2026 [note 1] [note 2] [note 3] [note 4] [note 27]"
+      },
+      {
+        "name": "table_24",
+        "rows": 14,
+        "title": "Table 24: Mean salary for employees by responsibility level and sex, as at 31 March 2026 [note 1] [note 2] [note 3] [note 5] [note 6] [note 27]"
+      },
+      {
+        "name": "table_25",
+        "rows": 156,
+        "title": "Table 25: Civil Service employment; median salary by responsibility level and government department, as at 31 March 2026 [note 1] [note 2] [note 3] [note 6]"
+      },
+      {
+        "name": "table_26",
+        "rows": 155,
+        "title": "table 26: Civil Service employment by government department and sex, as at 31 March 2026 [note 1] [note 4] [note 27]"
+      },
+      {
+        "name": "table_27",
+        "rows": 156,
+        "title": "table 27: Civil Service employment by government department and ethnicity, as at 31 March 2026 [note 1]"
+      },
+      {
+        "name": "table_28",
+        "rows": 156,
+        "title": "table 28: Civil Service employment by government department and disability status, as at 31 March 2026 [note 1]"
+      },
+      {
+        "name": "table_29",
+        "rows": 155,
+        "title": "table 29: Civil Service employment by government department and age band, as at 31 March 2026 [note 1]"
+      },
+      {
+        "name": "table_30",
+        "rows": 155,
+        "title": "table 30: Civil Service entrants and leavers by government department and sex, from 1 April 2025 to 31 March 2026 [note 1] [note 4] [note 14] [note 27]"
+      },
+      {
+        "name": "table_31",
+        "rows": 156,
+        "title": "table 31: Civil Service entrants and leavers by government department and ethnicity, from 1 April 2025 to 31 March 2026 [note 1] [note 14]"
+      },
+      {
+        "name": "table_32",
+        "rows": 155,
+        "title": "table 32: Civil Service leavers by government department and leaving cause, from 1 April2025 to 31 March 2026 [note 1] [note 14]"
+      },
+      {
+        "name": "table_33",
+        "rows": 155,
+        "title": "table 33: Civil Service internal transfers by government department, from 1 April 2025 to 31 March 2026 [note 1]"
+      },
+      {
+        "name": "table_34",
+        "rows": 15,
+        "title": "table 34: Civil Service employment; Percentage of employees working part-time by age band and sex, as at 31 March 2026 [note 4] [note 27]"
+      },
+      {
+        "name": "table_35",
+        "rows": 42,
+        "title": "table 35: Lower quartile, median, and upper quartile of salary by profession, as at 31 March 2026 [note 1] [note 6] [note 9]"
+      },
+      {
+        "name": "table_36",
+        "rows": 155,
+        "title": "table 36: Civil Service employment; percentage working part-time by department, as at 31 March 2026 [note 1]"
+      },
+      {
+        "name": "table_37",
+        "rows": 43,
+        "title": "table 37: Civil Service employment; regional distribution by profession, as at 31 March 2026 [note 1] [note 9] [note 11] [note 12]"
+      },
+      {
+        "name": "table_A1",
+        "rows": 156,
+        "title": "Table A1: Civil Service employment by sexual orientation and department, as at 31 March 2026 [note 1]"
+      },
+      {
+        "name": "table_A2",
+        "rows": 12,
+        "title": "Table A2: Civil Service employment by sexual orientation and responsibility level, as at 31 March 2026 [note 1] [note 2] [note 3]"
+      },
+      {
+        "name": "table_A3",
+        "rows": 155,
+        "title": "Table A3: Civil Service employment by religion or belief and department, as at 31 March 2026 [note 1]"
+      },
+      {
+        "name": "table_A4",
+        "rows": 12,
+        "title": "Table A4: Civil Service employment by religion or belief and responsibility level, as at 31 March 2026 [note 1] [note 2] [note 3]"
+      },
+      {
+        "name": "table_B",
+        "rows": 154,
+        "title": "Table B: Civil Service employment; ratio of highest earner against all employees median salaries by department, as at 31 March 2026 [note 1] [note 2] [note 3] [note 6]"
+      },
+      {
+        "name": "table_D1",
+        "rows": 155,
+        "title": "Table D1: Civil Service employment; function by government department, as at 31 March 2026 [note 1]"
+      },
+      {
+        "name": "table_D2",
+        "rows": 155,
+        "title": "Table D2: Civil Service employment; function by government department on a full-time equivalent (FTE) basis, as at 31 March 2026 [note 1]"
+      },
+      {
+        "name": "table_D3",
+        "rows": 22,
+        "title": "Table D3: Lower quartile, median, and upper quartile of salary by function, as at 31 March 2026 [note 1] [note 6]"
+      },
+      {
+        "name": "table_D4",
+        "rows": 23,
+        "title": "Table D4: Civil Service employment; regional distribution by function, as at 31 March 2026 [note 1] [note 2]"
+      },
+      {
+        "name": "table_E1",
+        "rows": 16,
+        "title": "Table E1: Civil Service employment; proportions of ethnic minority, disabled and LGBO civil servants, from 31 March 2016 to 31 March 2026"
+      },
+      {
+        "name": "table_E2",
+        "rows": 15,
+        "title": "Table E2: Civil Service employment; distribution of responsibility level, from 31 March 2016 to 31 March 2026 [note 2] [note 3]"
+      },
+      {
+        "name": "table_E3",
+        "rows": 15,
+        "title": "Table E3: Civil Service employment; percentage of staff with an unreported grade, from 31 March 2016 to 31 March 2026"
+      },
+      {
+        "name": "table_E4",
+        "rows": 15,
+        "title": "Table E4: Civil Service employment; percentage of female staff by responsibility level, from 31 March 2016 to 31 March 2026 [note 2] [note 3] [note 27]"
+      },
+      {
+        "name": "table_E5",
+        "rows": 15,
+        "title": "Table E5: Civil Service employment; distribution of age bands, from 31 March 2016 to 31 March 2026"
+      },
+      {
+        "name": "table_E6",
+        "rows": 15,
+        "title": "Table E6: Civil Service employment; percentage of ethnic minority staff by responsibility level, from 31 March 2016 to 31 March 2026 [note 2] [note 3]"
+      },
+      {
+        "name": "table_E7",
+        "rows": 26,
+        "title": "Table E7: Civil Service employment; percentage of staff declaring a disability by responsibility level, from 31 March 2016 to 31 March 2026 [note 2] [note 3]"
+      },
+      {
+        "name": "table_E8",
+        "rows": 15,
+        "title": "Table E8: Civil Service employment; percentage of staff that identify as LGBO by responsibility level, from 31 March 2016 to 31 March 2026 [note 2] [note 3]"
+      },
+      {
+        "name": "table_E9",
+        "rows": 15,
+        "title": "Table E9: Civil Service employment; mean and median gross salary by working pattern, from 31 March 2016 to 31 March 2026 [note 5] [note 6]"
+      },
+      {
+        "name": "table_E10",
+        "rows": 15,
+        "title": "Table E10: Civil Service employment; percentage of staff that working in a part-time role by responsibility level, from 31 March 2016 to 31 March 2026 [note 2] [note 3]"
+      },
+      {
+        "name": "table_E11",
+        "rows": 15,
+        "title": "Table E11: Civil Service employment; headcount of staff in full-time and part-time roles, from 31 March 2016 to 31 March 2026"
+      },
+      {
+        "name": "table_E12",
+        "rows": 10,
+        "title": "Table E12: Civil Service employment; gender pay gap (GPG), 2020 to 2025 [note 17]"
+      },
+      {
+        "name": "table_E13",
+        "rows": 15,
+        "title": "Table E13: Civil Service employment; entrants and leavers, from 1 April 2015 to 31 March 2026 [note 14]"
+      },
+      {
+        "name": "table_E14",
+        "rows": 16,
+        "title": "Table E14: Civil Service employment; turnover and resignation rates, from 1 April 2015 to 31 March 2026 [note 19]"
+      },
+      {
+        "name": "Full_revisions_list",
+        "rows": 9,
+        "title": "Table Column Row Previous value Revised value Cell Ref"
+      }
+    ],
+    "readback": {
+      "table_7": {
+        "title": "Table 7: Median salary for employees by responsibility level and sex, as at 31 March 2026 [note 1] [note 2] [note 3] [note 4] [note 5] [note 6] [note 7] [note 8] [note 27]",
+        "rows": 14,
+        "first": [
+          "Back to contents",
+          "Table 7: Median salary for employees by responsibility level and sex, as at 31 March 2026 [note 1] [note 2] [note 3] [note 4] [note 5] [note 6] [note 7] [note 8] [note 27]",
+          "This worksheet contains one table.",
+          "Some cells in the table refer to notes which can be found on the notes worksheet.",
+          "Shorthand is used in this table, [c] = confidential and suppressed due to small numbers of less than 30.",
+          "Shorthand is used in this table, [n] = not applicable due to zero in the cell.",
+          "Responsibility Level | Median salary of male civil servants that are working in a full-time role | Median salary of male civil servants that are working in a part-time role | Median salary of all male civil servants | Median salary of female civil servants tha",
+          "Senior Civil Service level | 96440 | 105500 | 96940 | 94290 | 94440 | 94360 | [c] | [c] | [c] | 95540 | 0.022 | 0.105 | 0.027",
+          "Grades 6 and 7 | 66230 | 68260 | 66520 | 64880 | 66040 | 65110 | 63430 | [c] | 63210 | 65830 | 0.02 | 0.033 | 0.021",
+          "Senior and Higher Executive Officers | 44360 | 44980 | 44400 | 43750 | 43120 | 43610 | 42580 | [c] | 42990 | 43930 | 0.014 | 0.041 | 0.018",
+          "Executive Officers | 32140 | 32140 | 32140 | 32140 | 32140 | 32140 | 29650 | [c] | 29650 | 32140 | 0 | 0 | 0",
+          "Administrative Officers and Assistants | 28630 | 28020 | 28020 | 28020 | 27840 | 28020 | [c] | [c] | [c] | 28020 | 0.021 | 0.006 | 0",
+          "Not reported | 31920 | 31650 | 31650 | 31810 | 31650 | 31650 | [n] | [n] | [n] | 31650 | 0.003 | 0 | 0",
+          "All responsibility levels | 39260 | 35530 | 38970 | 37990 | 32140 | 36740 | 44510 | 47780 | 45360 | 37820 | 0.032 | 0.095 | 0.057"
+        ]
+      },
+      "table_25": {
+        "title": "Table 25: Civil Service employment; median salary by responsibility level and government department, as at 31 March 2026 [note 1] [note 2] [note 3] [note 6]",
+        "rows": 156,
+        "first": [
+          "Back to contents",
+          "Table 25: Civil Service employment; median salary by responsibility level and government department, as at 31 March 2026 [note 1] [note 2] [note 3] [note 6]",
+          "This worksheet contains one table.",
+          "Some cells in the table refer to notes which can be found on the notes worksheet.",
+          "Shorthand is used in this table, [c] = confidential and suppressed due to small numbers of less than 10.",
+          "Shorthand is used in this table, [n] = not applicable due to zero in the cell.",
+          "Civil Service parent department | Civil Service organisation | Median salary of all civil servants working at Senior Civil Service level | Median salary of all civil servants working at Grade 6 or Grade 7 level | Median salary of all civil servants working at ",
+          "Attorney General's Departments | Attorney General's Office | [c] | 74680 | 37120 | [c] | [c] | [n] | 59170",
+          "Attorney General's Departments | Crown Prosecution Service | 98970 | 63500 | 41070 | 32430 | 26700 | [n] | 39890",
+          "Attorney General's Departments | HM Crown Prosecution Service Inspectorate | [c] | 67520 | [c] | [c] | [c] | [n] | 67190",
+          "Attorney General's Departments | Government Legal Department | 90960 | 69460 | 38040 | 33740 | 30470 | [n] | 67370",
+          "Attorney General's Departments | Serious Fraud Office | 100510 | 63650 | 42680 | 29840 | 28860 | [n] | 45470",
+          "Attorney General's Departments | Attorney General's Departments Overall | 93350 | 65820 | 41070 | 32430 | 26700 | [n] | 55980",
+          "Department for Business and Trade | Department for Business and Trade (excl. agencies) | 89230 | 64930 | 45430 | 34230 | 32370 | [n] | 57360",
+          "Department for Business and Trade | Advisory, Conciliation and Arbitration Service | [c] | 64040 | 38450 | 30120 | 27200 | [n] | 36550",
+          "Department for Business and Trade | Companies House | 90000 | 61940 | 42920 | 30060 | 26450 | [n] | 30060",
+          "Department for Business and Trade | The Insolvency Service | 98240 | 61760 | 42590 | 30140 | 26670 | [n] | 39210",
+          "Department for Business and Trade | Department for Business and Trade Overall | 89680 | 64660 | 43740 | 30120 | 26450 | [n] | 44680"
+        ]
+      },
+      "table_20": {
+        "title": "Table 20: Civil Service employment; responsibility level by government department, as at 31 March 2026 [note 1] [note 2] [note 3]",
+        "rows": 155,
+        "first": [
+          "Back to contents",
+          "Table 20: Civil Service employment; responsibility level by government department, as at 31 March 2026 [note 1] [note 2] [note 3]",
+          "This worksheet contains one table.",
+          "Some cells in the table refer to notes which can be found on the notes worksheet.",
+          "Shorthand is used in this table, [c] = confidential and suppressed due to small numbers of between 1 and 4.",
+          "Civil Service parent department | Civil Service organisation | Headcount of all civil servants working at Senior Civil Service level | Headcount of all civil servants working at Grade 6 or Grade 7 level | Headcount of all civil servants working at Senior or Hi",
+          "Attorney General's Departments | Attorney General's Office | 10 | 30 | 20 | [c] | [c] | 0 | 65",
+          "Attorney General's Departments | Crown Prosecution Service | 100 | 3380 | 1305 | 1870 | 1660 | 0 | 8315",
+          "Attorney General's Departments | HM Crown Prosecution Service Inspectorate | [c] | 25 | [c] | [c] | [c] | 0 | 30",
+          "Attorney General's Departments | Government Legal Department | 245 | 2280 | 410 | 425 | 30 | 0 | 3390",
+          "Attorney General's Departments | Serious Fraud Office | 15 | 205 | 260 | 110 | 15 | 0 | 610",
+          "Attorney General's Departments | Attorney General's Departments Overall | 370 | 5920 | 1995 | 2410 | 1710 | 0 | 12405",
+          "Department for Business and Trade | Department for Business and Trade (excl. agencies) | 325 | 2570 | 2605 | 360 | 55 | 0 | 5915",
+          "Department for Business and Trade | Advisory, Conciliation and Arbitration Service | 10 | 65 | 725 | 300 | 45 | 0 | 1140",
+          "Department for Business and Trade | Companies House | 10 | 215 | 725 | 695 | 775 | 0 | 2420",
+          "Department for Business and Trade | The Insolvency Service | 15 | 200 | 1095 | 225 | 550 | 0 | 2085",
+          "Department for Business and Trade | Department for Business and Trade Overall | 355 | 3050 | 5155 | 1585 | 1420 | 0 | 11565",
+          "Cabinet Office | Cabinet Office (excl. agencies) | 425 | 1905 | 2075 | 610 | 370 | 0 | 5385"
+        ]
+      },
+      "table_21": {
+        "title": "Table 21: Civil Service employment; responsibility level by government department, as at 31 March 2026 [note 1] [note 2] [note 3]",
+        "rows": 155,
+        "first": [
+          "Back to contents",
+          "Table 21: Civil Service employment; responsibility level by government department, as at 31 March 2026 [note 1] [note 2] [note 3]",
+          "This worksheet contains one table.",
+          "Some cells in the table refer to notes which can be found on the notes worksheet.",
+          "Shorthand is used in this table, [c] = confidential and suppressed due to small numbers of between 1 and 4.",
+          "Civil Service parent department | Civil Service organisation | Full-time equivalent (FTE) of all civil servants working at Senior Civil Service level | Full-time equivalent (FTE) of all civil servants working at Grade 6 or Grade 7 level | Full-time equivalent ",
+          "Attorney General's Departments | Attorney General's Office | 10 | 30 | 20 | [c] | [c] | 0 | 65",
+          "Attorney General's Departments | Crown Prosecution Service | 100 | 3145 | 1260 | 1755 | 1540 | 0 | 7800",
+          "Attorney General's Departments | HM Crown Prosecution Service Inspectorate | [c] | 20 | [c] | [c] | [c] | 0 | 30",
+          "Attorney General's Departments | Government Legal Department | 225 | 2110 | 400 | 415 | 30 | 0 | 3180",
+          "Attorney General's Departments | Serious Fraud Office | 15 | 200 | 255 | 110 | 15 | 0 | 595",
+          "Attorney General's Departments | Attorney General's Departments Overall | 350 | 5505 | 1940 | 2280 | 1585 | 0 | 11670",
+          "Department for Business and Trade | Department for Business and Trade (excl. agencies) | 310 | 2525 | 2565 | 350 | 55 | 0 | 5810",
+          "Department for Business and Trade | Advisory, Conciliation and Arbitration Service | 10 | 65 | 670 | 275 | 35 | 0 | 1050",
+          "Department for Business and Trade | Companies House | 10 | 215 | 705 | 670 | 705 | 0 | 2310",
+          "Department for Business and Trade | The Insolvency Service | 10 | 195 | 1055 | 215 | 500 | 0 | 1975",
+          "Department for Business and Trade | Department for Business and Trade Overall | 340 | 2995 | 4995 | 1515 | 1300 | 0 | 11145",
+          "Cabinet Office | Cabinet Office (excl. agencies) | 415 | 1870 | 2035 | 590 | 335 | 0 | 5240"
+        ]
+      }
+    }
+  }
+}

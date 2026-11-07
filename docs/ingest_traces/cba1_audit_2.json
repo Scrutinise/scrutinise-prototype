@@ -1,0 +1,380 @@
+{
+  "acts": [
+    {
+      "name": "Building Safety Act 2022",
+      "uri": "ukpga/2022/30",
+      "enSections": 0,
+      "enWords": null,
+      "iaByInstrument": [],
+      "iaByTitle": []
+    },
+    {
+      "name": "Financial Services and Markets Act 2000",
+      "uri": "ukpga/2000/8",
+      "enSections": 0,
+      "enWords": null,
+      "iaByInstrument": [],
+      "iaByTitle": []
+    },
+    {
+      "name": "Financial Services (Banking Reform) Act 2013",
+      "uri": "ukpga/2013/33",
+      "enSections": 0,
+      "enWords": null,
+      "iaByInstrument": [],
+      "iaByTitle": []
+    },
+    {
+      "name": "Financial Services Act 2012",
+      "uri": "ukpga/2012/21",
+      "enSections": 0,
+      "enWords": null,
+      "iaByInstrument": [],
+      "iaByTitle": []
+    },
+    {
+      "name": "Corporate Manslaughter and Corporate Homicide Act 2007",
+      "uri": "ukpga/2007/19",
+      "enSections": 0,
+      "enWords": null,
+      "iaByInstrument": [],
+      "iaByTitle": []
+    },
+    {
+      "name": "Local Government Act 1972",
+      "uri": "ukpga/1972/70",
+      "enSections": 0,
+      "enWords": null,
+      "iaByInstrument": [],
+      "iaByTitle": []
+    },
+    {
+      "name": "Local Government and Housing Act 1989",
+      "uri": "ukpga/1989/42",
+      "enSections": 0,
+      "enWords": null,
+      "iaByInstrument": [],
+      "iaByTitle": []
+    },
+    {
+      "name": "Health and Care Act 2022",
+      "uri": "ukpga/2022/31",
+      "enSections": 0,
+      "enWords": null,
+      "iaByInstrument": [],
+      "iaByTitle": []
+    },
+    {
+      "name": "Constitutional Reform and Governance Act 2010",
+      "uri": "ukpga/2010/25",
+      "enSections": 0,
+      "enWords": null,
+      "iaByInstrument": [],
+      "iaByTitle": []
+    }
+  ],
+  "iaShape": {
+    "docs": 1172,
+    "secs": 18759,
+    "nullparent": 989,
+    "d0": "2005-12-01",
+    "d1": "2026-07-27"
+  },
+  "mpmSample": [
+    {
+      "id": "govuk-core-docs:government/publications/managing-public-money:110",
+      "sectionTitle": "Managing Public Money › Annex 4.1 Senior officer responsible for finance",
+      "wordCount": 1048,
+      "d": "2026-08-13",
+      "licence": "ogl-3.0"
+    },
+    {
+      "id": "govuk-core-docs:government/publications/managing-public-money:111",
+      "sectionTitle": "Managing Public Money › Annex 4.2 Use of models",
+      "wordCount": 1104,
+      "d": "2026-08-13",
+      "licence": "ogl-3.0"
+    },
+    {
+      "id": "govuk-core-docs:government/publications/managing-public-money:112",
+      "sectionTitle": "Managing Public Money › Annex 4.3 Risk",
+      "wordCount": 2103,
+      "d": "2026-08-13",
+      "licence": "ogl-3.0"
+    },
+    {
+      "id": "govuk-core-docs:government/publications/managing-public-money:113",
+      "sectionTitle": "Managing Public Money › Annex 4.4 Insurance",
+      "wordCount": 2119,
+      "d": "2026-08-13",
+      "licence": "ogl-3.0"
+    },
+    {
+      "id": "govuk-core-docs:government/publications/managing-public-money:114",
+      "sectionTitle": "Managing Public Money › Annex 4.5 Senior Responsible Owner accountability",
+      "wordCount": 454,
+      "d": "2026-08-13",
+      "licence": "ogl-3.0"
+    },
+    {
+      "id": "govuk-core-docs:government/publications/managing-public-money:115",
+      "sectionTitle": "Managing Public Money › Annex 4.6 Procurement",
+      "wordCount": 1651,
+      "d": "2026-08-13",
+      "licence": "ogl-3.0"
+    },
+    {
+      "id": "govuk-core-docs:government/publications/managing-public-money:116",
+      "sectionTitle": "Managing Public Money › Annex 4.7 Subsidies and Subsidy Control",
+      "wordCount": 1355,
+      "d": "2026-08-13",
+      "licence": "ogl-3.0"
+    },
+    {
+      "id": "govuk-core-docs:government/publications/managing-public-money:117",
+      "sectionTitle": "Managing Public Money › Annex 4.8 Expenditure and payments",
+      "wordCount": 775,
+      "d": "2026-08-13",
+      "licence": "ogl-3.0"
+    },
+    {
+      "id": "govuk-core-docs:government/publications/managing-public-money:118",
+      "sectionTitle": "Managing Public Money › Annex 4.9 Fraud",
+      "wordCount": 847,
+      "d": "2026-08-13",
+      "licence": "ogl-3.0"
+    },
+    {
+      "id": "govuk-core-docs:government/publications/managing-public-money:119",
+      "sectionTitle": "Managing Public Money › Annex 4.10 Losses and write offs",
+      "wordCount": 2046,
+      "d": "2026-08-13",
+      "licence": "ogl-3.0"
+    },
+    {
+      "id": "govuk-core-docs:government/publications/managing-public-money:120",
+      "sectionTitle": "Managing Public Money › Annex 4.11 Overpayments",
+      "wordCount": 1883,
+      "d": "2026-08-13",
+      "licence": "ogl-3.0"
+    },
+    {
+      "id": "govuk-core-docs:government/publications/managing-public-money:121",
+      "sectionTitle": "Managing Public Money › Annex 4.12 Gifts",
+      "wordCount": 1157,
+      "d": "2026-08-13",
+      "licence": "ogl-3.0"
+    }
+  ],
+  "coreDocsUnsplit": [
+    {
+      "id": "govuk-core-docs:government/publications/orange-book:1",
+      "sectionTitle": "Orange Book",
+      "wordCount": 93,
+      "format": "html",
+      "d": "2026-07-29",
+      "sourceUrl": "https://www.gov.uk/government/publications/orange-book",
+      "licence": "ogl-3.0"
+    },
+    {
+      "id": "govuk-core-docs:government/publications/orange-book:94",
+      "sectionTitle": "Orange Book: Management of risk - Principles and Concepts (PDF 462KB)",
+      "wordCount": 14411,
+      "format": "pdf",
+      "d": "2026-07-29",
+      "sourceUrl": "https://assets.publishing.service.gov.uk/media/6453acadc33b460012f5e6b8/HMT_Orange_Book_May_2023.pdf",
+      "licence": "ogl-3.0"
+    },
+    {
+      "id": "govuk-core-docs:government/publications/the-green-book--2:1",
+      "sectionTitle": "The Green Book",
+      "wordCount": 72,
+      "format": "html",
+      "d": "2026-10-28",
+      "sourceUrl": "https://www.gov.uk/government/publications/the-green-book--2",
+      "licence": "ogl-3.0"
+    },
+    {
+      "id": "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:1",
+      "sectionTitle": "The Green Book",
+      "wordCount": 87,
+      "format": "html",
+      "d": "2026-02-05",
+      "sourceUrl": "https://www.gov.uk/government/publications/the-green-book-appraisal-and-evaluation-in-central-government",
+      "licence": "ogl-3.0"
+    },
+    {
+      "id": "govuk-core-docs:government/publications/the-green-book-appraisal-and-evaluation-in-central-government:2",
+      "sectionTitle": "The Green Book (2026)",
+      "wordCount": 31515,
+      "format": "pdf",
+      "d": "2026-02-05",
+      "sourceUrl": "https://assets.publishing.service.gov.uk/media/698dbcd17da91680ad7f4308/The_Green_Book_2026.pdf",
+      "licence": "ogl-3.0"
+    },
+    {
+      "id": "govuk-core-docs:government/publications/the-magenta-book:1",
+      "sectionTitle": "The Magenta Book",
+      "wordCount": 163,
+      "format": "html",
+      "d": "2026-05-15",
+      "sourceUrl": "https://www.gov.uk/government/publications/the-magenta-book",
+      "licence": "ogl-3.0"
+    }
+  ],
+  "coreDocsSplit": [
+    {
+      "doc": "government/publications/managing-public-money",
+      "n": 138,
+      "headed": 134
+    },
+    {
+      "doc": "government/publications/orange-book",
+      "n": 94,
+      "headed": 92
+    },
+    {
+      "doc": "government/publications/the-aqua-book-guidance-on-producing-quality-analysis-for-government",
+      "n": 1,
+      "headed": 0
+    },
+    {
+      "doc": "government/publications/the-green-book--2",
+      "n": 89,
+      "headed": 88
+    },
+    {
+      "doc": "government/publications/the-green-book-appraisal-and-evaluation-in-central-government",
+      "n": 2,
+      "headed": 0
+    },
+    {
+      "doc": "government/publications/the-magenta-book",
+      "n": 388,
+      "headed": 387
+    },
+    {
+      "doc": "guidance/the-aqua-book",
+      "n": 79,
+      "headed": 79
+    }
+  ],
+  "nao": {
+    "n": 3983,
+    "topical": 31
+  },
+  "pac": {
+    "n": 20564
+  },
+  "licences": [
+    {
+      "corpus": "committees-reports",
+      "licence": "opl-3.0",
+      "n": 344773
+    },
+    {
+      "corpus": "departmental-accounts",
+      "licence": "ogl-3.0",
+      "n": 551
+    },
+    {
+      "corpus": "explanatory-notes",
+      "licence": "ogl-3.0",
+      "n": 18801
+    },
+    {
+      "corpus": "govuk-core-docs",
+      "licence": "ogl-3.0",
+      "n": 2864
+    },
+    {
+      "corpus": "impact-assessments",
+      "licence": "ogl-3.0",
+      "n": 18759
+    },
+    {
+      "corpus": "independent-reviews",
+      "licence": "ogl-3.0",
+      "n": 667
+    },
+    {
+      "corpus": "nao-reports",
+      "licence": "nao-nc",
+      "n": 3983
+    }
+  ],
+  "costBenchmarkBySource": [
+    {
+      "source": "Home Office, Economic and social costs of crime 2019 to 2020 (Table 1/3/4)",
+      "n": 19,
+      "p0": 2019,
+      "p1": 2019
+    },
+    {
+      "source": "PSSRU/CoReC Unit Costs of Health and Social Care 2025 (Jones et al., University of Kent)",
+      "n": 9,
+      "p0": 2024,
+      "p1": 2024
+    },
+    {
+      "source": "DBT Business Population Estimates 2025, Table 1 (UK private sector, start 2025)",
+      "n": 5,
+      "p0": 2025,
+      "p1": 2025
+    },
+    {
+      "source": "DfT TAG Data Book May 2026 v2.03, Table A4.1.1",
+      "n": 4,
+      "p0": 2023,
+      "p1": 2023
+    },
+    {
+      "source": "ONS Annual Survey of Hours and Earnings (ASHE) 2025 provisional, hourly pay – gross",
+      "n": 3,
+      "p0": 2025,
+      "p1": 2025
+    },
+    {
+      "source": "DfT TAG Data Book May 2026 v2.03, Table A4.1.4",
+      "n": 3,
+      "p0": 2023,
+      "p1": 2023
+    },
+    {
+      "source": "Home Office, Economic and social cost of fraud 2023 to 2024",
+      "n": 3,
+      "p0": 2023,
+      "p1": 2023
+    },
+    {
+      "source": "DfT TAG Data Book May 2026 v2.03, Table A1.3.1",
+      "n": 3,
+      "p0": 2023,
+      "p1": 2023
+    },
+    {
+      "source": "DESNZ, Valuation of greenhouse gas emissions for policy appraisal and evaluation (Annex 1)",
+      "n": 2,
+      "p0": 2020,
+      "p1": 2020
+    },
+    {
+      "source": "HM Treasury Green Book (2022 clarification, carried in DHSC supplementary health appraisal guidance)",
+      "n": 1,
+      "p0": 2020,
+      "p1": 2020
+    },
+    {
+      "source": "HM Treasury, Wellbeing Guidance for Appraisal: Supplementary Green Book Guidance (Jul 2021)",
+      "n": 1,
+      "p0": 2019,
+      "p1": 2019
+    }
+  ],
+  "deflator": {
+    "y0": 1955,
+    "y1": 2025,
+    "n": 71,
+    "upd": "2026-07-04 11:45:54.405"
+  }
+}

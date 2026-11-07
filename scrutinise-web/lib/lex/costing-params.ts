@@ -56,10 +56,14 @@ export const HEALTH_DISCOUNT_RATE: CostingParam<number> = {
 
 /** Optimism-bias uplifts by project class (applied to implementationCost — COSTING_SCOPE
  *  §4.3). VERIFIED against Table 1 of the HMT supplementary guidance ("Recommended
- *  Adjustment Ranges", Mott MacDonald 2002 evidence base): the values below are the
- *  CAPITAL EXPENDITURE UPPER bounds (starting point at outline business case);
- *  lower bounds are 2% / 4% / 3% / 6% / 10%. Outsourcing = 41% on OPEX. */
-export const OPTIMISM_BIAS_UPLIFTS: CostingParam<Record<string, number>> = {
+ *  Adjustment Ranges", Mott MacDonald 2002 evidence base), PDF page 2 (printed "2/15").
+ *  ⚠ Table 1 has FOUR columns per project type, under "Optimism Bias (%)":
+ *      Works Duration › Upper | Works Duration › Lower | Capital Expenditure › Upper | Capital Expenditure › Lower
+ *  This parameter is ONLY the third column, Capital Expenditure › Upper (the starting value,
+ *  para 3.11). It is not a works-duration (time) figure. Renamed from OPTIMISM_BIAS_UPLIFTS on
+ *  4 Nov 2026 so the name says which column it came from. Outsourcing (41* / 0*) is omitted:
+ *  its footnote says it is measured on operating expenditure, not capex. */
+export const OPTIMISM_BIAS_CAPEX_UPPER: CostingParam<Record<string, number>> = {
   value: {
     'standard-buildings': 0.24,
     'non-standard-buildings': 0.51,
@@ -67,9 +71,9 @@ export const OPTIMISM_BIAS_UPLIFTS: CostingParam<Record<string, number>> = {
     'non-standard-civil': 0.66,
     'equipment-and-development': 2.0,
   },
-  unit: 'fraction uplift on capex (upper bound, outline business case)',
-  source: 'HMT Supplementary Green Book Guidance — Optimism Bias, Table 1',
+  unit: 'fraction uplift on capital expenditure (Table 1 column "Capital Expenditure — Upper")',
+  source: 'HMT Supplementary Green Book Guidance — Optimism Bias (2013), Table 1, column Capital Expenditure › Upper, PDF p.2',
   status: 'VERIFIED',
   verified: true,
-  note: 'Verified 2026-07-04 against Optimism_bias.pdf (Table 1). Uplift reduces as risks are actively managed; lower bounds 0.02/0.04/0.03/0.06/0.10. Apply to implementationCost.',
+  note: 'Verified 2026-07-04 against Optimism_bias.pdf (Table 1); column headings re-read from the page image 2026-11-04. Capital Expenditure › Lower: 0.02/0.04/0.03/0.06/0.10. Works Duration (Upper/Lower, not used here): 4/1, 39/2, 20/1, 25/3, 54/10. Uplift reduces as risks are actively managed. Apply to implementationCost.',
 }
