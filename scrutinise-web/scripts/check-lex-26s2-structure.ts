@@ -322,7 +322,8 @@ async function partE() {
     const heldBy = await prisma.lexCoherentAction.findMany({ where: { ideaId: id, headingId: retireH.id, status: 'LIVE' }, select: { id: true } })
     const rt = await S.deleteHeading(id, retireH.id)
     const rowAfter = await prisma.actionHeading.findFirst({ where: { id: retireH.id, archivedAt: { not: null } } })
-    ok('Retire heading archives the heading row (it still exists) and unassigns exactly the actions it held', rt.ok && !!rowAfter && rt.data.unassigned === heldBy.length && heldBy.length > 0 && (await prisma.lexCoherentAction.count({ where: { id: { in: heldBy.map((x) => x.id) }, headingId: null } })) === heldBy.length)
+    ok('Retire heading archives the heading row (it still exists) and unassigns exactly the actions it held', rt.ok && !!rowAfter && rt.data.unassigned === heldBy.length && heldBy.length > 0 && (await prisma.lexCoherentAction.count({ where: { id: { in: heldBy.map((x) => x.id) }, headingId: null } })) === heldBy.length,
+      `heading “${retireH.name}”: ok ${rt.ok}${rt.ok ? `, unassigned ${rt.data.unassigned}` : `, ${(rt as { error: string }).error}`}; held ${heldBy.length}; row archived ${!!rowAfter}`)
     ok('…and it no longer shows on the live list of headings', !(await computeCanonicalState(id))!.actionHeadings.some((x) => x.id === retireH.id))
     await S.restoreHeading(id, retireH.id)
     ok('Bring back restores the heading AND puts its actions back on it', (await prisma.lexCoherentAction.count({ where: { id: { in: heldBy.map((x) => x.id) }, headingId: retireH.id, headingWasId: null } })) === heldBy.length)

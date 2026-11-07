@@ -1014,13 +1014,21 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-11-07 19:43 UTC (laptop): 332 + housekeeping committed; X3 SIZED, waiting on CCh's three calls.** See CHANGE_LOG 19:43 and
+`docs/LEX_26X_REPORT.md` § X3 (sizing) and § 332.
+- **332:** a code / management code heading → code text, whatever the avenue. On 452c5ade it changes #207, #28, #36, #158, #174 and #208 (⚠ #28
+  is legislative). D.207.1 set aside (kept); its content offered as D.59.1 BRIEF_PROPOSAL v1 (waiting); #207's split already on the Code's Brief.
+- Ledger row 9900 labelled `check` (inferred), so 26s2 is green. The 26v1b 360 px check now waits for the condition. ⚠ 26s2-structure "Retire heading
+  archives…" failed once, then passed twice; it now prints its detail.
+- **Next:** X3, after CCh answers the sizing's three calls (who delivers opens past the lock; the policy test reads whole drafts; costs by year 1–5).
+  Proposed split: X3a §6a 1–5 + §6b, X3b §6a 6 + §7.
+
 **▶ 2026-11-07 17:49 UTC (laptop): 26-X X2 built and committed: the Brief, "Draft it", companions, Briefed on the strip.** See CHANGE_LOG 17:49 and
 `docs/LEX_26X_REPORT.md` § X2. Schema `prisma/lex_26x_brief.sql` (three CHECKs widened) was applied to Neon before the commit. The clause's Brief is
 READ IN PLACE (Charlie, 7 Nov). Prefill measured at 1.5p.
-- **#207's split** is a proposal script (`scripts/propose-26x-207-split.ts`, dry run by default). It is written to production with `--apply` after
-  the deploy (see the next entry if done). ⚠ **Open for Charlie:** #207's one instrument. Its derived need is a draft clause, but it holds the Code.
+- **#207's split** is a proposal script (`scripts/propose-26x-207-split.ts`, dry run by default). **Written 7 Nov 17:53 UTC** after `cf278bd` was live:
+  D.207.2 BRIEF_PROPOSAL v1, waiting (15 points; 8,210 chars stay). #207's Action details are unchanged until Charlie accepts. #207's one instrument: settled by 332 (above).
 - **Only Charlie can confirm (§9):** #207 with its Brief above the Draft; the split; the strips.
-- **Next:** X3 (Who, how and against moves to the Deepening).
 
 **▶ 2026-11-07 02:51 UTC (laptop): 325 done; CBA-1's held edits committed (c2805ed); deepenOverride in the entity list; 313 measured.**
 See CHANGE_LOG 02:51.

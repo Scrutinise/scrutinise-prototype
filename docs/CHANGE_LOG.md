@@ -1,5 +1,33 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-07 19:43 UTC - LEX 332: a code heading makes a code text whatever the avenue; #207's draft clause set aside, its content offered on #59's Brief; housekeeping (ledger row 9900, the 360 px check); X3 sized
+
+**Brief:** CCh-Lex 7 Nov (1). Full write-up: `docs/LEX_26X_REPORT.md` § 332 and § X3 (sizing).
+
+- **The derivation** (`lib/lex/action-documents-pure.ts` `headingMakesCode`): under a heading of kind code or management code, the
+  instrument is the code text, whatever the avenue. The owner's override still wins.
+  - **Measured over all 1,019 live actions (37 ideas), before and after:** 66 change, 60 of them on 11 deleted scratch copies.
+  - **On 452c5ade, 6:**
+    - #207 and #28: draft clause + collision report → code text. ⚠ #28 is legislative.
+    - #36, #158, #174: operating text → code text.
+    - #208: nothing derived → code text.
+  - Only #207 holds documents.
+- **Data on 452c5ade** (`scripts/apply-332.ts`, dry run first, read back):
+  - **D.207.1 set aside, kept:** SUPERSEDED by D.207.2, the Code.
+  - **Its content is offered on #59's Brief:** D.59.1 BRIEF_PROPOSAL v1, waiting. It is word for word, with no model call: 18 "Must include" points, 1 "Must not", tone statutory.
+  - A coverage test runs before writing, and was shown failing on a stray line.
+  - #207's split was already on the Code's Brief (D.207.2 BRIEF_PROPOSAL v1). Not written again.
+- **Housekeeping:**
+  - Ledger row 9900 is now `purpose 'check'`, `purposeInferred` (193). ⚠ This is an inference: it is a `lex.agent.turn` on an idea since deleted.
+  - 26v1b's 360 px check waits for "≡ More" (up to 5 s), not 200 ms.
+  - The handoff line about #207's split is committed.
+- **Checks:**
+  - `check:lex-26x2` 75/75, 8 controls, 0 dead: a new part H, plus 332's cold read in G. The X2 "both instruments" assertion is moved, with the reason written above it. With the rule switched off: 4 red.
+  - Regression: 26s2 215/215 · 26x 110 · 26w-b 60 · 26w 66 · 26v 66 · 26v1b 81 · 26v2b 47 · 26v2c 44 · 26v2d 62 · 26u 67 · 26t1 98 · 26t2 72 · 26s2-structure 107;
+  - prompt-examples, client-boundary, llm-guards 9 and costing-params 11 all green; tsc (web and scripts) clean.
+  - ⚠ 26s2-structure "Retire heading archives…" failed once in the suite, then passed twice. It now prints the heading and the reason if it fails.
+- **X3 sized, not built.** Three calls for CCh: who delivers opens whatever the lock says; the policy test reads the whole accepted draft; costs are shown for years 1–5. Proposed split: X3a / X3b.
+
 ## 2026-11-07 17:49 UTC - LEX 26-X X2 (decisions 309, 313, 310): the Brief on every draft, "Draft it" between the Brief and the Draft, companions, #207's split as a proposal, the clause's Brief read in place, Briefed on the strip
 
 **Brief:** `docs/BRIEF_26X.md` §5c–e, §8 item 6, §5f; CCh-Lex 5 Nov (1) ("Then X2 as sized"); Charlie, 7 Nov: "continue with x2", and the clause's Brief "Read in place".

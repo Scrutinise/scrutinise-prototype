@@ -12,7 +12,9 @@
 //   D · the record, RENDERED: §5c's order (statement → Brief → Draft → Action details …); the Brief's states; "Draft it" disabled with its reason
 //   E · the drafter reads the Brief FIRST (the prompt it is sent), and names the version in its reason
 //   F · the guide has an entry for every new label; read_brief / propose_brief exist
-//   G · COLD READ of 452c5ade (§26): every live action's Brief, read with plain queries against briefView
+//   G · COLD READ of 452c5ade (§26): every live action's Brief, read with plain queries against briefView; 332's state (#207 one instrument,
+//       D.207.1 set aside and kept, the split on the Code's Brief, D.207.1's content offered on #59)
+//   H · 332 — a heading of kind code / management code → code text, regardless of avenue
 //
 //   npx tsx --tsconfig tsconfig.json --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-26x2.ts
 // ─────────────────────────────────────────────────────────────────────────────
@@ -23,6 +25,7 @@ import { prisma } from '../lib/prisma'
 import * as BP from '../lib/lex/action-brief-pure'
 import * as B from '../lib/lex/action-brief'
 import * as D from '../lib/lex/action-documents'
+import * as DP from '../lib/lex/action-documents-pure'
 import * as PP from '../lib/lex/action-progress-pure'
 import * as SL from '../lib/lex/screen-labels'
 import { REVIEW_PASS_COUNT } from '../lib/lex/development'
@@ -332,11 +335,38 @@ async function partG() {
     if (ins && cur && ins.v === cur.v && ins.dutyOnWhom === cur.dutyOnWhom && ins.provisions === cur.provisions.length) same++
   }
   if (clauses.length) ok(`a clause’s Brief reads its instruction IN PLACE on the real data: ${same} of ${clauses.length} live clause(s) with a version match their own current version`, same === clauses.length)
+  // ⚠ MOVED BY 332 (CCh-Lex 7 Nov (1)): #207's instrument is the Code text; its draft clause D.207.1 is set aside (kept). Was: "#207 shows a
+  // Brief for BOTH instruments it holds (code text and draft clause) — 313's finding, on the screen".
   const n207 = live.find((a) => a.number === 207)
   if (n207) {
     const v = await B.briefView(idea.id, n207.id)
-    ok('#207 shows a Brief for BOTH instruments it holds (code text and draft clause) — 313’s finding, on the screen', v.ok && ['CODE_TEXT', 'DRAFT_CLAUSE'].every((x) => v.data.kinds.some((k) => k.kind === x)), v.ok ? v.data.kinds.map((k) => k.kind).join(',') : '')
-  } else skip('#207 two instruments', '#207 is not live')
+    const kinds = v.ok ? v.data.kinds.map((k) => k.kind) : []
+    ok('332: #207 shows ONE Brief, the code text’s — the draft clause is no longer offered', v.ok && kinds.length === 1 && kinds[0] === 'CODE_TEXT', kinds.join(','))
+    const docs = await prisma.actionDocument.findMany({ where: { actionId: n207.id }, select: { number: true, kind: true, status: true, supersededBy: true, id: true, _count: { select: { versions: true } } } })
+    const d1 = docs.find((d) => d.number === 1), d2 = docs.find((d) => d.number === 2)
+    ok('332: D.207.1 (the draft clause) is set aside and KEPT — superseded by D.207.2, the Code, its rows still there', d1?.kind === 'DRAFT_CLAUSE' && d1.status === 'SUPERSEDED' && d1.supersededBy === d2?.id && d1._count.versions > 0, JSON.stringify(d1))
+    const k = v.ok ? v.data.kinds.find((x) => x.kind === 'CODE_TEXT') : null
+    ok('332: #207’s split is proposed against the Code’s Brief, and waiting', !!k?.proposal?.split, k?.proposal ? `proposal v${k.proposal.v}` : 'no proposal')
+  } else skip('#207 one instrument (332)', '#207 is not live')
+  const n59 = live.find((a) => a.number === 59)
+  if (n59) {
+    const v = await B.briefView(idea.id, n59.id)
+    const k = v.ok ? v.data.kinds.find((x) => x.kind === 'DRAFT_CLAUSE') : null
+    const p = k?.proposal ? await prisma.actionDocumentVersion.findFirst({ where: { documentId: k.documentId ?? '', role: 'BRIEF_PROPOSAL', v: k.proposal.v } }) : null
+    ok('332: D.207.1’s content is OFFERED on #59’s Brief — a proposal, waiting, never over a saved Brief, carried word for word (subsection 5(a) is there)', !!p && !p.answer && /D\.207\.1/.test(p.reason ?? '') && /first investigation must focus on ascertaining causes in the system/.test(p.body ?? ''), p ? `answer ${p.answer}` : 'no proposal on #59')
+  } else skip('#59 proposal (332)', '#59 is not live')
+}
+
+// ── H · 332: a heading of kind code / management code makes a code, regardless of avenue ─────────────────────────────
+function partH() {
+  section('H · 332 — a "code" or "management code" heading → code text, whatever the avenue')
+  const needs = (avenue: string | null, headingKind: string | null, instrument: string | null = null) => DP.needsDocuments({ avenue, instrument: instrument as never, headingKind, headingName: 'H' }).kinds.join('+')
+  ok('a legislative action under a code heading → code text (not a clause) — #207’s case', needs('LEGISLATIVE', 'CODE') === 'CODE_TEXT')
+  ok('an organisational action under a management code heading → code text (not operating text)', needs('ORGANISATIONAL', 'MANAGEMENT_CODE') === 'CODE_TEXT')
+  ok('no avenue under a code heading → code text (it was "nothing derived")', needs(null, 'MANAGEMENT_CODE') === 'CODE_TEXT' && /a management code heading/.test(DP.needsDocuments({ avenue: null, instrument: null, headingKind: 'MANAGEMENT_CODE', headingName: 'CS Mgt Code' }).why))
+  ok('other headings are untouched: legislative under primary legislation → clause + collision report; platform still adds a specification', needs('LEGISLATIVE', 'PRIMARY_LEGISLATION') === 'DRAFT_CLAUSE+COLLISION_REPORT' && needs('ORGANISATIONAL', 'PLATFORM') === 'OPERATING_TEXT+SPECIFICATION')
+  ok('the owner’s own "needs nothing" still wins over the heading', DP.needsDocuments({ avenue: 'LEGISLATIVE', instrument: null, headingKind: 'CODE', override: { mode: 'nothing', reason: 'r' } as never }).kinds.length === 0)
+  control('the pre-332 rule (avenue first) giving #207 a code text (must be FALSE)', needs('LEGISLATIVE', null) === 'CODE_TEXT')
 }
 
 async function main() {
@@ -347,6 +377,7 @@ async function main() {
   await partE()
   partF()
   await partG()
+  partH()
   console.log(`\n${ran} ran: ${pass} passed, ${fail} failed · ${controls} controls, ${dead} dead · ${notRun} not run`)
   await prisma.$disconnect()
   process.exit(fail || dead ? 1 : 0)

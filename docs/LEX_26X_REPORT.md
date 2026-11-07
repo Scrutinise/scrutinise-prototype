@@ -1,5 +1,85 @@
 # LEX 26-X — REPORT
 
+## X3 — sized 7 Nov 2026, before any build (CCh-Lex 7 Nov (1): "Then X3 as sized … Size first")
+
+Read: BRIEF_26X §6–§7; `app/ideas/create/CreateIdeaClient.tsx` (the Deepening renders there, `lexStage === 'deepening'`),
+`components/lex/DeepeningGate.tsx`, `lib/lex/development.ts`, `lib/lex/action-digest(-pure).ts`, `lib/lex/action-structure.ts`
+`testAgainstPolicy`, `lib/lex/document-review.ts`, `lib/lex/gap-check.ts`, `CostLine` and `computeCostSummary`, `action-record.ts` slots,
+`IncentiveMap.tsx`. Nothing built.
+
+### What exists, and what each §6a section needs
+
+| §6a / §6b / §7 | today | X3 work | size |
+|---|---|---|---|
+| page order | Gate → law table → "The documents" tree → Risks → update pass → research passes (`DeepeningPanel`) | the six §6a sections first, in order; law table, update pass and research passes kept below them (nothing removed) | S |
+| 1 Collision | no section; collision reports are a kind in the tree; the schedule (#203) is a document | a section: the schedule plus every draft's collision report, with counts; "What depends on this" / "for review" as 267/269 (the reader exists) | M |
+| 2 Four models over drafts | `actionBlock` sends statement, avenue, causes, the 7 slots, the policy verdict and the Action details. **No drafts.** SET and HEADING digests, both only in Organising. Price: SET 74.3p for 58 actions, n=1, a floor | per action, the accepted draft's current text where one exists, else the statement, and the digest says which it read; the SET digest moves here (heading digests stay); the 360k character budget re-planned (drafts are long: #207's Code is 15,606 characters); **price re-measured on scratch** | L |
+| 3 Review passes | five passes, **one document at a time** (`reviewDocument`); Risks groups every issue by document | a runner over every accepted draft (skips passes that already read the version; asks first at the summed `reviewPlan` price); Risks grouped by draft | M |
+| 4 Coherence and gaps | gap check only in Organising; conditions × actions twice (from the digest; and `ConditionsCoverageView` from the owner's links, step 1 only) | both shown here | S |
+| 5 Costs | `computeCostSummary`: the whole idea by category, uprated. **No roll-up by heading or by year** | a table by heading × year, plus "cost–benefit analysis: not yet available" | M |
+| 6 Who delivers and who resists | the 7 slots edited in the record's "Who, how and against" (kept there until X3); "By who" `IncentiveMap` is **unreachable** (its view is step 2's, and steps are gone); **no code counts** "N actions rely on an implementer whose incentive is against and nothing changes it" | the slots edited here per action; the map; the count (new, from the slots' `direction`); the record section and its band entry removed | M |
+| 6b Policy test over drafts | `testAgainstPolicy` reads the title (120) and statement (600), batches of 25; verdict + reason stored; nothing says what it read | reads the accepted draft where one exists; the verdict says "tested against the draft, v2" / "against the statement" (`policyTestFrom` exists, unwritten); price re-measured | M |
+| §7 Renames (300) | screen-labels: 4 ("Add a document", "Review this document", "Save the document", "Needs no document"); 7 hard-coded outside it (Deepening "The documents", the idea page's "Documents" tab ×3, the record band, the system prompt, the Actions Pack); field guide ~42; tool descriptions ~38; components ~70 (a regex count; Sources and uploads stay) | all moved into `screen-labels.ts` and renamed; the count reported exactly | M |
+
+**Spend:** two real measurements on scratch copies (the digest over drafts, about £1 a run at today's rate and more with drafts; the
+policy test over drafts, pence). n=2 each, under £5 in all. Everything else is fixtures.
+
+### Three things for CCh to decide before X3 (my recommendation first)
+
+1. **The slots would be locked away.** §6a puts "Who delivers and who resists" on the Deepening, and the Deepening is LOCKED until every
+   live action is accepted or needs no draft (317). On 452c5ade that is most of 58 actions, so moving the slots there leaves them with no
+   editor for as long as drafting takes. **Recommend: "Who delivers and who resists" opens whatever the lock says** (it reads the actions,
+   not the drafts). The rest of the page stays locked. Alternative: keep the record section until the lock opens.
+2. **How much of a draft the policy test reads.** Today it reads 600 characters of statement; a draft runs to 15,000. **Recommend: the whole
+   accepted draft**, one action per call when the draft is long (batched as now when it is not), priced and measured. Clipping a draft to
+   fit would test part of it and say it tested the draft.
+3. **"By year" needs a horizon.** Cost lines carry `recurrence` (one-off / per year / unset) and `durationMonths`. **Recommend: years 1–5**,
+   one-off in year 1, per year in each year for its duration (whole term when unset), and lines with no recurrence in a "not said" column,
+   counted, never guessed.
+
+**Proposed split:** **X3a**: §6a 1–5 and §6b (the page, collision, digest and policy test over drafts with both prices measured, the
+review runner, gaps, costs). **X3b**: §6a 6 (who delivers) and §7 (renames). Each is a commit with its checks; X3b's renames touch
+every label file, so they go last.
+
+## 332 and housekeeping — 7 Nov 2026 (CCh-Lex 7 Nov (1): "325 and X2 accepted. 332: #207's instrument is Code text")
+
+**The derivation, corrected** (`lib/lex/action-documents-pure.ts` `headingMakesCode`): an action under a heading of kind **code** or
+**management code** needs a **code text**, whatever its avenue. Before 332 the heading's kind was read for platforms only, so #207
+(legislative avenue, "Accountability Code" heading) was derived as a draft clause. The owner's "needs nothing" / "set" still wins.
+
+**Every action the correction changes, measured** (all 1,019 live actions on 37 ideas, derived kinds before and after, diffed): 66
+change, **60 of them on 11 deleted scratch copies** of 452c5ade. **On 452c5ade, 6:**
+
+| action | heading | avenue | before | after | holds |
+|---|---|---|---|---|---|
+| #207 | Accountability Code (code) | legislative | draft clause + collision report | code text | code text (accepted), draft clause (now set aside) |
+| #28 | CS Mgt Code (management code) | legislative | draft clause + collision report | code text | nothing |
+| #36, #158, #174 | CS Mgt Code (management code) | organisational | operating text | code text | nothing |
+| #208 | CS Mgt Code (management code) | none | nothing derived | code text | nothing |
+
+⚠ **#28 is the one to look at:** a legislative action that loses its clause because of its heading. If it is really a clause, it belongs
+under a primary-legislation heading, or "set" overrides it.
+
+**On 452c5ade** (`scripts/apply-332.ts`, dry run first, every write read back):
+- **D.207.1 set aside, kept:** status SUPERSEDED, superseded by D.207.2 (the Code). It had no version, only one Lex proposal, dismissed;
+  its row stays readable. #207 now shows one Brief, the Code's.
+- **Its useful content is offered on #59's Brief** (#59 "Governed by a statutory Accountability and Delivery Code" is the clause that
+  makes the Code statutory): **D.59.1 BRIEF_PROPOSAL v1, waiting.** Built from D.207.1's stored fields word for word, with no model
+  call. It carries the purpose (as "must do"); 18 "Must include" points (duty on whom, enforcement, commencement, extent, subsections
+  (1)–(10), the precedent, the law it touches, the drafting note), each saying where it came from; the CMCHA 2007 s.1(3) caveat as
+  "Must not"; and tone statutory. A coverage test (every clause line placed, only the "Illustrative, not settled" banner left out) runs
+  before writing, and was shown failing on a stray line.
+- **#207's split** was already written against the Code's Brief (D.207.2 BRIEF_PROPOSAL v1, 7 Nov). Confirmed, not written again.
+
+**Housekeeping.**
+- Ledger row 9900 is now labelled `purpose 'check'`, `purposeInferred true` (193), so 26s2 is green: 215/215. ⚠ That label is an
+  inference: the row is a `lex.agent.turn` on the owner's account (24 Oct, 13.8p) on an idea since deleted.
+- 26v1b's 360 px band check now waits for "≡ More" to appear (up to 5 s; a timeout is the failure) instead of 200 ms.
+
+**Checks.** `check:lex-26x2` 75/75, 8 controls, 0 dead: a new part H (the rule, with a control holding the pre-332 rule) and 332's cold
+read in G. The X2 assertion "#207 shows a Brief for BOTH instruments" is moved, with the reason written above it. **Shown failing:**
+with the rule switched off, 4 red (H ×3 and G's #207). `check:lex-26s2` 215/215; `check:lex-26v1b` 81/81.
+
 ## X2 — built 7 Nov 2026 (CCh-Lex 5 Nov (1): "Then X2 as sized"; Charlie, 7 Nov: "continue with x2")
 
 **Before it: 325** (`65f3b6c`, live) and CBA-1's held edits committed by this session (`c2805ed`, live). **313 measured first:** of 452c5ade's

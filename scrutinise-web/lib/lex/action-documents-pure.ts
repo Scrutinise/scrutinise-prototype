@@ -105,8 +105,17 @@ export function needsDocuments(a: NeedsInput): Needs {
     : { kinds: ['SPECIFICATION'], why: under, overridden: false }
 }
 
+/** 332 (CCh-Lex 7 Nov (1)): an action under a heading of kind "code" or "management code" makes a code — its instrument is the code text,
+ *  REGARDLESS OF AVENUE. Before 332 the kind was read for platforms only, so #207 (a legislative avenue under a code heading) was derived
+ *  as a draft clause while the instrument it held was the Code. */
+export const headingMakesCode = (kind: string | null | undefined) => kind === 'CODE' || kind === 'MANAGEMENT_CODE'
+
 function derivedNeeds(a: NeedsInput): Needs {
   if (a.instrument === 'STATUTORY_CODE' || a.instrument === 'MANAGEMENT_CODE') return { kinds: ['CODE_TEXT'], why: 'the instrument is a code', overridden: false }
+  if (headingMakesCode(a.headingKind)) {
+    const word = HEADING_KIND_WORD[a.headingKind as HeadingKind]
+    return { kinds: ['CODE_TEXT'], why: a.headingName?.trim() ? `under “${a.headingName.trim()}”, a ${word} heading` : `under a ${word} heading`, overridden: false }
+  }
   // 259: an accepted clause needs its explanatory note — one plain-English paragraph per subsection
   if (a.avenue === 'LEGISLATIVE') return a.clauseAccepted
     ? { kinds: ['DRAFT_CLAUSE', 'COLLISION_REPORT', 'EXPLANATORY_NOTE'], why: 'a legislative action with an accepted clause', overridden: false }

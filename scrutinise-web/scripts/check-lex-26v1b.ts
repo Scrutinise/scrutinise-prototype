@@ -282,8 +282,10 @@ async function partC(copyId: string, userId: string, docId: string) {
     // item 1 — the band at a narrow and a wide width
     await load({ mode: 'band', width: 360 })
     await page.waitForSelector('[data-jump-band]')
-    await page.waitForTimeout(200)
-    ok('the band at 360 px puts the rest under "≡ More"', (await page.locator('[data-band-more]').count()) === 1 && /≡ More/.test(await page.locator('[data-band-more]').innerText()))
+    // CCh-Lex 7 Nov (1): wait for the CONDITION, not a fixed 200 ms (the band measures itself after paint; 200 ms failed once in three runs).
+    // A timeout here is the failure, reported as one — not an exception.
+    const moreShown = await page.waitForFunction(() => /≡ More/.test(document.querySelector('[data-band-more]')?.textContent ?? ''), null, { timeout: 5000 }).then(() => true, () => false)
+    ok('the band at 360 px puts the rest under "≡ More"', moreShown && (await page.locator('[data-band-more]').count()) === 1 && /≡ More/.test(await page.locator('[data-band-more]').innerText()))
     await page.locator('[data-band-more]').click()
     ok('…and "≡ More" opens the rest, each with its state in words', /Comments · 3/.test(await page.locator('[data-band-menu]').innerText()))
     await load({ mode: 'band', width: 1100 })
