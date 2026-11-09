@@ -1,5 +1,78 @@
 # LEX 26-X — REPORT
 
+## X3a — built 7 Nov 2026 (CCh-Lex 7 Nov (2): "X3: go, as split. Your three recommendations stand")
+
+§6a sections 1–5 and §6b. Section 6 ("Who delivers and who resists") and the §7 renames are X3b.
+
+**One reader for "what a review reads"** — `lib/lex/accepted-drafts.ts` (`acceptedDrafts`) and its words in `accepted-drafts-pure.ts`. Per live
+action: the accepted INSTRUMENT (never a companion), at the version the owner accepted, in full; a later unaccepted version is named, never
+read. The digest, the policy test and the review runner all read through it. On 452c5ade today that is one draft: #207, D.207.2 (code
+text) v1, 15,606 characters.
+
+**§6a.2 the four-model digest over drafts (311).** Each action's block says first what to read ("its ACCEPTED DRAFT, D.207.2 (code text),
+version 1 — given in full" / "the statement. No draft of this action is accepted yet"), and the draft follows in full. The models are told to
+judge an action by what its draft provides. Over the 360k budget, one cut length applies to every Detail and every draft, and the cut is said
+in the text and counted. Each model's answer stores what it read (`read`, `dataChars`), so the panel says "The models read 1 accepted draft
+(#207 D.207.2 v1) and 57 statements", per action on request, and says when models asked at different times read different texts. The
+WHOLE-SET digest moved from the Organising toolbar to the Deepening; heading digests stay in Organising (and read drafts too).
+
+**§6b the policy test over drafts (CCh-Lex 7 Nov (2), 2).** It reads the whole accepted draft, never clipped. A draft over 4,000 characters is
+a call of its own; the rest batch 25 a call, and a batch carries at most 40,000 characters of drafts (`policy-test-pure.ts`). Each verdict
+stores what it read (`record.policyTestRead`, carried by `parseRecord`; no schema change), and the record says "tested against the draft
+D.207.2, v1" / "tested against the statement". A verdict whose reading is out of date says "⚠ Out of date: a different draft is accepted
+now". The Organising button counts "N untested · M out of date" and tests both. ⚠ A verdict from before X3 carries no mark: it was a test of
+the statement, so it stays CURRENT until a draft is accepted (`testIsCurrent`). Without that rule the button would have re-tested all 41 old
+verdicts on 452c5ade; the mutation run reproduced exactly that ("58: the 17 untested and 41 out of date").
+
+**Prices, measured on a scratch copy of 452c5ade carrying its live documents (`scripts/measure-26x3.ts`):**
+
+| run | read | pence | note |
+|---|---|---|---|
+| policy test, 20 statements | 9,110 chars, 1 call | 5.23 | 51 s |
+| policy test, #207's Code alone | 16,230 chars, 1 call | 8.09 | 71 s |
+| digest, whole set (58) | 194,758 chars: 1 draft + 57 statements | models 61.50 | grok-4.7 timed out at 265 s (as on 19 Oct): a floor |
+| digest, "Accountability Code" (#207 alone) | 41,552 chars | models 30.39 | all four answered |
+
+The prices are fitted as a fixed part per call plus a part per character (`price-fit-pure.ts`), because most of a call's cost is its own
+output. A price per character alone would put an eight-statement heading at about 25p against a measured 45p (a control in the check holds
+that). The whole set's two runs give a negative fixed part, so the whole-set price falls back to per character alone and is labelled a floor.
+On 452c5ade today the buttons read about 82p for the whole set (195k characters) and about 12.6p for the policy test: 17 untested, 2 calls,
+24k characters (#207 is among the untested, and its Code is a call of its own).
+
+⚠ **The judge could not be measured on 7 Nov.** From this machine, `api.anthropic.com` fails TLS with `SELF_SIGNED_CERT_IN_CHAIN`, while
+Google, OpenAI, xAI and OpenRouter connect (a bare GET to each; no proxy or extra CA is set). Something local is intercepting that one host. The
+ledger shows the judge failing at 0p on both runs tonight; on 19 Oct it worked from here. I did NOT turn certificate checking off. The judge's
+part of each digest price is therefore its 19 Oct measured cost for the same scope (SET 22.46p, HEADING 18.52p), said so in `DIGEST_RUNS`.
+The judge reads the four answers and an index, not the drafts, so its cost should not move with them; it is still a different run's figure.
+**For Charlie:** one whole-set digest on the live site would measure the judge over drafts. Separately, worth finding what on this machine
+presents its own certificate for api.anthropic.com.
+
+**§6a.3 review passes over every accepted draft.** The Deepening lists each accepted draft (accepted at its current version: the version the
+passes read) with ●/◐/○ and "N of 5 passes have read it". "Review every accepted draft — about Np" asks first at the summed `reviewPlan`
+price, runs one draft after another through the existing route (a pass that already read the version is not run again), and can stop after a
+draft. A draft accepted earlier and edited since is listed as not reviewed here until the new version is accepted. The Risks view (already
+grouped by document) moved into this section.
+
+**§6a.4 coherence and gaps** — the gap check (still also on Organising's toolbar) and the conditions × actions table from the owner's links.
+The digest's own table stays inside the digest.
+
+**§6a.5 costs** (CCh-Lex 7 Nov (2), 3) — `cost-years-pure.ts`: years 1–5. A one-off line falls in year 1. A per-year line falls in each year of
+its duration, a part year as that part of the figure, and all five years when no duration is given. A line with no recurrence sits under "Not
+said", counted, never placed in a year. Lines with no figure, and one-number floors, are counted. Uprating uses the cost summary's own
+deflator (`uprater`, extracted from `computeCostSummary` so the two cannot differ). "Cost–benefit analysis: not yet available" sits below.
+452c5ade has no cost lines yet, so its section says so.
+
+**§6a.1 collision** — the schedule and every draft's collision report, with counts by part (its own lines · depend on it · for review), the
+staleness, and the actions that need a report and have none. On 452c5ade: the schedule (#203), no reports yet.
+
+**Page order:** the five sections first, inside the lock; the law table, the documents tree, the update pass and the research passes kept
+below them, nothing removed. On 452c5ade the page is still locked (57 to go), so Charlie sees it only by the owner's override.
+
+**Checks:** `check:lex-26x3` 62/62, 5 controls, 0 dead, 1 not run (no whole-set digest exists on 452c5ade to cold-read). Five mutations each
+went red: the draft not given to the models (3 red); an old verdict counted out of date (3); a one-off line put in "not said" (4); the
+verdict not saying what it read (2); the set digest put back on Organising (1). `measure-26x3` 10 passed, 3 failed: two judges unreachable
+(above), and one assertion of mine wrong for a heading that holds only #207 ("0 statements" is right there).
+
 ## X3 — sized 7 Nov 2026, before any build (CCh-Lex 7 Nov (1): "Then X3 as sized … Size first")
 
 Read: BRIEF_26X §6–§7; `app/ideas/create/CreateIdeaClient.tsx` (the Deepening renders there, `lexStage === 'deepening'`),

@@ -21,13 +21,15 @@ import { HEADING_PALETTE, colourFor } from '@/lib/lex/action-headings'
 import { HEADING_KINDS, HEADING_KIND_WORD, isHeadingKind, type HeadingKind } from '@/lib/lex/action-documents-pure'
 import { kindProposalPrice } from '@/lib/lex/heading-kind-pure'
 import { POLICY_VERDICT_UI } from '@/lib/lex/action-facets'
+import { policyTestPrice } from '@/lib/lex/policy-test-pure'
+import { testedAgainstWords } from '@/lib/lex/accepted-drafts-pure'
 import type { ActionStructureRequest, ActionStructureOp } from '@/lib/lex/action-structure-schema'
 import { OP_WORDS } from '@/lib/lex/action-structure-schema'
 import { explainFailure } from '@/lib/api-rejection'
 import { LIMITS } from '@/lib/lex/input-limits'
 import BoundedInput from './BoundedInput'
 import ActionSlots from './ActionSlots'
-import { useDigests, HeadingDigest, SetDigest, SetDigestButton } from './ActionDigest'
+import { useDigests, HeadingDigest } from './ActionDigest'
 import IncentiveMap from './IncentiveMap'
 import { usePackPrint, PackStatus } from './ActionsPackPrint'
 import ActionComments from './ActionComments'
@@ -272,6 +274,9 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   const markDuplicatesChecked = () => { try { window.localStorage.setItem(sigKey, listSig) } catch { /* ditto */ } setDupesSig(listSig) }
   const duplicatesChecked = sigReady && dupesSig === listSig
   const untestedCount = unparked.filter(isUntested).length
+  // 26-X X3 (6b): a verdict whose reading is out of date (a draft accepted since) is tested again by the same button, and counted beside it
+  const staleTestCount = unparked.filter((a) => !isUntested(a) && a.policyTest?.current === false).length
+  const testPrice = policyTestPrice(unparked.filter((a) => isUntested(a) || a.policyTest?.current === false).map((a) => ({ draftChars: a.acceptedDraft?.chars ?? 0, statementChars: (a.title?.length ?? 0) + a.practicalStep.length })))
   // ── the list filter (§8) ──
   const [filterAsked, setFilter] = useState<Filter>('all')
   const filter: Filter = filterAsked === 'notSpecific' && step === 1 ? 'all' : filterAsked
@@ -301,7 +306,6 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   const [consolidate, setConsolidate] = useState<ConsolidateCardState | null>(null)
   // 26-T1 - the digest (four models + a judge), per heading and for the whole set: step 1's
   const digests = useDigests(ideaId, org, onChanged)
-  const [setDigestOpen, setSetDigestOpen] = useState(false)
   // 26-T2 - the Actions Pack: any selection, one heading, or all
   const pack = usePackPrint(ideaId)
   /** "#12" in a digest opens that action in the list and brings it into view. */
@@ -727,11 +731,11 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
             if (r.ok) { setDupes(r.result); markDuplicatesChecked() }
           }} className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 bg-white text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{WORKSPACE_UI.findDuplicates}</button>
           {headingPlan && <ResortTool plan={headingPlan} undoable={structure?.resortUndoable ?? 0} ops={ops} disabled={disabled} />}
-          {untestedCount > 0 && (
-            <button disabled={disabled} data-test-policy title="Runs the same test the import uses, on the actions that read ? Not tested. Measured once on a real idea: 14 actions for 3.9p in about 40 seconds (n=1). The price of this run is shown when it finishes." onClick={() => { setView('list'); setFind(''); setFilter('unreviewed'); void ops.run('testPolicy', {}, 'Lex is testing the actions against your Guiding Policy', testedWords) }}
-              className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 bg-white text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{ORGANISING_TOOLBAR_UI.testAgainstPolicy} ({untestedCount} untested)</button>
+          {untestedCount + staleTestCount > 0 && (
+            <button disabled={disabled} data-test-policy title={`Runs the same test the import uses, on the actions that read ? Not tested and on any whose verdict is out of date. Where an action has an accepted draft the test reads the whole draft; otherwise its statement. Price: ${testPrice.words}.`} onClick={() => { setView('list'); setFind(''); setFilter('unreviewed'); void ops.run('testPolicy', {}, 'Lex is testing the actions against your Guiding Policy', testedWords) }}
+              className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 bg-white text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{ORGANISING_TOOLBAR_UI.testAgainstPolicy} ({untestedCount} untested{staleTestCount ? ` · ${staleTestCount} out of date` : ''})</button>
           )}
-          <SetDigestButton state={digests} disabled={disabled || live.length === 0} onOpened={() => setSetDigestOpen(true)} />
+          {/* 26-X X3 (§6a.2): the four-model digest of the WHOLE SET moved to the Deepening page; heading digests stay here */}
           {KindsAsk}
           {gapSlot}
           <button type="button" disabled={disabled || pack.busy || live.length === 0} data-print-all onClick={() => void pack.print(undefined, 'all the actions')} title="A printable pack of every action with everything the record holds, every paragraph numbered. No model is called." className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 bg-white text-zinc-800 hover:bg-zinc-50 disabled:opacity-40">{WORKSPACE_UI.printAll}</button>
@@ -881,7 +885,6 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
       {view === 'who' && <IncentiveMap ideaId={ideaId} actions={unparked} onOpenAction={openByNumber} onChanged={onChanged} disabled={disabled} />}
 
       {/* 26-T1 - the whole-set digest, at the foot of step 1 */}
-      {org && <SetDigest state={digests} open={setDigestOpen} setOpen={setSetDigestOpen} onOpenAction={openByNumber} disabled={disabled} />}
 
       {/* 26-S2 §3c — this step's checklist at the foot of the list. ADVISORY: it says what is unfinished and never blocks moving on. */}
       {org && checklist.length > 0 && <StepChecklist step={step} lines={checklist} />}
@@ -984,6 +987,10 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect, onBa
             <p className="mt-0.5 text-zinc-900">
               <span className="font-semibold"><span aria-hidden>{POLICY_VERDICT_UI[a.policyTest.verdict].glyph}</span> {POLICY_VERDICT_UI[a.policyTest.verdict].word}.</span>{' '}
               {a.policyTest.reason ?? <span className="text-zinc-500">No reason was recorded.</span>}
+            </p>
+            {/* 26-X X3 (6b): the verdict says what it read; one that is out of date says so, in words and with ⚠ */}
+            <p className={`mt-0.5 text-[11px] ${a.policyTest.current === false ? 'font-semibold text-zinc-900' : 'text-zinc-600'}`} data-policy-read={a.policyTest.read?.what ?? 'unrecorded'} data-policy-current={a.policyTest.current === false ? 'no' : 'yes'}>
+              {testedAgainstWords(a.policyTest.read)}{a.policyTest.current === false ? ' ⚠ Out of date: a different draft is accepted now. Test again to read it.' : '.'}
             </p>
             <p className="mt-1"><button type="button" disabled={disabled} onClick={testOne} className="text-[11px] font-medium px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">{a.policyTest.verdict === 'NOT_TESTED' ? RECORD_UI.testAgainstPolicy : RECORD_UI.testAgain}</button></p>
             {/* 26-S2 §3c — an action the policy conflicts with is ruled out, edited and re-tested, or KEPT WITH A NOTE. */}

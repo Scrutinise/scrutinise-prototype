@@ -9,6 +9,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { specificEnough as recordSpecific } from './action-record' // imports nothing itself: the client bundle stays clean (§28)
+import type { ReadMark } from './accepted-drafts-pure'
 
 export const AVENUES = ['LEGISLATIVE', 'ORGANISATIONAL', 'FINANCIAL'] as const
 export type Avenue = (typeof AVENUES)[number]
@@ -44,7 +45,13 @@ export const POLICY_VERDICT_UI: Record<PolicyVerdict, { glyph: string; word: str
   NOT_TESTED: { glyph: '?', word: 'Not tested' },
   FITS: { glyph: '✓', word: 'Fits' },
 }
-export interface PolicyTest { verdict: PolicyVerdict; reason: string | null; from: string[] }
+export interface PolicyTest {
+  verdict: PolicyVerdict; reason: string | null; from: string[]
+  /** 26-X X3 (6b): what the test read (null on a test from before X3), and whether that is still what it would read now — false once a
+   *  draft is accepted after a test of the statement, or a newer version of the draft is accepted. Out of date is said, never hidden. */
+  read?: ReadMark | null
+  current?: boolean
+}
 /** An action the consolidation never tested (the user's own, or from another route) says so in words — it is never shown as fitting. */
 export const NOT_IN_POLICY_TEST = 'Not part of the consolidation’s policy test'
 /** 26-S browser pass C — an action with NO recorded policy test reads "? Not tested" in words, never blank. */

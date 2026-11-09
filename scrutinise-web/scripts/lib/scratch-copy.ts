@@ -101,6 +101,34 @@ export async function scratchCopy(sourceId: string, label: string): Promise<{ id
 }
 
 /**
+ * 26-X X3 — the copy carries no documents (above); a measurement or a check that needs the drafts a review reads copies the source's LIVE
+ * documents (not superseded) and every version of each, onto the copied actions by action number. `deleteScratch` removes them with the copy.
+ */
+export async function copyDocuments(sourceIdeaId: string, toIdeaId: string): Promise<number> {
+  const [src, dst] = await Promise.all([
+    prisma.lexCoherentAction.findMany({ where: { ideaId: sourceIdeaId }, select: { id: true, number: true } }),
+    prisma.lexCoherentAction.findMany({ where: { ideaId: toIdeaId }, select: { id: true, number: true } }),
+  ])
+  const byNum = new Map(dst.map((a) => [a.number, a.id]))
+  const map = new Map(src.map((a) => [a.id, byNum.get(a.number)]))
+  const docs = await prisma.actionDocument.findMany({ where: { ideaId: sourceIdeaId, status: { not: 'SUPERSEDED' } }, include: { versions: true } })
+  let n = 0
+  for (const d of docs) {
+    const to = map.get(d.actionId)
+    if (!to) continue
+    const { versions, ...doc } = d
+    const made = await prisma.actionDocument.create({ data: { ...strip(doc as unknown as Row, 'supersededBy'), ideaId: toIdeaId, actionId: to } as never })
+    for (const v of versions) {
+      const data: Row = { ...strip(v as unknown as Row, 'documentId'), documentId: made.id }
+      if (data.payload === null) delete data.payload // a null Json column is left unset rather than written as JSON null
+      await prisma.actionDocumentVersion.create({ data: data as never })
+    }
+    n++
+  }
+  return n
+}
+
+/**
  * LEX 264: a run that is killed never reaches its `finally`, so its copy stays. The `isScratch` flag is the note it leaves: the next
  * `scratchCopy()` deletes every flagged copy older than LEFTOVER_AFTER_MS and says so. (Younger ones may be another run's, still going.)
  */

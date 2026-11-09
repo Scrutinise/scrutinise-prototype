@@ -1350,6 +1350,20 @@ export async function suggestStaffCost(level: StaffLevel, fte: number, months: n
  * `npm run check:cost-summary` pins the arithmetic to known inputs and an expected
  * total, and asserts each of the three claims above.
  */
+/** A figure uprated from its price year to the latest year in the deflator series; a figure with no price year, or a year the series lacks, is
+ *  returned as entered. Shared by the cost summary and the Deepening's table by heading and year (26-X X3), so the two cannot uprate differently. */
+export function uprater(deflator: ReadonlyArray<{ year: number; index: number }>): { uprate: (value: number, fromYear?: number | null) => number; targetYear: number | null } {
+  const idx = new Map(deflator.map((d) => [d.year, d.index]))
+  const targetYear = deflator.length ? Math.max(...deflator.map((d) => d.year)) : null
+  const uprate = (value: number, fromYear?: number | null): number => {
+    if (targetYear == null || fromYear == null) return value
+    const from = idx.get(fromYear), to = idx.get(targetYear)
+    if (!from || !to) return value
+    return value * (to / from)
+  }
+  return { uprate, targetYear }
+}
+
 export async function computeCostSummary(ideaId: string): Promise<{ summary: string; totals: Record<string, unknown> }> {
   const [actions, deflator, lines] = await Promise.all([
     prisma.lexCoherentAction.findMany({
@@ -1370,15 +1384,8 @@ export async function computeCostSummary(ideaId: string): Promise<{ summary: str
     }),
   ])
 
-  // Uprate a figure from its price year to the latest year in the deflator series.
-  const idx = new Map(deflator.map((d) => [d.year, d.index]))
-  const targetYear = deflator.length ? Math.max(...deflator.map((d) => d.year)) : null
-  const uprate = (value: number, fromYear?: number | null): number => {
-    if (targetYear == null || fromYear == null) return value
-    const from = idx.get(fromYear), to = idx.get(targetYear)
-    if (!from || !to) return value
-    return value * (to / from)
-  }
+  // Uprate a figure from its price year to the latest year in the deflator series (26-X X3: shared with the Deepening's cost table).
+  const { uprate, targetYear } = uprater(deflator)
 
   // A category total carries its own PROVENANCE alongside the numbers, because the
   // sentence written from it has to be true of the figures that went in.

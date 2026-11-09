@@ -23,6 +23,7 @@ import { DIGEST_OP_WORDS } from '@/lib/lex/action-digest-types'
 import { DIGEST_QUESTIONS, DIGEST_CONFIRM_ABOVE_PENCE, type DigestView, type DigestQuote, type DigestPrice } from '@/lib/lex/action-digest-pure'
 import { explainFailure } from '@/lib/api-rejection'
 import { WORKSPACE_UI } from '@/lib/lex/screen-labels'
+import { readWords } from '@/lib/lex/accepted-drafts-pure'
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const pence = (p: number | null | undefined) => (p == null ? 'not priced' : p < 1 ? `${p.toFixed(2)}p` : `${p.toFixed(1)}p`)
@@ -220,6 +221,20 @@ export function DigestPanel({ d, state, onOpenAction, disabled }: { d: DigestVie
         {STATUS_WORDS[d.status] ?? d.status}. {answering} of {d.models.length} models answered. Cost {d.spentPence == null ? 'not recorded' : pence(d.spentPence)}{d.unpriced ? ' (at least one call could not be priced, so this is a floor)' : ' (measured on this run)'}.
         {j && (j.trimmedCommentaries > 0 ? ` ⚠ ${j.trimmedCommentaries} long ${j.trimmedCommentaries === 1 ? 'Detail was' : 'Details were'} cut at ${j.commentaryMax} characters to fit what the models can read.` : '')}
       </p>
+
+      {/* 26-X X3 (311): what the models read, per action - the accepted draft where one exists, else the statement */}
+      <div className="text-[11px] text-zinc-700" data-digest-reads>
+        <p><span className="font-semibold">What they read:</span> {d.readsLine}{d.draftsCut ? ` ⚠ ${d.draftsCut} draft${d.draftsCut === 1 ? ' was' : 's were'} cut to fit what the models can read, and each says so where it is cut.` : ''}{d.readsDiffer ? ' ⚠ The models were asked at different times and did not all read the same texts (a draft was accepted in between); each model’s own answers say what it was given.' : ''}</p>
+        {d.reads && d.reads.some((r) => r.read.what === 'draft') && (
+          <details>
+            <summary className="cursor-pointer underline">Per action</summary>
+            <ul className="mt-0.5 space-y-0.5">{d.reads.map((r) => (
+              <li key={r.n} data-digest-read={r.n} data-digest-read-what={r.read.what}>
+                <button type="button" onClick={() => onOpenAction?.(r.n)} className="underline font-medium" title={d.labels[r.n]}>#{r.n}</button> — {readWords(r.read)}{r.cut ? ' (cut to fit)' : ''}
+              </li>))}</ul>
+          </details>
+        )}
+      </div>
 
       {/* who answered, and who did not - a failure announces itself with its cause (CLAUDE.md §18) */}
       <ul className="text-[11px] space-y-0.5" data-digest-models>

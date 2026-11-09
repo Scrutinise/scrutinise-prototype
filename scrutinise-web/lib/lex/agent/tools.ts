@@ -1243,7 +1243,7 @@ const proposeSlotsTool: ToolDefinition = {
 
 const testPolicyTool: ToolDefinition = {
   name: 'test_actions_against_policy', category: 'draft', tier: 'free',
-  description: 'Test coherent actions against the settled Guiding Policy — the same test the import uses: each is judged FITS, DOES NOT FIT or CONFLICTS, with a one-line reason, written to the action. With no actions named it tests every action that reads “? Not tested”; with numbers it (re-)tests those, e.g. after an edit. Needs an accepted Guiding Policy. Costs pence (about 0.3p an action, measured); the result gives the price.',
+  description: 'Test coherent actions against the settled Guiding Policy — the same test the import uses: each is judged FITS, DOES NOT FIT or CONFLICTS, with a one-line reason, written to the action. Where an action has an ACCEPTED DRAFT the test reads the whole draft, otherwise its statement, and the verdict records which (“tested against the draft” with its D-number and version, or “tested against the statement”). With no actions named it tests every action that reads “? Not tested” and every verdict that is out of date (a draft accepted since it was tested); with numbers it (re-)tests those, e.g. after an edit. Needs an accepted Guiding Policy. Costs pence; a long draft is a call of its own; the result gives the price.',
   schema: z.object({ actions: z.array(z.number().int()).max(60).optional().describe('action numbers; omit for every action that was never tested') }),
   async run(ctx, { actions }) {
     let ids: string[] | undefined

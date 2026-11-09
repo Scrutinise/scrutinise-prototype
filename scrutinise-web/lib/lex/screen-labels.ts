@@ -317,6 +317,23 @@ export const DEEPENING_LOCK_UI = {
   recordOverride: 'Record the reason and open the Deepening',
 } as const
 
+/** 26-X X3 §6a — the Deepening page's own sections, in their order, and their controls. */
+export const DEEPENING_UI = {
+  collision: '1 · Collision',
+  fourModels: '2 · Four models, over the drafts',
+  reviews: '3 · Review passes over the accepted drafts',
+  coherence: '4 · Coherence and gaps',
+  costs: '5 · Costs, by heading and by year',
+  reviewAll: 'Review every accepted draft',
+  reviewGo: 'Review them',
+  readAgain: 'Read the sections again',
+  cbaNotYet: 'Cost–benefit analysis: not yet available',
+  undated: 'Not said (no recurrence)',
+  noHeading: 'Not under a heading',
+  total: 'Total',
+  year: (n: string) => `Year ${n}`,
+} as const
+
 /** 26-X addendum 321 — the Organising toolbar is three labelled rows; and the controls on them whose words were written in their components. */
 export const ORGANISING_TOOLBAR_UI = {
   rowView: 'View',

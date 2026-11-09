@@ -25,6 +25,8 @@ import { activeConditions } from './action-conditions'
 import { readConditions, proposeCondition } from './action-conditions-server'
 import { actionLabel } from './action-facets'
 import type { GapSource } from './gap-check'
+import { acceptedDrafts, readsLine } from './accepted-drafts'
+import { KIND_WORD } from './action-documents-pure'
 import {
   DIGEST_QUESTIONS, DIGEST_SYSTEM, JUDGE_SYSTEM, MODEL_SCHEMA, JUDGE_SCHEMA, dataBlock, digestUserPrompt, judgeUserPrompt, parseModelAnswer, parseJudge,
   conditionTable, staleness, digestLine, staleSentence, refsIn, digestPrice,
@@ -54,10 +56,12 @@ export interface ScopeRead {
   ids: string[]
   headingName: string | null
   scopeWords: string
+  /** The heading id of each of `actions`, in the same order (the price per heading is computed from the set's one read). */
+  headingIds: Array<string | null>
 }
 
 export async function readScope(ideaId: string, scope: DigestScope, headingId: string | null): Promise<Result<ScopeRead>> {
-  const [idea, causes, headings, rows, policy, cond] = await Promise.all([
+  const [idea, causes, headings, rows, policy, cond, drafts] = await Promise.all([
     prisma.idea.findUnique({ where: { id: ideaId }, select: { challenge: true, summaryDescription: true, pivotalObstacle: true } }),
     prisma.diagnosisCause.findMany({ where: { ideaId }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }], select: { id: true, number: true, cause: true } }),
     prisma.actionHeading.findMany({ where: { ideaId }, orderBy: { orderIndex: 'asc' }, select: { id: true, name: true, purpose: true, hidden: true } }),
@@ -70,6 +74,8 @@ export async function readScope(ideaId: string, scope: DigestScope, headingId: s
     }),
     prisma.policyOption.findFirst({ where: { ideaId, status: 'CHOSEN' } }),
     readConditions(ideaId),
+    // 26-X X3 (311): the accepted draft of each action, in full - the models read it where one exists
+    acceptedDrafts(ideaId),
   ])
   let heading: { id: string; name: string } | null = null
   if (scope === 'HEADING') {
@@ -100,8 +106,10 @@ export async function readScope(ideaId: string, scope: DigestScope, headingId: s
       support: r.supportOnly,
       policyTest: r.policyTestVerdict ? { verdict: r.policyTestVerdict, reason: r.policyTestReason } : null,
       slots, commentary: r.commentary, parked: r.parked,
+      draft: (() => { const d = drafts.get(r.id); return d ? { d: d.d, kind: d.kind, kindWord: KIND_WORD[d.kind] ?? d.kind, v: d.v, newerV: d.newerV, text: d.body } : null })(),
     }]
   })
+  const headingIdOf = new Map(inScope.map((r) => [r.number, r.headingId]))
   if (!actions.length) return fail(scope === 'HEADING' ? `“${heading?.name}” has no live actions, so there is nothing to ask the models about. Nothing was started.` : 'There are no live actions yet, so there is nothing to ask the models about. Nothing was started.')
   const ctx: DigestContext = {
     problem: idea?.challenge?.trim() || idea?.summaryDescription?.trim() || '(no problem statement recorded)',
@@ -115,6 +123,7 @@ export async function readScope(ideaId: string, scope: DigestScope, headingId: s
     ok: true,
     data: {
       ctx, actions, ids: inScope.filter((r) => r.number != null).map((r) => r.id), headingName: heading?.name ?? null,
+      headingIds: actions.map((a) => headingIdOf.get(a.number) ?? null),
       scopeWords: scope === 'HEADING'
         ? `the ${actions.length} live ${actions.length === 1 ? 'action' : 'actions'} under the heading “${heading?.name}”. The conditions are those of the whole proposal; these actions are not expected to deliver all of them.`
         : `the whole set: all ${actions.length} live actions, under all the headings.`,
@@ -159,7 +168,20 @@ async function view(row: Row): Promise<DigestView> {
     conditions: cond,
     labels: read.ok ? Object.fromEntries(read.data.actions.map((a) => [a.number, actionLabel({ title: a.title, practicalStep: a.statement }, 100)])) : {},
     working: row.status === 'WORKING_MODELS' || row.status === 'WORKING_JUDGE',
+    ...readsOf(outputs),
   }
+}
+
+/** 26-X X3 (311): what the models read, per action, from the answers themselves (each answer stores what it was given). */
+function readsOf(outputs: StoredModelOutput[]): Pick<DigestView, 'reads' | 'readsLine' | 'readsDiffer' | 'draftsCut'> {
+  const given = outputs.filter((o) => o.status === 'OK' && o.read)
+  const first = given[0]?.read ?? null
+  if (!first) {
+    const old = outputs.some((o) => o.status === 'OK')
+    return { reads: null, readsLine: old ? 'This digest was run before drafts were read: every action was read by its statement.' : 'Nothing read yet.', readsDiffer: false, draftsCut: 0 }
+  }
+  const sig = (r: NonNullable<StoredModelOutput['read']>) => JSON.stringify(r.map((x) => [x.n, x.read.what, x.read.what === 'draft' ? `${x.read.d}v${x.read.v}` : '']))
+  return { reads: first, readsLine: `The models read ${readsLine(first)}.`, readsDiffer: given.some((o) => sig(o.read!) !== sig(first)), draftsCut: first.filter((r) => r.cut).length }
 }
 
 /** The digests to show: for each scope (a heading, or the set) the newest one - READY, or in progress, or the newest failure if nothing else. */
@@ -258,7 +280,8 @@ async function runModels(ideaId: string, userId: string, row: Row, read: ScopeRe
   }
 
   const pending = outputs.filter((o) => o.status === 'PENDING')
-  const ran = await Promise.all(pending.map(one))
+  // 26-X X3 (311): each answer keeps what its model was given, so the digest says per action whether it read the draft or the statement
+  const ran = (await Promise.all(pending.map(one))).map((r) => ({ ...r, read: data.reads, dataChars: data.text.length }))
   const next = outputs.map((o) => ran.find((r) => r.model === o.model) ?? o)
   const spent = (row.spentPence ?? 0) + ran.reduce((n, r) => n + (r.pence ?? 0), 0)
   const anyOk = next.some((o) => o.status === 'OK')
@@ -390,17 +413,27 @@ export async function suggestGaps(ideaId: string, digestId: string, index?: numb
 
 // ── the price on the button ─────────────────────────────────────────────────────────────────────────────────────
 
+/**
+ * 26-X X3 (311): priced on the CHARACTERS the models would be given now (drafts included), from ONE read of the set - no model call. A heading's
+ * data is the same head with that heading alone, and its actions' blocks.
+ */
 export async function digestQuote(ideaId: string): Promise<DigestQuote> {
-  const [rows, headings] = await Promise.all([
-    prisma.lexCoherentAction.findMany({ where: { ideaId, status: 'LIVE' }, select: { headingId: true } }),
-    prisma.actionHeading.findMany({ where: { ideaId }, select: { id: true } }),
+  const [read, headings] = await Promise.all([
+    readScope(ideaId, 'SET', null),
+    prisma.actionHeading.findMany({ where: { ideaId }, select: { id: true, name: true, purpose: true } }),
   ])
   const per: DigestQuote['headings'] = {}
-  for (const h of headings) {
-    const n = rows.filter((r) => r.headingId === h.id).length
-    per[h.id] = { actions: n, price: digestPrice('HEADING', n) }
+  if (!read.ok) {
+    for (const h of headings) per[h.id] = { actions: 0, price: digestPrice('HEADING', 0, 0) }
+    return { set: { actions: 0, price: digestPrice('SET', 0, 0) }, headings: per }
   }
-  return { set: { actions: rows.length, price: digestPrice('SET', rows.length) }, headings: per }
+  const { ctx, actions, headingIds } = read.data
+  for (const h of headings) {
+    const mine = actions.filter((_, i) => headingIds[i] === h.id)
+    const chars = mine.length ? dataBlock({ ...ctx, headings: [{ name: h.name, purpose: h.purpose }] }, mine).text.length : 0
+    per[h.id] = { actions: mine.length, price: digestPrice('HEADING', mine.length, chars) }
+  }
+  return { set: { actions: actions.length, price: digestPrice('SET', actions.length, dataBlock(ctx, actions).text.length) }, headings: per }
 }
 
 export { DIGEST_QUESTIONS }

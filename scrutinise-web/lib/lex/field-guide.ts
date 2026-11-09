@@ -16,7 +16,7 @@ import {
   COMMON_UI, RECORD_UI, DOCUMENT_UI, DOCUMENT_TAB_WORD, INSTRUCTION_FIELD, INSTRUCTION_EDITOR, TOUCH_BLOCK, TREE_UI, TREE_FILTER_WORD,
   PROVISION_COLUMNS, PRECEDENT_COLUMNS, STATEMENT_LABEL, COMMENTARY_LABEL, FACET_WORD, WORKSPACE_UI, WORKSPACE_VIEW_WORD, NOTEBOOK_UI, shown,
   LIFECYCLE_STAGE_WORD, LIFECYCLE_UI, PROGRESS_WORD, CHECKLIST_WORD, PAGE_UI, DRAFTING_FILTER_WORD, DEEPENING_LOCK_UI,
-  ORGANISING_TOOLBAR_UI, ADD_ACTION_UI, BRIEF_UI, BRIEF_FIELD_WORD, TONE_WORD,
+  ORGANISING_TOOLBAR_UI, ADD_ACTION_UI, BRIEF_UI, BRIEF_FIELD_WORD, TONE_WORD, DEEPENING_UI,
 } from './screen-labels'
 import { EXTENTS } from './action-draft-pure'
 import { RECORD_SECTIONS, type RecordSection } from './record-layout-pure'
@@ -212,7 +212,7 @@ const WORKSPACE: Record<keyof typeof WORKSPACE_UI, GuideText> = {
   classifyWithLex: { purpose: 'Lex proposes the causes, avenue and conditions for every action that has none (on the Organising page).', fits: 'Proposals sit beside the owner\'s answers; nothing changes until accepted. The seven "Who, how and against" answers are proposed per action, from its record ("Ask Lex").', tool: 'classify_actions, propose_action_slots' },
   dismissThemAll: { purpose: 'Sets aside every answer Lex has proposed for "Who, how and against", on every action.', fits: 'The owner\'s own answers are not touched. (Its button left the screen with the step tabs, 26-X; Lex can still do it.)', tool: 'answer_slot_proposal (accept: false)' },
   findDuplicates: { purpose: 'Lists pairs of actions that may say the same thing.', fits: 'Free: no model is called. Merging a pair is the owner\'s choice, and can be undone.', tool: 'find_action_duplicates, merge_actions' },
-  askFourSet: { purpose: 'Four models each answer the same six questions about every action, and a judge writes one digest keeping each model\'s position named.', fits: 'Asks first at the price shown; nothing is added to the list.', tool: none('a priced run started from the screen') },
+  askFourSet: { purpose: 'Four models each answer the same six questions about every action, and a judge writes one digest keeping each model\'s position named. Each model reads an action\'s accepted draft where one exists, otherwise its statement, and the digest says which for each.', fits: 'On the Deepening page, section 2 (it moved from the Organising toolbar, 26-X X3; heading digests stay in Organising). Asks first at the price shown, measured over drafts; nothing is added to the list.', tool: none('a priced run started from the screen') },
   printAll: { purpose: 'A printable Actions Pack (Word and PDF) of every action, every paragraph numbered.', fits: 'No model is called.', tool: none('a file the screen builds') },
   addHeading: { purpose: 'Adds a heading, named by the owner, to group actions under.', fits: 'A primary button: pressing it opens the name box. Headings group actions into instruments; each can be given a kind.', limits: 'The box shows its limit.', tool: 'create_action_heading' },
   suggestHeadings: { purpose: 'Lex reads the Guiding Policy and suggests headings.', fits: 'The owner adds the ones they want.', tool: 'suggest_action_headings' },
@@ -245,12 +245,12 @@ const ROW = { view: 'On the Organising toolbar\'s "View" row, where nothing chan
 const TOOLBAR_G: Record<keyof typeof ORGANISING_TOOLBAR_UI, GuideText> = {
   rowView: { purpose: 'The first toolbar row: how the list is shown — List, Board, Coverage grid, Conditions, Group, Hide all / Show all headings, the find box and Show.', fits: ROW.view, tool: none('a row of screen controls') },
   rowAdd: { purpose: 'The second toolbar row: Add action, Add heading, Suggest headings from my guiding policy, Import actions from a document.', fits: ROW.add, tool: none('a row of screen controls') },
-  rowLex: { purpose: 'The third toolbar row: the runs Lex makes and the checks — titles, classify, duplicates, re-sort, the policy test, four models, gaps, print.', fits: `${ROW.lex} Each that spends says its price first.`, tool: none('a row of screen controls') },
+  rowLex: { purpose: 'The third toolbar row: the runs Lex makes and the checks — titles, classify, duplicates, re-sort, the policy test, gaps, print (the four-model digest of the whole set moved to the Deepening, 26-X X3).', fits: `${ROW.lex} Each that spends says its price first.`, tool: none('a row of screen controls') },
   addAction: { purpose: 'Adds an action of the owner\'s own: a title (required), a statement, and a heading (or Unsorted).', fits: `${ROW.add} It is the page\'s primary button. The action lands first under its heading, opened on Drafting, numbered, with its strip at "Defined ◐" until it has a statement and a heading with a kind.`, limits: 'The title and the statement show their limits.', tool: 'add_action' },
   importActions: { purpose: 'Reads a document you have filed and shows a table of every idea in it for you to change and confirm before anything is added.', fits: `${ROW.add} (Moved from above the list.)`, tool: 'import_actions_from_source' },
   checkForGaps: { purpose: 'Looks for actions the guiding policy cannot do without: a free read first, then four models; each suggestion says what fails without it.', fits: `${ROW.lex} (Moved from its own box above the list.) Nothing is an action until you accept it.`, tool: 'run_gap_check' },
   reSort: { purpose: 'Lex sorts the actions into instrument headings, one batch at a time; Undo puts them back.', fits: ROW.lex, tool: none('a run started from the screen') },
-  testAgainstPolicy: { purpose: 'Tests the actions that read "? Not tested" against the Guiding Policy; the count is how many are untested.', fits: `${ROW.lex} The price of the run is shown when it finishes.`, tool: 'test_actions_against_policy' },
+  testAgainstPolicy: { purpose: 'Tests the actions that read "? Not tested", and any whose verdict is out of date, against the Guiding Policy; the count says how many of each.', fits: `${ROW.lex} Where an action has an accepted draft the test reads the whole draft (a long one in a call of its own), otherwise its statement; each verdict says which ("tested against the draft …" / "tested against the statement"). The price is on the button, measured over drafts.`, tool: 'test_actions_against_policy' },
   untitledFilter: { purpose: 'A filter on the list: the actions with no title.', fits: 'In "Show" on the View row; "Title them with Lex" turns it on, so its count is the rows shown.', tool: 'list_actions' },
   acceptAllTitles: { purpose: 'Accepts every title Lex has proposed and that waits on its row.', fits: `${ROW.lex} Beside "Title them with Lex", only while proposals wait. A row the owner has titled since keeps the owner\'s title.`, tool: 'answer_title_proposals' },
   lexProposes: { purpose: 'Lex\'s proposed title for the action, under its statement on the row.', fits: 'A proposal: the action keeps no title until it is accepted.', tool: 'answer_title_proposals' },
@@ -271,7 +271,7 @@ const ADD_ACTION_G: Record<keyof typeof ADD_ACTION_UI, GuideText> = {
 const WORKSPACE_ROW: Partial<Record<keyof typeof WORKSPACE_UI, keyof typeof ROW>> = {
   group: 'view', hideAllHeadings: 'view', showAllHeadings: 'view', listFilter: 'view',
   addHeading: 'add', suggestHeadings: 'add',
-  classifyWithLex: 'lex', findDuplicates: 'lex', askFourSet: 'lex', printAll: 'lex',
+  classifyWithLex: 'lex', findDuplicates: 'lex', printAll: 'lex',
 }
 const onRows = <K extends string>(texts: Record<K, GuideText>, rows: Partial<Record<K, keyof typeof ROW>>): Record<K, GuideText> =>
   Object.fromEntries((Object.keys(texts) as K[]).map((k) => [k, rows[k] && !texts[k].fits.includes(ROW[rows[k]!]) ? { ...texts[k], fits: `${ROW[rows[k]!]} ${texts[k].fits}` } : texts[k]])) as Record<K, GuideText>
@@ -387,6 +387,23 @@ const LOCK_G: Record<keyof typeof DEEPENING_LOCK_UI, GuideText> = {
   recordOverride: { purpose: 'Records the reason and opens the Deepening.', fits: 'An override is added to the record, never replacing an earlier one.', tool: none('the owner’s decision, made on the screen') },
 }
 
+// 26-X X3 §6a — the Deepening page's sections
+const DEEPENING_G: Record<keyof typeof DEEPENING_UI, GuideText> = {
+  collision: { purpose: 'The consequential schedule and every draft\'s collision report, with counts: the clause\'s own lines, "What depends on this" and "Provisions that refer to this — for review".', fits: 'Generated from the drafts and the law data; free. Each report says when it is out of date. Actions that need a report and have none are listed.', tool: 'list_documents, read_document' },
+  fourModels: { purpose: 'The four-model digest of the whole set, reading each action\'s accepted draft where one exists, otherwise its statement; the digest says which, per action.', fits: 'Heading digests stay on Organising. The price on the button is measured over drafts.', tool: none('a priced run started from the screen') },
+  reviews: { purpose: 'The five review passes over every accepted draft: how many have read each one, and the price of the rest.', fits: 'The Risks view below lists every issue the passes raise, by draft.', tool: 'review_document (one draft at a time)' },
+  coherence: { purpose: 'The gap check and the conditions × actions table, side by side.', fits: 'The gap check\'s suggestions are not actions until accepted; the table is the owner\'s own links.', tool: 'run_gap_check, conditions_coverage' },
+  costs: { purpose: 'The cost lines rolled up by heading and by year, years 1 to 5.', fits: 'A one-off line falls in year 1; a per-year line in each year of its duration (all five when no duration is given); a line with no recurrence is shown under "Not said", counted, never placed in a year.', tool: 'add_cost_line, set_action_costs' },
+  reviewAll: { purpose: 'Runs the review passes that have not yet read each accepted draft, one draft after another.', fits: 'Asks first at the summed measured price; a pass that already read a version is not run again; each draft is saved as it finishes.', tool: 'review_document (one draft at a time)' },
+  reviewGo: { purpose: 'Confirms "Review every accepted draft" at the price shown.', fits: 'As "Review every accepted draft".', tool: 'review_document' },
+  readAgain: { purpose: 'Reads the Deepening\'s sections again from the record.', fits: 'Free; nothing is changed.', tool: none('a screen control') },
+  cbaNotYet: { purpose: 'Says the cost–benefit analysis is not built yet.', fits: 'It comes with its own brief (decision 314); it is not a gate.', tool: none('not yet built') },
+  undated: { purpose: 'The column for cost lines that do not say whether they are one-off or per year.', fits: 'Counted and summed apart; never guessed into a year. Say the recurrence on the line to move it.', tool: 'add_cost_line' },
+  noHeading: { purpose: 'The row for cost lines on actions not under a heading.', fits: 'As every heading row.', tool: 'set_action_costs' },
+  total: { purpose: 'The total of every row.', fits: 'Uprated to the latest price year, as the cost summary.', tool: 'set_action_costs' },
+  year: { purpose: 'A year of the five, from the start.', fits: 'One-off lines are in year 1.', tool: 'set_action_costs' },
+}
+
 // 26-X X2 (309) — the Brief
 const BRIEF_G: Record<keyof typeof BRIEF_UI, GuideText> = {
   section: { purpose: 'The Brief for the action\'s draft, with its version and who wrote it.', fits: 'Above "Draft it" and the Draft.', tool: 'read_brief' },
@@ -482,6 +499,8 @@ export function guideEntries(): GuideEntry[] {
     ...fromTable('record', 'brief', BRIEF_UI, BRIEF_G),
     ...fromTable('record', 'briefField', BRIEF_FIELD_WORD, BRIEF_FIELD_G),
     ...fromTable('record', 'tone', TONE_WORD, TONE_G),
+    // 26-X X3
+    ...fromTable('workspace', 'deepening', DEEPENING_UI, DEEPENING_G),
   ]
 }
 

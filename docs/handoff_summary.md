@@ -1014,6 +1014,15 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-11-09 00:53 UTC (laptop): 26-X X3a built and committed: the Deepening's five sections; the digest and the policy test read accepted drafts; costs years 1–5.**
+See CHANGE_LOG 00:53 and `docs/LEX_26X_REPORT.md` § X3a.
+- One reader (`lib/lex/accepted-drafts.ts`): the accepted draft in full, else the statement. Policy verdicts record what they read; verdicts
+  from before X3 count as statement tests.
+- Prices were measured over drafts on scratch. ⚠ The judge could not run locally (api.anthropic.com TLS, `SELF_SIGNED_CERT_IN_CHAIN`), so its share
+  is the 19 Oct figure, labelled. One live whole-set digest would measure it.
+- **Next:** X3b: "Who delivers and who resists" (open whatever the lock says) plus the §7 renames, with the count reported.
+- **For Charlie:** #28's heading; one live whole-set digest; what intercepts api.anthropic.com's TLS on this machine.
+
 **▶ 2026-11-07 19:43 UTC (laptop): 332 + housekeeping committed; X3 SIZED, waiting on CCh's three calls.** See CHANGE_LOG 19:43 and
 `docs/LEX_26X_REPORT.md` § X3 (sizing) and § 332.
 - **332:** a code / management code heading → code text, whatever the avenue. On 452c5ade it changes #207, #28, #36, #158, #174 and #208 (⚠ #28

@@ -15,6 +15,7 @@ import { readStageSearches, displayStageFor, groupLandscape } from './stage-sear
 import { clampStep } from './action-steps'
 import { parseRecord } from './action-record'
 import { withDrafts } from './action-documents'
+import { acceptedDrafts, markOf, parseReadMark, testIsCurrent } from './accepted-drafts'
 import { parseConditions } from './action-conditions'
 import { parseHeadingPlan } from './action-resort-pure'
 import {
@@ -234,6 +235,12 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     where: { ideaId },
     orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }],
   }))
+  // 26-X X3 (6b) — the accepted draft of each action, so a policy verdict can say whether what it read is still what it would read now
+  const accepted = await acceptedDrafts(ideaId)
+  const testRead = (a: (typeof actionRows)[number]) => {
+    const read = parseReadMark((parseRecord(a.record) as { policyTestRead?: unknown }).policyTestRead)
+    return { read, current: testIsCurrent(read, markOf(accepted.get(a.id), a.practicalStep)) }
+  }
   const num = (v: unknown): number | null => (typeof v === 'number' ? v : null)
   const range = (v: unknown) => {
     const r = v as Record<string, unknown> | null
@@ -268,9 +275,10 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     ...(a.status !== 'LIVE' ? { setAsideAt: a.updatedAt.toISOString() } : {}),
     // Decision 138 — the policy test, read off the ACTION (not off the `ActionIdea` behind it).
     policyTest: a.policyTestVerdict
-      ? { verdict: a.policyTestVerdict as NonNullable<CanonicalAction['policyTest']>['verdict'], reason: a.policyTestReason, from: Array.isArray(a.policyTestFrom) ? (a.policyTestFrom as unknown[]).map(String) : [] }
+      ? { verdict: a.policyTestVerdict as NonNullable<CanonicalAction['policyTest']>['verdict'], reason: a.policyTestReason, from: Array.isArray(a.policyTestFrom) ? (a.policyTestFrom as unknown[]).map(String) : [], ...testRead(a) }
       : null,
     conflictNote: a.conflictNote ?? null,
+    acceptedDraft: (() => { const d = accepted.get(a.id); return d ? { d: d.d, v: d.v, chars: d.body.length } : null })(),
     commentary: a.commentary ?? null,
     record: a.record ? parseRecord(a.record) : null,
     noCostReason: a.noCostReason ?? null,

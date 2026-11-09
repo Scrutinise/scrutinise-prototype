@@ -33,7 +33,9 @@ import { readConditions } from './action-conditions-server'
 import { TEST_SYSTEM, TEST_SCHEMA, placeGroups } from './action-ideas'
 import { parseRecord } from './action-record'
 import { cycleRefusal } from './action-order-pure'
-import { HEADING_KINDS, HEADING_KIND_WORD, isHeadingKind } from './action-documents-pure'
+import { HEADING_KINDS, HEADING_KIND_WORD, KIND_WORD, isHeadingKind, type DocumentKind } from './action-documents-pure'
+import { acceptedDrafts, markOf, parseReadMark, testIsCurrent } from './accepted-drafts'
+import { policyTestCalls, policyTestDue } from './policy-test-pure'
 const TITLE_MAX = LIMITS.actionTitle
 
 export type Result<T = unknown> = { ok: true; data: T } | { ok: false; error: string }
@@ -522,7 +524,6 @@ export async function proposeFacets(ideaId: string, userId: string | null, asked
 // writes carries a verdict. Rows from before that — build-era actions, the user's own — read "? Not tested". This runs the SAME test on them
 // (or, with `ids`, again on named ones: an action that was edited after a ✗ Conflicts is re-tested rather than argued with). Each batch is
 // written as it completes, so a failure part-way keeps what was tested and says how many were.
-const POLICY_TEST_BATCH = 25
 const POLICY_TEST_ONE_BY_ONE = [
   '',
   '⚠ HERE EVERY GROUP HAS EXACTLY ONE MEMBER. These actions are already on the user\'s list and are judged one by one; do not merge any of them,',
@@ -538,10 +539,14 @@ export async function testAgainstPolicy(ideaId: string, userId: string | null, o
   if (!policy) return fail('There is no accepted Guiding Policy on this idea yet, so there is nothing to test the actions against. Settle the policy first. Nothing was changed.')
   const all = await prisma.lexCoherentAction.findMany({
     where: { ideaId, status: 'LIVE', ...(opts.ids ? { id: { in: opts.ids } } : {}) },
-    select: { id: true, number: true, title: true, practicalStep: true, policyTestVerdict: true }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }],
+    select: { id: true, number: true, title: true, practicalStep: true, policyTestVerdict: true, record: true }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }],
   })
   if (opts.ids && all.length !== new Set(opts.ids).size) return fail('One of those actions is not on this idea’s live list. Nothing was tested.')
-  const rows = opts.ids ? all : all.filter((r) => !r.policyTestVerdict || r.policyTestVerdict === 'NOT_TESTED')
+  // 26-X X3 (311, 6b): the test reads the ACCEPTED DRAFT where one exists, else the statement - and a verdict whose reading is out of date (a
+  // draft accepted since a test of the statement, or a newer version accepted since) is tested again by the button, like an untested one.
+  const drafts = await acceptedDrafts(ideaId, all.map((r) => r.id))
+  const items = all.map((r) => ({ r, draft: drafts.get(r.id), mark: markOf(drafts.get(r.id), r.practicalStep) }))
+  const rows = opts.ids ? items : items.filter((x) => policyTestDue(x.r.policyTestVerdict, testIsCurrent(parseReadMark(parseRecord(x.r.record).policyTestRead), x.mark)))
   const counts: Record<string, number> = { FITS: 0, DOES_NOT_FIT: 0, CONFLICTS: 0, NOT_TESTED: 0 }
   if (!rows.length) return { ok: true, data: { tested: 0, counts, pence: 0, batches: 0 } }
   const user0 = [
@@ -551,12 +556,14 @@ export async function testAgainstPolicy(ideaId: string, userId: string | null, o
     chosen?.chainLink ? `If only part is delivered: ${clip(chosen.chainLink, 700)}` : '',
     '', 'THE CANDIDATE ACTIONS',
   ].filter((l, i, a) => l !== '' || a[i - 1] !== '')
+  // CCh-Lex 7 Nov (2), 2: the WHOLE draft, never clipped; an action whose draft is long is tested in a call of its own; the rest are batched as before
+  const calls = policyTestCalls(rows.map((x) => ({ draftChars: x.draft?.body.length ?? 0 })))
   let tested = 0, pence = 0, unpriced = false, batches = 0
-  for (let i = 0; i < rows.length; i += POLICY_TEST_BATCH) {
-    const batch = rows.slice(i, i + POLICY_TEST_BATCH)
-    const user = [...user0, ...batch.map((r, k) => `[${k}] ${clip(r.title || '', 120)}${r.title ? ': ' : ''}${clip(r.practicalStep, 600)}`)].join('\n')
+  for (const idxs of calls) {
+    const batch = idxs.map((i) => rows[i])
+    const user = [...user0, ...batch.map((x, k) => policyTestItem(k, x.r.title, x.r.practicalStep, x.draft))].join('\n')
     const res = await callModelJson<{ groups?: Array<{ members?: unknown; text?: unknown; verdict?: unknown; reason?: unknown }> }>({
-      model: STRUCTURE_MODEL, system: TEST_SYSTEM + POLICY_TEST_ONE_BY_ONE, user, schema: TEST_SCHEMA as never, maxOutputTokens: 8192, timeoutMs: 120_000,
+      model: STRUCTURE_MODEL, system: TEST_SYSTEM + POLICY_TEST_ONE_BY_ONE + POLICY_TEST_DRAFTS, user, schema: TEST_SCHEMA as never, maxOutputTokens: 8192, timeoutMs: 120_000,
       temperature: 0.1, reasoningEffort: 'medium', label: 'action-policy-test', stream: 'lex', pass: 'actions.policy-test', ideaId, userId,
     })
     const priced = res.usage.recorded ?? (await recordUsage(res.usage, { stream: 'lex', pass: 'actions.policy-test', ideaId, userId, failed: !res.ok }))
@@ -564,18 +571,35 @@ export async function testAgainstPolicy(ideaId: string, userId: string | null, o
     batches++
     if (!res.ok) {
       console.warn('[action-policy-test] failed', { ideaId, reason: (res as { reason: string }).reason, detail: clip((res as { detail: string }).detail, 300) })
-      return fail(`Testing did not finish: ${tested} of ${rows.length} actions were tested and saved; the rest still read “? Not tested”. Press “Test against the policy” again to continue.`)
+      return fail(`Testing did not finish: ${tested} of ${rows.length} actions were tested and saved; the rest keep the verdict they had (or still read “? Not tested”). Press “Test against the policy” again to continue.`)
     }
-    for (const g of placeGroups(res.value.groups, batch.map((r) => r.title || r.practicalStep))) {
+    for (const g of placeGroups(res.value.groups, batch.map((x) => x.r.title || x.r.practicalStep))) {
       for (const mem of g.members) {
-        const row = batch[mem]
-        await prisma.lexCoherentAction.update({ where: { id: row.id }, data: { policyTestVerdict: g.verdict, policyTestReason: g.reason || null } })
+        const x = batch[mem]
+        // the verdict and WHAT IT READ are written together, from a fresh read of the record (a slot saved meanwhile is kept)
+        await prisma.$transaction(async (tx) => {
+          const fresh = await tx.lexCoherentAction.findUnique({ where: { id: x.r.id }, select: { record: true } })
+          const record = { ...parseRecord(fresh?.record), policyTestRead: x.mark }
+          await tx.lexCoherentAction.update({ where: { id: x.r.id }, data: { policyTestVerdict: g.verdict, policyTestReason: g.reason || null, record: record as never } })
+        })
         counts[g.verdict] = (counts[g.verdict] ?? 0) + 1; tested++
       }
     }
   }
   return { ok: true, data: { tested, counts, pence: unpriced ? null : pence, batches } }
 }
+
+/** One item as the model reads it: the statement (as before, title 120 / statement 600) and, where one is accepted, the draft IN FULL. */
+export function policyTestItem(k: number, title: string | null, statement: string, draft: { d: string; kind: DocumentKind; v: number; body: string } | undefined): string {
+  const head = `[${k}] ${clip(title || '', 120)}${title ? ': ' : ''}${clip(statement, 600)}`
+  if (!draft) return `${head}\n    (No draft of this action is accepted yet: test the statement.)`
+  return `${head}\n    THE ACCEPTED DRAFT ${draft.d} (${KIND_WORD[draft.kind] ?? draft.kind}), version ${draft.v} - TEST THIS, IN FULL:\n${draft.body.trim()}\n    [end of ${draft.d}]`
+}
+const POLICY_TEST_DRAFTS = [
+  '',
+  '⚠ WHERE AN ITEM CARRIES ITS ACCEPTED DRAFT, TEST THE DRAFT: what it actually provides, not what its statement hopes for. Where the draft does',
+  'something the statement does not (or omits what the statement promises), judge what the draft does, and say so in the reason.',
+].join('\n')
 
 // ── 26-S2 §3 — the step the user is on, and "kept with a note" ───────────────────────────────────────────────
 

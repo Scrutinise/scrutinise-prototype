@@ -51,6 +51,9 @@ export interface ActionRecord {
   documentNeeds?: unknown
   /** 26-V1b §7b (262) — on the LATER action: why it must come after each earlier one, keyed by the earlier action's id (lib/lex/action-order-pure.ts). */
   orderBecause?: Record<string, string>
+  /** 26-X X3 (311, 6b) — what the policy test READ when it gave the verdict on the action: the accepted draft (D-number, kind, version) or the
+   *  statement (lib/lex/accepted-drafts-pure.ts ReadMark). Written by testAgainstPolicy beside the verdict; absent on a test from before X3. */
+  policyTestRead?: unknown
 }
 
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v)
@@ -93,6 +96,8 @@ export function parseRecord(json: unknown): ActionRecord {
     const because = Object.fromEntries(Object.entries(json.orderBecause).map(([k, v]) => [k, str(v, 300)]).filter(([, v]) => v))
     if (Object.keys(because).length) out.orderBecause = because
   }
+  // 26-X X3 — what the policy test read; carried through like the others, or a slot save would drop it
+  if (isObj(json.policyTestRead)) out.policyTestRead = json.policyTestRead
   return out
 }
 

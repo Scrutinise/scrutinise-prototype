@@ -465,7 +465,9 @@ export interface CanonicalAction {
    * Decision 138 — what the consolidation's policy test said about this action against the settled guiding policy, and where it
    * came from (in words). null = it never went through that test (the user's own, or from another route).
    */
-  policyTest: { verdict: 'FITS' | 'DOES_NOT_FIT' | 'CONFLICTS' | 'NOT_TESTED'; reason: string | null; from: string[] } | null
+  /** 26-X X3 (311): the action's accepted draft, if any — what a review reads instead of the statement (lib/lex/accepted-drafts.ts). */
+  acceptedDraft?: { d: string; v: number; chars: number } | null
+  policyTest: { verdict: 'FITS' | 'DOES_NOT_FIT' | 'CONFLICTS' | 'NOT_TESTED'; reason: string | null; from: string[]; read?: import('./accepted-drafts-pure').ReadMark | null; current?: boolean } | null
   /** 26-S2 §3c — "kept with a note": why the user keeps an action the test says CONFLICTS. null = no note. */
   conflictNote: string | null
   /** Decision 181 — the commentary: unlimited, beside the 1,000-character statement. null = none. */

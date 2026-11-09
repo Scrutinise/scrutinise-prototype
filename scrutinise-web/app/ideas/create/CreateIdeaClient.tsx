@@ -38,7 +38,7 @@ import DeepeningPanel from '@/components/lex/DeepeningPanel'
 import DeepeningGate from '@/components/lex/DeepeningGate'
 import UpdatePassPanel from '@/components/lex/UpdatePassPanel'
 import DocumentsTree from '@/components/lex/DocumentsTree'
-import RisksView from '@/components/lex/RisksView'
+import DeepeningSections from '@/components/lex/DeepeningSections'
 import DeepeningLawTable from '@/components/lex/DeepeningLawTable'
 import AgendaPanel from '@/components/lex/AgendaPanel'
 import ReportAdditions from '@/components/lex/ReportAdditions'
@@ -1292,18 +1292,16 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                   {/* 26-X decision 317 — THE LOCK: until every live action is accepted or needs no draft (or the owner overrides, with a
                       reason), this page shows only the count and the actions still to go; nothing below mounts, so nothing in it runs. */}
                   <DeepeningGate ideaId={state.ideaId}>
-                  {/* 26-V1 §6 (decision 244): the law table at the top; the documents tree below it; the passes below that. */}
-                  <section className="pt-2" data-deepening="law">
+                  {/* 26-X X3 §6a: the Deepening's own sections FIRST, in the brief's order (collision · four models · review passes and the
+                      Risks view by draft · coherence and gaps · costs); then, kept below them and nothing removed, the law table (26-V1 §6),
+                      the documents tree, the update pass and the research passes. */}
+                  <DeepeningSections ideaId={state.ideaId} actions={state.actions} headings={state.actionHeadings ?? []} conditions={state.conditions} onChanged={refreshState} />
+                  <section className="pt-3" data-deepening="law">
                     <DeepeningLawTable ideaId={state.ideaId} />
                   </section>
                   <section className="pt-3" data-deepening="documents">
                     <h3 className="text-sm font-bold uppercase tracking-wide text-zinc-800 mb-1">The documents</h3>
                     <DocumentsTree ideaId={state.ideaId} />
-                  </section>
-                  {/* 26-V2d (§7, 225): the Risks view — every issue, by document, answered here */}
-                  <section className="pt-3" data-deepening="risks">
-                    <h3 className="text-sm font-bold uppercase tracking-wide text-zinc-800 mb-1">Risks</h3>
-                    <RisksView ideaId={state.ideaId} />
                   </section>
                   <div className="pt-3">
                     <UpdatePassPanel ideaId={state.ideaId} canEdit showResearchAngle={false} />

@@ -1,5 +1,35 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-09 00:53 UTC - LEX 26-X X3a (BRIEF_26X §6a 1–5, §6b; decision 311): the Deepening's five sections; the digest and the policy test read accepted drafts; costs by heading and year 1–5
+
+**Brief:** CCh-Lex 7 Nov (2), "X3: go, as split". Full write-up: `docs/LEX_26X_REPORT.md` § X3a.
+
+- **One reader of "what this action says"** (`lib/lex/accepted-drafts(-pure).ts`): the accepted instrument draft in full where there is one,
+  otherwise the statement. On 452c5ade that is one draft, #207's Code (D.207.2 v1, 15,606 characters).
+- **The four-model digest reads it.** Each action's block says which it is. The digest says what was read ("1 accepted draft (#207 D.207.2 v1)
+  and 57 statements"), and per action on request. The whole-set digest moved from Organising to the Deepening; heading digests stay in Organising.
+- **The policy test reads it.** The whole accepted draft is given; a long draft gets a call of its own. Each verdict records what it read
+  (`record.policyTestRead`) and says so: "tested against the draft D.207.2, v1" / "tested against the statement". If a different draft has
+  been accepted since, it says the verdict is out of date. Verdicts from before X3 count as tests of the statement, so nothing is re-tested by default.
+- **The Deepening page** (`components/lex/DeepeningSections.tsx`, `GET /api/ideas/[id]/deepening/overview`), in the brief's order:
+  1. Collision: the schedule and each draft's collision report, counted.
+  2. The whole-set digest.
+  3. Review passes over every accepted draft, asking first at the summed price, with the Risks view under it.
+  4. The gap check and the conditions × actions table.
+  5. Costs by heading, years 1–5. One-off lines fall in year 1 and per-year lines in each year of their duration. Lines with no recurrence are
+     shown apart and counted, never guessed. A line says cost–benefit analysis is not yet available.
+- **Prices measured over drafts on a scratch copy** (`scripts/measure-26x3.ts`), about £1.25 spent:
+  - Policy test: 5.23p for 20 statements, 8.09p for #207's Code alone. The live button reads about 12.6p for 17 due, in 2 calls.
+  - Set digest: models 61.50p over 194,758 characters (Grok timed out, so it is a floor). The live button reads about 82p.
+  - Heading digest: models 30.39p over 41,552 characters.
+  - ⚠ **The judge could not run from this machine:** api.anthropic.com alone fails TLS (`SELF_SIGNED_CERT_IN_CHAIN`). Certificate checks
+    were not turned off. The judge's share of the price is its 19 Oct figure, and the price says so.
+- **Checks:**
+  - `check:lex-26x3` 62/62, 5 controls, 0 dead, 1 not run. Five mutations went red.
+  - Regression, run one at a time: 26x2 75 · 26x 110 (its Organising "Ask four models" assertion moved with the button) · 26w-b 60 · 26w 66 ·
+    26v 66 · 26v2b 47 · 26v2c 44 · 26v2d 62 · 26u 67 · 26t1 98 · 26t2 72 · 26s2-structure 107 · 26s2 215 · 26v1b 81.
+  - prompt-examples, client-boundary, llm-guards 9 and costing-params 11 all green; tsc clean.
+
 ## 2026-11-07 19:43 UTC - LEX 332: a code heading makes a code text whatever the avenue; #207's draft clause set aside, its content offered on #59's Brief; housekeeping (ledger row 9900, the 360 px check); X3 sized
 
 **Brief:** CCh-Lex 7 Nov (1). Full write-up: `docs/LEX_26X_REPORT.md` § 332 and § X3 (sizing).

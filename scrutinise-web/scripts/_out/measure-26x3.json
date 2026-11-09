@@ -1,0 +1,123 @@
+{
+  "on": "452c5ade",
+  "at": "2026-11-07T23:43:26.513Z",
+  "acceptedDrafts": [
+    {
+      "d": "D.207.2",
+      "kind": "CODE_TEXT",
+      "v": 1,
+      "chars": 15606
+    }
+  ],
+  "set": {
+    "id": "f57d7210-3665-4700-9486-2075e6e6d91f",
+    "scope": "SET",
+    "status": "MODELS_DONE",
+    "pence": 61.496,
+    "unpriced": false,
+    "seconds": 267,
+    "actions": 58,
+    "chars": 194758,
+    "models": [
+      {
+        "model": "claude-opus-5-5",
+        "status": "OK",
+        "pence": 37.415664,
+        "dropped": {
+          "unknownRefs": [],
+          "badActionNumbers": 0,
+          "missingWhatFails": 0,
+          "badConditionNumbers": 0
+        }
+      },
+      {
+        "model": "gpt-6.1-sol",
+        "status": "OK",
+        "pence": 11.529892,
+        "dropped": {
+          "unknownRefs": [],
+          "badActionNumbers": 0,
+          "missingWhatFails": 0,
+          "badConditionNumbers": 0
+        }
+      },
+      {
+        "model": "gemini-3.1-pro-preview",
+        "status": "OK",
+        "pence": 12.550730000000001,
+        "dropped": {
+          "unknownRefs": [],
+          "badActionNumbers": 0,
+          "missingWhatFails": 0,
+          "badConditionNumbers": 0
+        }
+      },
+      {
+        "model": "grok-4.7",
+        "status": "FAILED",
+        "error": "timeout: [action-digest:grok-4.7] timed out after 264972ms",
+        "pence": 0
+      }
+    ],
+    "readsLine": "The models read 1 accepted draft (#207 D.207.2 v1) and 57 statements (the actions with no accepted draft).",
+    "draftsCut": 0
+  },
+  "heading": {
+    "id": "dddfec76-0028-4f1c-b994-7df4aec643ad",
+    "scope": "HEADING",
+    "status": "MODELS_DONE",
+    "pence": 30.387,
+    "unpriced": false,
+    "seconds": 143,
+    "actions": 1,
+    "chars": 41531,
+    "models": [
+      {
+        "model": "claude-opus-5-5",
+        "status": "OK",
+        "pence": 15.776299999999999,
+        "dropped": {
+          "unknownRefs": [],
+          "badActionNumbers": 0,
+          "missingWhatFails": 0,
+          "badConditionNumbers": 0
+        }
+      },
+      {
+        "model": "gpt-6.1-sol",
+        "status": "OK",
+        "pence": 3.295406,
+        "dropped": {
+          "unknownRefs": [],
+          "badActionNumbers": 0,
+          "missingWhatFails": 0,
+          "badConditionNumbers": 0
+        }
+      },
+      {
+        "model": "gemini-3.1-pro-preview",
+        "status": "OK",
+        "pence": 3.3723520000000007,
+        "dropped": {
+          "unknownRefs": [],
+          "badActionNumbers": 0,
+          "missingWhatFails": 0,
+          "badConditionNumbers": 0
+        }
+      },
+      {
+        "model": "grok-4.7",
+        "status": "OK",
+        "pence": 7.9432920000000005,
+        "dropped": {
+          "unknownRefs": [],
+          "badActionNumbers": 0,
+          "missingWhatFails": 0,
+          "badConditionNumbers": 0
+        }
+      }
+    ],
+    "readsLine": "The models read 1 accepted draft (#207 D.207.2 v1) and 0 statements (the actions with no accepted draft).",
+    "draftsCut": 0
+  }
+}
