@@ -16,7 +16,7 @@ import {
   COMMON_UI, RECORD_UI, DOCUMENT_UI, DOCUMENT_TAB_WORD, INSTRUCTION_FIELD, INSTRUCTION_EDITOR, TOUCH_BLOCK, TREE_UI, TREE_FILTER_WORD,
   PROVISION_COLUMNS, PRECEDENT_COLUMNS, STATEMENT_LABEL, COMMENTARY_LABEL, FACET_WORD, WORKSPACE_UI, WORKSPACE_VIEW_WORD, NOTEBOOK_UI, shown,
   LIFECYCLE_STAGE_WORD, LIFECYCLE_UI, PROGRESS_WORD, CHECKLIST_WORD, PAGE_UI, DRAFTING_FILTER_WORD, DEEPENING_LOCK_UI,
-  ORGANISING_TOOLBAR_UI, ADD_ACTION_UI, BRIEF_UI, BRIEF_FIELD_WORD, TONE_WORD, DEEPENING_UI,
+  ORGANISING_TOOLBAR_UI, ADD_ACTION_UI, BRIEF_UI, BRIEF_FIELD_WORD, TONE_WORD, DEEPENING_UI, DRAFTS_UI,
 } from './screen-labels'
 import { EXTENTS } from './action-draft-pure'
 import { RECORD_SECTIONS, type RecordSection } from './record-layout-pure'
@@ -48,7 +48,7 @@ const COMMON: Record<keyof typeof COMMON_UI, GuideText> = {
   ok: { purpose: 'Dismisses a message the screen has shown.', fits: 'Messages say what was saved or why not; OK only hides the message.', tool: none('nothing is stored') },
   notNow: { purpose: 'Declines a priced offer; nothing is spent or changed.', fits: 'Beside every "Draft it" or "Review it" that costs money.', tool: none('nothing to do') },
   edit: { purpose: 'Opens the thing it sits beside for editing.', fits: 'The edit replaces the owner\'s own text; earlier versions are kept where the thing has versions.', tool: 'the tool for the field being edited (see that field)' },
-  add: { purpose: 'Adds what was chosen in the control beside it.', fits: 'Used for "Add a document" and "Must come after".', tool: 'see the control it sits beside' },
+  add: { purpose: 'Adds what was chosen in the control beside it.', fits: 'Used for "Add a draft" and "Must come after".', tool: 'see the control it sits beside' },
   remove: { purpose: 'Removes the line it sits on (an order link).', fits: 'The action itself is untouched.', tool: 'set_action_order (on: false)' },
   dismiss: { purpose: 'Sets aside a proposal or a summary.', fits: 'A proposal set aside is kept, never deleted.', tool: 'see the proposal it sits beside' },
   accept: { purpose: 'Takes Lex\'s proposal as the owner\'s answer.', fits: 'Lex\'s proposals sit beside the owner\'s answers and change nothing until accepted.', tool: 'see the proposal it sits beside' },
@@ -72,27 +72,27 @@ const RECORD: Record<keyof typeof RECORD_UI, GuideText> = {
   keptWithNote: { purpose: 'The owner\'s reason for keeping an action the policy conflicts with.', fits: 'Shown with the conflict, on the record and in the printed pack.', tool: 'keep_conflict_note' },
   keepWithNote: { purpose: 'Keeps an action the policy test says conflicts, with the owner\'s reason.', fits: 'The conflict stays visible; the note says why the owner kept it.', limits: 'At least 3 characters; the box shows its limit.', tool: 'keep_conflict_note' },
   clearNote: { purpose: 'Removes the keep-it note; the conflict is shown unanswered again.', fits: 'As "Keep it, with a note".', tool: 'keep_conflict_note (note: null)' },
-  facetsTitle: { purpose: 'Heads the classification: the causes the action attacks and its avenue.', fits: 'Causes come from the Diagnosis; the avenue (legislative, organisational, financial) decides which documents the action needs.', tool: 'set_action_facets, classify_actions' },
+  facetsTitle: { purpose: 'Heads the classification: the causes the action attacks and its avenue.', fits: 'Causes come from the Diagnosis; the avenue (legislative, organisational, financial) decides which drafts the action needs.', tool: 'set_action_facets, classify_actions' },
   facetsTitleConditions: { purpose: 'Adds "and the conditions it delivers" when the idea has conditions.', fits: 'Conditions are the owner\'s numbered list on the Guiding Policy.', tool: 'set_action_facets' },
   lexProposes: { purpose: 'Lex\'s proposed classification (causes, avenue, conditions or order), beside the owner\'s.', fits: 'Accept takes it; Dismiss sets it aside; nothing changes until then.', tool: 'answer_facet_proposals' },
   conditionsDelivers: { purpose: 'Which of the idea\'s conditions for success this action delivers.', fits: 'Read by conditions_coverage: a condition no action delivers shows NO ACTION.', tool: 'set_action_conditions' },
   support: { purpose: 'Marks an action that delivers no condition directly (training, a pilot, a consultation).', fits: 'A support action is counted apart from the conditions it serves.', tool: 'set_action_conditions (support: true)' },
   change: { purpose: 'Opens the list beside it to change the choice.', fits: 'Used on the causes and the conditions.', tool: 'set_action_facets, set_action_conditions' },
-  headingKind: { purpose: 'The type of instrument the actions under a heading make.', fits: '"Platform" means each action under it needs a specification; the kind decides which documents are needed.', tool: 'set_heading_kind, answer_kind_proposal' },
+  headingKind: { purpose: 'The type of instrument the actions under a heading make.', fits: '"Platform" means each action under it needs a specification; the kind decides which drafts are needed.', tool: 'set_heading_kind, answer_kind_proposal' },
   rename: { purpose: 'Renames a heading.', fits: 'Headings group actions into instruments (primary legislation, a code, guidance…).', limits: 'The box shows its limit.', tool: 'rename_action_heading' },
   hide: { purpose: 'Hides a heading\'s actions from the list.', fits: 'Hidden is not ruled out: the actions stay live and counted.', tool: 'hide_action_heading' },
   show: { purpose: 'Shows a hidden heading\'s actions again.', fits: 'As Hide.', tool: 'hide_action_heading (hidden: false)' },
   retireHeading: { purpose: 'Retires a heading; its actions stay, with no heading.', fits: 'Nothing is deleted: "Bring back" under Retired headings restores it.', tool: 'retire_action_heading' },
   consolidateHeading: { purpose: 'Lex looks under a heading for actions that are parts of another, or say the same thing.', fits: 'Asks first with a price; every merge can be restored.', tool: 'run_consolidation' },
   notThis: { purpose: 'Sets aside Lex\'s proposed kind for a heading; the kind is unchanged.', fits: 'As Accept beside it.', tool: 'answer_kind_proposal (accept: false)' },
-  addDocument: { purpose: 'Adds a document of the chosen kind to the action, written by the owner.', fits: 'Documents are numbered D.<action>.<n> and have versions; the owner\'s own words.', tool: 'propose_document_text (Lex\'s text is a proposal beside the owner\'s)' },
-  draftWhatActionNeeds: { purpose: 'Drafts every document the action still needs.', fits: 'Each draft is saved as a proposal as it finishes; asks first at the measured price.', tool: 'draft_document' },
+  addDocument: { purpose: 'Adds a draft of the chosen kind to the action, written by the owner.', fits: 'Drafts are numbered D.<action>.<n> and have versions; the owner\'s own words.', tool: 'propose_document_text (Lex\'s text is a proposal beside the owner\'s)' },
+  draftWhatActionNeeds: { purpose: 'Drafts everything the action still needs.', fits: 'Each draft is saved as a proposal as it finishes; asks first at the measured price.', tool: 'draft_document' },
   generateFree: { purpose: 'Generates the collision report from the clause and the official effects data.', fits: 'Free: built from data, not drafted.', tool: 'generate_collision_report' },
   writeInstruction: { purpose: 'Opens the drafting instruction\'s form for the owner to write.', fits: 'The instruction names what the clause amends, the duty, enforcement and purpose; its provision lines write the law rows.', tool: 'redraft_document (Lex drafts it as a proposal)' },
-  draftWithLex: { purpose: 'Lex drafts the document; the price is shown first.', fits: 'The draft arrives as a proposal beside the current version.', tool: 'draft_document, redraft_document' },
+  draftWithLex: { purpose: 'Lex drafts it; the price is shown first.', fits: 'The draft arrives as a proposal beside the current version.', tool: 'draft_document, redraft_document' },
   draftWithLexNoPrice: { purpose: 'Lex drafts the explanatory note; the price is said before it runs.', fits: 'As "draft it with Lex".', tool: 'redraft_document' },
-  writeIt: { purpose: 'Opens a form for the owner to write a missing document.', fits: 'As "Add a document".', tool: 'propose_document_text' },
-  noneYet: { purpose: 'Says a document the action needs does not exist yet.', fits: 'What an action needs is worked out from its avenue and its heading\'s kind, or set by hand.', tool: 'list_documents' },
+  writeIt: { purpose: 'Opens a form for the owner to write a missing draft.', fits: 'As "Add a draft".', tool: 'propose_document_text' },
+  noneYet: { purpose: 'Says a draft the action needs does not exist yet.', fits: 'What an action needs is worked out from its avenue and its heading\'s kind, or set by hand.', tool: 'list_documents' },
   askLex: { purpose: 'Lex proposes answers to the seven questions of step 2 for this action.', fits: 'Each proposal sits beside its slot; an answer the owner wrote is never overwritten.', tool: 'propose_action_slots' },
   dismissAllSlotProposals: { purpose: 'Sets aside every waiting proposal on this action\'s seven slots.', fits: 'The owner\'s answers are untouched.', tool: 'answer_slot_proposal (slot: all, accept: false)' },
   notYetAnswered: { purpose: 'Says a step-2 question has no answer yet.', fits: '"Specific enough" needs Who and Against answered.', tool: 'set_action_slot' },
@@ -135,14 +135,14 @@ const RECORD: Record<keyof typeof RECORD_UI, GuideText> = {
 
 // ── the document view ──────────────────────────────────────────────────────────────────────────────────────────
 const DOCUMENT: Record<keyof typeof DOCUMENT_UI, GuideText> = {
-  acceptVersion: { purpose: 'The owner accepts the document as it stands.', fits: 'A later edit takes it back to "accepted, then changed".', tool: 'accept_document (owner\'s instruction only)' },
+  acceptVersion: { purpose: 'The owner accepts the draft as it stands.', fits: 'A later edit takes it back to "accepted, then changed".', tool: 'accept_document (owner\'s instruction only)' },
   generateAgain: { purpose: 'Rebuilds the collision report from the clause and the effects data.', fits: 'Free; unchanged if nothing moved.', tool: 'generate_collision_report' },
   askLexToRedraft: { purpose: 'Lex drafts a fresh version as a proposal; the price is shown first.', fits: 'An older waiting proposal is set aside, kept.', tool: 'redraft_document' },
   versions: { purpose: 'Opens the Versions tab: every version, who wrote it, what it changed, and set-aside proposals.', fits: 'Nothing is ever deleted.', tool: 'read_document' },
   reviewThisDocument: { purpose: 'The five review passes read the current version and raise issues on its parts.', fits: 'Asks first at the measured price; issues land in the Issues tab and the Risks view.', tool: 'review_document' },
-  reviewIt: { purpose: 'Confirms the review at the price shown.', fits: 'As "Review this document".', tool: 'review_document' },
-  reviewAgain: { purpose: 'Reviews a version the five passes have already read, adding a second set of issues.', fits: 'As "Review this document".', tool: 'review_document' },
-  saveAsNewVersion: { purpose: 'Saves the owner\'s edit as the next version.', fits: 'Earlier versions are kept; an accepted document then needs accepting again.', tool: none('the owner\'s own words (decision 301): Lex writes a proposal and the owner uses it') },
+  reviewIt: { purpose: 'Confirms the review at the price shown.', fits: 'As "Review this draft".', tool: 'review_document' },
+  reviewAgain: { purpose: 'Reviews a version the five passes have already read, adding a second set of issues.', fits: 'As "Review this draft".', tool: 'review_document' },
+  saveAsNewVersion: { purpose: 'Saves the owner\'s edit as the next version.', fits: 'Earlier versions are kept; an accepted draft then needs accepting again.', tool: none('the owner\'s own words (decision 301): Lex writes a proposal and the owner uses it') },
   useItAsVersion: { purpose: 'Makes Lex\'s waiting proposal the next version.', fits: 'Not accepted until the owner accepts it.', tool: 'use_proposal (owner\'s instruction only)' },
   takeAll: { purpose: 'Copies Lex\'s whole proposal into the working copy.', fits: 'Saving then uses Lex\'s whole instruction, its provision lines and every field.', tool: 'use_proposal' },
   takeThis: { purpose: 'Copies one subsection of Lex\'s proposal into the working copy.', fits: 'The working copy is saved as the owner\'s version.', tool: none('a choice in the owner\'s working copy') },
@@ -154,13 +154,13 @@ const DOCUMENT: Record<keyof typeof DOCUMENT_UI, GuideText> = {
   lexProposesColumn: { purpose: 'Lex\'s proposal, in the comparison; it cannot be edited.', fits: 'As "As it stands".', tool: 'read_document' },
   yourWorkingCopy: { purpose: 'The owner\'s working copy, editable, saved as the next version.', fits: 'As "As it stands".', tool: none('the owner\'s own words (decision 301)') },
   precedents: { purpose: 'Existing provisions the drafting instruction draws on, and what it takes from each.', fits: 'Part of the drafting instruction.', tool: 'read_document' },
-  saveTheDocument: { purpose: 'Saves a document the owner wrote.', fits: 'As "Add a document".', tool: 'propose_document_text' },
-  title: { purpose: 'The document\'s title.', fits: 'Shown in the tree and on the record.', tool: 'propose_document_text' },
-  textWithParts: { purpose: 'The document\'s text; "## " starts each numbered part.', fits: 'Parts are numbered D.<action>.<n>.<part>; issues attach to parts.', tool: 'propose_document_text' },
+  saveTheDocument: { purpose: 'Saves a draft the owner wrote.', fits: 'As "Add a draft".', tool: 'propose_document_text' },
+  title: { purpose: 'The draft\'s title.', fits: 'Shown in the tree and on the record.', tool: 'propose_document_text' },
+  textWithParts: { purpose: 'The draft\'s text; "## " starts each numbered part.', fits: 'Parts are numbered D.<action>.<n>.<part>; issues attach to parts.', tool: 'propose_document_text' },
 }
 
 const TABS: Record<keyof typeof DOCUMENT_TAB_WORD, GuideText> = {
-  text: { purpose: 'The document\'s current text, part by part.', fits: 'For a clause, the caveat is always the first line.', tool: 'read_document' },
+  text: { purpose: 'The draft\'s current text, part by part.', fits: 'For a clause, the caveat is always the first line.', tool: 'read_document' },
   instruction: { purpose: 'The drafting instruction: what the clause amends, the duty, enforcement, commencement, extent, purpose and precedents.', fits: 'Its provision lines write the idea\'s law rows.', tool: 'read_document' },
   touches: { purpose: 'What the clause touches in the statute book: the text held, changes already made, instruments made under it, judgments, near provisions.', fits: 'Computed from the instruction\'s named provisions; free.', tool: 'statute_effects, read_section' },
   versions: { purpose: 'Every version and proposal, with who wrote it and what it changed.', fits: 'Nothing is deleted.', tool: 'read_document' },
@@ -190,13 +190,13 @@ const BLOCKS: Record<keyof typeof TOUCH_BLOCK, GuideText> = {
   near: { purpose: 'Neighbouring provisions, each with the question it raises.', fits: 'Block 5.', tool: 'read_section' },
 }
 const TREE: Record<keyof typeof TREE_UI, GuideText> = {
-  draftWhatHeadingNeeds: { purpose: 'Drafts every document the actions under a heading still need.', fits: 'Asks first at the measured price; each draft is saved as a proposal.', tool: none('not yet: draft_document covers one action') },
-  changeWhatThisNeeds: { purpose: 'Sets which documents an action needs by hand, with a reason.', fits: 'Overrides the rule that works it out from the avenue and the heading\'s kind.', tool: 'set_document_needs' },
+  draftWhatHeadingNeeds: { purpose: 'Drafts everything the actions under a heading still need.', fits: 'Asks first at the measured price; each draft is saved as a proposal.', tool: none('not yet: draft_document covers one action') },
+  changeWhatThisNeeds: { purpose: 'Sets which drafts an action needs by hand, with a reason.', fits: 'Overrides the rule that works it out from the avenue and the heading\'s kind.', tool: 'set_document_needs' },
   generateItFree: { purpose: 'Generates the collision report.', fits: 'Free.', tool: 'generate_collision_report' },
-  writeIt: { purpose: 'Opens a form for the owner to write a missing document.', fits: 'As "Add a document".', tool: 'propose_document_text' },
+  writeIt: { purpose: 'Opens a form for the owner to write a missing draft.', fits: 'As "Add a draft".', tool: 'propose_document_text' },
   needsDerived: { purpose: 'Lets the rule work out what the action needs.', fits: 'From its avenue and its heading\'s kind.', tool: 'set_document_needs' },
-  needsNothing: { purpose: 'Says the action needs no document, with a reason.', fits: 'As "Change what this needs".', tool: 'set_document_needs' },
-  needsSet: { purpose: 'Names exactly the documents the action needs.', fits: 'As "Change what this needs".', tool: 'set_document_needs' },
+  needsNothing: { purpose: 'Says the action needs no draft, with a reason.', fits: 'As "Change what this needs".', tool: 'set_document_needs' },
+  needsSet: { purpose: 'Names exactly the drafts the action needs.', fits: 'As "Change what this needs".', tool: 'set_document_needs' },
 }
 const WORKSPACE: Record<keyof typeof WORKSPACE_UI, GuideText> = {
   conditionsTitle: { purpose: 'The idea\'s own numbered list of conditions the proposal must meet.', fits: 'Each action says which conditions it delivers; conditions_coverage shows a condition no action delivers as NO ACTION.', limits: 'Each condition is one short sentence; the box shows its limit.', tool: 'change_condition (the owner\'s list), propose_condition (Lex\'s suggestion), answer_condition_proposal' },
@@ -285,19 +285,31 @@ const NOTEBOOK: Record<keyof typeof NOTEBOOK_UI, GuideText> = {
 }
 
 const FILTERS: Record<keyof typeof TREE_FILTER_WORD, GuideText> = {
-  all: { purpose: 'Shows every action\'s documents.', fits: 'A filter on the tree.', tool: 'list_documents' },
-  missing: { purpose: 'Shows actions missing a document they need.', fits: 'A filter on the tree.', tool: 'list_documents' },
-  drafted: { purpose: 'Shows documents drafted but not accepted.', fits: 'A filter on the tree.', tool: 'list_documents' },
-  accepted: { purpose: 'Shows accepted documents.', fits: 'A filter on the tree.', tool: 'list_documents' },
+  all: { purpose: 'Shows every action\'s drafts.', fits: 'A filter on the tree.', tool: 'list_documents' },
+  missing: { purpose: 'Shows actions missing a draft they need.', fits: 'A filter on the tree.', tool: 'list_documents' },
+  drafted: { purpose: 'Shows drafts drafted but not accepted.', fits: 'A filter on the tree.', tool: 'list_documents' },
+  accepted: { purpose: 'Shows accepted drafts.', fits: 'A filter on the tree.', tool: 'list_documents' },
+}
+
+// 26-X X3b §7 — the draft words that were hard-coded in their components
+const DRAFTS_G: Record<keyof typeof DRAFTS_UI, GuideText> = {
+  ideaTab: { purpose: 'The idea page\'s tab listing the drafts on its actions, read-only.', fits: 'Drafted and accepted in the Deepening and on the Drafting page. Uploaded files are under Sources, not here.', tool: 'list_documents' },
+  ideaTabLead: { purpose: 'Says what the Drafts tab holds and where its drafts are worked on.', fits: 'On the idea page\'s Drafts tab.', tool: 'list_documents' },
+  deepeningTree: { purpose: 'The drafts tree on the Deepening: every action\'s drafts, with their numbers, kinds and status, and what is still needed.', fits: 'Below the Deepening\'s six sections.', tool: 'list_documents, read_document' },
+  risksByDraft: { purpose: 'The Risks view\'s issues grouped by the draft they were raised on.', fits: 'In the Deepening, section 3.', tool: 'review_document' },
+  risksOnAction: { purpose: 'Issues raised on an action or the proposal, not on one of its drafts.', fits: 'In the Risks view, under the drafts.', tool: 'review_document' },
+  findInTree: { purpose: 'Finds a draft in the tree by title or number (38, 38.2, D.38.2).', fits: 'The drafts tree.', tool: 'list_documents' },
+  noDraftYet: { purpose: 'Says a draft the action needs does not exist yet.', fits: 'In the drafts tree, beside the kind.', tool: 'list_documents' },
+  kindToAdd: { purpose: 'Chooses the kind of draft "Add a draft" adds.', fits: 'On the record\'s Drafts section.', tool: 'propose_document_text' },
+  eachDraft: { purpose: 'Lists each draft a run queued, with its state.', fits: 'Under "Draft what this heading needs".', tool: 'list_documents' },
 }
 
 // ── labels held in the older tables ────────────────────────────────────────────────────────────────────────────
 const SECTIONS: Record<RecordSection, GuideText> = {
   brief: { purpose: 'The Brief: the owner\'s instructions for the action\'s draft — what it must do, what it is modelled on, its tone and form, what it must include and must not, and the kind\'s own fields.', fits: 'Under the statement and above the Draft, with "Draft it" between them. The drafter reads it first, then the Action details. A draft clause\'s own fields are its drafting instruction.', limits: 'Every save is a version; the earlier ones are kept.', tool: 'read_brief, propose_brief' },
-  detail: { purpose: 'The action\'s full explanation: what it does and why, its parts and reasoning.', fits: 'The statement is the headline; an instrument\'s text goes in a document, never here.', limits: 'No limit; more than 3,000 characters of instrument-like text from Lex is refused.', tool: 'set_action_detail, add_action_details_section' },
-  documents: { purpose: 'The action\'s documents: each with its number, kind, status and version, and what is still needed.', fits: 'Opens each document in the document view.', tool: 'list_documents, read_document' },
+  detail: { purpose: 'The action\'s full explanation: what it does and why, its parts and reasoning.', fits: 'The statement is the headline; an instrument\'s text goes in a draft, never here.', limits: 'No limit; more than 3,000 characters of instrument-like text from Lex is refused.', tool: 'set_action_detail, add_action_details_section' },
+  documents: { purpose: 'The action\'s drafts: each with its number, kind, status and version, and what is still needed.', fits: 'Opens each draft in the draft view.', tool: 'list_documents, read_document' },
   law: { purpose: 'The law rows this action\'s drafting instruction wrote.', fits: 'The idea\'s whole law is on the Overview\'s Law tab.', tool: 'read_document' },
-  who: { purpose: 'Who implements it, their incentive, what changes it, skill, how it is enforced, what opposes it, what tells us it worked.', fits: '"Specific enough" needs Who and Against. A section of the record until it moves to the Deepening (315).', tool: 'set_action_slot, propose_action_slots' },
   costs: { purpose: 'The cost ranges, cost lines, or "no cost, because".', fits: 'The full costing is in the Deepening.', tool: 'set_action_costs, add_cost_line, set_no_cost_reason' },
   order: { purpose: 'What this action must come after, and why.', fits: 'The order is derived from these links.', tool: 'set_action_order' },
   comments: { purpose: 'The comment thread on the action.', fits: 'Everyone who can see the idea sees it.', tool: 'add_action_comment, reply_to_comment' },
@@ -306,10 +318,10 @@ const SLOTS: Record<AnySlot, GuideText> = {
   who: { purpose: 'Who implements it, a body or a role, inside or outside government.', fits: 'Stored on the action itself.', tool: 'set_action_slot (slot: who)' },
   incentiveNow: { purpose: 'Whether the implementer\'s present incentive pulls with the action, against it or neither, and why.', fits: 'Read by the incentive map.', tool: 'set_action_slot (slot: incentiveNow)' },
   whatChangesIt: { purpose: 'What in the proposal changes that incentive, usually another action (linked).', fits: 'Read by the incentive map.', tool: 'set_action_slot (slot: whatChangesIt)' },
-  skill: { purpose: 'Why they would have the skill to do it.', fits: 'Step 2.', tool: 'set_action_slot (slot: skill)' },
-  how: { purpose: 'How it is enforced, by whom, with what consequence.', fits: 'Step 2.', tool: 'set_action_slot (slot: how)' },
+  skill: { purpose: 'Why they would have the skill to do it.', fits: 'On the Deepening, section 6.', tool: 'set_action_slot (slot: skill)' },
+  how: { purpose: 'How it is enforced, by whom, with what consequence.', fits: 'On the Deepening, section 6.', tool: 'set_action_slot (slot: how)' },
   against: { purpose: 'What will oppose it, and the counter to each.', fits: '"Specific enough" needs it answered.', tool: 'set_action_slot (slot: against)' },
-  worked: { purpose: 'The measure that would tell us it worked.', fits: 'Step 2.', tool: 'set_action_slot (slot: worked)' },
+  worked: { purpose: 'The measure that would tell us it worked.', fits: 'On the Deepening, section 6.', tool: 'set_action_slot (slot: worked)' },
 }
 const DIRECTIONS_G: Record<Direction, GuideText> = {
   WITH: { purpose: 'The present incentive pulls with the action.', fits: 'A choice on "Incentive now".', tool: 'set_action_slot (direction)' },
@@ -319,7 +331,7 @@ const DIRECTIONS_G: Record<Direction, GuideText> = {
 const STEP_G: Record<ActionsStep, GuideText> = {
   // 26-X 308: the step tabs are gone; these four words now head the record's sections (one line each, saying where it stands)
   1: { purpose: 'The record\'s classification: the heading, avenue, causes and the policy verdict.', fits: 'The list is sorted on the Organising page; this is one action\'s part of it.', tool: 'classify_actions, set_action_facets, merge_actions, rule_out_actions' },
-  2: { purpose: 'Who, how and against for this action.', fits: 'A section of the record until it moves to the Deepening (315).', tool: 'set_action_slot, propose_action_slots' },
+  2: { purpose: 'Who, how and against for this action.', fits: 'Edited on the Deepening page, section 6 "Who delivers and who resists", per action; no longer a section of the record (315).', tool: 'set_action_slot, propose_action_slots' },
   3: { purpose: 'A cost range for this action.', fits: 'A section of the record; the roll-up is in the Deepening.', tool: 'set_action_costs, add_cost_line, set_no_cost_reason' },
   4: { purpose: 'What this action must come after.', fits: 'A section of the record; the order is derived from these links.', tool: 'set_action_order' },
 }
@@ -368,7 +380,7 @@ const PAGE_G: Record<keyof typeof PAGE_UI, GuideText> = {
   drafting: { purpose: 'The same list with each action’s progress, filtered by where each stands; opening an action shows its record with its drafts at the top.', fits: 'Its counts say how many are accepted, need no draft, or are still to go.', tool: 'list_documents, draft_document' },
   backToOrganising: { purpose: 'Returns from an action on Drafting to the Organising page.', fits: 'At the same place in the list, with the same filters and find box.', tool: none('a screen control') },
   openInDrafting: { purpose: 'Opens an action on the Drafting page.', fits: 'On every Organising row; the title does the same.', tool: 'get_action' },
-  needsNoDraftBecause: { purpose: 'Records that the action needs no draft, with the owner’s reason.', fits: 'The same store as the tree’s "Needs no document"; the action then counts as done for the Deepening.', limits: '300 characters, with a counter.', tool: 'set_document_needs (mode: nothing)' },
+  needsNoDraftBecause: { purpose: 'Records that the action needs no draft, with the owner’s reason.', fits: 'The same store as the tree’s "Needs no draft"; the action then counts as done for the Deepening.', limits: '300 characters, with a counter.', tool: 'set_document_needs (mode: nothing)' },
   saveNoDraft: { purpose: 'Saves "needs no draft" with the reason typed.', fits: 'As "Needs no draft, because…".', tool: 'set_document_needs (mode: nothing)' },
   needsDraftAfterAll: { purpose: 'Takes "needs no draft" back: what the action needs is worked out again from its avenue and heading.', fits: 'The reason given before is not kept on the action.', tool: 'set_document_needs (mode: derived)' },
 }
@@ -394,6 +406,10 @@ const DEEPENING_G: Record<keyof typeof DEEPENING_UI, GuideText> = {
   reviews: { purpose: 'The five review passes over every accepted draft: how many have read each one, and the price of the rest.', fits: 'The Risks view below lists every issue the passes raise, by draft.', tool: 'review_document (one draft at a time)' },
   coherence: { purpose: 'The gap check and the conditions × actions table, side by side.', fits: 'The gap check\'s suggestions are not actions until accepted; the table is the owner\'s own links.', tool: 'run_gap_check, conditions_coverage' },
   costs: { purpose: 'The cost lines rolled up by heading and by year, years 1 to 5.', fits: 'A one-off line falls in year 1; a per-year line in each year of its duration (all five when no duration is given); a line with no recurrence is shown under "Not said", counted, never placed in a year.', tool: 'add_cost_line, set_action_costs' },
+  who: { purpose: 'Who delivers each action and who resists it: the seven answers per action (Who, Incentive now, What changes it, Skill, How, Against, What tells us it worked), the incentive map "By who", and how many actions rely on an implementer whose incentive is against with nothing to change it.', fits: 'On the Deepening page, section 6. It opens whatever the lock says, because it reads the actions, not the drafts. It moved here from each action\'s record (315).', tool: 'set_action_slot, propose_action_slots, answer_slot_proposal' },
+  whoShowAll: { purpose: 'Lists every live action in "Who delivers and who resists".', fits: 'One of three filters on section 6 of the Deepening.', tool: 'list_actions' },
+  whoShowNotSpecific: { purpose: 'Lists the actions not yet specific enough: Who or Against is unanswered.', fits: 'One of three filters on section 6 of the Deepening.', tool: 'get_action' },
+  whoShowNothingChanges: { purpose: 'Lists the actions whose implementer\'s incentive is against and nothing in the proposal changes it.', fits: 'One of three filters on section 6 of the Deepening; the count above it says how many.', tool: 'get_action' },
   reviewAll: { purpose: 'Runs the review passes that have not yet read each accepted draft, one draft after another.', fits: 'Asks first at the summed measured price; a pass that already read a version is not run again; each draft is saved as it finishes.', tool: 'review_document (one draft at a time)' },
   reviewGo: { purpose: 'Confirms "Review every accepted draft" at the price shown.', fits: 'As "Review every accepted draft".', tool: 'review_document' },
   readAgain: { purpose: 'Reads the Deepening\'s sections again from the record.', fits: 'Free; nothing is changed.', tool: none('a screen control') },
@@ -452,8 +468,8 @@ const fromTable = <K extends string>(area: GuideArea, prefix: string, labels: Re
 
 /** Every entry, its label read NOW from the table the screen renders. */
 export function guideEntries(): GuideEntry[] {
-  const kindTexts = Object.fromEntries((Object.keys(KIND_WORD) as DocumentKind[]).map((k) => [k, { purpose: `A ${KIND_WORD[k]}: one of the kinds of document an action can have.`, fits: 'Which kinds an action needs comes from its avenue and its heading\'s kind, or is set by hand.', tool: 'list_documents, draft_document' }])) as Record<DocumentKind, GuideText>
-  const headingKindTexts = Object.fromEntries(Object.keys(HEADING_KIND_WORD).map((k) => [k, { purpose: `A heading whose actions make ${HEADING_KIND_WORD[k as keyof typeof HEADING_KIND_WORD]}.`, fits: 'Decides which documents its actions need.', tool: 'set_heading_kind' }])) as Record<keyof typeof HEADING_KIND_WORD, GuideText>
+  const kindTexts = Object.fromEntries((Object.keys(KIND_WORD) as DocumentKind[]).map((k) => [k, { purpose: `A ${KIND_WORD[k]}: one of the kinds of draft an action can have.`, fits: 'Which kinds an action needs comes from its avenue and its heading\'s kind, or is set by hand.', tool: 'list_documents, draft_document' }])) as Record<DocumentKind, GuideText>
+  const headingKindTexts = Object.fromEntries(Object.keys(HEADING_KIND_WORD).map((k) => [k, { purpose: `A heading whose actions make ${HEADING_KIND_WORD[k as keyof typeof HEADING_KIND_WORD]}.`, fits: 'Decides which drafts its actions need.', tool: 'set_heading_kind' }])) as Record<keyof typeof HEADING_KIND_WORD, GuideText>
   return [
     ...fromTable('common', 'common', COMMON_UI, COMMON),
     ...fromTable('record', 'record', RECORD_UI, RECORD),
@@ -465,11 +481,12 @@ export function guideEntries(): GuideEntry[] {
     { key: 'record.statement', area: 'record', label: STATEMENT_LABEL, purpose: 'The action\'s statement: what the action is.', fits: 'The headline; Action details hold the rest.', limits: 'The label states the limit.', tool: 'edit_action_statement' },
     { key: 'record.commentary', area: 'record', label: COMMENTARY_LABEL, ...SECTIONS.detail },
     { key: 'record.quotedParts', area: 'record', label: FOLD_HEADER, purpose: 'Parts quoted into the Action details: merged components and imported passages, each with its source.', fits: 'Kept exactly as stored when the owner edits their own text.', tool: 'get_action' },
-    { key: 'record.avenue', area: 'record', label: FACET_WORD.avenue, purpose: 'The avenue: legislative, organisational or financial.', fits: 'Decides which documents the action needs.', tool: 'set_action_facets' },
+    { key: 'record.avenue', area: 'record', label: FACET_WORD.avenue, purpose: 'The avenue: legislative, organisational or financial.', fits: 'Decides which drafts the action needs.', tool: 'set_action_facets' },
     { key: 'record.causes', area: 'record', label: FACET_WORD.causes, purpose: 'The causes from the Diagnosis that the action attacks.', fits: 'causes_without_action lists causes no action attacks.', tool: 'set_action_facets' },
     ...fromTable('document', 'kind', KIND_WORD, kindTexts),
     ...fromTable('record', 'headingKind', HEADING_KIND_WORD, headingKindTexts),
     ...fromTable('document', 'document', DOCUMENT_UI, DOCUMENT),
+    ...fromTable('document', 'drafts', DRAFTS_UI, DRAFTS_G),
     ...fromTable('document', 'tab', DOCUMENT_TAB_WORD, TABS),
     ...fromTable('document', 'field', INSTRUCTION_FIELD, FIELDS),
     ...fromTable('document', 'editor', INSTRUCTION_EDITOR, EDITOR),

@@ -22,7 +22,7 @@ import { draftingLine, type DraftingCounts, type DraftingStage } from '@/lib/lex
 import { draftingHref } from '@/lib/lex/stages'
 import BoundedInput from './BoundedInput'
 
-interface Lock {
+export interface Lock {
   counts: DraftingCounts
   parked: number
   deepeningOpen: boolean
@@ -30,8 +30,15 @@ interface Lock {
   overrideLine: string | null
 }
 
-export default function DeepeningGate({ ideaId, children }: { ideaId: string; children: ReactNode }) {
-  const [lock, setLock] = useState<Lock | null>(null)
+/**
+ * 26-X X3b (CCh-Lex 7 Nov (2), 1) — `children` may be a function of the lock: `open` is true only when the Deepening is open. A section
+ * that opens WHATEVER the lock says ("Who delivers and who resists": it reads the actions, not the drafts) is rendered for both values;
+ * everything else is rendered only for `open`. A plain node is the old contract: shown only when open.
+ */
+export type GateChildren = ReactNode | ((open: boolean) => ReactNode)
+
+export default function DeepeningGate({ ideaId, children, initial }: { ideaId: string; children: GateChildren; /** a check's read */ initial?: Lock }) {
+  const [lock, setLock] = useState<Lock | null>(initial ?? null)
   const [error, setError] = useState<string | null>(null)
   const [asking, setAsking] = useState(false)
   const [reason, setReason] = useState('')
@@ -67,12 +74,13 @@ export default function DeepeningGate({ ideaId, children }: { ideaId: string; ch
   if (lock.deepeningOpen) return (
     <>
       {lock.overrideLine && <p className="mt-2 text-xs font-bold text-zinc-900 bg-white border-2 border-zinc-900 rounded px-2 py-1.5" data-deepened-early>{lock.overrideLine}</p>}
-      {children}
+      {typeof children === 'function' ? children(true) : children}
     </>
   )
 
   const n = lock.counts.toGo
   return (
+    <>
     <section className="pt-3 space-y-2" data-deepening-locked aria-label={`${CHECKLIST_WORD.deepening} — ${CHECKLIST_WORD.locked}`}>
       {alert}
       <h3 className="text-sm font-bold text-zinc-900"><span aria-hidden>🔒</span> {CHECKLIST_WORD.deepening} — {CHECKLIST_WORD.locked}</h3>
@@ -100,5 +108,7 @@ export default function DeepeningGate({ ideaId, children }: { ideaId: string; ch
         <p><button type="button" onClick={() => setAsking(true)} data-override-open className="text-xs font-medium px-2 py-1 rounded border border-zinc-300 bg-white">{DEEPENING_LOCK_UI.deepenNow}</button> <span className="text-[11px] text-zinc-600">— the owner only, with a reason</span></p>
       )}
     </section>
+    {typeof children === 'function' ? children(false) : null}
+    </>
   )
 }

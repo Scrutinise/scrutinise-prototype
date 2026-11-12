@@ -230,7 +230,8 @@ function partD() {
   // MOVED BY 26-X X2 (§5c): X1 drew the Drafts OPEN *above* the statement (§5a); X2 puts the statement first, then the Brief, then the
   // Drafts — both open (check:lex-26x2 part D asserts the whole order). What stays true here: Back is at the top, and the Drafts are open.
   ok('a Drafting record opens with "← Back to Organising" at its top and the Drafts section OPEN (X2: under the statement and the Brief)', /data-back-to-organising/.test(opened) && /<details data-record-section="documents"[^>]*open=""/.test(opened) && opened.indexOf('data-back-to-organising') < opened.indexOf('FULL CARD 3') && opened.indexOf('data-record-section="brief"') < opened.indexOf('data-record-section="documents"'))
-  ok('CCh-Lex 4 Nov (2) item 1: "Who, how and against" is still a section of the record; no line says "this step" or "from step N"', /data-record-section="who"/.test(opened) && !/this step|from step \d/.test(textOf(opened)))
+  // ⚠ MOVED BY 26-X X3b (§6a.6): CCh-Lex 4 Nov (2) item 1 kept "Who, how and against" on the record UNTIL X3; X3b moved it to the Deepening.
+  ok('X3b: "Who, how and against" is no longer a section of the record; no line says "this step" or "from step N"', !/data-record-section="who"/.test(opened) && !/this step|from step \d/.test(textOf(opened)))
   // an action opened on Drafting (flip, deep link, a new "Add action") under a HIDDEN heading is still drawn (found by 26v1b: #202 on 452c5ade)
   const hid = (page: 'organising' | 'drafting') => renderToStaticMarkup(React.createElement(ActionsWorkspace, {
     ideaId: 'idea-x', actions: rows as never, setAside: [] as never, headings: [{ id: 'h1', name: 'Legislation', colourKey: 'blue', hidden: true, orderIndex: 0, kind: 'CODE' }] as never,

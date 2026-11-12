@@ -197,14 +197,14 @@ async function partB(): Promise<{ copyId: string; userId: string; cleanup: () =>
   const snap = await buildProposalSnapshot(copy.id)
   const model = buildFor('ACTIONS_PACK', snap, null, { selection: { actionIds: [owner.id, other.id] } }).model
   const blocks = model.blocks as Array<{ kind: string; title?: string; refs?: Array<{ title: string; citation: string }> }>
-  const iS = blocks.findIndex((b) => b.kind === 'section' && b.title === 'SOURCES'), iD = blocks.findIndex((b) => b.kind === 'section' && b.title === 'DOCUMENTS')
+  const iS = blocks.findIndex((b) => b.kind === 'section' && b.title === 'SOURCES'), iD = blocks.findIndex((b) => b.kind === 'section' && b.title === 'DRAFTS') // ⚠ MOVED BY 26-X X3b §7: the list is headed DRAFTS (was DOCUMENTS)
   ok('the pack prints Sources and Documents as two separate lists, Documents after Sources', iS >= 0 && iD > iS)
   const sourcesText = JSON.stringify(blocks.slice(iS, iD))
   ok('…no D-number appears in the Sources list', !/\bD\.\d+\.\d+/.test(sourcesText))
   const docsText = JSON.stringify(blocks.slice(iD))
   ok('…the Documents list names D.59.1 with its status in words', /D\.59\.1, drafted, not accepted/.test(docsText) && /D\.59\.2, drafted, not accepted, out of date/.test(docsText), docsText.slice(0, 300))
   const all = JSON.stringify(blocks)
-  ok('each action’s documents print after its record (section 14 "Documents")', /14 Documents|\.14[^"]{0,4}"?[^"]{0,20}Documents/.test(all) || all.includes('Documents:'))
+  ok('each action’s drafts print after its record (section 14 "Drafts"; X3b §7, was "Documents")', /14 Drafts|\.14[^"]{0,4}"?[^"]{0,20}Drafts/.test(all) || all.includes('Drafts:'))
   const known = new Set<string>()
   const bad1 = checkReply({ reply: 'Under D.59.1, every body must publish its goals.', outcomes: [], knownLabels: known })
   const bad2 = checkReply({ reply: 'Every body must publish its goals [Ref: D.59.1].', outcomes: [], knownLabels: known })

@@ -11,6 +11,7 @@
 // ⚠ Colour is never the only cue (docs/CLAUDE.md §21): every row carries a shape and its state in words.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { DRAFTS_UI } from '@/lib/lex/screen-labels'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { KIND_WORD } from '@/lib/lex/action-documents-pure'
 import { JOB_SHAPE, priceWords, type DraftPlan } from '@/lib/lex/document-drafting-pure'
@@ -48,7 +49,7 @@ export function DraftPlanDialog({ ideaId, scope, onClose, onQueued }: { ideaId: 
       const r = await postDocs(ideaId, { op: 'draftQueue', ...where, agreedPence: plan.pence }, 'Starting the drafting')
       if ('error' in r) { setError(r.error); return }
       const d = r.data as { runId: string; queued: number; alreadyWaiting: number }
-      onQueued(d.runId, `Started: ${d.queued} document${d.queued === 1 ? '' : 's'} queued for Lex${d.alreadyWaiting ? ` (${d.alreadyWaiting} already waiting from an earlier run)` : ''}. Each is saved as a proposal as it finishes; you can close this page.`)
+      onQueued(d.runId, `Started: ${d.queued} draft${d.queued === 1 ? '' : 's'} queued for Lex${d.alreadyWaiting ? ` (${d.alreadyWaiting} already waiting from an earlier run)` : ''}. Each is saved as a proposal as it finishes; you can close this page.`)
     } finally { setBusy(false) }
   }
 
@@ -80,7 +81,7 @@ export function DraftPlanDialog({ ideaId, scope, onClose, onQueued }: { ideaId: 
                 ))}</ul>
               </details>
             )}
-            <p className="text-xs text-zinc-600">Lex drafts on the server, one document at a time. Every result is a proposal beside the document: nothing is written over what is there. The price is the average of measured runs; the run shows what each one actually cost.</p>
+            <p className="text-xs text-zinc-600">Lex drafts on the server, one draft at a time. Every result is a proposal beside the draft: nothing is written over what is there. The price is the average of measured runs; the run shows what each one actually cost.</p>
           </>
         )}
       </div>
@@ -119,13 +120,13 @@ export function DraftRunLine({ ideaId, runId, onProgress }: { ideaId: string; ru
   if (view.finished && !runId) return null
   const stop = async () => {
     const r = await postDocs(ideaId, { op: 'draftStop', runId: view.runId }, 'Stopping the drafting run')
-    setSaid('error' in r ? `Not done: ${r.error}` : `Stopped: ${(r.data as { stopped: number }).stopped} waiting document(s) will not be drafted. The one drafting now finishes.`)
+    setSaid('error' in r ? `Not done: ${r.error}` : `Stopped: ${(r.data as { stopped: number }).stopped} waiting draft(s) will not be drafted. The one drafting now finishes.`)
     void read()
   }
   return (
     <div className="border-2 border-zinc-900 rounded px-2 py-1.5 text-xs space-y-1" data-draft-run role="status">
       <p className="font-semibold">Drafting what is needed — {view.line}</p>
-      <details><summary className="cursor-pointer">Each document</summary>
+      <details><summary className="cursor-pointer">{DRAFTS_UI.eachDraft}</summary>
         <ul className="mt-1 space-y-0.5">{view.items.map((i) => (
           <li key={i.id} data-draft-run-item={i.status}>
             <span aria-hidden>{JOB_SHAPE[i.status]}</span> #{i.number ?? '?'} {KIND_WORD[i.kind]} — <span className="font-semibold">{i.word}</span>

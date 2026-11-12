@@ -9,6 +9,7 @@
 // canonical state, which replaces what we render. See docs/LEX_REBUILD_DESIGN.md.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { DRAFTS_UI } from '@/lib/lex/screen-labels'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import PublicNav from '@/components/PublicNav'
 import ChatPanel, { type ChatMessage } from '@/components/lex/ChatPanel'
@@ -39,6 +40,7 @@ import DeepeningGate from '@/components/lex/DeepeningGate'
 import UpdatePassPanel from '@/components/lex/UpdatePassPanel'
 import DocumentsTree from '@/components/lex/DocumentsTree'
 import DeepeningSections from '@/components/lex/DeepeningSections'
+import DeepeningWho from '@/components/lex/DeepeningWho'
 import DeepeningLawTable from '@/components/lex/DeepeningLawTable'
 import AgendaPanel from '@/components/lex/AgendaPanel'
 import ReportAdditions from '@/components/lex/ReportAdditions'
@@ -1291,16 +1293,19 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                       section (nested inside `FieldsPanel`, see §10b above) never mounts here. */}
                   {/* 26-X decision 317 — THE LOCK: until every live action is accepted or needs no draft (or the owner overrides, with a
                       reason), this page shows only the count and the actions still to go; nothing below mounts, so nothing in it runs. */}
-                  <DeepeningGate ideaId={state.ideaId}>
+                  <DeepeningGate ideaId={state.ideaId}>{(open) => (<>
                   {/* 26-X X3 §6a: the Deepening's own sections FIRST, in the brief's order (collision · four models · review passes and the
-                      Risks view by draft · coherence and gaps · costs); then, kept below them and nothing removed, the law table (26-V1 §6),
-                      the documents tree, the update pass and the research passes. */}
-                  <DeepeningSections ideaId={state.ideaId} actions={state.actions} headings={state.actionHeadings ?? []} conditions={state.conditions} onChanged={refreshState} />
+                      Risks view by draft · coherence and gaps · costs · who delivers); then, kept below them and nothing removed, the law
+                      table (26-V1 §6), the documents tree, the update pass and the research passes.
+                      ⚠ X3b (CCh-Lex 7 Nov (2), 1): section 6 opens WHATEVER THE LOCK SAYS; everything else mounts only when `open`. */}
+                  {open && <DeepeningSections ideaId={state.ideaId} actions={state.actions} headings={state.actionHeadings ?? []} conditions={state.conditions} onChanged={refreshState} />}
+                  <DeepeningWho ideaId={state.ideaId} actions={state.actions} onChanged={refreshState} open={open} />
+                  {open && (<>
                   <section className="pt-3" data-deepening="law">
                     <DeepeningLawTable ideaId={state.ideaId} />
                   </section>
                   <section className="pt-3" data-deepening="documents">
-                    <h3 className="text-sm font-bold uppercase tracking-wide text-zinc-800 mb-1">The documents</h3>
+                    <h3 className="text-sm font-bold uppercase tracking-wide text-zinc-800 mb-1">{DRAFTS_UI.deepeningTree}</h3>
                     <DocumentsTree ideaId={state.ideaId} />
                   </section>
                   <div className="pt-3">
@@ -1312,7 +1317,8 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                     onOpenPass={setOpenDeepeningPass}
                     onDiscussIssue={discussIssue}
                   />
-                  </DeepeningGate>
+                  </>)}
+                  </>)}</DeepeningGate>
                 </div>
               ) : (
               <FieldsPanel

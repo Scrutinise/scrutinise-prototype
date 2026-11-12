@@ -30,7 +30,7 @@ import RisksView from './RisksView'
 const pence = (p: number | null | undefined) => (p == null ? 'not priced' : p < 1 ? `${p.toFixed(2)}p` : `${p.toFixed(1)}p`)
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
-function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
+export function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
     <section className="pt-3" data-deepening-section={id} aria-label={title}>
       <h3 className="text-sm font-bold uppercase tracking-wide text-zinc-800 mb-1">{title}</h3>

@@ -312,7 +312,7 @@ async function partD(copy: { id: string; userId: string }) {
         const t = page.locator(`[data-document-tab="${tab}"]`)
         if (await t.count()) { await t.click(); await page.waitForTimeout(200); await openAll(); for (const l of await collect()) all.add(l); for (const l of await uncovered()) missing.add(`document ${tab}: ${l}`) }
       }
-      for (const re of [/^Ask Lex to redraft$/, /^Review this document$/, /^Edit$/]) { await press(re); await page.waitForTimeout(400); await openAll(); for (const l of await collect()) all.add(l); for (const l of await uncovered()) missing.add(`document: ${l}`) }
+      for (const re of [/^Ask Lex to redraft$/, /^Review this draft$/, /^Edit$/]) { await press(re); await page.waitForTimeout(400); await openAll(); for (const l of await collect()) all.add(l); for (const l of await uncovered()) missing.add(`document: ${l}`) }
     }
     ok(`every label rendered on the record (steps 1–4) and the document view is in the guide (${all.size} distinct labels read)`, missing.size === 0 && all.size > 60, [...missing].join(' | '))
     ok('no page error while rendering', errors.length === 0, errors.join(' | ').slice(0, 300))

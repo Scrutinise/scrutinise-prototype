@@ -28,7 +28,6 @@ import { OP_WORDS } from '@/lib/lex/action-structure-schema'
 import { explainFailure } from '@/lib/api-rejection'
 import { LIMITS } from '@/lib/lex/input-limits'
 import BoundedInput from './BoundedInput'
-import ActionSlots from './ActionSlots'
 import { useDigests, HeadingDigest } from './ActionDigest'
 import IncentiveMap from './IncentiveMap'
 import { usePackPrint, PackStatus } from './ActionsPackPrint'
@@ -75,7 +74,8 @@ type Bodies = { [R in ActionStructureRequest as R['op']]: Omit<R, 'op'> }
  *      (the old message sat in the toolbar, above the fold of a 100-row list, so a rejection looked like nothing happening);
  *   3. a success says WHAT happened ("#12 is now under “Legislation”") — a row that jumps to another group otherwise looks like it vanished.
  */
-function useOps(ideaId: string, onChanged: () => void | Promise<boolean | void>) {
+// 26-X X3b — exported: the Deepening's "Who delivers and who resists" writes the seven slots through this same route and rule (no copy).
+export function useOps(ideaId: string, onChanged: () => void | Promise<boolean | void>) {
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState<string | null>(null)
@@ -1067,8 +1067,9 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect, onBa
         </div>
       </div>
   )
-  const section: Record<2 | 3 | 4, ReactNode> = {
-    2: <div className="space-y-2"><ActionSlots a={a} others={others} disabled={disabled} run={ops.run as never} /></div>,
+  // 26-X X3b (§6a.6, 315) — the seven slots left the record: they are edited on the Deepening, "Who delivers and who resists", which opens
+  // whatever the lock says (CCh-Lex 7 Nov (2), 1). The record keeps Costs and Order.
+  const section: Record<3 | 4, ReactNode> = {
     3: <div className="space-y-2">{renderFull(a, 3)}</div>,
     // 26-V1b §7b (262) — Order by dependency only: "must come after #59, because …". Now / Next / Later is not on the screen.
     4: (
@@ -1096,7 +1097,6 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect, onBa
     detail: a.commentary,
     documents: facts.docs ? { needed: needed.length, drafted: docsLive.filter((d) => needed.includes(d.kind) && d.current).length, accepted: docsLive.filter((d) => needed.includes(d.kind) && d.status === 'ACCEPTED').length, total: docsLive.length } : null,
     lawRows: facts.docs?.lawRows ?? null,
-    whoAnswered: answeredCount(a), whoOf: ALL_SLOTS.length,
     costs: a.noCostReason?.trim() ? 'no cost' : hasCostRange(a) || hasCostLines ? 'answered' : 'not answered',
     after: others.filter((o) => o.beforeIds.includes(a.id)).map((o) => o.number),
     comments: facts.comments,
@@ -1117,7 +1117,7 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect, onBa
       <div className="px-2 pb-2 pt-1 space-y-2">{body}</div>
     </details>
   )
-  const stepPart = (n: 2 | 3 | 4, key: RecordSection) =>
+  const stepPart = (n: 3 | 4, key: RecordSection) =>
     closed(key, n, here(otherStepLine(n, a, hasCostLines, headingName, afterOf(live, a.id, becauseFor(live))), n), section[n])
   const titled = (key: RecordSection, title: string, body: ReactNode, opened = false) =>
     closed(key, null, <><span className="font-semibold">{title}</span> · <span data-section-state>{states[key]}</span></>, body, opened)
@@ -1126,8 +1126,8 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect, onBa
       {/* 318 — the way back, at the top of the record: Organising at the same scroll position, with its find box and filters as they were */}
       {onBack && <p><button type="button" onClick={onBack} data-back-to-organising className="text-xs font-semibold px-2 py-0.5 rounded border-2 border-zinc-900 bg-white">{PAGE_UI.backToOrganising}</button></p>}
       {/* 26-X X2 (§5c) — top to bottom: the statement (the card's), then the Brief, "Draft it" with "Needs no draft, because…" beside it,
-          the Draft with its companions — both OPEN — then the Action details (the card's), Law, Who/how/against (until X3), Costs, Order,
-          Comments. ⚠ REVERSES X1's "Drafts open ABOVE the statement" (§5a): §5c puts the statement first and the Brief above the Draft. */}
+          the Draft with its companions — both OPEN — then the Action details (the card's), Law, Costs, Order, Comments ("Who, how and
+          against" moved to the Deepening in X3b). ⚠ REVERSES X1's "Drafts open ABOVE the statement" (§5a): §5c puts the statement first and the Brief above the Draft. */}
       {renderFull(a, 1, (
         <div className="space-y-2">
           <JumpBand states={states} onJump={jump} headingSelect={headingSelect} />
@@ -1138,8 +1138,6 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect, onBa
         </div>
       ))}
       {titled('law', sectionLabel('law'), <LawSection facts={facts} number={a.number} />)}
-      {/* CCh-Lex 4 Nov (2), item 1 — "Who, how and against" stays a record section until X3 moves it to the Deepening */}
-      {stepPart(2, 'who')}
       {stepPart(3, 'costs')}
       {stepPart(4, 'order')}
       {closed('prune', null, RECORD_UI.pruneLine, pruneBlock)}
