@@ -265,9 +265,9 @@ async function partC(copyId: string, userId: string) {
     const expectMissing = tree.headings.flatMap((h) => h.actions).filter((a) => a.missing.length).length
     ok('the "Missing" filter shows exactly the actions with a needed document missing', missingRows === expectMissing, `${missingRows} vs ${expectMissing}`)
     await page.locator('[data-tree-filter="all"]').click()
-    await page.locator('input[aria-label="Find in the documents"]').fill('D.59.2')
+    await page.locator('input[aria-label="Find in the drafts"]').fill('D.59.2')
     ok('the find box finds by D-number: one action', (await page.locator('[data-tree-action]').count()) === 1)
-    await page.locator('input[aria-label="Find in the documents"]').fill('')
+    await page.locator('input[aria-label="Find in the drafts"]').fill('')
     await page.locator('[data-tree-document="D.59.1"] button').first().click()
     await page.waitForSelector('[data-document-view="D.59.1"]')
     const view = await page.locator('[data-document-view="D.59.1"]').innerText()

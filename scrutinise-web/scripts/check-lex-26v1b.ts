@@ -206,8 +206,9 @@ async function partB(): Promise<{ copyId: string; userId: string; docId: string 
     ok('290: Action details opens OPEN — a <details> carrying "open"', detail.startsWith('<details') && isOpen(detail), detail.slice(0, 200))
     ok('26-X §5a: the Drafts open OPEN', drafts.startsWith('<details') && isOpen(drafts), drafts.slice(0, 200))
     ok('26-X §5c: the Brief opens OPEN', brief.startsWith('<details') && isOpen(brief), brief.slice(0, 200))
+    // ⚠ MOVED BY 26-X X3b §7: the record's section is labelled "Drafts" (was "Documents")
     // ⚠ MOVED BY 26-X 308: there are no steps, so no line says "this step" (was: "this step" on the current step's line)
-    ok('265: the closed lines carry the states the band shows ("Action details · 4 words"-style); no line says "this step" or "from step N" (308)', /Action details<\/span> · <span data-section-state="true">1 part</.test(html) && /Documents<\/span> · <span data-section-state="true">/.test(html) && !/this step|from step \d/.test(textOf(html)), (html.match(/.{50}data-section-state.{30}/g) ?? []).join(' | ').slice(0, 400) || 'no data-section-state at all')
+    ok('265: the closed lines carry the states the band shows ("Action details · 4 words"-style); no line says "this step" or "from step N" (308)', /Action details<\/span> · <span data-section-state="true">1 part</.test(html) && /Drafts<\/span> · <span data-section-state="true">/.test(html) && !/this step|from step \d/.test(textOf(html)), (html.match(/.{50}data-section-state.{30}/g) ?? []).join(' | ').slice(0, 400) || 'no data-section-state at all')
   }
   ok('2d: the quoted parts are one collapsible list, "Parts of this action, quoted (1)"', /Parts of this action, quoted \(1\)/.test(textOf(html)) && detailParts(act.commentary).parts[0].title === 'a component title')
   const facts = await actionDocuments(copy.id, a59.id)
