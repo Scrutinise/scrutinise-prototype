@@ -1,5 +1,38 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-12 02:39 UTC - LEX 26-X X3b (BRIEF_26X §6a.6, §7; decisions 315, 300): "Who delivers and who resists" on the Deepening, open whatever the lock says; "document" → "draft" on screen
+
+**Brief:** CCh-Lex 7 Nov (2) "X3: go, as split"; CCh-Lex 12 Nov (1) "finish X3b". Full write-up: `docs/LEX_26X_REPORT.md` § X3b.
+
+- **Section 6, "Who delivers and who resists"** (`components/lex/DeepeningWho.tsx`). It opens even when the Deepening is locked:
+  `DeepeningGate` children are now `(open) => …`. It shows the incentive count line, three filters with counts, and one row per live action.
+  Each row says whether the action is specific, "X of 7 answered", how many of Lex's proposals are waiting, and "▼ against, nothing changes it".
+  The seven slots are edited in place, with the incentive map below.
+- **It left the action record:** no `who` section, no Who on the band, no slots in Organising step 2. The field guide, the controls and Lex's
+  prompt say where it went.
+- **§7 renames**, "document" → "draft" wherever it means a draft on an action:
+  - labels: 4 renamed and 9 moved into `DRAFTS_UI`
+  - components: 26 strings
+  - record: 2
+  - Actions Pack: 5 (section 14 is "Drafts")
+  - field guide: 37, plus 9 entries
+  - tool descriptions: 15 words in 10
+  - system prompt: 3
+  Uploaded files keep "Documents", and tool names are unchanged. Stage names were already done in X1. No "Document D.x" label existed.
+- **Process (CCh-Lex 12 Nov (1)):**
+  - The 11 Nov build was in the tree intact on 12 Nov. The 11 Nov regression was stopped for low memory, not by a failure.
+  - The work was committed to `wip/26x` first (05ce99a), then squashed here.
+  - ⚠ Pushing `wip/26x` hung at Git Credential Manager from both shells, so the branch is local only. Read-only `ls-remote` works.
+- **Checks:**
+  - `check:lex-26x3b` 36/36, 3 controls, 0 dead, 0 not run; three mutations each went red.
+  - Regression, one at a time: prompt-examples ✓ · 26w 66 · 26w-b 60 · 26x 110 · 26v 66 · 26v2d 62 · 26v2b 47 · 26v2c 44 · 26u 67 · 26x2 75 ·
+    26x3 62 · 26v1b 81 · 26p 126 · 26s2 215 · 26t1 98 · 26t2 72 · 26s2-browser 33.
+  - 26v (find box) and 26v1b (record label) were red on renames they had not followed; both were fixed.
+  - ⚠ 26s2-structure 106/107, red 2 runs of 3 on "Retire heading … unassigns exactly the actions it held". This is not X3b: neither file is in the
+    diff. `deleteHeading` unassigns actions of every status, while the check (and 18 Oct (9)) counts LIVE only; `heads2` is unordered. The
+    question is for CCh.
+  - Clean build: a worktree of 05ce99a, then `npm ci` → `prisma generate` → tsc: the app program clean (exit 0). The scripts program has 3 errors, all in `scripts/ingest/shared/*`, whose packages a web-only install does not carry (§20 check 0); none of those files is in this diff.
+
 ## 2026-11-09 00:53 UTC - LEX 26-X X3a (BRIEF_26X §6a 1–5, §6b; decision 311): the Deepening's five sections; the digest and the policy test read accepted drafts; costs by heading and year 1–5
 
 **Brief:** CCh-Lex 7 Nov (2), "X3: go, as split". Full write-up: `docs/LEX_26X_REPORT.md` § X3a.

@@ -51,7 +51,7 @@ export default function DocumentView({ ideaId, documentId, readOnly = false, onC
   const load = useCallback(async () => {
     const res = await fetch(`/api/ideas/${ideaId}/action-documents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ op: 'view', documentId }) })
     const body = await res.json().catch(() => null)
-    if (!res.ok) { setError(explainFailure(body, res.status, 'Opening the document')); return }
+    if (!res.ok) { setError(explainFailure(body, res.status, 'Opening the draft')); return }
     setData((body as { data: DocumentViewData }).data); setError(null)
   }, [ideaId, documentId])
   useEffect(() => { void load() }, [load])
@@ -71,7 +71,7 @@ export default function DocumentView({ ideaId, documentId, readOnly = false, onC
   }, [ideaId, load, onChanged])
 
   if (error) return <p className="text-xs" role="alert" data-document-view-error>Not opened: {error}</p>
-  if (!data) return <p className="text-xs text-zinc-500">Opening the document…</p>
+  if (!data) return <p className="text-xs text-zinc-500">Opening the draft…</p>
 
   const { doc } = data
   const generated = GENERATED_KINDS.has(doc.kind)
@@ -335,7 +335,7 @@ function IssuesTab({ data }: { data: DocumentViewData }) {
               <span className="font-semibold">{p.label}</span>{' — '}
               {!r ? 'not yet reviewed'
                 : r.status === 'FAILED' ? `review of version ${r.v} failed on ${day(r.at)}: ${r.failureReason}`
-                : <>read version {r.v} on {day(r.at)}{data.current && r.v !== data.current.v ? ` (the document is now at version ${data.current.v})` : ''}: {r.issues} issue{r.issues === 1 ? '' : 's'} raised, {openBy(p.key)} still open{r.heldUp ? <span className="text-zinc-600"> · held up: {r.heldUp}</span> : null}</>}
+                : <>read version {r.v} on {day(r.at)}{data.current && r.v !== data.current.v ? ` (the draft is now at version ${data.current.v})` : ''}: {r.issues} issue{r.issues === 1 ? '' : 's'} raised, {openBy(p.key)} still open{r.heldUp ? <span className="text-zinc-600"> · held up: {r.heldUp}</span> : null}</>}
             </li>
           )
         })}
@@ -351,7 +351,7 @@ function IssuesTab({ data }: { data: DocumentViewData }) {
                 <p className="text-zinc-600">{i.reviewId ? (i.attachReason ?? `Raised by ${producerWords(i.passKey)}`) : i.attachedBy === 'LEX' ? `Placed here by Lex${i.attachReason ? `: ${i.attachReason}` : ''}` : 'Placed here by you'}{i.sourceModel ? ` · raised by ${i.sourceModel}` : ''}</p>
               </li>
             ))}
-            <li className="text-zinc-600">Answer an issue in the Risks view, or by redrafting this document.</li>
+            <li className="text-zinc-600">Answer an issue in the Risks view, or by redrafting this draft.</li>
           </ul>
         )}
     </div>
@@ -375,21 +375,21 @@ function ReviewAsk({ ideaId, documentId, busy, onDone, onClose }: { ideaId: stri
     try {
       const r = await fetch(`/api/ideas/${ideaId}/action-documents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ op: 'review', documentId, again }) })
       const b = await r.json().catch(() => null) as { data?: { d: string; v: number; outcomes: Array<{ words: string }>; pence: number | null } } | null
-      if (!r.ok || !b?.data) { onDone(`Not done: ${explainFailure(b, r.status, '“Review this document”')}`); return }
+      if (!r.ok || !b?.data) { onDone(`Not done: ${explainFailure(b, r.status, `“${DOCUMENT_UI.reviewThisDocument}”`)}`); return }
       onDone(`Reviewed ${b.data.d}, version ${b.data.v}${b.data.pence != null ? ` — it cost ${b.data.pence.toFixed(1)}p` : ''}. ${b.data.outcomes.map((o) => o.words).join(' ')} The issues are in the Issues tab, by part.`)
-    } catch (e) { onDone(`Not done: “Review this document” could not reach the server (${e instanceof Error ? e.message : 'network error'}). Nothing was changed.`) }
+    } catch (e) { onDone(`Not done: “${DOCUMENT_UI.reviewThisDocument}” could not reach the server (${e instanceof Error ? e.message : 'network error'}). Nothing was changed.`) }
     finally { setRunning(false) }
   }
   if (err) return <p role="alert">Not priced: {err} <button type="button" className="underline" onClick={onClose}>{COMMON_UI.ok}</button></p>
   if (!plan) return <p className="text-zinc-500">Reading what the five review passes have already read…</p>
   if (plan.notReviewable) return <p data-review-ask="not-reviewable">{plan.notReviewable} <button type="button" className="underline" onClick={onClose}>{COMMON_UI.ok}</button></p>
   const todo = plan.price.forPasses.length
-  const priceWords = (pence: number | null) => (pence != null ? `about ${pence}p (measured on a copy of a real idea, n=${plan.price.n}, scaled to this document’s length)` : 'not yet measured')
+  const priceWords = (pence: number | null) => (pence != null ? `about ${pence}p (measured on a copy of a real idea, n=${plan.price.n}, scaled to this draft’s length)` : 'not yet measured')
   return (
     <div className="border-2 border-zinc-900 rounded p-1.5 space-y-1" data-review-ask={todo ? 'todo' : 'all-read'}>
       <p className="font-semibold">Review {plan.d}, version {plan.v}, with the five passes</p>
       <ul>{plan.passes.map((p) => <li key={p.passKey}><span aria-hidden>{p.readThisVersion ? '●' : '○'}</span> {p.label} — {p.readThisVersion ? `already read version ${plan.v}` : 'will read it'}: <span className="text-zinc-600">{p.strapline}</span></li>)}</ul>
-      <p>Each pass reads the document part by part and raises issues on the part they concern; it searches nothing. Each is saved as it finishes. Nothing in the document changes.</p>
+      <p>Each pass reads the draft part by part and raises issues on the part they concern; it searches nothing. Each is saved as it finishes. Nothing in the draft changes.</p>
       {todo
         ? <p>{todo === 5 ? 'All five' : `The ${todo} that have not read this version`}: {priceWords(plan.price.pence)}.{' '}
             <button type="button" disabled={busy || running} onClick={() => void run(false)} data-review-run className="px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">{running ? 'Reviewing… (about 15 seconds)' : DOCUMENT_UI.reviewIt}</button>{' '}

@@ -1014,6 +1014,16 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-11-12 02:39 UTC (laptop): 26-X X3b committed, which closes X3. Section 6 "Who delivers and who resists" is on the Deepening and opens whatever the lock says; the §7 renames are in.**
+See CHANGE_LOG 2026-11-12 02:39 and `docs/LEX_26X_REPORT.md` § X3b.
+- Who/how/against moved from the action record to Deepening section 6. Renames: 4 labels + 9 moved into `DRAFTS_UI`; 26 component strings; 2 on the record; 5 in the pack;
+  37 in the guide (+9 entries); 15 tool-description words; 3 in the prompt.
+- Regression green one at a time, except ⚠ 26s2-structure "Retire heading". That is not X3b: `deleteHeading` unassigns non-live actions too, while the check counts
+  LIVE only. **For CCh:** which side is right?
+- Process: WIP now goes to `wip/<sprint>` before any idle, reboot or handover (CCh-Lex 12 Nov (1)). ⚠ Pushing from this machine hung at Git Credential Manager on 12 Nov.
+  The push of this commit is reported in the CHANGE_LOG entry and the §20 read-back in the report.
+- **For Charlie:** #28's heading; one live whole-set digest; what intercepts api.anthropic.com's TLS; the git credential prompt.
+
 **▶ 2026-11-09 00:53 UTC (laptop): 26-X X3a built and committed: the Deepening's five sections; the digest and the policy test read accepted drafts; costs years 1–5.**
 See CHANGE_LOG 00:53 and `docs/LEX_26X_REPORT.md` § X3a.
 - One reader (`lib/lex/accepted-drafts.ts`): the accepted draft in full, else the statement. Policy verdicts record what they read; verdicts

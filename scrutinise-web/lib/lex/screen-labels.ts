@@ -66,8 +66,8 @@ export const RECORD_UI = {
   retireHeading: 'Retire heading',
   consolidateHeading: 'Consolidate this heading',
   notThis: 'Not this',
-  // documents section
-  addDocument: 'Add a document',
+  // the drafts section (26-X X3b §7: "document" → "draft" where it means what we write)
+  addDocument: 'Add a draft',
   draftWhatActionNeeds: 'Draft what this action needs',
   generateFree: 'generate (free)',
   writeInstruction: 'write the instruction',
@@ -126,7 +126,7 @@ export const DOCUMENT_UI = {
   generateAgain: 'Generate again (free)',
   askLexToRedraft: 'Ask Lex to redraft',
   versions: (n: number | string) => `Versions (${n})`,
-  reviewThisDocument: 'Review this document',
+  reviewThisDocument: 'Review this draft',
   reviewIt: 'Review it',
   reviewAgain: 'Review again',
   saveAsNewVersion: 'Save as a new version',
@@ -141,7 +141,7 @@ export const DOCUMENT_UI = {
   lexProposesColumn: 'Lex proposes',
   yourWorkingCopy: 'Your working copy',
   precedents: 'Precedents',
-  saveTheDocument: 'Save the document',
+  saveTheDocument: 'Save the draft',
   title: 'Title',
   textWithParts: 'The text — use “## ” to start each numbered part',
 } as const
@@ -155,14 +155,14 @@ export const INSTRUCTION_EDITOR = {
   purposeOneLine: 'Purpose — one line',
 } as const
 
-/** The documents tree on the Overview's Documents tab and in the Deepening (DocumentsTree). */
+/** The drafts tree on the idea page's Drafts tab and in the Deepening (DocumentsTree). */
 export const TREE_UI = {
   draftWhatHeadingNeeds: 'Draft what this heading needs',
   changeWhatThisNeeds: 'Change what this needs',
   generateItFree: 'Generate it (free)',
   writeIt: 'Write it',
   needsDerived: 'Work it out from the avenue and instrument',
-  needsNothing: 'Needs no document',
+  needsNothing: 'Needs no draft',
   needsSet: 'Needs exactly these',
 } as const
 export const TREE_FILTER_WORD = { all: 'All', missing: 'Missing', drafted: 'Drafted, not accepted', accepted: 'Accepted' } as const
@@ -219,6 +219,23 @@ export const NOTEBOOK_UI = {
   makeMineOnly: 'Make mine only',
   bringBackIntoRecord: 'Bring back into the record',
   putInRecord: 'Put in the record',
+} as const
+
+/**
+ * 26-X X3b §7 (300) — "Document(s)" → "Draft(s)" wherever it means what we write; these were hard-coded in their components.
+ * "Documents" stays for uploaded files (Sources, the research notebook, "Import actions from a document"). The code's names
+ * (ActionDocument, list_documents, data-document-*) are not on screen and stay.
+ */
+export const DRAFTS_UI = {
+  ideaTab: 'Drafts',
+  ideaTabLead: 'The drafts on this idea’s actions — read here; drafted and accepted in The Deepening.',
+  deepeningTree: 'Drafts on actions',
+  risksByDraft: 'By draft',
+  risksOnAction: 'On an action, not on one of its drafts',
+  findInTree: 'Find in the drafts',
+  noDraftYet: 'no draft yet',
+  kindToAdd: 'The kind of draft to add',
+  eachDraft: 'Each draft',
 } as const
 
 /** The document view's five tabs. */
@@ -324,6 +341,11 @@ export const DEEPENING_UI = {
   reviews: '3 · Review passes over the accepted drafts',
   coherence: '4 · Coherence and gaps',
   costs: '5 · Costs, by heading and by year',
+  // 26-X X3b (§6a.6, 315) — open whatever the lock says (CCh-Lex 7 Nov (2), 1)
+  who: '6 · Who delivers and who resists',
+  whoShowAll: 'Every action',
+  whoShowNotSpecific: 'Not yet specific',
+  whoShowNothingChanges: 'Against, and nothing changes it',
   reviewAll: 'Review every accepted draft',
   reviewGo: 'Review them',
   readAgain: 'Read the sections again',

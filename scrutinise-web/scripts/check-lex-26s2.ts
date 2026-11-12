@@ -295,11 +295,14 @@ function partC() {
   ok('…step 1\'s says what is unfinished, in words with counts, and that it never blocks', /2 actions have no heading/.test(s1) && /2 actions have no cause/.test(s1) && /Advisory: it never stops you moving on/.test(s1))
   // an OPENED record (on Drafting): every section closed under ONE line saying where it stands; no line names a step
   const o2 = renderWs(2, rows, ['a1'])
-  ok('OPENED on Drafting: the step sections are closed under one line each, none saying "this step" or "from step N" (308), and Who, how and against holds its seven slots', (o2.match(/<details[^>]*data-step-section/g) ?? []).length === 4 && !/this step|from step \d/.test(textOf(o2)) && /data-slots-for="a1"/.test(o2) && (o2.match(/data-slot="/g) ?? []).length === 7)
+  // ⚠ MOVED BY 26-X X3b (§6a.6, 315; CCh-Lex 7 Nov (2), 1): "Who, how and against" left the record for the Deepening's section 6, which
+  // opens whatever the lock says (check:lex-26x3b asserts the seven slots THERE). Was: four step sections, the Who one holding seven slots.
+  ok('OPENED on Drafting: the step sections are closed under one line each, none saying "this step" or "from step N" (308), and the seven slots are NOT on the record (X3b)', (o2.match(/<details[^>]*data-step-section/g) ?? []).length === 3 && !/this step|from step \d/.test(textOf(o2)) && !/data-slots-for="a1"/.test(o2) && !/data-slot="/.test(o2))
   ok('…the Costs line says "a cost range is recorded" where one is, and the collapsed sections still hold their content (nothing hidden, only out of the way)', /Costs — a cost range is recorded/.test(textOf(o2)) && textOf(o2).includes('FULL CARD 1 STEP 3') && textOf(o2).includes('FULL CARD 1 STEP 1'))
   const o1 = renderWs(2, rows, ['a2'])
   ok('OPENED: the policy test with its reason, the conflict note control, causes, avenue — and "Edit title"', /Policy test/.test(textOf(o1)) && /It rules out thresholds/.test(textOf(o1)) && /Keep it, with a note/.test(textOf(o1)) && /Edit title/.test(textOf(o1)) && /Later phase/.test(textOf(o1)))
-  ok('…and "Who, how and against — not yet answered" is the line for the Who section while unanswered', /Who, how and against — not yet answered/.test(textOf(o1)))
+  // ⚠ MOVED BY 26-X X3b: there is no Who line on the record any more. Was: "Who, how and against — not yet answered" while unanswered.
+  ok('…and the record has no "Who, how and against" line (X3b: it is on the Deepening)', !/Who, how and against/.test(textOf(o1)))
   control('a FITS action offering "Keep it, with a note" (must be FALSE)', /Keep it, with a note/.test(textOf(renderWs(1, rows, ['a1']))))
 
   // the checklists, pure

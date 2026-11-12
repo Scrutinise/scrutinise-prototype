@@ -19,7 +19,7 @@ import DocumentView from './DocumentView'
 import { statusWords } from '@/lib/lex/document-view-pure'
 import { reviewedWords, ISSUES_CHANGED_EVENT } from '@/lib/lex/document-review-pure'
 import BoundedInput from './BoundedInput'
-import { COMMON_UI, DOCUMENT_UI, RECORD_UI, TREE_UI, TREE_FILTER_WORD } from '@/lib/lex/screen-labels'
+import { COMMON_UI, DOCUMENT_UI, RECORD_UI, TREE_UI, TREE_FILTER_WORD, DRAFTS_UI } from '@/lib/lex/screen-labels'
 import { DraftPlanDialog, DraftRunLine, type DraftScopeInput } from './DraftNeedsPanel'
 
 type Filter = 'all' | 'missing' | 'drafted' | 'accepted'
@@ -43,7 +43,7 @@ export default function DocumentsTree({ ideaId, readOnly = false }: { ideaId: st
   const load = useCallback(async () => {
     const res = await fetch(`/api/ideas/${ideaId}/action-documents`)
     const body = await res.json().catch(() => null)
-    if (!res.ok) { setError(explainFailure(body, res.status, 'Reading the documents')); return }
+    if (!res.ok) { setError(explainFailure(body, res.status, 'Reading the drafts')); return }
     setTree(body as DocumentTree); setError(null)
   }, [ideaId])
   useEffect(() => { void load() }, [load])
@@ -83,7 +83,7 @@ export default function DocumentsTree({ ideaId, readOnly = false }: { ideaId: st
   const toggle = (k: string) => setClosed((s) => { const n = new Set(s); n.has(k) ? n.delete(k) : n.add(k); return n })
 
   if (error) return <p className="text-sm text-zinc-700" role="alert">Not read: {error}</p>
-  if (!tree) return <p className="text-sm text-zinc-500">Reading the documents…</p>
+  if (!tree) return <p className="text-sm text-zinc-500">Reading the drafts…</p>
 
   return (
     <div className="space-y-2" data-documents-tree>
@@ -95,7 +95,7 @@ export default function DocumentsTree({ ideaId, readOnly = false }: { ideaId: st
             {filter === f ? '● ' : '○ '}{FILTER_WORD[f]}
           </button>
         ))}
-        <input value={find} onChange={(e) => setFind(e.target.value)} placeholder="Find a title or a number (38, 38.2, D.38.2)" aria-label="Find in the documents"
+        <input value={find} onChange={(e) => setFind(e.target.value)} placeholder="Find a title or a number (38, 38.2, D.38.2)" aria-label={DRAFTS_UI.findInTree}
           className="ml-auto w-72 max-w-full text-xs border border-zinc-300 rounded px-2 py-1" />
       </div>
       {!readOnly && <DraftRunLine key={runId ?? 'latest'} ideaId={ideaId} runId={runId} onProgress={() => void load()} />}
@@ -136,7 +136,7 @@ export default function DocumentsTree({ ideaId, readOnly = false }: { ideaId: st
 
       {adding && (
         <AddDialog action={adding.action} kind={adding.kind} busy={busy} onClose={() => setAdding(null)}
-          onSave={async (title, body) => { const r = await post({ op: 'addByHand', actionId: adding.action.id, kind: adding.kind, title, body }, 'Adding the document') as { d?: string } | null; if (r) { setSaid(`Saved: ${r.d} added.`); setAdding(null); await load() } }} />
+          onSave={async (title, body) => { const r = await post({ op: 'addByHand', actionId: adding.action.id, kind: adding.kind, title, body }, 'Adding the draft') as { d?: string } | null; if (r) { setSaid(`Saved: ${r.d} added.`); setAdding(null); await load() } }} />
       )}
     </div>
   )
@@ -188,7 +188,7 @@ function ActionRow({ ideaId, a, readOnly, busy, opened, closed, toggle, onOpen, 
           ))}
           {a.missing.map((k) => (
             <li key={k} className="text-xs text-zinc-700" data-tree-missing={k}>
-              <span aria-hidden>○</span> {KIND_WORD[k]} — <span className="font-semibold">no document yet</span>
+              <span aria-hidden>○</span> {KIND_WORD[k]} — <span className="font-semibold">{DRAFTS_UI.noDraftYet}</span>
               {!readOnly && (GENERATED_KINDS.has(k)
                 ? k === 'COLLISION_REPORT' && <button type="button" disabled={busy} className="underline ml-1 disabled:opacity-40" onClick={() => onGenerate('collision')}>{TREE_UI.generateItFree}</button>
                 : <button type="button" disabled={busy} className="underline ml-1 disabled:opacity-40" onClick={() => onAdd(k)}>{TREE_UI.writeIt}</button>)}
@@ -227,8 +227,8 @@ export function AddDialog({ action, kind, busy, onClose, onSave }: { action: Tre
     <FocusDialog title={`Write the ${KIND_WORD[kind]} for #${action.number}`} onClose={onClose}
       footer={<button type="button" disabled={busy || !title.trim()} onClick={() => onSave(title, body)} className="px-3 py-1 rounded bg-zinc-900 text-white text-sm disabled:opacity-40">{DOCUMENT_UI.saveTheDocument}</button>}>
       <div className="space-y-2 text-sm">
-        <label className="block">{DOCUMENT_UI.title}<BoundedInput value={title} onChange={setTitle} max={LIMITS.documentTitle} aria-label="The document’s title" className="w-full border border-zinc-300 rounded px-2 py-1" wrapperClassName="w-full" /></label>
-        <label className="block">{DOCUMENT_UI.textWithParts}<BoundedInput multiline rows={12} value={body} onChange={setBody} max={LIMITS.documentText} aria-label="The document’s text" className="w-full border border-zinc-300 rounded px-2 py-1 text-xs" wrapperClassName="w-full" /></label>
+        <label className="block">{DOCUMENT_UI.title}<BoundedInput value={title} onChange={setTitle} max={LIMITS.documentTitle} aria-label="The draft’s title" className="w-full border border-zinc-300 rounded px-2 py-1" wrapperClassName="w-full" /></label>
+        <label className="block">{DOCUMENT_UI.textWithParts}<BoundedInput multiline rows={12} value={body} onChange={setBody} max={LIMITS.documentText} aria-label="The draft’s text" className="w-full border border-zinc-300 rounded px-2 py-1 text-xs" wrapperClassName="w-full" /></label>
       </div>
     </FocusDialog>
   )

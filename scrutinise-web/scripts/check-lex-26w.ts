@@ -226,13 +226,13 @@ async function main() {
       ['Accept version N', 'accept_document'],
       ['Set aside (text proposal, instruction proposal)', 'set_aside_proposal'],
       ['Take all → Save as version N (clause)', 'use_proposal'],
-      ['Review this document → Review it / Review again', 'review_document'],
+      ['Review this draft → Review it / Review again', 'review_document'],
       ['Generate again (collision report)', 'generate_collision_report'],
-      ['Add a document (by hand)', 'propose_document_text'],
+      ['Add a draft (by hand)', 'propose_document_text'],
       ['Draft what this action needs', 'draft_document'],
       ['Draft what this heading needs', 'none, in 26-W-b: draft_document covers one action; a heading-wide run is the next part'],
-      ['(reading) the document view', 'read_document'],
-      ['(reading) the documents tree', 'list_documents'],
+      ['(reading) the draft view', 'read_document'],
+      ['(reading) the drafts tree', 'list_documents'],
     ]
     const names = new Set(MODEL_TOOLS.map((t) => t.name))
     for (const [row, tool] of INVENTORY) ok(`“${row}” → ${tool.startsWith('none') ? tool : tool}`, tool.startsWith('none') ? tool.length > 20 : names.has(tool))

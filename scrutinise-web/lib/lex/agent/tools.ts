@@ -1790,7 +1790,7 @@ const DOC_PART_CHARS = 15_000
 
 const listDocumentsTool: ToolDefinition = {
   name: 'list_documents', category: 'see', tier: 'free',
-  description: 'List the documents on the actions (the draft clause, code text, specification, costing, operating text, background note, explanatory note, collision report, schedule): each one\'s D-number, kind, status, current version, whether a proposal of yours is waiting, and what each action still needs. Give an action number for one action only.',
+  description: 'List the drafts on the actions (the draft clause, code text, specification, costing, operating text, background note, explanatory note, collision report, schedule): each one\'s D-number, kind, status, current version, whether a proposal of yours is waiting, and what each action still needs. Give an action number for one action only.',
   schema: z.object({ action: z.number().int().optional().describe('only this action, as in #207') }),
   describe: (i) => ((i as { action?: number })?.action ? `List the documents of #${(i as { action: number }).action}` : 'List the documents'),
   async run(ctx, { action }) {
@@ -1809,7 +1809,7 @@ const listDocumentsTool: ToolDefinition = {
 
 const readDocumentTool: ToolDefinition = {
   name: 'read_document', category: 'see', tier: 'free',
-  description: `Read a document by its D-number: its current version (default), your waiting proposal, or an earlier version. A long text comes back in parts of ${DOC_PART_CHARS.toLocaleString('en-GB')} characters — pass nextFrom as \`from\` to read on.`,
+  description: `Read a draft by its D-number: its current version (default), your waiting proposal, or an earlier version. A long text comes back in parts of ${DOC_PART_CHARS.toLocaleString('en-GB')} characters — pass nextFrom as \`from\` to read on.`,
   schema: z.object({ d: z.string().describe('the D-number, as in D.207.2'), which: z.enum(['current', 'proposal', 'version']).default('current'), v: z.number().int().min(1).optional().describe('with which "version": the version number'), from: z.number().int().min(0).optional() }),
   describe: (i) => `Read ${(i as { d?: string })?.d ?? 'a document'}`,
   async run(ctx, { d, which, v, from }) {
@@ -1849,7 +1849,7 @@ const readDocumentTool: ToolDefinition = {
 const INSTRUMENT_KINDS: ReadonlySet<string> = new Set(['CODE_TEXT', 'SPECIFICATION', 'OPERATING_TEXT', 'COSTING'])
 const proposeDocumentText: ToolDefinition = {
   name: 'propose_document_text', category: 'draft', tier: 'free',
-  description: 'Write the text of a document as YOUR PROPOSAL, a SECTION per call, each saved as it lands: the owner sees it in the document view beside their versions and uses, edits or sets it aside. '
+  description: 'Write the text of a draft as YOUR PROPOSAL, a SECTION per call, each saved as it lands: the owner sees it in the draft view beside their versions and uses, edits or sets it aside. '
     + 'This — never the Action details — is where a code, a specification, operating rules or any instrument\'s text goes. mode "start" begins a new proposal (an older waiting one is set aside, kept); mode "append" adds the next section to the proposal you started. '
     + 'Give the document by its D-number, or by action and kind to start one (it is made if the action has none of that kind). Write the instrument itself, never proposals about it. The draft clause is not written here: use redraft_document.',
   schema: z.object({
@@ -1898,7 +1898,7 @@ const isTemplateKindName = (k: string) => DD.isTemplateKind(k)
 
 const draftDocumentTool: ToolDefinition = {
   name: 'draft_document', category: 'run', tier: 'ask',
-  description: 'The same as the owner\'s "Draft what this action needs": drafts every document the action still needs (each a proposal of yours, saved as it finishes, in the background). Asks first, at the measured price.',
+  description: 'The same as the owner\'s "Draft what this action needs": drafts everything the action still needs (each a proposal of yours, saved as it finishes, in the background). Asks first, at the measured price.',
   schema: z.object({ action: z.number().int() }),
   describe: (i) => `Draft what #${(i as { action?: number })?.action ?? '?'} needs`,
   async price(ctx, { action }) {
@@ -1918,7 +1918,7 @@ const draftDocumentTool: ToolDefinition = {
 
 const redraftDocumentTool: ToolDefinition = {
   name: 'redraft_document', category: 'run', tier: 'ask',
-  description: 'The same as "Ask Lex to redraft" on a document: a fresh draft of it, as a proposal beside its versions (an older waiting proposal is set aside, kept). For a code, specification, costing, operating text or background note you may pass the owner\'s instruction ("model it on [Ref: 218]", "shorter") and a model source. Asks first, at the measured price.',
+  description: 'The same as "Ask Lex to redraft" on a draft: a fresh draft of it, as a proposal beside its versions (an older waiting proposal is set aside, kept). For a code, specification, costing, operating text or background note you may pass the owner\'s instruction ("model it on [Ref: 218]", "shorter") and a model source. Asks first, at the measured price.',
   schema: z.object({ d: z.string(), instruction: z.string().max(1500).optional(), modelRef: z.number().int().optional().describe('code text only: the [Ref: n] of the existing code to model the form on') }),
   describe: (i) => `Redraft ${(i as { d?: string })?.d ?? 'the document'}${(i as { instruction?: string })?.instruction ? ` — “${clip((i as { instruction: string }).instruction, 100)}”` : ''}`,
   async price(ctx, { d }) {
@@ -1942,7 +1942,7 @@ const redraftDocumentTool: ToolDefinition = {
 
 const useProposalTool: ToolDefinition = {
   name: 'use_proposal', category: 'change', tier: 'ask',
-  description: 'ONLY when the owner tells you to: the same as "Use it" on a document (for a draft clause, "Take all" then save) — your waiting proposal becomes the document\'s next version. Asks first.',
+  description: 'ONLY when the owner tells you to: the same as "Use it" on a draft (for a draft clause, "Take all" then save) — your waiting proposal becomes the draft\'s next version. Asks first.',
   schema: z.object({ d: z.string() }),
   describe: (i) => `Use Lex’s proposal as the next version of ${(i as { d?: string })?.d ?? 'the document'}`,
   async run(ctx, { d }) {
@@ -1957,7 +1957,7 @@ const useProposalTool: ToolDefinition = {
 
 const acceptDocumentTool: ToolDefinition = {
   name: 'accept_document', category: 'change', tier: 'ask',
-  description: 'ONLY when the owner tells you to: the same as "Accept version N" — the owner accepts the document as it stands. Asks first.',
+  description: 'ONLY when the owner tells you to: the same as "Accept version N" — the owner accepts the draft as it stands. Asks first.',
   schema: z.object({ d: z.string() }),
   describe: (i) => `Accept ${(i as { d?: string })?.d ?? 'the document'} as it stands`,
   async run(ctx, { d }) {
@@ -1985,7 +1985,7 @@ const setAsideProposalTool: ToolDefinition = {
 
 const reviewDocumentTool: ToolDefinition = {
   name: 'review_document', category: 'run', tier: 'ask',
-  description: 'The same as "Review this document" on a document: the five review passes read its current version and raise issues on its parts. Asks first, at the measured price.',
+  description: 'The same as "Review this draft" on a draft: the five review passes read its current version and raise issues on its parts. Asks first, at the measured price.',
   schema: z.object({ d: z.string(), again: z.boolean().default(false).describe('all five passes again, even those that read this version') }),
   describe: (i) => `Review ${(i as { d?: string })?.d ?? 'the document'}${(i as { again?: boolean })?.again ? ' again (all five passes)' : ''}`,
   async price(ctx, { d, again }) {
@@ -2052,7 +2052,7 @@ const actionsPanel = [{ type: 'open_panel' as const, panel: 'actions' as const }
 
 const explainFieldTool: ToolDefinition = {
   name: 'explain_field', category: 'see', tier: 'free',
-  description: 'The field guide: what a section, field or button on the action record, the documents or the documents tree is FOR, how it fits (what feeds it, what reads it), its limits, and which of your tools acts on it. Give the label as the user said it ("Order", "Action details", "Use it as version 2"). Answer "what is this field for?" from this, never from general knowledge. Free.',
+  description: 'The field guide: what a section, field or button on the action record, the drafts or the drafts tree is FOR, how it fits (what feeds it, what reads it), its limits, and which of your tools acts on it. Give the label as the user said it ("Order", "Action details", "Use it as version 2"). Answer "what is this field for?" from this, never from general knowledge. Free.',
   schema: z.object({ name: z.string().min(1).max(120) }),
   async run(_ctx, { name }) {
     const r = explainField(name)
@@ -2359,7 +2359,7 @@ const summariseThreadTool: ToolDefinition = {
 // ── documents: what an action needs ──
 const setDocumentNeedsTool: ToolDefinition = {
   name: 'set_document_needs', category: 'draft', tier: 'free',
-  description: `The same as "Change what this needs" in the documents tree: mode "derived" (worked out from the avenue and the heading's kind), "nothing" (needs no document, with a reason), or "set" (exactly these kinds: ${Object.keys(KIND_WORD).join(', ')}, with a reason).`,
+  description: `The same as "Change what this needs" in the drafts tree: mode "derived" (worked out from the avenue and the heading's kind), "nothing" (needs no draft, with a reason), or "set" (exactly these kinds: ${Object.keys(KIND_WORD).join(', ')}, with a reason).`,
   schema: z.object({ action: z.number().int(), mode: z.enum(['derived', 'nothing', 'set']), kinds: z.array(z.enum(Object.keys(KIND_WORD) as [string, ...string[]])).max(8).optional(), reason: z.string().max(LIMITS.ruleOutReason).optional() }),
   async run(ctx, { action, mode, kinds, reason }) {
     const a = await oneAction(ctx, action); if (!a) return noAction(action)

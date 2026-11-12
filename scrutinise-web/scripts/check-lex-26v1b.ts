@@ -182,8 +182,9 @@ async function partB(): Promise<{ copyId: string; userId: string; docId: string 
   // ⚠ MOVED BY 26-X §5a: the Drafts (the documents section) open AT THE TOP of the record, under "← Back to Organising"; the rest keeps its
   // 26-V1b order. Was: Statement → jump band → policy test → Detail → Documents → Law → …
   // ⚠ MOVED BY 26-X X2 (§5c): the statement comes first again, then the Brief, then the Drafts. Was (X1 §5a): Back → Drafts → Statement → jump band → …
-  const order = [at(/data-back-to-organising/), at(/data-statement/), at(/data-jump-band/), at(/data-record-section="brief"/), at(/data-record-section="documents"/), at(/data-record-section="policy"/), at(/data-record-section="detail"/), at(/data-record-section="law"/), at(/data-record-section="who"/), at(/data-record-section="costs"/), at(/data-record-section="order"/), at(/data-record-section="comments"/)]
-  ok('26-X §5c: Back to Organising → Statement → jump band → Brief → Drafts → policy test → Detail → Law → Who, how and against → Costs → Order → Comments', order.every((p, i) => p >= 0 && (i === 0 || p > order[i - 1])), order.join(','))
+  const order = [at(/data-back-to-organising/), at(/data-statement/), at(/data-jump-band/), at(/data-record-section="brief"/), at(/data-record-section="documents"/), at(/data-record-section="policy"/), at(/data-record-section="detail"/), at(/data-record-section="law"/), at(/data-record-section="costs"/), at(/data-record-section="order"/), at(/data-record-section="comments"/)]
+  // ⚠ MOVED BY 26-X X3b: "Who, how and against" left the record (now the Deepening's section 6). Was: … → Law → Who, how and against → Costs → …
+  ok('26-X §5c + X3b: Back to Organising → Statement → jump band → Brief → Drafts → policy test → Detail → Law → Costs → Order → Comments (no Who section)', !/data-record-section="who"/.test(html) && order.every((p, i) => p >= 0 && (i === 0 || p > order[i - 1])), order.join(','))
   ok('the band names each section with its state in words, the heading menu at its right', /data-band="documents"/.test(html) && /data-band="comments"/.test(html) && /Heading for action 59/.test(html.slice(at(/data-jump-band/), at(/data-record-section="policy"/))))
   ok('"Action details" is the label, and "Commentary" is nowhere on the record (257, 266)', />Action details<\/span>/.test(html) && !/Commentary/.test(textOf(html)))
   {
@@ -200,12 +201,14 @@ async function partB(): Promise<{ copyId: string; userId: string; docId: string 
     const detail = sections.find((t) => /data-record-section="detail"/.test(t)) ?? '<missing>'
     const drafts = sections.find((t) => /data-record-section="documents"/.test(t)) ?? '<missing>'
     const brief = sections.find((t) => /data-record-section="brief"/.test(t)) ?? '<missing>'
-    ok('265/26-X: every record section but Action details, the Brief and the Drafts opens closed — a <details> with no "open"', sections.length >= 10 && notClosed.length === 0, `${sections.length} sections; not closed: ${notClosed.join(' | ').slice(0, 300)}`)
+    // ⚠ MOVED BY 26-X X3b: "Who, how and against" left the record, so there are 9 sections, not 10.
+    ok('265/26-X: every record section but Action details, the Brief and the Drafts opens closed — a <details> with no "open"', sections.length >= 9 && notClosed.length === 0, `${sections.length} sections; not closed: ${notClosed.join(' | ').slice(0, 300)}`)
     ok('290: Action details opens OPEN — a <details> carrying "open"', detail.startsWith('<details') && isOpen(detail), detail.slice(0, 200))
     ok('26-X §5a: the Drafts open OPEN', drafts.startsWith('<details') && isOpen(drafts), drafts.slice(0, 200))
     ok('26-X §5c: the Brief opens OPEN', brief.startsWith('<details') && isOpen(brief), brief.slice(0, 200))
+    // ⚠ MOVED BY 26-X X3b §7: the record's section is labelled "Drafts" (was "Documents")
     // ⚠ MOVED BY 26-X 308: there are no steps, so no line says "this step" (was: "this step" on the current step's line)
-    ok('265: the closed lines carry the states the band shows ("Action details · 4 words"-style); no line says "this step" or "from step N" (308)', /Action details<\/span> · <span data-section-state="true">1 part</.test(html) && /Documents<\/span> · <span data-section-state="true">/.test(html) && !/this step|from step \d/.test(textOf(html)), (html.match(/.{50}data-section-state.{30}/g) ?? []).join(' | ').slice(0, 400) || 'no data-section-state at all')
+    ok('265: the closed lines carry the states the band shows ("Action details · 4 words"-style); no line says "this step" or "from step N" (308)', /Action details<\/span> · <span data-section-state="true">1 part</.test(html) && /Drafts<\/span> · <span data-section-state="true">/.test(html) && !/this step|from step \d/.test(textOf(html)), (html.match(/.{50}data-section-state.{30}/g) ?? []).join(' | ').slice(0, 400) || 'no data-section-state at all')
   }
   ok('2d: the quoted parts are one collapsible list, "Parts of this action, quoted (1)"', /Parts of this action, quoted \(1\)/.test(textOf(html)) && detailParts(act.commentary).parts[0].title === 'a component title')
   const facts = await actionDocuments(copy.id, a59.id)

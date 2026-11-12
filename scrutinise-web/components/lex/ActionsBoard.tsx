@@ -144,7 +144,7 @@ export default function ActionsBoard({ ideaId, actions, headings, conditions, op
             <p><span className="font-semibold tabular-nums">#{a.number ?? '?'}</span> {actionLabel(a, 90)}
               {inPair && <span className="ml-1 font-bold uppercase tracking-wide" data-board-pair-word>pair</span>}
               {isTarget && <span className="ml-1 font-semibold">— drop to merge</span>}</p>
-            <p className="text-zinc-600" data-board-needs>{needs?.get(a.id) ?? (failed ? 'documents not read' : 'reading documents…')}</p>
+            <p className="text-zinc-600" data-board-needs>{needs?.get(a.id) ?? (failed ? 'drafts not read' : 'reading drafts…')}</p>
             {chips.length > 0 && <p className="mt-0.5 flex flex-wrap gap-1" data-board-conditions>{chips.map((c) => <span key={c} className="rounded border border-zinc-400 px-1 text-[10px]">{c}</span>)}</p>}
           </div>
         </div>
@@ -161,7 +161,7 @@ export default function ActionsBoard({ ideaId, actions, headings, conditions, op
   return (
     <div ref={box} className="flex flex-col lg:flex-row gap-2 items-start" data-board>
       <div className="flex-1 min-w-0 overflow-x-auto">
-        {failed && <p className="text-[11px]" role="alert">The document counts on the cards could not be read ({failed}); the board still works.</p>}
+        {failed && <p className="text-[11px]" role="alert">The draft counts on the cards could not be read ({failed}); the board still works.</p>}
         <div className="flex gap-2 items-start pb-1">
           {columns.map((col) => {
             const c = col.h ? colourFor(col.h.colourKey) : null

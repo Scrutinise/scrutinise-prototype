@@ -23,7 +23,7 @@ import { RELATION_WORD } from '@/lib/lex/law-panel-words'
 import { RECORD_SECTIONS, bandFits, type RecordSection } from '@/lib/lex/record-layout-pure'
 import { draftPrice, DRAFT_CONFIRM_ABOVE_PENCE, EMPTY_INSTRUCTION } from '@/lib/lex/action-draft-pure'
 import { explainFailure } from '@/lib/api-rejection'
-import { COMMON_UI, RECORD_UI, PAGE_UI, PROGRESS_WORD } from '@/lib/lex/screen-labels'
+import { COMMON_UI, RECORD_UI, PAGE_UI, PROGRESS_WORD, DRAFTS_UI } from '@/lib/lex/screen-labels'
 import { NO_DRAFT_GLYPH, draftKindsOf } from '@/lib/lex/action-progress-pure'
 import { briefChanged } from '@/lib/lex/action-brief-pure'
 import { BRIEF_UI } from '@/lib/lex/screen-labels'
@@ -44,7 +44,7 @@ export function useRecordFacts(ideaId: string, actionId: string) {
     try {
       const res = await fetch(`/api/ideas/${ideaId}/action-documents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ op: 'forAction', actionId }) })
       const body = await res.json().catch(() => null)
-      if (!res.ok) { setDocsError(explainFailure(body, res.status, 'Reading this action’s documents')); return }
+      if (!res.ok) { setDocsError(explainFailure(body, res.status, 'Reading this action’s drafts')); return }
       setDocs((body as { data: RecordDocuments }).data); setDocsError(null)
     } catch (e) { setDocsError(`could not reach the server (${e instanceof Error ? e.message : 'network error'})`) }
   }, [ideaId, actionId])
@@ -117,7 +117,7 @@ export function DocumentsSection({ ideaId, a, facts, disabled, onChanged }: {
   const draftWithLex = () => { setAsking(false); void post('action-structure', { op: 'draftAction', actionId: a.id }, `Drafting #${a.number ?? '?'}`, (r) => `Saved: Lex’s proposal for #${a.number ?? '?'} is waiting — open the drafting instruction to compare it${r?.pence != null ? ` (it cost ${Number(r.pence).toFixed(1)}p)` : ''}.`) }
 
   if (docsError) return <p className="text-xs" role="alert">Not read: {docsError}</p>
-  if (!docs) return <p className="text-xs text-zinc-500">Reading this action’s documents…</p>
+  if (!docs) return <p className="text-xs text-zinc-500">Reading this action’s drafts…</p>
   // 26-X X2 — a BRIEFED document holds only a Brief (shown in the Brief above); the Draft lists what has been drafted
   const live = docs.documents.filter((d) => d.status !== 'SUPERSEDED' && (d.status !== 'BRIEFED' || d.current || d.proposalWaiting))
   const needed = docs.needs.kinds
@@ -170,7 +170,7 @@ export function DocumentsSection({ ideaId, a, facts, disabled, onChanged }: {
       {!disabled && (
         <div className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-1">{RECORD_UI.addDocument}
-            <select value={pick} onChange={(e) => setPick(e.target.value as DocumentKind)} className="border border-zinc-300 rounded px-1 py-0.5" aria-label="The kind of document to add">
+            <select value={pick} onChange={(e) => setPick(e.target.value as DocumentKind)} className="border border-zinc-300 rounded px-1 py-0.5" aria-label={DRAFTS_UI.kindToAdd}>
               {DOCUMENT_KINDS.filter((k) => !GENERATED_KINDS.has(k) && k !== 'DRAFT_CLAUSE').map((k) => <option key={k} value={k}>{KIND_WORD[k]}</option>)}
             </select></label>
           <button type="button" disabled={busy} onClick={() => setAdding(pick)} className="px-2 py-0.5 rounded border border-zinc-300 disabled:opacity-40">{COMMON_UI.add}</button>

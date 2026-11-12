@@ -1,5 +1,60 @@
 # LEX 26-X — REPORT
 
+## X3b — built 11 Nov 2026, committed 12 Nov (CCh-Lex 7 Nov (2): "X3: go, as split"; CCh-Lex 12 Nov (1): "finish X3b")
+
+BRIEF_26X §6a.6 (decision 315) and the §7 renames (decision 300). This closes X3.
+
+**Where the build was between sessions (CCh-Lex 12 Nov (1)).** It was built on Wednesday 11 Nov, not Saturday: the new files are stamped
+09:39 and 10:02 UTC that day, and X3a was committed on Monday the 9th. It was all in the tree on 12 Nov, uncommitted: 25 modified files and
+2 new ones, identical to what was left. The 11 Nov regression was not a code failure. Claude Code stopped it for low memory after four checks
+(all green), and it was left stopped as the note asked. As CCh asked, the build was then committed to `wip/26x` before anything else ran (05ce99a; HEAD,
+index and tree untouched, through a private index), and squashed onto Main when green.
+
+**§6a.6 "Who delivers and who resists" (315)** — `components/lex/DeepeningWho.tsx`, section 6 of the Deepening.
+- It opens whatever the lock says (recommendation 1). `DeepeningGate`'s children are now a render prop `(open) => …`: sections 1–5 and
+  everything after mount only when open; section 6 always renders, and when locked it says "Open while the rest of the Deepening is
+  locked: it reads the actions, not the drafts."
+- At the top, the incentive count line (`incentiveChecklistLine`). Filters: Every action · Not yet specific · Against, and nothing changes it,
+  each with its count.
+- One row per live action. Its line shows: specific or not, "X of 7 answered", proposals by Lex waiting, and "▼ against, nothing changes it".
+  Opening a row edits the seven slots in place (`ActionSlots`, through the shared `useOps` write route). The incentive map is below.
+- **It left the action record.** `RECORD_SECTIONS` loses `who`. The band no longer shows Who, and the Organising page's step 2 no longer
+  renders slots. The field guide, the controls file (the three slot controls now name section 6 on the Deepening) and Lex's prompt all say
+  where it went.
+- On 452c5ade: 58 live actions, 0 recorded as against with nothing changing it. The count equals a plain query (cold read, part F).
+
+**§7 renames (300): "document" → "draft" wherever it means a draft on an action.** Uploaded files keep "Documents", for example the idea
+page's inbound list. Tool names (`list_documents`, `review_document`, …) are unchanged; the prompt tells Lex the screen says drafts.
+
+| where | count |
+|---|---|
+| `screen-labels.ts` | 4 labels renamed; 9 inline strings moved into a new `DRAFTS_UI` table |
+| components (DocumentView, DocumentsTree, RisksView, DraftNeedsPanel, ActionRecordSections, ActionsBoard, IdeaDetailClient, CreateIdeaClient) | 26 strings |
+| the record | 2: the section label and the band ("N drafts") |
+| the Actions Pack | 5: section 14 is "Drafts"; the key; the list heading "DRAFTS"; "No draft is recorded…" (a pack printed earlier keeps "Documents") |
+| field guide | 37 prose strings, plus 9 new entries for `DRAFTS_UI` |
+| Lex's tool descriptions | 15 words in 10 descriptions |
+| Lex's system prompt | 3 |
+
+"Stage names per §2c" were already done in X1 (17 strings). "Draft D.38.1": no "Document D.x" label exists anywhere, so there was nothing to rename.
+
+**Checks.**
+- `check:lex-26x3b` 36/36, 3 controls, 0 dead, 0 not run. Three mutations each went red: the gate not rendering `children(false)`;
+  `DeepeningWho` put behind `open &&` (11 red); "Needs no document" restored (2 red).
+- Moved by X3b (each one marked `⚠ MOVED BY 26-X X3b`): 26s2 (step 2 has no slots), 26x ("who" is not a record section), 26v1b (9 sections; the
+  record label "Drafts"), 26v ("DRAFTS", "14 Drafts", the find box "Find in the drafts"), 26w-b ("Review this draft"), 26w (the mapping table).
+  Two of those were found red on 12 Nov and fixed: 26v's find box and 26v1b's record label. Both were renames the checks had not followed.
+- Regression, one at a time, after the renames:
+  - prompt-examples ✓ · 26w 66 · 26w-b 60 · 26x 110 (11 Nov)
+  - 26v 66 · 26v2d 62 · 26v2b 47 · 26v2c 44 · 26u 67 · 26x2 75 · 26x3 62 · 26x3b 36 · 26v1b 81 · 26p 126 · 26s2 215 · 26t1 98 · 26t2 72 ·
+    26s2-browser 33 (12 Nov)
+  - ⚠ 26s2-structure: 106/107, red 2 runs of 3 on "Retire heading … unassigns exactly the actions it held". **Not X3b:** neither
+    `action-structure.ts` nor the check is in this diff. Cause, read from the code: `deleteHeading` unassigns every action on the heading
+    whatever its status, while the check (and the 18 Oct (9) record: "its LIVE actions lose the heading") counts only LIVE ones. `heads2` has no
+    `orderBy`, so the check fails whenever the heading it happens to pick also holds a parked or ruled-out action. **For CCh:** should retiring
+    a heading unassign its non-live actions too? Then the check is wrong. If not, `deleteHeading` should filter on LIVE.
+- Clean build: a worktree of the WIP commit, `npm ci`, `prisma generate`, tsc. The result is in the CHANGE_LOG entry.
+
 ## X3a — built 7 Nov 2026 (CCh-Lex 7 Nov (2): "X3: go, as split. Your three recommendations stand")
 
 §6a sections 1–5 and §6b. Section 6 ("Who delivers and who resists") and the §7 renames are X3b.

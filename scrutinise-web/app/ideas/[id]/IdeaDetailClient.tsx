@@ -1,5 +1,6 @@
 'use client'
 
+import { DRAFTS_UI } from '@/lib/lex/screen-labels'
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -1469,7 +1470,7 @@ function IdeaTab({
     { key: 'actions', label: 'Coherent Actions' },
     // 26-V1 §6 (decision 244): beside Coherent Actions — the law this idea concerns, and the documents on its actions.
     { key: 'law', label: 'Law' },
-    { key: 'documents', label: 'Documents' },
+    { key: 'documents', label: DRAFTS_UI.ideaTab },
   ]
 
   const IDEA_TYPE_LABELS: Record<string, string> = {
@@ -1635,7 +1636,7 @@ function IdeaTab({
       {/* 26-V1 §6 — the documents tree, read-only here; it is worked on in the Deepening. */}
       {subTab === 'documents' && (
         <div data-subtab="documents" className="space-y-2">
-          <p className="text-xs text-zinc-600">The documents on this idea’s actions — read here; drafted and accepted in The Deepening.</p>
+          <p className="text-xs text-zinc-600">{DRAFTS_UI.ideaTabLead}</p>
           <DocumentsTree ideaId={idea.id} readOnly />
         </div>
       )}
