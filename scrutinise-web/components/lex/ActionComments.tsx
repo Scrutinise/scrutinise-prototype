@@ -10,7 +10,8 @@
 // ⚠ Every input shows its limit (BoundedInput); every refusal reads "Not saved: ..." (CLAUDE.md §30).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { useDeviceDraft, DraftOffer } from './DeviceDraft'
 import { explainFailure } from '@/lib/api-rejection'
 import { LIMITS } from '@/lib/lex/input-limits'
 import BoundedInput from './BoundedInput'
@@ -28,6 +29,9 @@ export default function ActionComments({ ideaId, actionId, number }: { ideaId: s
   const [draft, setDraft] = useState('')
   const [replies, setReplies] = useState<Record<string, string>>({})
   const [summary, setSummary] = useState<{ text: string; pence: number | null } | null>(null)
+  // 26-Z §6.2 — a comment being written is kept on this device until it is added; after a reload the thread opens and offers it back
+  const kept = useDeviceDraft(ideaId, `action.${actionId}.comment`, draft)
+  useEffect(() => { if (kept.offer && !open) { setOpen(true); if (notes === null) void load() } }, [kept.offer]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const load = useCallback(async () => {
     try {
@@ -55,7 +59,7 @@ export default function ActionComments({ ideaId, actionId, number }: { ideaId: s
       op: 'addNote', ownObservation: true, comment: text, stance: 'CONTEXT', tags: ['comment'],
       bearsOn: [{ kind: 'action', id: actionId, label: `Action ${number ?? '?'}` }],
     }, '“Add comment”')
-    if (r.ok) { setDraft(''); await load() }
+    if (r.ok) { setDraft(''); kept.clear(); await load() }
     setBusy(null)
   }
   const sendReply = async (noteId: string) => {
@@ -103,6 +107,7 @@ export default function ActionComments({ ideaId, actionId, number }: { ideaId: s
             </div>
           )
         })}
+        <DraftOffer offer={kept.offer} onRestore={() => setDraft(kept.take() ?? '')} onDiscard={kept.discard} />
         <div className="flex flex-wrap items-start gap-1.5" data-comment-add>
           <BoundedInput value={draft} onChange={setDraft} max={LIMITS.actionComment} multiline rows={3} placeholder="Add a comment on this action" aria-label={`Add a comment on action ${number ?? ''}`} className="text-xs border border-zinc-300 rounded px-1.5 py-0.5 w-96 max-w-full" />
           <button type="button" disabled={busy != null || !draft.trim()} onClick={() => void addComment()} className="text-[11px] font-medium px-2 py-1 rounded bg-zinc-900 text-white disabled:opacity-40" data-comment-save>{RECORD_UI.addComment}</button>

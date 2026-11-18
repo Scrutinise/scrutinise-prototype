@@ -5,6 +5,7 @@ import AcceptCard from './AcceptCard'
 import EditOfferCard from './EditOfferCard'
 import ChatAttach from './ChatAttach'
 import ChatMarkdown from './ChatMarkdown'
+import { useDeviceDraft, DraftOffer } from './DeviceDraft'
 import { INPUT_MIN_PX, LHP_KEYS, inputHeight, parsePx, readStored, writeStored } from '@/lib/lex/lhp-layout'
 import AgentCards, { type AgentCardsState } from './AgentCards'
 import type { EditOffer } from '@/lib/lex/field-edit'
@@ -190,6 +191,8 @@ export default function ChatPanel({
   onDismissEdit?: () => void
 }) {
   const [input, setInput] = useState('')
+  // 26-Z §6.2 — the message being typed is kept on this device until it is sent; after a reload it is offered back, never sent by itself
+  const draft = useDeviceDraft(ideaId, 'lex.message', input)
   const [expanded, setExpanded] = useState<Set<number>>(new Set())
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -256,6 +259,7 @@ export default function ChatPanel({
     const text = input.trim()
     if (!text || busy) return
     setInput('')
+    draft.clear() // 26-Z §6.2 — sent: nothing left to offer back
     setBoxPx(inputHeight({ contentPx: 0, chosenPx, chatAreaPx: chatAreaPx() }))
     onSend(text)
   }
@@ -390,6 +394,7 @@ export default function ChatPanel({
           </div>
         )}
         {ideaId && <ChatAttach ideaId={ideaId} onChanged={onMaterialChanged} />}
+        <DraftOffer offer={draft.offer} onRestore={() => setInput(draft.take() ?? '')} onDiscard={draft.discard} />
         <div className="flex gap-2 items-end">
           <div className="flex-1 flex flex-col">
           <textarea

@@ -316,6 +316,54 @@ export const PAGE_UI = {
   saveNoDraft: 'Save — needs no draft',
   needsDraftAfterAll: 'It needs a draft after all',
 } as const
+
+// ══ 26-Z (decisions 344–348) — Where am I?, the panels, Focus view, never losing your place ══════════════════════════════════════════
+
+/** 344 / §2c — the seven panels, in order. Panel 6's name is "Working on …" when something is open (`workingOn`). */
+export const PANEL_WORD = {
+  1: 'Where am I?',
+  2: 'To-do',
+  3: 'Lex',
+  4: 'Notes',
+  5: 'Chapters',
+  6: 'The open chapter',
+  7: 'Research and sources',
+} as const
+/** §2c — where each panel sits on the desktop, for the visual blocks and their text labels. */
+export const PANEL_PLACE_WORD = { top: 'across the top on desktop', left: 'left on desktop', centre: 'centre on desktop', right: 'right on desktop' } as const
+/** §2a–§2c — the three sentences, verbatim, shown once at the top of the menu. */
+export const WHERE_SENTENCES = {
+  stages: 'Your idea passes through 7 stages from creation to enactment.',
+  chapters: 'Within the Development stage you have 7 chapters to develop a mature proposal.',
+  panels: 'Tap a panel to work in it.',
+} as const
+/** The bars, the menu and the toggle. */
+export const WHERE_UI = {
+  button: 'Where am I?',
+  stage: 'Stage',
+  chapter: 'Chapter',
+  panel: 'Panel',
+  youAreHere: 'You are here',
+  gotIt: 'Got it',
+  explain: '?',
+  explainLabel: 'What are stages, chapters and panels?',
+  close: 'Close',
+  workingOn: (what: string) => `Working on ${what}`,
+  backWhereYouWere: 'Back where you were',
+  focusView: 'Focus view',
+  fullView: 'Full view',
+  focusToggleLabel: 'Show one panel at a time (Focus view) or all three columns (Full view)',
+  /** "Private Scrutiny: not yet open" — given "<stage>: <state>" already joined (a label takes one argument). */
+  noChaptersOutside: (stageAndState: string) => `Chapters of ${stageAndState}`,
+  chaptersOfActions: 'The actions on this page',
+  addressLabel: 'Your place: stage, chapter and panel',
+} as const
+/** §6.2 — the offer to restore unsent text. Never sent by itself. */
+export const DRAFT_RESTORE_UI = {
+  offer: 'You had unsent text here — restore it?',
+  restore: 'Restore it',
+  discard: 'Discard it',
+} as const
 /** §5a — the Drafting page's filters, one per stage of the strip, and "all". */
 export const DRAFTING_FILTER_WORD = {
   all: 'all',

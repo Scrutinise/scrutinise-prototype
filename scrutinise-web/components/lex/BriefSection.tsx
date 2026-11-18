@@ -13,7 +13,9 @@
 // ⚠ Imports only pure modules, types and client components (§28).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
+import { IdeaIdContext } from './RefTextarea'
+import { useDeviceDraft, DraftOffer } from './DeviceDraft'
 import type { BriefView, BriefKindView } from '@/lib/lex/action-brief'
 import { KIND_FIELDS, TONES, EMPTY_BRIEF, briefBody, draftedFromWords, modelledOnWords, type Brief, type BriefKind } from '@/lib/lex/action-brief-pure'
 import { KIND_WORD } from '@/lib/lex/action-documents-pure'
@@ -86,11 +88,17 @@ function KindBrief({ k, view, a, busy, disabled, post }: { k: BriefKindView; vie
     const done = answering && k.documentId
       ? await post('action-documents', { op: 'useBrief', documentId: k.documentId, edited: b }, BRIEF_UI.editThenSave, (r) => `Saved: version ${String(r?.v ?? '?')} of the Brief for ${n}’s ${kindWord}, from Lex’s proposal as you edited it.`)
       : await post('action-documents', { op: 'saveBrief', actionId: a.id, kind: k.kind, brief: b }, BRIEF_UI.saveBrief, (r) => `Saved: version ${String(r?.v ?? '?')} of the Brief for ${n}’s ${kindWord}. The earlier versions are kept.`)
-    if (done) { setEditing(null); setAnswering(false) }
+    if (done) { setEditing(null); setAnswering(false); setTyped(null); kept.clear() }
   }
   const drafted = draftedFromWords(k.draft?.draftedFromBriefV ?? null, k.current?.v ?? null, !!k.draft)
+  // 26-Z §6.2 — the Brief being written is kept on this device while the form is open; Cancel or a save that worked closes it and drops it
+  const [typed, setTyped] = useState<Brief | null>(null)
+  const ideaId = useContext(IdeaIdContext)
+  const kept = useDeviceDraft(ideaId, `brief.${a.id}.${k.kind}`, editing && typed ? JSON.stringify(typed) : '')
+  const restoreBrief = () => { const t = kept.take(); if (!t) return; try { const b = JSON.parse(t) as Brief; setEditing(b); setTyped(b) } catch { kept.discard() } }
   return (
     <section className="rounded border border-zinc-300 bg-white p-2 space-y-1.5" data-brief-kind={k.kind}>
+      {!editing && <DraftOffer offer={kept.offer} onRestore={restoreBrief} onDiscard={kept.discard} preview={(o) => { try { return briefBody(k.kind, JSON.parse(o) as Brief).split('\n').filter(Boolean)[0] ?? '' } catch { return '' } }} />}
       <p className="font-semibold">
         <span aria-hidden>{k.current ? '●' : '○'}</span> {BRIEF_UI.section} — {kindWord}{k.d ? ` (${k.d})` : ''} ·{' '}
         <span data-brief-state>{k.current ? `version ${k.current.v}, by ${AUTHOR_WORD[k.current.author] ?? k.current.author}, ${day(k.current.at)}${k.versions.length > 1 ? ` · ${k.versions.length} versions kept` : ''}` : k.kind === 'DRAFT_CLAUSE' && k.instruction ? `its drafting instruction, version ${k.instruction.v}` : BRIEF_UI.noBriefYet}</span>
@@ -134,7 +142,7 @@ function KindBrief({ k, view, a, busy, disabled, post }: { k: BriefKindView; vie
         </div>
       )}
 
-      {editing && <BriefForm kind={k.kind} start={editing} busy={busy} onCancel={() => { setEditing(null); setAnswering(false) }} onSave={save} />}
+      {editing && <BriefForm kind={k.kind} start={editing} busy={busy} onCancel={() => { setEditing(null); setAnswering(false); setTyped(null) }} onSave={save} onTyped={setTyped} />}
 
       {!disabled && !editing && (
         <p className="flex flex-wrap items-center gap-2">
@@ -168,12 +176,14 @@ function KindBrief({ k, view, a, busy, disabled, post }: { k: BriefKindView; vie
 }
 
 /** The form: the common fields, then the kind's own. Every box shows its limit (§30.1); nothing typed is cut without a word. */
-function BriefForm({ kind, start, busy, onSave, onCancel }: { kind: BriefKind; start: Brief; busy: boolean; onSave: (b: Brief) => void; onCancel: () => void }) {
+function BriefForm({ kind, start, busy, onSave, onCancel, onTyped }: { kind: BriefKind; start: Brief; busy: boolean; onSave: (b: Brief) => void; onCancel: () => void; onTyped?: (b: Brief) => void }) {
   const [b, setB] = useState<Brief>(start)
   const [ref, setRef] = useState(start.modelledOn && 'ref' in start.modelledOn ? String(start.modelledOn.ref) : start.modelledOn && 'corpusId' in start.modelledOn ? start.modelledOn.corpusId : '')
   const set = (p: Partial<Brief>) => setB((x) => ({ ...x, ...p }))
   const modelledOn = (s: string): Brief['modelledOn'] => { const t = s.trim().replace(/^\[?Ref:\s*/i, '').replace(/\]$/, ''); return !t ? null : /^\d+$/.test(t) ? { ref: Number(t) } : { corpusId: s.trim() } }
   const final = { ...b, modelledOn: modelledOn(ref) }
+  // 26-Z §6.2 — only what the user has changed counts as unsent typing: an opened, untouched form reports nothing
+  useEffect(() => { if (b !== start || ref !== (start.modelledOn && 'ref' in start.modelledOn ? String(start.modelledOn.ref) : start.modelledOn && 'corpusId' in start.modelledOn ? start.modelledOn.corpusId : '')) onTyped?.(final) }, [b, ref]) // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="rounded border border-zinc-900 p-2 space-y-2" data-brief-form={kind}>
       <label className="block"><span className="font-semibold">{BRIEF_FIELD_WORD.must}</span>

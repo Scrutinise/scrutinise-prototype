@@ -27,6 +27,7 @@ import type { ActionStructureRequest, ActionStructureOp } from '@/lib/lex/action
 import { OP_WORDS } from '@/lib/lex/action-structure-schema'
 import { explainFailure } from '@/lib/api-rejection'
 import { LIMITS } from '@/lib/lex/input-limits'
+import { STORE_KEY, safeStore } from '@/lib/lex/where-am-i'
 import BoundedInput from './BoundedInput'
 import { useDigests, HeadingDigest } from './ActionDigest'
 import IncentiveMap from './IncentiveMap'
@@ -224,7 +225,8 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
   const scrollParent = (): HTMLElement | null => {
     let el = rootRef.current?.parentElement ?? null
     while (el && !(el.scrollHeight > el.clientHeight && /(auto|scroll)/.test(getComputedStyle(el).overflowY))) el = el.parentElement
-    return el
+    // 26-Z §4 — in Focus view (and on a phone) nothing inside scrolls: the page does, so the page is what is remembered and restored.
+    return el ?? (typeof document !== 'undefined' ? (document.scrollingElement as HTMLElement | null) : null)
   }
   const [viewAsked, setView] = useState<View>('list')
   const [modeAsked, setMode] = useState<GroupMode>('heading')
@@ -339,6 +341,37 @@ export default function ActionsWorkspace({ ideaId, actions, setAside, headings, 
     setOpen(new Set([a.id]))
     setTimeout(() => document.querySelector(`[data-action-id="${a.id}"]`)?.scrollIntoView?.({ block: 'start' }), 150)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps -- on arrival only
+  // 26-Z §4 — and when the hash changes without a page load (panel 5 → 6 in Focus view: "#38" opens #38 in place)
+  useEffect(() => {
+    if (page !== 'drafting' || typeof window === 'undefined') return
+    const onHash = () => {
+      const m = /^#(\d+)$/.exec(window.location.hash)
+      const a = m ? live.find((x) => x.number === Number(m[1])) : undefined
+      if (!a) return
+      if (draftFilter !== 'all' && development.byId.get(a.id)?.stage !== draftFilter) setDraftFilter('all')
+      setOpen(new Set([a.id]))
+      setTimeout(() => document.querySelector(`[data-action-id="${a.id}"]`)?.scrollIntoView?.({ block: 'start' }), 80)
+    }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [page, live, draftFilter, development.byId])
+  // 26-Z §6.1 — the list / board choice, the find box and the Drafting filter are kept on this device, per idea, and come back on a reload
+  const orgStore = useMemo(() => safeStore(() => (typeof window === 'undefined' ? null : window.localStorage)), [])
+  const orgRead = useRef(false)
+  useEffect(() => {
+    try {
+      const v = JSON.parse(orgStore.get(STORE_KEY.organising(ideaId)) ?? 'null') as { view?: View; find?: string; draftFilter?: 'all' | DraftingStage } | null
+      if (v?.view) setView(v.view)
+      if (typeof v?.find === 'string') setFind(v.find)
+      // a link to a record (#N) wins over a remembered filter that might hide it
+      if (v?.draftFilter && !/^#\d+$/.test(window.location.hash)) setDraftFilter(v.draftFilter)
+    } catch { /* unreadable: start as the page always has */ }
+    orgRead.current = true
+  }, [ideaId, orgStore])
+  useEffect(() => {
+    if (!orgRead.current) return
+    orgStore.set(STORE_KEY.organising(ideaId), JSON.stringify({ view: viewAsked, find, draftFilter }))
+  }, [ideaId, orgStore, viewAsked, find, draftFilter])
   const allHeadingsHidden = headings.length > 0 && headings.every((h) => h.hidden)
 
   const toggleOpen = (id: string) => setOpen((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })

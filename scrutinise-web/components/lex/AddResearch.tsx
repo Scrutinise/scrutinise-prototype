@@ -33,6 +33,7 @@
 //   "document" or "pasted text", so the Sources list can tell a filed file from pasted text.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useDeviceDraft, DraftOffer } from './DeviceDraft'
 import {
   STANCES, STANCE_LABEL, STANCE_GLYPH, BEARS_ON_LABEL, type Stance, type BearsOnRef, type NotebookRequest,
 } from '@/lib/lex/research-notebook-schema'
@@ -201,6 +202,24 @@ export default function AddResearch({
     } catch (e) { setError(`Saving the research could not reach the server (${e instanceof Error ? e.message : 'network error'}). Nothing was saved.`) } finally { setSaving(false) }
   }
 
+  // 26-Z §6.2 — what is typed into Add research (not a fetched or read text, which can be fetched again) is kept on this device until it is
+  // saved; after a reload the button offers it back. A save that worked empties every field (reset), which drops it.
+  const typedFields = { url, title, quote, location, comment, author, publishedAt, tags }
+  const typedJson = Object.values(typedFields).some((v) => v.trim()) && !(initial && url === (initial.url ?? '') && title === (initial.title ?? '') && quote === (initial.text ?? '') && !comment.trim()) ? JSON.stringify(typedFields) : ''
+  const kept = useDeviceDraft(ideaId, 'research.add', typedJson)
+  const restoreResearch = () => {
+    const t = kept.take()
+    if (!t) return
+    try {
+      const v = JSON.parse(t) as Partial<typeof typedFields>
+      setUrl(v.url ?? ''); setTitle(v.title ?? ''); setQuote(v.quote ?? ''); setLocation(v.location ?? ''); setComment(v.comment ?? ''); setAuthor(v.author ?? ''); setPublishedAt(v.publishedAt ?? ''); setTags(v.tags ?? '')
+      if (v.quote) setShowQuote(true)
+      if (v.comment) setShowComment(true)
+      setOpen(true)
+    } catch { kept.discard() }
+  }
+  const keptOffer = <DraftOffer offer={kept.offer} onRestore={restoreResearch} onDiscard={kept.discard} preview={(o) => { try { const v = JSON.parse(o) as Record<string, string>; return [v.title, v.quote, v.comment, v.url].find((x) => x?.trim()) ?? '' } catch { return '' } }} />
+
   const trigger = (
     <button
       type="button"
@@ -216,12 +235,13 @@ export default function AddResearch({
     </button>
   )
 
-  if (!open) return <div className="mb-2">{trigger}{saved && <SavedLine s={saved} />}</div>
+  if (!open) return <div className="mb-2">{trigger}{saved && <SavedLine s={saved} />}{keptOffer}</div>
 
   // 26-S2 sec 9d (decision 172) - THE FIELDS, IN THIS ORDER: a file, an address or text -> the source's name -> the quote (optional) -> the comment
   // (optional) -> "I may share this" (never defaulted). ONE Save, at the foot. Stance, tags, bears-on and "mine only" are folded under "More".
   const form = (
     <div className="space-y-3 text-sm" role="group" aria-label="Add research">
+      {keptOffer}
       {error && <p role="alert" className="text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">⚠ {error}</p>}
 
       <fieldset className="space-y-2">

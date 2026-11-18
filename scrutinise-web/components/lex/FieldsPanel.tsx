@@ -1,6 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useDeviceDraft, DraftOffer } from './DeviceDraft'
 import {
   fieldDef,
   type CanonicalState, type CanonicalField, type CanonicalCause, type CauseClassification,
@@ -1632,10 +1633,14 @@ function ResizeHandle({ height, setHeight, min = 80, label }: { height: number; 
  * 285 (28 Oct) — the owner's text is SET OUT (headings, paragraphs, lists, tables: the chat's own renderer), in a box with a drag handle,
  * with its own "Edit the action details" beside it. That edit changes the owner's text only; the quoted parts below are kept as stored.
  */
-function DetailBox({ detail, busy = false, onSave }: { detail: string | null | undefined; busy?: boolean; onSave?: (commentary: string | null) => void }) {
+function DetailBox({ detail, busy = false, onSave, draftKey }: { detail: string | null | undefined; busy?: boolean; onSave?: (commentary: string | null) => void; draftKey?: string }) {
   const { text, parts } = detailParts(plainFoldHeader(detail))
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(text)
+  // 26-Z §6.2 — "Edit the action details": kept on this device until the box matches the saved details again (a save that worked, or Cancel)
+  const draftIdea = useContext(IdeaIdContext)
+  // ⚠ only while the editor is open: `draft` is not re-synced when the details change elsewhere (Lex), so a closed box is never a draft
+  const detailDraft = useDeviceDraft(draftKey ? draftIdea : null, `action.${draftKey}.details`, editing ? draft : text, text)
   const [height, setHeight] = useState(240)
   const write = () => { setDraft(text); setEditing(true) }
   const editBtn = 'text-[11px] font-medium underline text-zinc-700 disabled:opacity-40 shrink-0'
@@ -1644,6 +1649,7 @@ function DetailBox({ detail, busy = false, onSave }: { detail: string | null | u
     // mount; React leaves it alone after that, so the user can still close it. The summary carries the state the band shows.
     <details open className="rounded border border-zinc-200 bg-zinc-50 p-1.5 scroll-mt-10" data-commentary data-record-section="detail">
       <summary className="cursor-pointer text-[11px] text-zinc-700"><span className="font-semibold">{DETAIL_LABEL}</span> · <span data-section-state>{detailState(detail)}</span></summary>
+      {!editing && <DraftOffer offer={detailDraft.offer} onRestore={() => { const t = detailDraft.take(); if (t != null) { setDraft(t); setEditing(true) } }} onDiscard={detailDraft.discard} />}
       {editing ? (
         <div className="mt-1 space-y-1" data-explanation-editor>
           <label className="block text-[11px] text-zinc-600"><span data-label="commentary">{COMMENTARY_LABEL}</span>
@@ -1703,6 +1709,10 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
   const [refusal, setRefusal] = useState<string | null>(null)
   useEffect(() => { setD(action) }, [action])
   const patch = (p: Partial<ActionDraft>) => { setRefusal(null); setD((x) => ({ ...x, ...p })) }
+  // 26-Z §6.2 — "Edit the action": the statement being typed is kept on this device. It is dropped once the box matches the saved
+  // statement again — after a save that worked (the action re-reads) or a Cancel — and kept if the save was refused.
+  const draftIdea = useContext(IdeaIdContext)
+  const statementDraft = useDeviceDraft(draftIdea, `action.${action.id}.statement`, d.practicalStep, action.practicalStep)
   const save = () => {
     if (step === 1 && d.practicalStep.length > LIMITS.actionStatement) {
       setRefusal(`Not saved: the statement is ${d.practicalStep.length.toLocaleString('en-GB')} characters; the limit is ${LIMITS.actionStatement.toLocaleString('en-GB')}. Move the extra into the Action details or shorten.`)
@@ -1765,9 +1775,10 @@ export function ActionCard({ action, benchmarks, costLines, busy, api, costLines
             <p className="flex-1 min-w-0 text-sm text-zinc-800 whitespace-pre-wrap" data-statement>{action.practicalStep}</p>
             <button type="button" disabled={busy} onClick={() => setEditing(true)} className="text-[11px] font-medium underline text-zinc-700 disabled:opacity-40 shrink-0" data-edit-action>{RECORD_UI.editAction}</button>
           </div>
+          <DraftOffer offer={statementDraft.offer} onRestore={() => { const t = statementDraft.take(); if (t != null) { patch({ practicalStep: t }); setEditing(true) } }} onDiscard={statementDraft.discard} />
           {between}
           {/* 26-V1b 257 — "Detail" (the column keeps its name); 2d — the quoted parts collapse to one line each, with their source */}
-          <DetailBox detail={action.commentary} busy={busy} onSave={(commentary) => api.update(action.id, { commentary })} />
+          <DetailBox detail={action.commentary} busy={busy} onSave={(commentary) => api.update(action.id, { commentary })} draftKey={action.id} />
         </div>
       )}
       {step === 2 && (

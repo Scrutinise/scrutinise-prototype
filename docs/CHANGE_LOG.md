@@ -1,5 +1,40 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-18 12:05 UTC - LEX 26-Z Z1 (BRIEF_26Z §2–§5, §6.1–6.2; decisions 344–348): Where am I?, one panel at a time on a phone and in Focus view, never losing your place
+
+**Brief:** `docs/BRIEF_26Z.md`; CCh-Lex 17 Nov (1) (own worktree `C:\lex26z`, branch `wip/26z`, while 26-Y runs in the main tree). Full write-up:
+`docs/LEX_26Z_REPORT.md` §0 (sizing: Z1 here, Z2 = §6.3 offline + §6.4 installable) and § Z1.
+
+- **Below 768 px, and on a desktop in Focus view:** one panel at a time, and the page scrolls (no fixed-height column boxes). The top bar
+  holds "Where am I?" and the address "S2 · C5 · P6" (spelled out the first time, then on hover or long press) and hides on scroll down.
+  The bottom bar holds "Where am I?" only. Lex's panel keeps its typing box above the bottom bar and the keyboard (visual viewport).
+- **The Where am I? menu** (`components/lex/WhereAmIMenu.tsx`): Stage → Chapter → Panel from the top, the reverse from the bottom. Drag
+  over a level to open it, lift on an item to go, or tap then tap. The seven panel blocks are labelled "Panel N · name · place on
+  desktop". The three sentences show once, with "Got it" and "?". The page behind is locked while it is open.
+- **Gestures:** left = back to the last panel chosen; right = forward, else Where am I?. Never inside a sideways-scrolling box, a text
+  box, a drag handle or a dialog. Keys in Focus view: ← → W Esc.
+- **Panel 5 → 6:** chapters, and under Organising and Drafting the actions by number. #N opens in panel 6, in place when already on
+  Drafting (`ActionsWorkspace` now opens a record on `hashchange`).
+- **The address is the URL** (`panel=N` written in with replaceState; `lib/lex/where-am-i.ts` derives it, pure).
+- **Focus view · Full view** toggle in the desktop header, remembered per browser. Full view renders the same elements as before: each
+  column's content is now a named node (`workNode`, `chatNode`, `notesNode`, `middleNode`, `rightNode`) placed by both layouts.
+- **§6.1:** position per idea on the device (URL, panel, scroll per panel, the Organising list/board, find box and Drafting filter). A
+  bare link to the idea returns there ("Back where you were"; `restoreOnArrival`).
+- **§6.2:** unsent text per idea and field (`components/lex/DeviceDraft.tsx`), offered back, never sent. Covers Lex's message, Edit the
+  action, Edit the action details, the Brief, comments and Add research.
+- **Labels:** `PANEL_WORD`, `PANEL_PLACE_WORD`, `WHERE_SENTENCES`, `WHERE_UI`, `DRAFT_RESTORE_UI` in `screen-labels.ts`; 34 field-guide
+  entries.
+- **Found and fixed:** swiping the menu closed scrolled the page under it; a restore's own scroll hid the top bar.
+- ⚠ **Measured, not passed:** in headless Chromium, the first tap after closing the sheet by a swipe is sometimes dropped (2–3 of 5). It
+  cannot be told from a synthetic-touch effect here; Charlie's phone is the check (report § Z1).
+
+**Checks:**
+- `check:lex-26z` (new): 131 ran, 131 passed, 7 controls, 0 dead, 2 not run (Full view in a browser — needs a signed-in session; the swipe-close tap rate — measured, for the phone); green three runs in a row. Three mutations each went red: the bottom order reversed; the sideways-box exclusion removed; the scroll
+  on back zeroed.
+- Regression, one at a time: 26x 110 · 26x2 75 · 26x3 62 · 26x3b 36 · 26w 66 · 26w-b 60 (the field guide covers every new label) · 26v 66 · 26v1b 81 · 26v2b 47 · 26v2d 62 · 26u 67 · 26p 126 · 26s2 215 · 26s2-browser 33 · prompt-examples 0 of 27 found · client-boundary clean · llm-guards 9 · costing-params 11. ⚠ 26s2-structure 106/107: the known "Retire heading" question from X3b (CCh), no file of it in this diff. ⚠ 26v1b's 264 went red once in the batch (an extra live scratch copy of the same owner, gone a minute later — another session's check running at the same time) and passed 81/81 run alone.
+- tsc (web) clean; the scripts program has the same 3 known `scripts/ingest/shared/*` errors as at X3b (packages a web-only install does
+  not carry), none in this diff; `check-clean-build --fast` PASS.
+
 ## 2026-11-12 02:39 UTC - LEX 26-X X3b (BRIEF_26X §6a.6, §7; decisions 315, 300): "Who delivers and who resists" on the Deepening, open whatever the lock says; "document" → "draft" on screen
 
 **Brief:** CCh-Lex 7 Nov (2) "X3: go, as split"; CCh-Lex 12 Nov (1) "finish X3b". Full write-up: `docs/LEX_26X_REPORT.md` § X3b.

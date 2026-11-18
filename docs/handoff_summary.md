@@ -1014,6 +1014,16 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-11-18 12:05 UTC (desktop, worktree `C:\lex26z`): 26-Z Z1 committed — Where am I?, one panel at a time below 768 px and in Focus view, never losing your place.**
+See CHANGE_LOG 2026-11-18 12:05 UTC and `docs/LEX_26Z_REPORT.md` (§0 sizing, § Z1). 26-Y ran in parallel in the main tree.
+- Z1 = §2–§5 + §6.1–6.2. **Z2 next** = §6.3 offline reading (service worker, cached view, queued writes) + §6.4 installable.
+- The address is the URL (`panel=N`); position and unsent text are on the device (`lex26z.*` keys), wrapped for blocked storage.
+- ⚠ Measured, not passed: the first tap after swiping the menu closed is sometimes dropped in headless Chromium. Charlie's phone settles it.
+- **For Charlie (§8):** on the phone — the two buttons; dragging through the menu from the top and the bottom; the panel blocks; swiping
+  back and forward; editing an action with the keyboard up; leaving and coming back. On a desktop: the Focus view · Full view toggle,
+  and that Full view looks exactly as before.
+- Inbox (decision 349): reports go to `C:\Code\inbox\to-cch\` as well.
+
 **▶ 2026-11-12 02:39 UTC (laptop): 26-X X3b committed, which closes X3. Section 6 "Who delivers and who resists" is on the Deepening and opens whatever the lock says; the §7 renames are in.**
 See CHANGE_LOG 2026-11-12 02:39 and `docs/LEX_26X_REPORT.md` § X3b.
 - Who/how/against moved from the action record to Deepening section 6. Renames: 4 labels + 9 moved into `DRAFTS_UI`; 26 component strings; 2 on the record; 5 in the pack;
