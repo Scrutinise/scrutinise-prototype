@@ -869,6 +869,26 @@ benefits"* carries a £ figure **65.5%** of the time and 25.9% carry labels with
 
 ---
 
+## INGEST THREAD — last updated 2026-11-18 23:44 UTC (CBA-1 EXECUTE, STOPPED)
+
+▼▼ **CBA-1 EXECUTE is half done on production and waiting on Charlie's option 1/2/3.** Report: **`docs/INGEST_CBA_1_EXECUTE_REPORT.md`**.
+- The 14 Nov writes were made by an unpushed session, inferred to be the laptop, and were verified 468/468:
+  - Pilot A, 468 rows, indexed, with both serves restarted;
+  - GMCA, 30 CostBenchmark rows.
+- §1: 324 stands; 327 waits on a CC-Search default filter.
+- §9: confirmed.
+- **Next session:** read `C:\Code\inbox\to-cc\` for Charlie's or CCh's answer first.
+  - **Option 1:** fetch `wip/ingest-cba1x` and build §3, §4 register, §5, §6, §8 on it.
+  - **Option 3:** build them from scratch.
+  - Either way:
+    - §3 is built around `pesa-ch5-function` in the stats DB.
+    - The §6 manifest uses keys `green-book:6.58`, `gb-discounting:3.8`, `gb-optimism-bias:3.8`, `green-book:table-1`, mapping key →
+      section id → text hash. The 468 rows are not re-keyed.
+    - The manifest's check asserts agreement with 26-Y's interim manifest.
+- ⚠ `write-pilot-a.ts --apply` refuses while the 14 Nov rows exist. That is deliberate.
+
+---
+
 ## INGEST THREAD — last updated 2026-10-20 08:13 UTC (INGEST_LEX_FIVE)
 
 *INGEST stream. Commits by explicit path only; the tree is shared.*

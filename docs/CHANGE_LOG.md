@@ -1,5 +1,30 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-18 23:44 UTC - INGEST CBA-1 EXECUTE (decisions 326–331): STOPPED at a Charlie decision; half already on production since 14 Nov, verified; nothing written
+
+**Brief:** `docs/BRIEF_INGEST_CBA_1_EXECUTE.md`. **Report:** `docs/INGEST_CBA_1_EXECUTE_REPORT.md`. Inbox QUESTION 11:08 UTC (CCh acked
+12:05; option 1/2/3 is Charlie's).
+- **Found:** §2 Pilot A and §4 GMCA were already written on 14 Nov by an unpushed session, inferred to be the laptop:
+  - 468 `govuk-core-docs` rows at 02:16 UTC;
+  - both indexes merged and both serves restarted at 03:19–03:20;
+  - 30 `m4-*` CostBenchmark rows at 02:30.
+  - No commit and no CHANGE_LOG entry exist for any of it.
+- **Verified read-only:**
+  - The PDF and HTML are the same October edition: paragraph openings 99.5%, table figures 69/69, paragraph endings 91.5%. The endings
+    miss is figure labels, and the floor was not moved.
+  - Today's split regenerates the reviewed read-back byte for byte.
+  - All 468 stored rows map one to one onto reviewed sections.
+- **§1:** 324 stands. There is no default `availability_status` filter in either serve, so 327 waits on CC-Search. The five retired rows
+  read 0 in every layer.
+- **§9:** confirmed. `STPR_SCHEDULE` is a per-year schedule (325).
+- **Not done:** §3 stats tables (build around `pesa-ch5-function`), the §4 register attribution, §5 NAO note, §6 manifest (key → id → text
+  hash, keys as CCh fixed them), §8 Table 1 table.
+- **Predictions:** none recorded, because no write was made.
+- **Committed:**
+  - `scripts/ingest/cba/write-pilot-a.ts` (check / verify-existing / readback; `--apply` refuses while the 14 Nov rows exist);
+  - two traces in `docs/ingest_traces/`;
+  - the brief and the report.
+
 ## 2026-11-18 17:29 UTC - LEX check fix (decision 333): 26s2-structure's "Retire heading" counts every action under the heading, any status
 
 **From:** CCh 18 Nov 17:10. Decision 333 (13 Nov): "Retire heading" clears the heading from every action under it, live or not. **The
