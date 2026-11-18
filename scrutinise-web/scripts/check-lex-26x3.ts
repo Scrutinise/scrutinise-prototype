@@ -35,7 +35,7 @@ import { parseRecord } from '../lib/lex/action-record'
 import { rowOf, type EffectRow } from '../lib/lex/action-documents-pure'
 import { guideEntries, normLabel } from '../lib/lex/field-guide'
 import { REVIEW_PASS_COUNT } from '../lib/lex/development'
-import DeepeningSections from '../components/lex/DeepeningSections'
+import DeepeningSections, { Costs } from '../components/lex/DeepeningSections'
 import { DigestPanel, type DigestState } from '../components/lex/ActionDigest'
 import ActionsWorkspace from '../components/lex/ActionsWorkspace'
 import * as PP from '../lib/lex/action-progress-pure'
@@ -197,13 +197,17 @@ function partC() {
   } as const
   const html = renderToStaticMarkup(React.createElement(DeepeningSections, { ideaId: 'idea-x', actions: [] as never, headings: [] as never, conditions: { items: [], proposals: [], source: null }, initial: ov as never }))
   const order = [...html.matchAll(/data-deepening-section="([a-z-]+)"/g)].map((m) => m[1])
-  ok('the sections render in the brief\'s order: collision · four models · review passes · coherence and gaps · costs', order.join() === 'collision,four-models,reviews,coherence,costs', order.join())
-  ok('…each headed by its label from screen-labels', [SL.DEEPENING_UI.collision, SL.DEEPENING_UI.fourModels, SL.DEEPENING_UI.reviews, SL.DEEPENING_UI.coherence, SL.DEEPENING_UI.costs].every((l) => textOf(html).includes(l)))
-  const t = textOf(html)
+  // ⚠ MOVED BY 26-Y (BRIEF_26Y §6): section 5 became "Costs and benefits" and left DeepeningSections for its own component, mounted by the page
+  //   beside section 6, because its roll-up must render while the Deepening is LOCKED. Its order and its table are asserted in check:lex-26y part 6;
+  //   here the four sections that stay, and the X3a table through the exported `Costs`, which section 5 still draws.
+  ok('the sections render in the brief\'s order: collision · four models · review passes · coherence and gaps (section 5 is 26-Y\'s own component)', order.join() === 'collision,four-models,reviews,coherence', order.join())
+  ok('…each headed by its label from screen-labels', [SL.DEEPENING_UI.collision, SL.DEEPENING_UI.fourModels, SL.DEEPENING_UI.reviews, SL.DEEPENING_UI.coherence].every((l) => textOf(html).includes(l)))
+  const t = textOf(html) + ' ' + textOf(renderToStaticMarkup(React.createElement(Costs, { c: ov.costs as never })))
   ok('collision: the report with its counts by part, its staleness in words, and the action that needs one', /D\.7\.2 #7 Seven — 3 lines of its own · 4 that depend on it · 5 for review · version 2 · ⚠ out of date: the law data has moved on/.test(t) && /Need a report, have none yet #8 Eight/.test(t), t.slice(t.indexOf('1 ·'), t.indexOf('1 ·') + 400))
   ok('reviews: the accepted draft with ◐ and "2 of N passes have read it", and the runner with its measured price', t.includes(`◐ 2 of ${REVIEW_PASS_COUNT} passes have read it`) && t.includes(`${SL.DEEPENING_UI.reviewAll} — about 12.5p`))
-  ok('costs: the table by heading and year, the undated line in its own column and counted, the rule said, and "cost–benefit analysis: not yet available"', /Heading One 2 lines £100 — — — — £9 \(1 line\)/.test(t) && t.includes(SL.DEEPENING_UI.undated) && /no recurrence is under/.test(t) && t.includes(SL.DEEPENING_UI.cbaNotYet), t.slice(t.indexOf('5 ·'), t.indexOf('5 ·') + 400))
-  control('a section left out would change the order', order.filter((x) => x !== 'reviews').join() === 'collision,four-models,reviews,coherence,costs')
+  // ⚠ MOVED BY 26-Y: "cost–benefit analysis: not yet available" is gone — the analysis is built (check:lex-26y part 6 asserts what replaces it)
+  ok('costs: the table by heading and year, the undated line in its own column and counted, the rule said', /Heading One 2 lines £100 — — — — £9 \(1 line\)/.test(t) && t.includes(SL.DEEPENING_UI.undated) && /no recurrence is under/.test(t), t.slice(t.indexOf('Heading'), t.indexOf('Heading') + 400))
+  control('a section left out would change the order', order.filter((x) => x !== 'reviews').join() === 'collision,four-models,reviews,coherence')
 
   // the digest panel
   const view: DP.DigestView = {

@@ -18,6 +18,14 @@
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { LIMITS } from '@/lib/lex/input-limits'
+import * as BEN from '@/lib/lex/cba/benefit-lines'
+import * as CLA from '@/lib/lex/cba/cost-line-appraisal'
+import * as CBA from '@/lib/lex/cba/engine'
+import * as CBS from '@/lib/lex/cba/summary-pure'
+import * as CBR from '@/lib/lex/cba/report'
+import * as CBSET from '@/lib/lex/cba/settings'
+import { NARRATIVE_PRICE } from '@/lib/lex/cba/prices'
+import { developmentState } from '@/lib/lex/development'
 import { computeCanonicalState } from '@/lib/lex/state'
 import { resolvePrefix, short } from './snapshot'
 import { signConfirm } from './confirm-token'
@@ -2468,10 +2476,171 @@ const proposeBriefTool: ToolDefinition = {
   },
 }
 
+// ── 26-Y (decisions 334–341) — benefit lines, a cost line's appraisal, the cost–benefit analysis, the appraisal period ──
+// Parity: every tool calls the writer the screen calls (lib/lex/cba/*). A benefit Lex writes is a PROPOSAL unless the owner dictated it —
+// and "dictated" is checked against the owner's own words this turn (saidByUser), never taken on Lex's say-so.
+const BenefitSource = z.object({
+  kind: z.enum(['REF', 'BENCHMARK', 'CITATION', 'OWNER']),
+  ref: z.number().int().positive().optional(), benchmarkId: z.string().max(100).optional(), citationKey: z.string().max(LIMITS.citationKey).optional(),
+  reason: z.string().max(LIMITS.benefitReason).optional().describe('OWNER only: the owner\'s own reason, in their words'),
+})
+const BenefitFields = {
+  label: z.string().min(3).max(LIMITS.benefitLabel), beneficiary: z.enum(['EXCHEQUER', 'DEPARTMENT', 'CITIZENS', 'BUSINESS', 'OTHER']), beneficiaryName: z.string().max(LIMITS.beneficiaryName).optional(),
+  measure: z.string().max(LIMITS.benefitMeasure).optional(), low: z.number().nonnegative().max(LIMITS.amountMax).optional(), high: z.number().nonnegative().max(LIMITS.amountMax).optional(),
+  priceYear: z.number().int().min(1900).max(2100).optional(), recurrence: z.enum(['ONE_OFF', 'PER_YEAR']).optional(), durationMonths: z.number().positive().max(1200).optional(),
+  isHealth: z.boolean().optional(), source: BenefitSource.optional(), notValuedWhy: z.string().max(LIMITS.benefitReason).optional(),
+}
+const benefitInputOf = (x: Record<string, unknown> & { source?: z.infer<typeof BenefitSource> }) => ({
+  label: x.label as string, beneficiary: x.beneficiary as 'CITIZENS', beneficiaryName: (x.beneficiaryName as string) ?? null, measure: (x.measure as string) ?? null,
+  low: (x.low as number) ?? null, high: (x.high as number) ?? null, priceYear: (x.priceYear as number) ?? null, recurrence: (x.recurrence as 'ONE_OFF') ?? null,
+  durationMonths: (x.durationMonths as number) ?? null, isHealth: !!x.isHealth, notValuedWhy: (x.notValuedWhy as string) ?? null,
+  sourceKind: x.source?.kind ?? null, sourceRef: x.source?.ref ?? null, benchmarkId: x.source?.benchmarkId ?? null, citationKey: x.source?.citationKey ?? null, ownerReason: x.source?.reason ?? null,
+})
+const LEX_VALUES_ONLY_FROM_HELD = 'Lex may value a benefit ONLY from a source it holds and names ([Ref: n] on this idea, a held unit-cost row, or a Green Book key); "the owner\'s estimate" is the owner\'s to give. Otherwise write it as not valued (notValuedWhy) and say what would value it.'
+async function benefitByLabel(ctx: ToolCtx, actionId: string, label: string) {
+  const all = await prisma.benefitLine.findMany({ where: { actionId }, select: { id: true, label: true, status: true } })
+  const hit = all.filter((b) => b.label.trim().toLowerCase() === label.trim().toLowerCase())
+  return { hit, all }
+}
+
+const addBenefitLineTool: ToolDefinition = {
+  name: 'add_benefit_line', category: 'draft', tier: 'free',
+  description: `The same as "+ Add a benefit" in an action's Costs section: what is gained, who gains (EXCHEQUER, DEPARTMENT, CITIZENS, BUSINESS, OTHER, optionally named), how it would be measured, and EITHER a value (low/high in whole pounds, price year, ONE_OFF or PER_YEAR, durationMonths) WITH its source, OR notValuedWhy. It lands as YOUR PROPOSAL beside the owner's lines unless the owner dictated it word for word this turn (dictated: true). ${LEX_VALUES_ONLY_FROM_HELD} A benefit with no source is stored as not valued and counts in no total.`,
+  schema: z.object({ action: z.number().int(), ...BenefitFields, dictated: z.boolean().optional(), why: z.string().max(600).optional().describe('why you propose it, for the owner') }),
+  describe: (i) => `Add the benefit “${clip((i as { label: string }).label, 80)}” to #${(i as { action: number }).action}`,
+  async run(ctx, x) {
+    const a = await oneAction(ctx, x.action); if (!a) return noAction(x.action)
+    const dictated = !!x.dictated && saidByUser(ctx, x.label)
+    if (!dictated && x.source?.kind === 'OWNER') return fail(LEX_VALUES_ONLY_FROM_HELD)
+    const r = await BEN.addBenefitLine(ctx.ideaId, a.id, benefitInputOf(x), { userId: ctx.userId, by: 'LEX', dictated, why: x.why ?? null })
+    if (!r.ok) return fail((r as { error: string }).error)
+    const d = (r as { data: { status: string; valuation: string; note: string | null; words: string } }).data
+    return { ok: true, data: { action: x.action, status: d.status, valuation: d.valuation, words: d.words, say: d.status === 'PROPOSED' ? `Proposed on #${x.action}, waiting for the owner: ${d.words}.${d.note ? ` ${d.note}` : ''}` : `Saved on #${x.action}: ${d.words}.${d.note ? ` ${d.note}` : ''}` }, ui: actionsPanel }
+  },
+}
+const setBenefitLineTool: ToolDefinition = {
+  name: 'set_benefit_line', category: 'draft', tier: 'free',
+  description: `The same as "Edit the benefit" on a benefit line: name the action and the line's label as shown, and give only what changes. A change you make to the owner's line is a PROPOSAL beside it (theirs is untouched) unless the owner dictated it this turn. ${LEX_VALUES_ONLY_FROM_HELD}`,
+  schema: z.object({ action: z.number().int(), line: z.string().min(1).max(LIMITS.benefitLabel), ...Object.fromEntries(Object.entries(BenefitFields).map(([k, v]) => [k, (v as z.ZodTypeAny).optional()])), dictated: z.boolean().optional(), why: z.string().max(600).optional() }),
+  describe: (i) => `Change the benefit “${clip((i as { line: string }).line, 80)}” on #${(i as { action: number }).action}`,
+  async run(ctx, x) {
+    const a = await oneAction(ctx, x.action); if (!a) return noAction(x.action)
+    const { hit, all } = await benefitByLabel(ctx, a.id, x.line as string)
+    if (hit.length !== 1) return fail(hit.length ? `#${x.action} has ${hit.length} benefit lines called “${x.line}”.` : `#${x.action} has no benefit line called “${x.line}”. Its lines: ${all.map((b) => `“${b.label}”`).join(', ') || 'none'}.`)
+    const dictated = !!x.dictated && saidByUser(ctx, String(x.label ?? x.line))
+    const src = x.source as z.infer<typeof BenefitSource> | undefined
+    if (!dictated && src?.kind === 'OWNER') return fail(LEX_VALUES_ONLY_FROM_HELD)
+    const patch = Object.fromEntries(Object.entries(benefitInputOf({ ...x, label: x.label ?? x.line } as never)).filter(([k]) => k === 'label' ? x.label !== undefined : k.startsWith('source') || ['sourceRef', 'benchmarkId', 'citationKey', 'ownerReason'].includes(k) ? x.source !== undefined : (x as Record<string, unknown>)[k] !== undefined))
+    const r = await BEN.setBenefitLine(ctx.ideaId, hit[0].id, patch, { userId: ctx.userId, by: 'LEX', dictated, why: (x.why as string) ?? null })
+    if (!r.ok) return fail((r as { error: string }).error)
+    const d = (r as { data: { note: string | null; words: string } }).data
+    return { ok: true, data: { action: x.action, words: d.words, say: `${d.note ?? 'Saved.'} ${d.words}` }, ui: actionsPanel }
+  },
+}
+const answerBenefitLineTool: ToolDefinition = {
+  name: 'answer_benefit_line', category: 'change', tier: 'ask',
+  description: `The owner's buttons on a benefit line: op "accept" or "set_aside" (Lex's proposal), "remove" or "restore" (a line; nothing is deleted — a removed line is kept and can be restored). Name the action and the line's label as shown. ${OWNER_ONLY}`,
+  schema: z.object({ action: z.number().int(), line: z.string().min(1).max(LIMITS.benefitLabel), op: z.enum(['accept', 'set_aside', 'remove', 'restore']) }),
+  describe: (i) => { const x = i as { action: number; line: string; op: string }; return `${x.op === 'set_aside' ? 'Set aside' : x.op[0].toUpperCase() + x.op.slice(1)} the benefit “${clip(x.line, 80)}” on #${x.action}` },
+  async run(ctx, x) {
+    const a = await oneAction(ctx, x.action); if (!a) return noAction(x.action)
+    const { hit, all } = await benefitByLabel(ctx, a.id, x.line)
+    const want = x.op === 'accept' || x.op === 'set_aside' ? ['PROPOSED'] : x.op === 'remove' ? ['ACCEPTED'] : ['REMOVED', 'SET_ASIDE']
+    const pick = hit.filter((h) => want.includes(h.status))
+    if (pick.length !== 1) return fail(pick.length ? `#${x.action} has ${pick.length} such lines called “${x.line}”.` : `#${x.action} has no ${want.join(' or ').toLowerCase().replace('_', ' ')} benefit line called “${x.line}”. Its lines: ${all.map((b) => `“${b.label}” (${b.status.toLowerCase()})`).join(', ') || 'none'}.`)
+    const r = await BEN.changeBenefitStatus(ctx.ideaId, pick[0].id, x.op, { userId: ctx.userId, by: 'OWNER' })
+    if (!r.ok) return fail((r as { error: string }).error)
+    return { ok: true, data: { action: x.action, line: x.line, status: (r as { data: { status: string } }).data.status }, ui: actionsPanel }
+  },
+}
+const setCostLineAppraisalTool: ToolDefinition = {
+  name: 'set_cost_line_appraisal', category: 'draft', tier: 'free',
+  description: 'What a cost line carries for the cost–benefit analysis, as under "For the cost–benefit analysis": who pays (payer), a Green Book citation key (refused unless held, with the nearest keys), a STAFF line\'s employer on-cost (yours is a PROPOSAL and must name a source you hold: [Ref: n], benchmark:<id>, or a key such as green-book:6.58 — without one the line stays "excludes employer costs"), and a CAPITAL line\'s Table 1 project type. You may not lower an optimism-bias rate: that is the owner\'s, with a reason. Name the action and the cost line\'s label.',
+  schema: z.object({
+    action: z.number().int(), line: z.string().min(1).max(300),
+    payer: z.object({ kind: z.enum(['EXCHEQUER', 'DEPARTMENT', 'CITIZENS', 'BUSINESS', 'OTHER']), name: z.string().max(LIMITS.beneficiaryName).optional() }).optional(),
+    citationKey: z.string().max(LIMITS.citationKey).optional(),
+    onCost: z.object({ rate: z.number().min(0).max(1), source: z.string().min(3).max(LIMITS.appraisalSource) }).optional(),
+    obType: z.enum(['standard-buildings', 'non-standard-buildings', 'standard-civil', 'non-standard-civil', 'equipment-and-development']).optional(),
+  }),
+  describe: (i) => `Set what “${clip((i as { line: string }).line, 80)}” on #${(i as { action: number }).action} carries for the cost–benefit analysis`,
+  async run(ctx, { action, line, ...patch }) {
+    const a = await oneAction(ctx, action); if (!a) return noAction(action)
+    const lines = await prisma.costLine.findMany({ where: { actionId: a.id }, select: { id: true, label: true } })
+    const hit = lines.filter((l) => l.label.trim().toLowerCase() === line.trim().toLowerCase())
+    if (hit.length !== 1) return fail(hit.length ? `#${action} has ${hit.length} cost lines called “${line}”.` : `#${action} has no cost line called “${line}”. Its lines: ${lines.map((l) => `“${l.label}”`).join(', ') || 'none'}.`)
+    const r = await CLA.setCostLineAppraisal(ctx.ideaId, hit[0].id, patch, { userId: ctx.userId, by: 'LEX' })
+    if (!r.ok) return fail((r as { error: string }).error)
+    return { ok: true, data: { action, line, saved: (r as { data: { words: string } }).data.words }, ui: actionsPanel }
+  },
+}
+const readCbaSummaryTool: ToolDefinition = {
+  name: 'read_cba_summary', category: 'see', tier: 'free',
+  description: 'The cost–benefit analysis as it stands, computed from the lines with no model (free): the period and price year, NPV and BCR (or "benefits not valued — no BCR"), the present values, every Gap, the figures with their trace ids, and the report\'s versions with their stale counts. Read this before saying anything about what the proposal costs or delivers; quote its figures and trace ids, never your own. Pass action to read one action\'s lines alone.',
+  schema: z.object({ action: z.number().int().optional() }),
+  async run(ctx, { action }) {
+    const a = action != null ? await oneAction(ctx, action) : null
+    if (action != null && !a) return noAction(action)
+    const run = await CBA.runCba(ctx.ideaId, a ? { actionId: a.id } : {})
+    if (!run) return fail('the idea was not found.')
+    const s = CBS.cbaSummary(run.result)
+    const status = a ? null : await CBR.cbaReportStatus(ctx.ideaId)
+    return { ok: true, data: { scope: a ? `#${action} alone` : 'every live action', ...s, versions: status?.versions ?? undefined, narrativePrice: status?.price ?? undefined, ia: status?.ia.reason ?? undefined } }
+  },
+}
+const explainCbaFigureTool: ToolDefinition = {
+  name: 'explain_cba_figure', category: 'see', tier: 'free',
+  description: 'Where one figure of the cost–benefit analysis comes from, by its trace id (from read_cba_summary, e.g. "npv", "pv-costs", "y3.costs", "sens:costs+20.npv", "line:<id>"): its value, the lines it sums, the deflator rows, the schedule years, any Table 1 row, and how it is computed. Free.',
+  schema: z.object({ id: z.string().min(1).max(200), action: z.number().int().optional() }),
+  async run(ctx, { id, action }) {
+    const a = action != null ? await oneAction(ctx, action) : null
+    const run = await CBA.runCba(ctx.ideaId, a ? { actionId: a.id } : {})
+    if (!run || !run.result.ok) return fail(run ? (run.result as { error: string }).error : 'the idea was not found.')
+    const t = (run.result as { trace: Record<string, { id: string; label: string; value: string; lines: string[]; deflatorYears: number[]; scheduleYears: number[]; tableRows: string[]; how: string }> }).trace[id]
+    if (!t) return fail(`there is no figure "${id}". Read read_cba_summary for the figures and their ids.`)
+    const lines = (run.result as { lines: Array<{ id: string; actionNumber: number | null; label: string; side: string }> }).lines.filter((l) => t.lines.includes(l.id)).map((l) => `${l.side} line #${l.actionNumber ?? '?'} “${l.label}”`)
+    return { ok: true, data: { ...t, lines } }
+  },
+}
+const generateCbaReportTool: ToolDefinition = {
+  name: 'generate_cba_report', category: 'run', tier: 'ask',
+  description: `The same as "Generate the Cost–benefit report" on the Deepening, section 5: a new version (earlier ones are kept), Word and PDF. Everything is computed for nothing except your two-paragraph narrative, at its measured price; narrative: false makes the free version. It opens only once the Deepening opens. ${OWNER_ONLY}`,
+  schema: z.object({ narrative: z.boolean().default(true) }),
+  describe: (i) => ((i as { narrative?: boolean }).narrative === false ? 'Generate the Cost–benefit report without the narrative (free)' : 'Generate the Cost–benefit report'),
+  async price(_ctx, { narrative }) {
+    if (narrative === false) return { pence: 0, source: 'free: no model call' }
+    return NARRATIVE_PRICE.pence != null ? { pence: NARRATIVE_PRICE.pence, source: `measured: ${NARRATIVE_PRICE.note}` } : null
+  },
+  async run(ctx, { narrative }) {
+    const lock = await developmentState(ctx.ideaId)
+    if (!lock.deepeningOpen) return fail(`the Cost–benefit report is generated once the Deepening opens; ${lock.counts.toGo} action${lock.counts.toGo === 1 ? ' is' : 's are'} still to go. Its figures can be read now with read_cba_summary.`)
+    const r = await CBR.generateCbaReport(ctx.ideaId, ctx.userId, { narrative })
+    if (!r.ok) return fail((r as { error: string }).error)
+    const d = r as { version: number; pence: number | null; narrativeNote: string | null }
+    return { ok: true, data: { version: d.version, pence: d.pence, say: `Version ${d.version} of the Cost–benefit report is made${d.pence != null ? ` (the narrative cost ${d.pence.toFixed(1)}p)` : ''}. It is in Output Reports and on the Deepening, section 5.${d.narrativeNote ? ` ${d.narrativeNote}` : ''}` } }
+  },
+}
+const setAppraisalPeriodTool: ToolDefinition = {
+  name: 'set_appraisal_period', category: 'change', tier: 'ask',
+  description: `The idea's appraisal settings, as on the Overview: years (1–60; the Green Book's usual for policy is 10), startYear and priceYear (financial years by their first calendar year, so 2026 = 2026-27). null puts one back to its default. The start year may not be before the price year. ${OWNER_ONLY}`,
+  schema: z.object({ years: z.number().int().nullable().optional(), startYear: z.number().int().nullable().optional(), priceYear: z.number().int().nullable().optional() }),
+  describe: (i) => { const x = i as { years?: number | null; startYear?: number | null; priceYear?: number | null }; return `Set the appraisal: ${[x.years !== undefined ? `${x.years ?? 'default'} years` : '', x.startYear !== undefined ? `from ${x.startYear ?? 'default'}` : '', x.priceYear !== undefined ? `in ${x.priceYear ?? 'default'} prices` : ''].filter(Boolean).join(', ')}` },
+  async run(ctx, patch) {
+    const idea = await prisma.idea.findUnique({ where: { id: ctx.ideaId }, select: { creatorId: true } })
+    if (idea?.creatorId !== ctx.userId) return fail('only the idea\'s owner sets the appraisal period and price year.')
+    const r = await CBSET.setAppraisalSettings(ctx.ideaId, patch, ctx.userId)
+    if (!r.ok) return fail((r as { error: string }).error)
+    return { ok: true, data: { saved: (r as { data: { words: string } }).data.words } }
+  },
+}
+export const CBA_TOOLS: ToolDefinition[] = [addBenefitLineTool, setBenefitLineTool, answerBenefitLineTool, setCostLineAppraisalTool, readCbaSummaryTool, explainCbaFigureTool, generateCbaReportTool, setAppraisalPeriodTool]
+
 export const DOCUMENT_TOOLS: ToolDefinition[] = [listDocumentsTool, readDocumentTool, proposeDocumentText, draftDocumentTool, redraftDocumentTool, useProposalTool, acceptDocumentTool, setAsideProposalTool, reviewDocumentTool, generateDocumentTool, readBriefTool, proposeBriefTool]
 
 export const MODEL_TOOLS: ToolDefinition[] = [
   ...DOCUMENT_TOOLS, ...INVENTORY_TOOLS,
+  // 26-Y — benefit lines, a cost line's appraisal, the cost–benefit analysis, the appraisal period
+  ...CBA_TOOLS,
   readField, listCandidates, listActionsTool, listSources, readSource, listChallenges, readReplyTool, searchConversationTool, listNotes,
   searchCorpus, searchWeb, searchMyDocuments, statuteEffects, statuteOnward, readSectionTool,
   fileUrl, fileText,

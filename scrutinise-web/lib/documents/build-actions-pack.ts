@@ -90,9 +90,16 @@ function costBlocks(label: string, a: PackAction, sa: SnapshotAction | undefined
     runs.push([{ text: l.label, bold: true }, { text: `${amount ? ` — ${amount}` : ''}${l.recurrence === 'ONE_OFF' ? ' one-off' : l.recurrence === 'PER_YEAR' ? ' per year' : ''}` }, { text: l.basis ? ` (${l.basis})` : ' (no basis stated)', italic: !l.basis }, ...(l.fromNumber != null ? [{ text: ` — from part #${l.fromNumber}`, italic: true }] : [])])
   }
   if (sa.noCostReason) runs.push([{ text: 'No cost, because: ', bold: true }, { text: sa.noCostReason }])
-  if (!runs.length) return [numbered(label, [{ text: `Cost: ${NOT_ANSWERED}`, italic: true }])]
-  out.push(numbered(label, [{ text: 'Cost', bold: true }]))
-  out.push({ kind: 'bullets', items: runs })
+  if (!runs.length) out.push(numbered(label, [{ text: `Cost: ${NOT_ANSWERED}`, italic: true }]))
+  else {
+    out.push(numbered(label, [{ text: 'Cost', bold: true }]))
+    out.push({ kind: 'bullets', items: runs })
+  }
+  // 26-Y §2c (334) — Benefits after Costs, each "valued at … from <source>" or "not valued (why)"; a not-valued line is never a zero
+  if (sa.benefitLines?.length) {
+    out.push(numbered(`${label}b`, [{ text: 'Benefits', bold: true }]))
+    out.push({ kind: 'bullets', items: sa.benefitLines.map((b): Run[] => [{ text: b.words, italic: b.valuation !== 'VALUED' }]) })
+  }
   void a
   return out
 }

@@ -1,5 +1,58 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-18 17:01 UTC - LEX 26-Y (BRIEF_26Y Y1 + Y2; decisions 334–341, 342–343): cost–benefit analysis — benefit lines, the appraisal engine, the Cost–benefit report, Deepening section 5
+
+**Brief:** `docs/BRIEF_26Y.md`; CCh GO 18 Nov 12:05 (342, 343, the price-year default, key → id → hash); CCh 18 Nov 13:05 (order: 26-Z
+first, then this, rebased onto `474198e6`). Full write-up: `docs/LEX_26Y_REPORT.md`. Schema and SQL went first, in `0f95312d` (applied to
+Neon at 11:08 UTC after `whichdb`).
+
+- **Benefit lines per action** (`lib/lex/cba/benefit-lines*.ts`, `ActionCbaLines.tsx` under the cost lines, `/api/ideas/[id]/benefit-lines`):
+  valued or not valued. A figure with no source is kept and stored NOT_VALUED. Lex's edit is a proposal beside the owner's line. Every save
+  writes a FieldRevision.
+- **Per cost line:** payer, on-cost (owner's or Lex's, the latter only with a held source) and optimism-bias type. Only the owner lowers a
+  rate, with a reason.
+- **The engine** (`lib/lex/cba/engine-pure.ts`):
+  - discounting by Annex A's published 4 dp factors over the appraisal period (default 10 years; price year defaults to the latest deflator
+    year, "Price year 2025-26 (latest deflator release held)");
+  - PV costs and benefits, NPV and BCR (both null when nothing is valued: "benefits not valued — no BCR"), by heading, payer and beneficiary;
+  - five sensitivity rows;
+  - Gaps and Assumptions;
+  - **every figure traced**.
+- **342: optimism bias is a BAND beside the headline, never in it.** Capital lines are banded by Table 1, lower to upper. Running costs use
+  the outsourcing row (0–41%, "the nearest analogue in the guidance, not a rule"). The guidance's caveat is quoted verbatim.
+  **343:** `OPTIMISM_BIAS_TABLE_1` holds both bounds and is checked row by row against the PDF read-back.
+- **Citations against a manifest** derived from the held Green Book paragraphs. Each key resolves to a section id and a text hash, stored with
+  every report version.
+- **The Cost–benefit report** (`lib/documents/build-cba-report.ts`, `/api/ideas/[id]/cba`):
+  - versioned;
+  - summary, Gaps, Assumptions, tables, the band, the lines, a narrative that states no figure (guarded; 0.48p measured) and the trace annex;
+  - the IA draft says "not available: IA template not held".
+- **Deepening section 5 "Costs and benefits"** (`DeepeningCostsBenefits.tsx`): it renders locked or open; Generate only when open. Appraisal
+  settings are on the Overview tab. The costing companion is re-templated to the engine.
+- **Lex:** eight CBA tools, and the honesty rule `invented-figure` (a £ sum in cost talk must match the tool's, the record's or the user's
+  figures).
+- **Not held from Ingest yet, each shown as a Gap:** the manifest file, Civil Service Statistics, PESA, deflator dates, the IA template.
+
+**Checks:**
+- `check:lex-26y` (new): 129 ran, 129 passed, 5 controls (0 dead), 0 not run, after the rebase. Four mutations each went red:
+  - OB upper bound into the headline: 13 red;
+  - a no-source benefit into a total: 8 red;
+  - a figure-less staffing line as £0: 1 red;
+  - an unmanifested citation accepted: 7 red.
+
+  Its first post-rebase run failed one assertion of its own: a source regex wanted `\n` where the checkout had written CRLF. The regex was
+  fixed; the mount was correct throughout.
+- **Regression after the rebase, one at a time:** 26w-b 60 · 26v 66 · 26v1b 81 · 26v2b 47 · 26v2c 44 · 26v2d 62 · 26u 67 · 26t1 98 (4 not
+  run) · 26t2 72 (4 not run) · 26p 126 (Part B not run) · 26s2 215 (4 not run) · 26s2-browser 33 · 26s2-structure 107/107 on rerun.
+  - ⚠ 26s2-structure's first run was 106/107: "Retire heading" reported unassigned 25 against held 6. `deleteHeading` unassigns actions of
+    every status, while the check counts LIVE ones only. This is the known X3b question; no file of it is in this diff.
+- ⚠ **`check:lex-26z`: no complete run this afternoon.** `page.tap` timed out in headless Chromium at a different step each time (after 72,
+  85 and 94 passes). **The same failure occurs on unmodified `474198e6` in 26-Z's own worktree `C:\lex26z`**, so it is this machine's
+  browser now, not this diff. It was green three in a row at 12:05.
+- tsc (web) clean. `check-clean-build.sh` (full) **PASS** on this commit: 0 cross-package files, and a committed-only checkout with
+  `npm ci` compiles.
+- Push and the §20 live read-back are Charlie's (Main deploys).
+
 ## 2026-11-18 12:05 UTC - LEX 26-Z Z1 (BRIEF_26Z §2–§5, §6.1–6.2; decisions 344–348): Where am I?, one panel at a time on a phone and in Focus view, never losing your place
 
 **Brief:** `docs/BRIEF_26Z.md`; CCh-Lex 17 Nov (1) (own worktree `C:\lex26z`, branch `wip/26z`, while 26-Y runs in the main tree). Full write-up:

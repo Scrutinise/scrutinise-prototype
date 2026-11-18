@@ -26,6 +26,9 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import ReportAdditions from './ReportAdditions'
+import { CbaVersions } from './DeepeningCostsBenefits'
+import { CBA_UI } from '@/lib/lex/screen-labels'
+import type { CbaReportStatus } from '@/lib/lex/cba/report'
 
 interface ExportStatus {
   kind: string
@@ -287,10 +290,36 @@ export default function OutputsPanel({ ideaId }: { ideaId: string }) {
         </div>
       ))}
 
+      {/* 26-Y §6 (336, §5) — the Cost–benefit report's versions with their stale flags, and the IA draft, which waits for its template */}
+      <CbaOutputs ideaId={ideaId} />
+
       <p className="text-[11px] text-zinc-400">
         Both are built from the same record as the screen you are looking at, so what you download is
         what you have been reading.
       </p>
     </div>
+  )
+}
+
+/** 26-Y — the Cost–benefit report (generated on the Deepening, section 5) and the Impact Assessment draft (not available yet). */
+function CbaOutputs({ ideaId }: { ideaId: string }) {
+  const [status, setStatus] = useState<CbaReportStatus | null>(null)
+  useEffect(() => {
+    void fetch(`/api/ideas/${ideaId}/cba`).then((r) => (r.ok ? r.json() : null)).then((b) => setStatus(b?.status ?? null)).catch(() => {})
+  }, [ideaId])
+  if (!status) return null
+  return (
+    <>
+      <div className="rounded-xl border border-zinc-200 p-3" data-output-cba>
+        <p className="text-sm font-semibold text-zinc-900">{CBA_UI.report}</p>
+        <p className="text-xs text-zinc-600 mt-1">The costs and benefits of every live action over the appraisal period: a one-page summary, the Gaps first, the
+          assumptions, the tables, the sensitivity tests and a trace of every figure. Generated on the Deepening, section 5; every version is kept.</p>
+        <CbaVersions ideaId={ideaId} status={status} />
+      </div>
+      <div className="rounded-xl border border-zinc-200 p-3" data-output-ia>
+        <p className="text-sm font-semibold text-zinc-900">{CBA_UI.iaDraft}</p>
+        <p className="text-xs text-zinc-600 mt-1" data-ia-not-available>{status.ia.reason}.</p>
+      </div>
+    </>
   )
 }

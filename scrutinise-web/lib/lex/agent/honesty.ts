@@ -29,12 +29,46 @@ export interface ToolOutcome {
   pending?: boolean
   /** Per-item results for a tool that handles several (file_url): used to test "all three". */
   items?: Array<{ ok: boolean; label?: string }>
+  /** 26-Y §7 — every sum of money (whole pounds) a tool returned this turn: a cost line, a benefit line, a report figure, a trace. */
+  figures?: number[]
 }
 
 export interface Violation {
-  kind: 'unconfirmed-claim' | 'pending-claimed-done' | 'overstated-total' | 'unknown-control' | 'phantom-pending' | 'dnumber-as-authority' | 'bare-not-found'
+  kind: 'unconfirmed-claim' | 'pending-claimed-done' | 'overstated-total' | 'unknown-control' | 'phantom-pending' | 'dnumber-as-authority' | 'bare-not-found' | 'invented-figure'
   sentence: string
   detail: string
+}
+
+// ── 26-Y §7 — sums of money ─────────────────────────────────────────────────────────────────────
+const COST_TALK = /\b(?:cost|costs|costing|costed|spend|spending|budget|price|pay|pays|paid|saving|savings|benefit|benefits|worth|value|valued|npv|net present|present value|bcr|ratio|£)/i
+const ESTIMATE = /\bmy (?:own )?estimate\b/i
+const SUM = /£\s?(\d[\d,]*(?:\.\d+)?)\s*(million|billion|bn|m|k)?\b/gi
+/** Every sum in a sentence, in whole pounds ("£1.2m" → 1,200,000). */
+export function sumsIn(text: string): Array<{ text: string; pounds: number }> {
+  return [...text.matchAll(SUM)].map((m) => {
+    const n = Number(m[1].replace(/,/g, ''))
+    const k = (m[2] ?? '').toLowerCase()
+    const mult = k === 'billion' || k === 'bn' ? 1e9 : k === 'million' || k === 'm' ? 1e6 : k === 'k' ? 1e3 : 1
+    return { text: m[0].trim(), pounds: Math.round(n * mult) }
+  })
+}
+/** A held sum matches a stated one when they are equal to the pound, or the stated one is the held one ROUNDED (as "£1.2m" for 1,234,567). */
+export function heldMatches(held: ReadonlySet<number>, pounds: number): boolean {
+  if (held.has(pounds)) return true
+  for (const h of held) {
+    if (h === 0) continue
+    const mag = Math.pow(10, Math.max(0, Math.floor(Math.log10(Math.abs(h))) - 2))
+    if (Math.abs(Math.round(h / mag) * mag - pounds) <= mag / 2 && Math.abs(h - pounds) / Math.abs(h) < 0.05) return true
+  }
+  return false
+}
+/** Every sum in a tool's JSON result, for ToolOutcome.figures: numbers under figure-ish keys, and "£…" inside strings. */
+export function figuresInData(data: unknown, depth = 0): number[] {
+  if (depth > 6 || data == null) return []
+  if (typeof data === 'string') return sumsIn(data).map((x) => x.pounds)
+  if (Array.isArray(data)) return data.flatMap((d) => figuresInData(d, depth + 1))
+  if (typeof data === 'object') return Object.entries(data as Record<string, unknown>).flatMap(([k, v]) => (typeof v === 'number' && /^(low|high|value|amount|total|pence)$/i.test(k) ? [Math.round(v)] : figuresInData(v, depth + 1)))
+  return []
 }
 
 // ── sentence handling ─────────────────────────────────────────────────────────────────────────
@@ -176,6 +210,8 @@ export interface CheckInput {
   knownLabels: ReadonlySet<string>
   /** What the user said this turn: a control the USER named is allowed to be echoed back. */
   userMessage?: string
+  /** 26-Y §7 — sums already on the screen or in the record before this turn (the idea's cost and benefit lines, the latest report). */
+  knownFigures?: ReadonlySet<number>
 }
 
 export function checkReply(input: CheckInput): Violation[] {
@@ -230,6 +266,18 @@ export function checkReply(input: CheckInput): Violation[] {
         kind: 'unknown-control', sentence,
         detail: `names “${label}”, which is not a control on the controls source — name only controls you were given, or say you are not sure what it is called`,
       })
+    }
+  }
+
+  // 26-Y §7 — a sum of money in a reply about costs or benefits must be one the record or a tool this turn holds (a line, a table row, a
+  // report figure, a trace), or be labelled "my estimate" with a reason. The user's own figures may be echoed back.
+  const held = new Set<number>([...(input.knownFigures ?? []), ...outcomes.flatMap((o) => o.figures ?? []), ...sumsIn(input.userMessage ?? '').map((x) => x.pounds)])
+  for (const sentence of splitSentences(reply)) {
+    if (!COST_TALK.test(sentence) || ESTIMATE.test(sentence)) continue
+    for (const f of sumsIn(sentence)) {
+      if (heldMatches(held, f.pounds)) continue
+      violations.push({ kind: 'invented-figure', sentence, detail: `states ${f.text}, which is not on any cost or benefit line, table row or report figure you were given — quote only the figures read_cba_summary or explain_cba_figure returned (with their trace), or label it "my estimate" with the reason; otherwise say it is not costed yet` })
+      break
     }
   }
 

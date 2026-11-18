@@ -16,7 +16,7 @@ import {
   COMMON_UI, RECORD_UI, DOCUMENT_UI, DOCUMENT_TAB_WORD, INSTRUCTION_FIELD, INSTRUCTION_EDITOR, TOUCH_BLOCK, TREE_UI, TREE_FILTER_WORD,
   PROVISION_COLUMNS, PRECEDENT_COLUMNS, STATEMENT_LABEL, COMMENTARY_LABEL, FACET_WORD, WORKSPACE_UI, WORKSPACE_VIEW_WORD, NOTEBOOK_UI, shown,
   LIFECYCLE_STAGE_WORD, LIFECYCLE_UI, PROGRESS_WORD, CHECKLIST_WORD, PAGE_UI, DRAFTING_FILTER_WORD, DEEPENING_LOCK_UI,
-  ORGANISING_TOOLBAR_UI, ADD_ACTION_UI, BRIEF_UI, BRIEF_FIELD_WORD, TONE_WORD, DEEPENING_UI, DRAFTS_UI,
+  ORGANISING_TOOLBAR_UI, ADD_ACTION_UI, BRIEF_UI, BRIEF_FIELD_WORD, TONE_WORD, DEEPENING_UI, DRAFTS_UI, CBA_UI,
   PANEL_WORD, PANEL_PLACE_WORD, WHERE_SENTENCES, WHERE_UI, DRAFT_RESTORE_UI,
 } from './screen-labels'
 import { EXTENTS } from './action-draft-pure'
@@ -452,7 +452,7 @@ const DEEPENING_G: Record<keyof typeof DEEPENING_UI, GuideText> = {
   fourModels: { purpose: 'The four-model digest of the whole set, reading each action\'s accepted draft where one exists, otherwise its statement; the digest says which, per action.', fits: 'Heading digests stay on Organising. The price on the button is measured over drafts.', tool: none('a priced run started from the screen') },
   reviews: { purpose: 'The five review passes over every accepted draft: how many have read each one, and the price of the rest.', fits: 'The Risks view below lists every issue the passes raise, by draft.', tool: 'review_document (one draft at a time)' },
   coherence: { purpose: 'The gap check and the conditions × actions table, side by side.', fits: 'The gap check\'s suggestions are not actions until accepted; the table is the owner\'s own links.', tool: 'run_gap_check, conditions_coverage' },
-  costs: { purpose: 'The cost lines rolled up by heading and by year, years 1 to 5.', fits: 'A one-off line falls in year 1; a per-year line in each year of its duration (all five when no duration is given); a line with no recurrence is shown under "Not said", counted, never placed in a year.', tool: 'add_cost_line, set_action_costs' },
+  costs: { purpose: 'Costs and benefits: the cost lines rolled up by heading for years 1 to 5, the analysis (net present value, benefit–cost ratio or "benefits not valued — no BCR"), its Gaps, and Generate the Cost–benefit report.', fits: 'Section 5 of the Deepening. The roll-up shows whatever lines exist, read-only, even while the Deepening is locked; the report is generated once it opens. A one-off line falls in year 1; a per-year line in each year of its duration; a line with no recurrence is under "Not said", counted, never placed in a year.', tool: 'read_cba_summary, explain_cba_figure, generate_cba_report' },
   who: { purpose: 'Who delivers each action and who resists it: the seven answers per action (Who, Incentive now, What changes it, Skill, How, Against, What tells us it worked), the incentive map "By who", and how many actions rely on an implementer whose incentive is against with nothing to change it.', fits: 'On the Deepening page, section 6. It opens whatever the lock says, because it reads the actions, not the drafts. It moved here from each action\'s record (315).', tool: 'set_action_slot, propose_action_slots, answer_slot_proposal' },
   whoShowAll: { purpose: 'Lists every live action in "Who delivers and who resists".', fits: 'One of three filters on section 6 of the Deepening.', tool: 'list_actions' },
   whoShowNotSpecific: { purpose: 'Lists the actions not yet specific enough: Who or Against is unanswered.', fits: 'One of three filters on section 6 of the Deepening.', tool: 'get_action' },
@@ -460,11 +460,59 @@ const DEEPENING_G: Record<keyof typeof DEEPENING_UI, GuideText> = {
   reviewAll: { purpose: 'Runs the review passes that have not yet read each accepted draft, one draft after another.', fits: 'Asks first at the summed measured price; a pass that already read a version is not run again; each draft is saved as it finishes.', tool: 'review_document (one draft at a time)' },
   reviewGo: { purpose: 'Confirms "Review every accepted draft" at the price shown.', fits: 'As "Review every accepted draft".', tool: 'review_document' },
   readAgain: { purpose: 'Reads the Deepening\'s sections again from the record.', fits: 'Free; nothing is changed.', tool: none('a screen control') },
-  cbaNotYet: { purpose: 'Says the cost–benefit analysis is not built yet.', fits: 'It comes with its own brief (decision 314); it is not a gate.', tool: none('not yet built') },
   undated: { purpose: 'The column for cost lines that do not say whether they are one-off or per year.', fits: 'Counted and summed apart; never guessed into a year. Say the recurrence on the line to move it.', tool: 'add_cost_line' },
   noHeading: { purpose: 'The row for cost lines on actions not under a heading.', fits: 'As every heading row.', tool: 'set_action_costs' },
   total: { purpose: 'The total of every row.', fits: 'Uprated to the latest price year, as the cost summary.', tool: 'set_action_costs' },
   year: { purpose: 'A year of the five, from the start.', fits: 'One-off lines are in year 1.', tool: 'set_action_costs' },
+}
+
+// 26-Y (334–341) — benefit lines, a cost line's appraisal, section 5, the settings, the reports
+const CBA_G: Record<keyof typeof CBA_UI, GuideText> = {
+  benefits: { purpose: 'What the action is claimed to deliver, beside its costs: what is gained, who gains, how it would be measured, and its value with the value\'s source — or "not valued".', fits: 'In the record\'s Costs section, under the cost lines. A benefit with no source is stored as not valued and never enters a total. The Actions Pack prints Benefits after Costs.', limits: 'Up to 40 lines per action.', tool: 'add_benefit_line, set_benefit_line' },
+  addBenefit: { purpose: 'Adds a benefit line to the action.', fits: 'Every save is kept as a revision.', tool: 'add_benefit_line' },
+  whatGained: { purpose: 'What is gained, in a phrase.', fits: 'The line\'s name in the report.', limits: '300 characters.', tool: 'add_benefit_line' },
+  whoGains: { purpose: 'Who gains: the Exchequer, a department, citizens, business, or other.', fits: 'The report totals valued benefits by who gains.', tool: 'add_benefit_line' },
+  whoNamed: { purpose: 'Names who gains, where it is one body ("Cabinet Office").', fits: 'Optional.', limits: '120 characters.', tool: 'add_benefit_line' },
+  howMeasured: { purpose: 'How the benefit would be measured, whether or not it is valued.', fits: 'Printed with the line; a measure without a value is still worth stating.', limits: '600 characters.', tool: 'add_benefit_line' },
+  valuedAt: { purpose: 'The benefit\'s value: low and high, the price year, one-off or per year, and for how long.', fits: 'Counts only with a source. A single figure is read as a floor.', tool: 'set_benefit_line' },
+  notValued: { purpose: 'Marks the benefit as recorded but not valued.', fits: 'It is listed under Gaps in the report and in no total; with nothing valued there is no net present value and no BCR, never a zero.', tool: 'set_benefit_line' },
+  notValuedWhy: { purpose: 'Why the benefit is not valued, for example "no source measures this yet".', fits: 'Printed in the report\'s Gaps.', limits: '600 characters.', tool: 'set_benefit_line' },
+  source: { purpose: 'Where the value comes from.', fits: 'One of: a source on this idea ([Ref: n]), a held unit-cost row, a Green Book paragraph (a manifest key), or your own estimate with a reason.', tool: 'set_benefit_line' },
+  sourceRef: { purpose: 'A numbered source on this idea, as [Ref: n].', fits: 'The number must be in the idea\'s source list.', tool: 'set_benefit_line' },
+  sourceBenchmark: { purpose: 'A held unit-cost row (for example Greater Manchester\'s Unit Cost Database).', fits: 'Only rows the platform holds can be chosen.', tool: 'set_benefit_line' },
+  sourceCitation: { purpose: 'A paragraph of HM Treasury guidance, as a key such as green-book:8.58.', fits: 'Refused unless the platform holds that paragraph; the nearest held keys are offered.', limits: '60 characters.', tool: 'set_benefit_line' },
+  sourceOwner: { purpose: 'Your own estimate.', fits: 'Counts, with your reason, and is listed among the owner\'s assumptions in the report\'s Gaps.', tool: 'set_benefit_line' },
+  ownerReason: { purpose: 'The reason behind your own estimate.', fits: 'Printed beside the figure.', limits: '600 characters.', tool: 'set_benefit_line' },
+  healthEffect: { purpose: 'Marks a health effect, whose real value is uprated 2% a year before discounting (Green Book 8.58).', fits: 'It is discounted at the same rate as everything else; there is no separate health rate.', tool: 'set_benefit_line' },
+  editBenefit: { purpose: 'Opens the benefit line for editing.', fits: 'The old wording is kept as a revision.', tool: 'set_benefit_line' },
+  removeBenefit: { purpose: 'Takes the benefit line off the action.', fits: 'Nothing is deleted: it moves to "Removed and set aside" and can be restored.', tool: 'set_benefit_line (status)' },
+  restoreBenefit: { purpose: 'Puts a removed or set-aside benefit line back.', fits: 'It counts again if it is valued with a source.', tool: 'set_benefit_line (status)' },
+  removedBenefits: { purpose: 'The benefit lines removed, and Lex\'s proposals set aside.', fits: 'Kept, never deleted; each can be restored.', tool: 'list_actions' },
+  lexProposes: { purpose: 'A benefit line Lex proposes, waiting for your answer.', fits: 'It counts in nothing until you accept it. Lex may value a benefit only from a source it holds and names.', tool: 'add_benefit_line' },
+  forAppraisal: { purpose: 'What a cost line carries for the cost–benefit analysis beyond its figure: who pays, an employer on-cost, the optimism-bias project type, and a citation.', fits: 'Under each cost line in the Costs section.', tool: 'set_cost_line_appraisal' },
+  whoPays: { purpose: 'Who pays the cost: the Exchequer, a department, citizens, business, or other.', fits: 'The report totals costs by payer; a line that does not say is listed under Gaps.', tool: 'set_cost_line_appraisal' },
+  onCost: { purpose: 'An uplift on a staffing line for employer costs (National Insurance, pension), with its source.', fits: 'Without one the line reads "excludes employer costs" and is a floor. Lex may propose one only with a source it holds; it waits for you.', tool: 'set_cost_line_appraisal' },
+  onCostSource: { purpose: 'Where the on-cost rate comes from.', fits: 'Printed in the report\'s Assumptions.', limits: '300 characters.', tool: 'set_cost_line_appraisal' },
+  excludesEmployer: { purpose: 'Says a staffing line has no on-cost uplift, so it is a floor.', fits: 'Listed under Gaps in the report.', tool: 'set_cost_line_appraisal' },
+  obType: { purpose: 'A capital line\'s project type from Table 1 of the optimism-bias guidance.', fits: 'Optimism bias never changes the headline figures (342): the line is banded from that type\'s lower to its upper bound, in a range shown beside the headline. A running-cost line is banded by the outsourcing row, the nearest analogue, not a rule.', tool: 'set_cost_line_appraisal' },
+  obLower: { purpose: 'Lowers the upper end of a capital line\'s optimism-bias band below Table 1\'s upper bound.', fits: 'Owner only, with a reason; it changes the band, never the headline; listed among the owner\'s assumptions.', tool: none('the owner\'s alone') },
+  obLowerReason: { purpose: 'Why the rate is lower: which risks are managed.', fits: 'Printed beside the line in the report.', limits: '600 characters.', tool: none('the owner\'s alone') },
+  citationKey: { purpose: 'A paragraph of HM Treasury guidance the cost line relies on, as a key such as gb-discounting:3.8.', fits: 'Refused unless the platform holds that paragraph, with the nearest held keys offered. A paragraph number is never typed free-hand.', limits: '60 characters.', tool: 'set_cost_line_appraisal' },
+  summary: { purpose: 'The analysis in figures: net present value, benefit–cost ratio, present values of costs and of valued benefits.', fits: 'Computed from the lines and HM Treasury\'s tables with no model; free. Each figure has a trace.', tool: 'read_cba_summary, explain_cba_figure' },
+  npv: { purpose: 'Present value of valued benefits minus present value of costs, as a range.', fits: 'Not computed when no benefit is valued.', tool: 'explain_cba_figure' },
+  bcr: { purpose: 'Present value of valued benefits divided by present value of costs, as a range.', fits: '"benefits not valued — no BCR" when nothing is valued; never a zero.', tool: 'explain_cba_figure' },
+  gaps: { purpose: 'What the analysis does not cover: benefits not valued, lines with no duration or figure, the owner\'s own assumptions, floors, and what the platform does not hold.', fits: 'Printed before the totals in every report.', tool: 'read_cba_summary' },
+  generate: { purpose: 'Generates a new version of the Cost–benefit report, as Word and PDF.', fits: 'Free except Lex\'s narrative, whose price is shown; asks first. Opens with the Deepening. Earlier versions are kept.', tool: 'generate_cba_report' },
+  generateGo: { purpose: 'Confirms "Generate the Cost–benefit report" at the price shown.', fits: 'As Generate.', tool: 'generate_cba_report' },
+  generateFree: { purpose: 'Generates the report without Lex\'s narrative, for nothing.', fits: 'Every table, Gaps and the trace are the same.', tool: 'generate_cba_report (narrative: false)' },
+  versions: { purpose: 'Every version of the Cost–benefit report, with Word and PDF, and how many lines have changed since each.', fits: 'A version never changes; a new generation is a new version.', tool: 'read_cba_summary' },
+  settings: { purpose: 'The idea\'s appraisal period, start year and price year.', fits: 'On the Overview. The owner sets them; the default is 10 years from the current financial year, in its prices.', tool: 'set_appraisal_period' },
+  periodYears: { purpose: 'How many years the analysis covers.', fits: 'The Green Book\'s usual for policy is 10.', limits: '1 to 60 years.', tool: 'set_appraisal_period' },
+  startYear: { purpose: 'The first year of delivery, as a financial year.', fits: 'It may not be before the price year.', tool: 'set_appraisal_period' },
+  priceYear: { purpose: 'The year the figures are shown in, and the present-value base year.', fits: 'The deflator\'s range is shown beside it; a line in a year the deflator does not hold is not converted and says so.', tool: 'set_appraisal_period' },
+  useDefault: { purpose: 'Puts a setting back to its default.', fits: 'The default is recorded as the default, not as your choice.', tool: 'set_appraisal_period' },
+  report: { purpose: 'The Cost–benefit report: a summary, Gaps, Assumptions, the tables, sensitivity, optimism bias per line, Lex\'s narrative and the trace.', fits: 'An Output Report; generated from the Deepening, listed here with its versions.', tool: 'generate_cba_report' },
+  iaDraft: { purpose: 'An Impact Assessment summary sheet in the government\'s shape, from the same analysis.', fits: 'Not available until the platform holds the IA template.', tool: none('not built until the IA template is held') },
 }
 
 // 26-X X2 (309) — the Brief
@@ -571,6 +619,8 @@ export function guideEntries(): GuideEntry[] {
     ...fromTable('workspace', 'whereSentence', WHERE_SENTENCES, WHERE_SENTENCES_G),
     ...fromTable('workspace', 'where', WHERE_UI, WHERE_UI_G),
     ...fromTable('common', 'draftRestore', DRAFT_RESTORE_UI, DRAFT_RESTORE_G),
+    // 26-Y
+    ...fromTable('record', 'cba', CBA_UI, CBA_G),
   ]
 }
 

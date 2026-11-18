@@ -43,6 +43,7 @@ import { plainFoldHeader } from '@/lib/lex/action-resort-pure'
 import { readActionsPackData } from './actions-pack-read'
 import type { ActionsPackData } from './actions-pack-types'
 import { refIndex, urlKey } from '@/lib/lex/source-registry'
+import { benefitWords } from '@/lib/lex/cba/benefit-lines-pure'
 
 /**
  * The shape version. Stored snapshots outlive the code that wrote them: a version
@@ -176,6 +177,9 @@ export interface SnapshotCostLine {
   fromNumber?: number | null
 }
 
+/** 26-Y §2c (334) — an ACCEPTED benefit line, as the Actions Pack prints it (benefitWords: what, who, how measured, valued-at-from or not valued). */
+export interface SnapshotBenefitLine { id: string; words: string; valuation: string }
+
 export interface SnapshotAction {
   id: string
   practicalStep: string
@@ -198,6 +202,8 @@ export interface SnapshotAction {
   commentary?: string | null
   /** Own cost lines first, then the lines of the components folded into this mechanism (each carries `fromNumber`). */
   costLines: SnapshotCostLine[]
+  /** 26-Y — present ONLY when the action has accepted benefit lines, so an action without them hashes exactly as before (no document goes stale for it). */
+  benefitLines?: SnapshotBenefitLine[]
   source: string
   evidenceIds: string[]
   supported: boolean
@@ -744,6 +750,10 @@ export async function buildProposalSnapshot(
       moveStatus: o.moveStatus,
     }))
 
+  // 26-Y §2c — the accepted benefit lines (a proposal, a removed line or a set-aside one is not in a document)
+  const benefitRows = await prisma.benefitLine.findMany({ where: { action: { ideaId, status: 'LIVE' }, status: 'ACCEPTED' }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }] })
+  const benefitsBy = new Map<string, SnapshotBenefitLine[]>()
+  for (const b of benefitRows) benefitsBy.set(b.actionId, [...(benefitsBy.get(b.actionId) ?? []), { id: b.id, words: benefitWords(b), valuation: b.valuation }])
   const linesByAction = new Map<string, SnapshotCostLine[]>()
   const costLines: SnapshotCostLine[] = costLineRows.map((l) => {
     const line: SnapshotCostLine = {
@@ -802,6 +812,7 @@ export async function buildProposalSnapshot(
       regulatoryFriction: figure(a.regulatoryFriction),
       commentary: plainFoldHeader((a as { commentary?: string | null }).commentary).trim() || null,
       costLines: [...(linesByAction.get(a.id) ?? []), ...(rolledUp.get(a.id) ?? [])],
+      ...(benefitsBy.get(a.id)?.length ? { benefitLines: benefitsBy.get(a.id) } : {}),
       source: a.source,
       evidenceIds,
       supported: evidenceIds.length > 0,
