@@ -906,6 +906,13 @@ model Idea {
   /// 26-X decision 317 — the owner's OVERRIDES of the Deepening's lock, appended, never edited: [{ reason, by, at, toGo }]. The last is the
   /// one in force; `toGo` is how many actions were still to go when it was made. NULL = never overridden. DDL: prisma/lex_26x_deepen_override.sql.
   deepenOverride            Json?
+  /// 26-Y decision 335 — the appraisal period in years (1–60), its first year, and the price year the figures are shown in. NULL = the default
+  /// (10 years; start = price year = the default price year, lib/lex/cba/period.ts). DDL: prisma/lex_26y_cba.sql (part 1, already on Neon 18 Nov).
+  appraisalYears            Int?
+  appraisalStartYear        Int?
+  cbaPriceYear              Int?
+  /// 26-Y decision 336 — the Cost–benefit report's versions (and Y2's IA draft). Never overwritten.
+  cbaReports                CbaReport[]
   /// 26-S2 decision 188 - the CONDITIONS the proposal must meet: { items:[{id,text,by,at}], proposals:[{id,text,why}], source? }. DDL: prisma/lex_26s2_conditions.sql.
   conditions                Json?
   /// 26-S2 190 - the instrument headings the Re-sort pass sorts into: { targets:[{name,purpose}], source }. DDL: prisma/lex_26s2_conditions.sql.
@@ -3074,6 +3081,8 @@ model LexCoherentAction {
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
   costLines          CostLine[]
+  /// 26-Y decision 334 — what the action is claimed to deliver. DDL: prisma/lex_26y_cba.sql.
+  benefitLines       BenefitLine[]
   /// GRAPH 7 — the laws this one action concerns. DDL: prisma/graph_7_idea_law_link.sql.
   lawLinks           IdeaLawLink[]
 
@@ -3284,11 +3293,74 @@ model CostLine {
   priceYear      Int?
   /// 26-S2 sec 6 - ONE_OFF | PER_YEAR. null = not said (every line before 18 Oct). DDL: prisma/lex_26s2_costs.sql.
   recurrence     String?
+  /// 26-Y decision 337 — the line's citation, a key of the citation manifest (lib/lex/cba/citation-manifest.ts). Refused at write if not one.
+  citationKey    String?
+  /// 26-Y §3.1 / 339 / 340 — { payer: {kind, name}, onCost: {rate, source, by, status}, ob: {type, lowered: {rate, reason} | null} }.
+  /// Shape and reader: lib/lex/cba/line-appraisal.ts. NULL = none said. DDL: prisma/lex_26y_cba.sql (part 2).
+  appraisal      Json?
   orderIndex     Int               @default(0)
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 
   @@index([actionId])
+}
+
+/// 26-Y decision 334 — a benefit line on an action, beside its cost lines: what is gained, by whom, how measured, and EITHER valued (an
+/// amount with its source) OR "not valued" (never enters a total). A figure with no source is stored as NOT_VALUED.
+///   status ACCEPTED | PROPOSED (Lex's, waiting) | SET_ASIDE (a proposal not taken) | REMOVED (taken off — kept, never deleted)
+///   sourceKind REF (sourceRef = [Ref: n]) | BENCHMARK (benchmarkId) | CITATION (citationKey, a manifest key) | OWNER (ownerReason)
+/// DDL: prisma/lex_26y_cba.sql (part 1 — the table was already on Neon on 18 Nov 2026, applied by an earlier 26-Y session).
+model BenefitLine {
+  id              String            @id @default(uuid())
+  actionId        String
+  action          LexCoherentAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  label           String
+  beneficiary     String            @default("OTHER")
+  beneficiaryName String?
+  measure         String?
+  low             Float?
+  high            Float?
+  unit            String?           @default("GBP")
+  priceYear       Int?
+  recurrence      String?
+  durationMonths  Float?
+  isHealth        Boolean           @default(false)
+  sourceKind      String?
+  sourceRef       Int?
+  benchmarkId     String?
+  citationKey     String?
+  ownerReason     String?
+  notValuedWhy    String?
+  valuation       String            @default("NOT_VALUED")
+  status          String            @default("ACCEPTED")
+  proposedWhy     String?
+  orderIndex      Int               @default(0)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @default(now()) @updatedAt
+
+  @@index([actionId])
+}
+
+/// 26-Y decision 336 — one VERSION of an idea's Cost–benefit report (kind CBA) or, in Y2, its IA draft (kind IA_DRAFT). Never overwritten:
+/// a new generation is a new version. `inputs` = the per-line fingerprint it was built from (for "stale: N lines changed since"); `result` =
+/// the engine output as printed. DDL: prisma/lex_26y_cba.sql (part 2).
+model CbaReport {
+  id             String   @id @default(uuid())
+  ideaId         String
+  idea           Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  kind           String   @default("CBA")
+  version        Int
+  inputs         Json
+  result         Json
+  narrative      String?
+  narrativePence Float?
+  docxKey        String?
+  pdfKey         String?
+  generatedById  String?
+  createdAt      DateTime @default(now())
+
+  @@unique([ideaId, kind, version])
+  @@index([ideaId])
 }
 
 enum CostLineType {
