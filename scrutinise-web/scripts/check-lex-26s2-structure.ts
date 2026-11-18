@@ -319,14 +319,23 @@ async function partE() {
     // ── 18 Oct (9) 2 - "Retire heading" ARCHIVES: the row stays, its actions lose the heading, Bring back re-attaches them
     const headsWithLive = new Set((await prisma.lexCoherentAction.findMany({ where: { ideaId: id, status: 'LIVE', headingId: { not: null } }, select: { headingId: true } })).map((x) => x.headingId))
     const retireH = heads2.find((x) => x.id !== target.id && x.archivedAt == null && x.name !== target.name && headsWithLive.has(x.id))!
-    const heldBy = await prisma.lexCoherentAction.findMany({ where: { ideaId: id, headingId: retireH.id, status: 'LIVE' }, select: { id: true } })
+    // decision 333 (13 Nov): Retire clears the heading from EVERY action under it, live or not — so count every status here.
+    // (Counting LIVE only made this flake whenever the scratch copy carried ruled-out or merged actions under the heading: 25 vs 6.)
+    // The check OWNS a non-live action under the heading (on the scratch copy), so "any status" is exercised every run, not only when the
+    // copy happens to carry one — without it a Retire that cleared LIVE actions only would pass whenever the heading held none other.
+    const notLive = await prisma.lexCoherentAction.findFirst({ where: { ideaId: id, status: { not: 'LIVE' } }, select: { id: true } })
+      ?? await prisma.lexCoherentAction.update({ where: { id: (await prisma.lexCoherentAction.findFirstOrThrow({ where: { ideaId: id, status: 'LIVE', headingId: { not: retireH.id } }, select: { id: true } })).id }, data: { status: 'RULED_OUT', ruleOutReason: '333 probe' }, select: { id: true } })
+    await prisma.lexCoherentAction.update({ where: { id: notLive.id }, data: { headingId: retireH.id } })
+    const heldBy = await prisma.lexCoherentAction.findMany({ where: { ideaId: id, headingId: retireH.id }, select: { id: true, status: true } })
+    ok('…the heading holds a non-live action for this assertion (the check placed it)', heldBy.some((x) => x.id === notLive.id && x.status !== 'LIVE'))
+    const heldLive = heldBy.filter((x) => x.status === 'LIVE')
     const rt = await S.deleteHeading(id, retireH.id)
     const rowAfter = await prisma.actionHeading.findFirst({ where: { id: retireH.id, archivedAt: { not: null } } })
-    ok('Retire heading archives the heading row (it still exists) and unassigns exactly the actions it held', rt.ok && !!rowAfter && rt.data.unassigned === heldBy.length && heldBy.length > 0 && (await prisma.lexCoherentAction.count({ where: { id: { in: heldBy.map((x) => x.id) }, headingId: null } })) === heldBy.length,
-      `heading “${retireH.name}”: ok ${rt.ok}${rt.ok ? `, unassigned ${rt.data.unassigned}` : `, ${(rt as { error: string }).error}`}; held ${heldBy.length}; row archived ${!!rowAfter}`)
+    ok('Retire heading archives the heading row (it still exists) and unassigns exactly the actions it held, of any status (333)', rt.ok && !!rowAfter && rt.data.unassigned === heldBy.length && heldLive.length > 0 && (await prisma.lexCoherentAction.count({ where: { id: { in: heldBy.map((x) => x.id) }, headingId: null } })) === heldBy.length,
+      `heading “${retireH.name}”: ok ${rt.ok}${rt.ok ? `, unassigned ${rt.data.unassigned}` : `, ${(rt as { error: string }).error}`}; held ${heldBy.length} (${heldLive.length} live); row archived ${!!rowAfter}`)
     ok('…and it no longer shows on the live list of headings', !(await computeCanonicalState(id))!.actionHeadings.some((x) => x.id === retireH.id))
     await S.restoreHeading(id, retireH.id)
-    ok('Bring back restores the heading AND puts its actions back on it', (await prisma.lexCoherentAction.count({ where: { id: { in: heldBy.map((x) => x.id) }, headingId: retireH.id, headingWasId: null } })) === heldBy.length)
+    ok('Bring back restores the heading AND puts its live actions back on it', (await prisma.lexCoherentAction.count({ where: { id: { in: heldLive.map((x) => x.id) }, headingId: retireH.id, headingWasId: null } })) === heldLive.length)
     control('Retire heading removing the heading row (must be FALSE)', (await prisma.actionHeading.findFirst({ where: { id: retireH.id }, select: { id: true } })) === null)
     // ── 198 - the cost total excludes lines on ruled-out and merged-away actions; folded components' lines stay in; restoring brings a line back
     const other = members.find((m) => ![lead, c1, c2, dupKeep, dupDrop].some((x) => x.id === m.id))!

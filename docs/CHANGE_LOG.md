@@ -1,5 +1,20 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-18 17:29 UTC - LEX check fix (decision 333): 26s2-structure's "Retire heading" counts every action under the heading, any status
+
+**From:** CCh 18 Nov 17:10. Decision 333 (13 Nov): "Retire heading" clears the heading from every action under it, live or not. **The
+check was wrong, not the code.**
+- The check now counts every action that held the heading. "Bring back" is still asserted on the LIVE ones, which is what
+  `restoreHeading` re-attaches.
+- **Why it flaked:** a scratch copy that carried ruled-out or merged actions under the heading failed (unassigned 25, held 6). One that
+  did not passed.
+- **The fix:** the check now places a non-live action under the heading itself, on the scratch copy, so the property is tested on every
+  run.
+- `check:lex-26s2-structure`: 108 ran, 108 passed, 18 controls (0 dead), 0 not run.
+- **Mutation:** with `deleteHeading` clearing LIVE actions only, the check goes red ("unassigned 6; held 26 (6 live)"). The source was
+  reverted and verified restored.
+- One file: `scrutinise-web/scripts/check-lex-26s2-structure.ts`. No product code changed.
+
 ## 2026-11-18 17:01 UTC - LEX 26-Y (BRIEF_26Y Y1 + Y2; decisions 334–341, 342–343): cost–benefit analysis — benefit lines, the appraisal engine, the Cost–benefit report, Deepening section 5
 
 **Brief:** `docs/BRIEF_26Y.md`; CCh GO 18 Nov 12:05 (342, 343, the price-year default, key → id → hash); CCh 18 Nov 13:05 (order: 26-Z
