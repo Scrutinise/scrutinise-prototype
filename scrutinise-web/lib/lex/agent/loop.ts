@@ -26,7 +26,8 @@ import { enforceNoPreamble, hasEvaluativePreamble } from '@/lib/lex/no-preamble'
 import { SYSTEM_PREFIX } from './system-prompt'
 import { buildSnapshot, type UiContext } from './snapshot'
 import { MODEL_TOOLS, execute, toolByName, isModelTool } from './tools'
-import { checkReply, correctionMessage, stripViolations, type ToolOutcome, type Violation } from './honesty'
+import { checkReply, correctionMessage, stripViolations, figuresInData, type ToolOutcome, type Violation } from './honesty'
+import { recordFigures } from '../cba/record-figures'
 import { knownLabels } from './controls'
 import type { PendingConfirmation, ToolCtx, ToolLogEntry, ToolResult, TurnState, UiEffect, UndoOffer } from './types'
 
@@ -373,7 +374,7 @@ export async function runAgentTurn(input: AgentTurnInput): Promise<AgentTurnResu
       // Defence in depth: a read-only turn is not OFFERED writing tools, and one named anyway is refused here.
       else if (input.readOnly && !isReadOnlyTool(b.name)) r = { ok: false, error: 'this chat only answers questions; it cannot change anything.' }
       else r = await execute(def, ctx, b.input)
-      outcomes.push({ name: b.name, category: def?.category ?? 'see', ok: r.ok, pending: !!r.pending, items: r.items })
+      outcomes.push({ name: b.name, category: def?.category ?? 'see', ok: r.ok, pending: !!r.pending, items: r.items, figures: figuresInData(r.data) })
       toolLog.push({
         name: b.name, input: b.input, ok: r.ok, pending: !!r.pending, error: r.error,
         summary: r.pending ? `waiting for confirmation: ${r.pending.summary}` : r.ok ? clipJson(r.data) : (r.error ?? 'failed'),
@@ -421,7 +422,9 @@ export async function runAgentTurn(input: AgentTurnInput): Promise<AgentTurnResu
 
     // §4b — claims checked against tool outcomes BEFORE the reply is shown. One corrective retry, then removal.
     const priorPending = priorPendingLive(input.history)
-    let violations = last ? checkReply({ reply, outcomes, knownLabels: labels, userMessage: input.message, priorPending }) : []
+    // 26-Y §7 — the sums already in the record (lines, the latest report), so a figure Lex quotes from the screen is not flagged as invented
+    const knownFigures = await recordFigures(input.ideaId).catch(() => new Set<number>())
+    let violations = last ? checkReply({ reply, outcomes, knownLabels: labels, userMessage: input.message, priorPending, knownFigures }) : []
     // 28 Oct (5) — WHAT THE FIRST DRAFT WAS FLAGGED FOR. The log's `violations` is the count AFTER the retry, so a retry that worked read
     // "retried: true, violations: 0" and looked like a retry on nothing (it was reported that way on 28 Oct). The retry fires only when
     // the first draft had at least one; this keeps which, in the log and on the stored reply, so a doubled turn can be explained.
@@ -437,7 +440,7 @@ export async function runAgentTurn(input: AgentTurnInput): Promise<AgentTurnResu
         messages.push({ role: 'user', content: await runTools(last.content) })
       }
       reply = textOf(last)
-      violations = checkReply({ reply, outcomes, knownLabels: labels, userMessage: input.message, priorPending })
+      violations = checkReply({ reply, outcomes, knownLabels: labels, userMessage: input.message, priorPending, knownFigures })
     }
     if (violations.length) reply = stripViolations(reply, violations, outcomes)
 

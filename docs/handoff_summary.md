@@ -1014,6 +1014,27 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-11-18 (desktop, cc-lex-26y): 26-Y built whole, Y1 + Y2: benefit lines, the engine, the Cost–benefit report, the companion re-templated, Deepening section 5, the settings, Lex's tools and honesty rule.**
+See `docs/LEX_26Y_REPORT.md` and the CHANGE_LOG entry for this commit.
+- **The schema was already on Neon** (BenefitLine, CostLine.citationKey, Idea appraisal columns) from a laptop session that never pushed. It was
+  built to as it stood. `prisma/lex_26y_cba.sql` records it and adds `CostLine.appraisal` + `CbaReport`; schema and SQL went first, in `0f95312d`.
+  ⚠ If the laptop's 26-Y code surfaces, merge it, do not duplicate it.
+- **Engineering calls** (report, "Engineering calls"):
+  - the manifest is derived from the 468 held paragraph rows, keyed on the paragraph number, not the row id;
+  - Table 1 = `OPTIMISM_BIAS_CAPEX_UPPER`;
+  - factors are Annex A's published 4 dp;
+  - Lex may not value a benefit as the owner's estimate.
+- **342/343 applied (CCh GO 12:05):** optimism bias is a BAND beside the headline, never in it; Table 1 = `OPTIMISM_BIAS_TABLE_1` with
+  both bounds (outsourcing as opex). The price year defaults to the latest deflator year. Manifest keys carry their section id and a text hash.
+- **Ingest EXECUTE is not finished:** no manifest file, no Civil Service Statistics, PESA or deflator dates, no IA template. Each shows as a Gap.
+- `check:lex-26y` 129/129, 4 mutations red (including OB-into-the-headline). Narrative measured at 0.48p (n=3).
+- **For Charlie (§9):**
+  - Benefits and the companion on #38 (⚠ 452c5ade has 0 cost lines);
+  - the one-page summary;
+  - "not valued" wording;
+  - the defaults.
+- **Process:** decision 349 inbox at `C:\Code\inbox\`. WIP branch `wip/26y`.
+
 **▶ 2026-11-12 02:39 UTC (laptop): 26-X X3b committed, which closes X3. Section 6 "Who delivers and who resists" is on the Deepening and opens whatever the lock says; the §7 renames are in.**
 See CHANGE_LOG 2026-11-12 02:39 and `docs/LEX_26X_REPORT.md` § X3b.
 - Who/how/against moved from the action record to Deepening section 6. Renames: 4 labels + 9 moved into `DRAFTS_UI`; 26 component strings; 2 on the record; 5 in the pack;

@@ -138,6 +138,25 @@ export function proposalFilename(
 }
 
 /**
+ * ⚠ 26-H §4 — the stage the banner prints. Built from the kernel, so its stage is the kernel's progress (Decision 135), read from
+ * the snapshot's OWN fields and pass list — a frozen version keeps the stage it had — and never from `Idea.stage`.
+ * ⚠ "Built" has no column in the snapshot; it is inferred from what only a build or a Deepening pass leaves behind (pass rows, or a
+ * field awaiting confirmation). Reported in LEX_26H follow-up as an inference.
+ * 26-Y — exported so the Cost–benefit report (lib/lex/cba/report.ts) prints the same stage as every other kind, from this one rule.
+ */
+export function snapshotStage(snapshot: ProposalSnapshot) {
+  return documentStage({
+    kind: 'KERNEL',
+    progress: kernelProgressOf({
+      built: (snapshot.passes ?? []).length > 0 || snapshot.fields.some((f) => f.status === 'AWAITING_CONFIRMATION'),
+      fieldStatuses: snapshot.fields.map((f) => f.status),
+      deepeningPassKeys: DEEPENING_PASS_KEYS,
+      passes: snapshot.passes ?? [],
+    }),
+  })
+}
+
+/**
  * Snapshot → the two rendered buffers, for one kind. The ONLY place that decides
  * which builder a kind maps to.
  */
@@ -148,20 +167,7 @@ export function buildFor(
   /** 26-X 317 — `deepenedEarly`: the override line for the working copy; a stored version is rendered without it (it is historic). */
   opts: { sections?: MeetingPackSection[]; selection?: PackSelection; deepenedEarly?: string | null } = {},
 ): ProposalBuildResult {
-  // ⚠ 26-H §4 — the stage banner goes on every kind, here, the one place a kind maps to a builder. Built from
-  // the kernel, so its stage is the kernel's progress (Decision 135), read from the snapshot's OWN fields and
-  // pass list — a frozen version keeps the stage it had — and never from `Idea.stage`.
-  // ⚠ "Built" has no column in the snapshot; it is inferred from what only a build or a Deepening pass leaves
-  // behind (pass rows, or a field awaiting confirmation). Reported in LEX_26H follow-up as an inference.
-  const stage = documentStage({
-    kind: 'KERNEL',
-    progress: kernelProgressOf({
-      built: (snapshot.passes ?? []).length > 0 || snapshot.fields.some((f) => f.status === 'AWAITING_CONFIRMATION'),
-      fieldStatuses: snapshot.fields.map((f) => f.status),
-      deepeningPassKeys: DEEPENING_PASS_KEYS,
-      passes: snapshot.passes ?? [],
-    }),
-  })
+  const stage = snapshotStage(snapshot)
   const bannered = (r: ProposalBuildResult): ProposalBuildResult => ({ ...r, model: withStageBanner(r.model, stage, undefined, { deepenedEarly: opts.deepenedEarly ?? null }) })
   switch (kind) {
     case 'PROPOSAL': return bannered(buildProposalDocument(snapshot))

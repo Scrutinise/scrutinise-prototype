@@ -5,6 +5,9 @@ import { enterSpendFor } from '@/lib/lex/build-context'
 import { computeCanonicalState } from '@/lib/lex/state'
 import { assertWritableField } from '@/lib/lex/stage'
 import { addCostLine, updateCostLine, removeCostLine, suggestStaffCost } from '@/lib/lex/field-machine'
+import { setCostLineAppraisal } from '@/lib/lex/cba/cost-line-appraisal'
+import { PARTY_KINDS, OB_TYPES } from '@/lib/lex/cba/line-appraisal'
+import { LIMITS } from '@/lib/lex/input-limits'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -37,6 +40,16 @@ const BodySchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('add'), actionId: z.string().min(1), ...LineFields }),
   z.object({ action: z.literal('update'), lineId: z.string().min(1), ...LineFields, label: LineFields.label.optional() }),
   z.object({ action: z.literal('remove'), lineId: z.string().min(1) }),
+  // 26-Y §3.1 / 337 / 339 / 340 — who pays, the citation, the on-cost, the Table 1 type (lib/lex/cba/cost-line-appraisal.ts; Lex calls the same writer)
+  z.object({
+    action: z.literal('appraisal'), lineId: z.string().min(1),
+    payer: z.object({ kind: z.enum(PARTY_KINDS), name: z.string().max(LIMITS.beneficiaryName).nullish() }).nullish(),
+    citationKey: z.string().max(LIMITS.citationKey).nullish(),
+    onCost: z.object({ rate: z.number().min(0).max(1), source: z.string().max(LIMITS.appraisalSource) }).nullish(),
+    onCostAnswer: z.enum(['accept', 'decline']).optional(),
+    obType: z.enum(OB_TYPES).nullish(),
+    obLowered: z.object({ rate: z.number().min(0).max(5), reason: z.string().max(LIMITS.obLowerReason) }).nullish(),
+  }),
   z.object({
     action: z.literal('suggest'),
     staffLevel: StaffLevels,
@@ -61,6 +74,15 @@ export async function POST(req: Request, { params }: Params) {
   const blocked = await assertWritableField(id, 'actions')
   if (blocked) {
     return NextResponse.json({ error: 'You haven’t started the Coherent Actions yet.' }, { status: 409 })
+  }
+
+  if (body.action === 'appraisal') {
+    const { action: _a, lineId, ...patch } = body
+    void _a
+    const r = await setCostLineAppraisal(id, lineId, patch, { userId: authz.user.id, by: 'OWNER' })
+    if (!r.ok) return NextResponse.json({ error: (r as { error: string }).error }, { status: 422 })
+    const state = await computeCanonicalState(id)
+    return NextResponse.json({ state, messages: [], saved: r.data.words })
   }
 
   if (body.action === 'suggest') {

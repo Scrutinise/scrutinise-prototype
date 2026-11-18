@@ -50,6 +50,20 @@ export const LIMITS = {
   briefField: 1000,
   /** a corpus section id given as "Modelled on" */
   briefCorpusId: 200,
+  /** 26-Y §2a (334): a benefit line — what is gained (as a cost line's label, 300), who gains when named, how it would be measured, and the
+   *  reasons: why it is not valued, or the owner's estimate's reason. A citation key is short by construction. */
+  benefitLabel: 300,
+  beneficiaryName: 120,
+  benefitMeasure: 600,
+  benefitReason: 600,
+  citationKey: 60,
+  /** 26-Y: lines per action (cost lines have none; benefit lines are counted so a runaway tool loop stops in words) */
+  benefitLinesPerAction: 40,
+  /** 26-Y 340: an on-cost uplift's source, and 339: the owner's reason for lowering an optimism-bias rate */
+  appraisalSource: 300,
+  obLowerReason: 600,
+  /** 26-Y: the largest amount a line may carry (£1 trillion) — a typo of extra zeros is refused, not summed */
+  amountMax: 1_000_000_000_000,
 } as const
 
 export type LimitKey = keyof typeof LIMITS

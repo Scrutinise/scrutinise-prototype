@@ -30,6 +30,7 @@ import LexActivityLog from '@/components/lex/LexActivityLog'
 import IdeaLawPanel from '@/components/lex/IdeaLawPanel'
 import DocumentsTree from '@/components/lex/DocumentsTree'
 import type { IdeaLawSet } from '@/lib/lex/idea-law-pure'
+import AppraisalSettings from '@/components/lex/AppraisalSettings'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -1649,6 +1650,8 @@ function IdeaTab({
 function OverviewTab({ idea }: { idea: Idea }) {
   return (
     <div className="space-y-6">
+      {/* 26-Y decision 335 / §6 — the idea's appraisal settings (the owner edits; others read) */}
+      <AppraisalSettings ideaId={idea.id} />
       {idea.diagnosis && (
         <section>
           <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">

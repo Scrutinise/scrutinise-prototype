@@ -115,26 +115,27 @@ export const HEALTH_VALUE_UPRATE: CostingParam<number> = {
   note: 'Verified 2026-11-07 (325) from the October 2026 PDF text read back 2026-11-04. Further detail is in the Green Book supplementary guidance on health (not held; NOT CHECKED).',
 }
 
-/** Optimism-bias uplifts by project class (applied to implementationCost — COSTING_SCOPE
- *  §4.3). VERIFIED against Table 1 of the HMT supplementary guidance ("Recommended
- *  Adjustment Ranges", Mott MacDonald 2002 evidence base), PDF page 2 (printed "2/15").
- *  ⚠ Table 1 has FOUR columns per project type, under "Optimism Bias (%)":
- *      Works Duration › Upper | Works Duration › Lower | Capital Expenditure › Upper | Capital Expenditure › Lower
- *  This parameter is ONLY the third column, Capital Expenditure › Upper (the starting value,
- *  para 3.11). It is not a works-duration (time) figure. Renamed from OPTIMISM_BIAS_UPLIFTS on
- *  4 Nov 2026 so the name says which column it came from. Outsourcing (41* / 0*) is omitted:
- *  its footnote says it is measured on operating expenditure, not capex. */
-export const OPTIMISM_BIAS_CAPEX_UPPER: CostingParam<Record<string, number>> = {
+/** 343 (18 Nov 2026) — TABLE 1 OF THE 2013 OPTIMISM-BIAS GUIDANCE, BOTH BOUNDS ("Recommended Adjustment Ranges", Mott MacDonald 2002 evidence
+ *  base), PDF page 2 (printed "2/15"). Four columns under "Optimism Bias (%)": Works Duration › Upper | Lower, Capital Expenditure › Upper | Lower.
+ *  ⚠ Read its SHAPE, not its name: it was OPTIMISM_BIAS_CAPEX_UPPER, which held the third column only and so threw away the lower bound.
+ *  ⚠ Outsourcing's row (41* / 0*) is measured on OPERATING expenditure (Table 1's own footnote), so it is held as `opex`, not `capex`, and
+ *    has no works-duration figures (N/A).
+ *  ⚠ 342: optimism bias NEVER adjusts the headline NPV. The engine shows it as a band beside the headline (lib/lex/cba/engine-pure.ts).
+ *  check:lex-26y compares every row with Table 1 as read back from the PDF text (docs/ingest_traces/cba1_pilot_readback.txt). */
+export interface ObBounds { upper: number; lower: number }
+export interface ObRowT { capex?: ObBounds; opex?: ObBounds; works: ObBounds | null }
+export const OPTIMISM_BIAS_TABLE_1: CostingParam<Record<'standard-buildings' | 'non-standard-buildings' | 'standard-civil' | 'non-standard-civil' | 'equipment-and-development' | 'outsourcing', ObRowT>> = {
   value: {
-    'standard-buildings': 0.24,
-    'non-standard-buildings': 0.51,
-    'standard-civil': 0.44,
-    'non-standard-civil': 0.66,
-    'equipment-and-development': 2.0,
+    'standard-buildings': { capex: { upper: 0.24, lower: 0.02 }, works: { upper: 0.04, lower: 0.01 } },
+    'non-standard-buildings': { capex: { upper: 0.51, lower: 0.04 }, works: { upper: 0.39, lower: 0.02 } },
+    'standard-civil': { capex: { upper: 0.44, lower: 0.03 }, works: { upper: 0.20, lower: 0.01 } },
+    'non-standard-civil': { capex: { upper: 0.66, lower: 0.06 }, works: { upper: 0.25, lower: 0.03 } },
+    'equipment-and-development': { capex: { upper: 2.0, lower: 0.10 }, works: { upper: 0.54, lower: 0.10 } },
+    outsourcing: { opex: { upper: 0.41, lower: 0.0 }, works: null },
   },
-  unit: 'fraction uplift on capital expenditure (Table 1 column "Capital Expenditure — Upper")',
-  source: 'HMT Supplementary Green Book Guidance — Optimism Bias (2013), Table 1, column Capital Expenditure › Upper, PDF p.2',
+  unit: 'fraction uplift; capex = Capital Expenditure columns, opex = outsourcing (operating expenditure), works = Works Duration columns',
+  source: 'HMT Supplementary Green Book Guidance — Optimism Bias (2013), Table 1, PDF p.2',
   status: 'VERIFIED',
   verified: true,
-  note: 'Verified 2026-07-04 against Optimism_bias.pdf (Table 1); column headings re-read from the page image 2026-11-04. Capital Expenditure › Lower: 0.02/0.04/0.03/0.06/0.10. Works Duration (Upper/Lower, not used here): 4/1, 39/2, 20/1, 25/3, 54/10. Uplift reduces as risks are actively managed. Apply to implementationCost.',
+  note: 'Verified 2026-07-04 against Optimism_bias.pdf (Table 1); column headings re-read from the page image 2026-11-04; both bounds held 2026-11-18 (343). "These values are indicative starting values … The upper bound (U) does not represent the highest possible values … and the lower bound (L) does not represent the lowest possible values" (gb-optimism-bias:3.6).',
 }

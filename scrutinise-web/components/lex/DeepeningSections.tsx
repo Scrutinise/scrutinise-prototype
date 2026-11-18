@@ -7,7 +7,7 @@
 //   2 Four models          the digest of the WHOLE SET, over drafts (311): moved here from Organising; heading digests stay there
 //   3 Review passes        the five passes over every accepted draft (a runner, priced and asked first) and the Risks view, by draft
 //   4 Coherence and gaps   the gap check, and the conditions × actions table from the owner's links
-//   5 Costs                the cost lines by heading and by year, years 1–5 (CCh-Lex 7 Nov (2), 3); "cost–benefit analysis: not yet available"
+//   5 Costs and benefits   26-Y: DeepeningCostsBenefits.tsx, mounted by the page (it renders locked and open); the roll-up table below is exported to it
 //
 // Mounted INSIDE the lock (DeepeningGate): until every live action is accepted or needs no draft, none of this mounts, so none of it runs.
 // ⚠ Never colour alone (§21): every state is a word, and a glyph where it is a state. ⚠ A run that spends asks first, at its measured price.
@@ -89,10 +89,8 @@ export default function DeepeningSections({ ideaId, actions, headings, condition
         <div className="pt-2"><ConditionsCoverageView doc={conditions} actions={live} headings={headings} /></div>
       </Section>
 
-      <Section id="costs" title={DEEPENING_UI.costs}>
-        {!o ? <p className="text-xs text-zinc-600" role="status">Reading…</p> : <Costs c={o.costs} />}
-        <p className="mt-1 text-xs font-semibold text-zinc-800" data-cba-not-yet>{DEEPENING_UI.cbaNotYet}.</p>
-      </Section>
+      {/* 26-Y §6 — section 5 "Costs and benefits" is DeepeningCostsBenefits, mounted by the page beside section 6: its roll-up shows whatever
+          lines exist even while the Deepening is locked, and the report is generated only once it opens. */}
     </div>
   )
 }
@@ -182,7 +180,7 @@ function Reviews({ ideaId, r, onDone }: { ideaId: string; r: DeepeningOverview['
 }
 
 // ── 5 Costs, by heading and by year ──────────────────────────────────────────────────────────────────────────
-function Costs({ c }: { c: DeepeningOverview['costs'] }) {
+export function Costs({ c }: { c: DeepeningOverview['costs'] }) {
   const t = c.table
   const name = (r: CostRow) => (r.headingId ? c.headings[r.headingId] ?? 'a retired heading' : DEEPENING_UI.noHeading)
   const years = Array.from({ length: COST_YEARS }, (_, i) => i + 1)

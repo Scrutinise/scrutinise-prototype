@@ -41,6 +41,7 @@ import UpdatePassPanel from '@/components/lex/UpdatePassPanel'
 import DocumentsTree from '@/components/lex/DocumentsTree'
 import DeepeningSections from '@/components/lex/DeepeningSections'
 import DeepeningWho from '@/components/lex/DeepeningWho'
+import DeepeningCostsBenefits from '@/components/lex/DeepeningCostsBenefits'
 import DeepeningLawTable from '@/components/lex/DeepeningLawTable'
 import AgendaPanel from '@/components/lex/AgendaPanel'
 import ReportAdditions from '@/components/lex/ReportAdditions'
@@ -1299,6 +1300,8 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                       table (26-V1 §6), the documents tree, the update pass and the research passes.
                       ⚠ X3b (CCh-Lex 7 Nov (2), 1): section 6 opens WHATEVER THE LOCK SAYS; everything else mounts only when `open`. */}
                   {open && <DeepeningSections ideaId={state.ideaId} actions={state.actions} headings={state.actionHeadings ?? []} conditions={state.conditions} onChanged={refreshState} />}
+                  {/* 26-Y §6 — section 5 "Costs and benefits": its roll-up renders locked or open; Generate only once open */}
+                  <DeepeningCostsBenefits ideaId={state.ideaId} open={open} />
                   <DeepeningWho ideaId={state.ideaId} actions={state.actions} onChanged={refreshState} open={open} />
                   {open && (<>
                   <section className="pt-3" data-deepening="law">

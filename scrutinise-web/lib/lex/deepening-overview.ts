@@ -107,7 +107,8 @@ async function reviewSection(ideaId: string, rows: TreeRow[]): Promise<ReviewSec
   return { drafts, movedOn, passes: PASSES.length, pence, toRun }
 }
 
-async function costSection(ideaId: string): Promise<CostSection> {
+/** 26-Y — exported: the Cost–benefit route serves the same roll-up to section 5, open or locked. */
+export async function costSection(ideaId: string): Promise<CostSection> {
   const [actions, headings, deflator] = await Promise.all([
     prisma.lexCoherentAction.findMany({ where: { ideaId }, select: { id: true, status: true, headingId: true, foldedIntoId: true, noCostReason: true } }),
     prisma.actionHeading.findMany({ where: { ideaId }, orderBy: { orderIndex: 'asc' }, select: { id: true, name: true } }),

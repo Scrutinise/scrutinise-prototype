@@ -59,6 +59,7 @@ import { titleProposalPrice, untitledWords } from '@/lib/lex/title-proposal-pure
 import AddActionForm from './AddActionForm'
 import { DRAFTING_STAGES, draftingLine, draftKindsOf, type Progress, type DraftingCounts, type DraftingStage } from '@/lib/lex/action-progress-pure'
 import ProgressStrip from './ProgressStrip'
+import ActionCbaLines from './ActionCbaLines'
 
 // ── talking to the route ─────────────────────────────────────────────────────────────────────────────────
 
@@ -1070,7 +1071,8 @@ function OpenAction({ a, originals, ctx, step, hasCostLines, headingSelect, onBa
   // 26-X X3b (§6a.6, 315) — the seven slots left the record: they are edited on the Deepening, "Who delivers and who resists", which opens
   // whatever the lock says (CCh-Lex 7 Nov (2), 1). The record keeps Costs and Order.
   const section: Record<3 | 4, ReactNode> = {
-    3: <div className="space-y-2">{renderFull(a, 3)}</div>,
+    // 26-Y §2a / §3.1 — under the cost lines: what each carries for the appraisal, and the action's Benefits
+    3: <div className="space-y-2">{renderFull(a, 3)}<ActionCbaLines ideaId={ctx.ideaId} actionId={a.id} actionNumber={a.number ?? null} disabled={disabled} onChanged={() => void ops.refresh()} /></div>,
     // 26-V1b §7b (262) — Order by dependency only: "must come after #59, because …". Now / Next / Later is not on the screen.
     4: (
       <div className="space-y-1.5">

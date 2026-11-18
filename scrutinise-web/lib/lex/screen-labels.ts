@@ -340,7 +340,8 @@ export const DEEPENING_UI = {
   fourModels: '2 · Four models, over the drafts',
   reviews: '3 · Review passes over the accepted drafts',
   coherence: '4 · Coherence and gaps',
-  costs: '5 · Costs, by heading and by year',
+  // 26-Y §6 — section 5 becomes "Costs and benefits" (the X3a roll-up stays inside it)
+  costs: '5 · Costs and benefits',
   // 26-X X3b (§6a.6, 315) — open whatever the lock says (CCh-Lex 7 Nov (2), 1)
   who: '6 · Who delivers and who resists',
   whoShowAll: 'Every action',
@@ -349,7 +350,6 @@ export const DEEPENING_UI = {
   reviewAll: 'Review every accepted draft',
   reviewGo: 'Review them',
   readAgain: 'Read the sections again',
-  cbaNotYet: 'Cost–benefit analysis: not yet available',
   undated: 'Not said (no recurrence)',
   noHeading: 'Not under a heading',
   total: 'Total',
@@ -439,3 +439,57 @@ export const withCount = (l: string, n: number): string => l.replace(/\bN\b/, St
 
 /** A label shown with "N" where the screen shows a number or a name. */
 export const shown = (l: string | ((x: string) => string)): string => (typeof l === 'function' ? l('N') : l)
+
+/** 26-Y (decisions 334–341) — benefit lines on the record, what a cost line carries for the appraisal, section 5, the settings and the reports. */
+export const CBA_UI = {
+  // §2 the Benefits table on the record (Costs section)
+  benefits: 'Benefits',
+  addBenefit: 'Add a benefit',
+  whatGained: 'What is gained',
+  whoGains: 'Who gains',
+  whoNamed: 'Named (optional)',
+  howMeasured: 'How it would be measured',
+  valuedAt: 'Valued at',
+  notValued: 'Not valued',
+  notValuedWhy: 'Why it is not valued',
+  source: 'Source',
+  sourceRef: 'A source on this idea ([Ref: n])',
+  sourceBenchmark: 'A held unit-cost row',
+  sourceCitation: 'A Green Book paragraph',
+  sourceOwner: 'My own estimate',
+  ownerReason: 'The reason for my estimate',
+  healthEffect: 'A health effect (uprated 2% a year)',
+  editBenefit: 'Edit the benefit',
+  removeBenefit: 'Remove the benefit',
+  restoreBenefit: 'Restore',
+  removedBenefits: 'Removed and set aside',
+  lexProposes: 'Lex proposes',
+  // §3.1 / 339 / 340 a cost line, for the appraisal
+  forAppraisal: 'For the cost–benefit analysis',
+  whoPays: 'Who pays',
+  onCost: 'Employer on-cost',
+  onCostSource: 'Where the rate comes from',
+  excludesEmployer: 'excludes employer costs',
+  obType: 'Optimism bias: Table 1 project type',
+  obLower: 'Lower the rate',
+  obLowerReason: 'Why the rate is lower',
+  citationKey: 'Green Book citation (key)',
+  // §6 Deepening section 5
+  summary: 'The analysis',
+  npv: 'Net present value',
+  bcr: 'Benefit–cost ratio',
+  gaps: 'Gaps',
+  generate: 'Generate the Cost–benefit report',
+  generateGo: 'Generate it',
+  generateFree: 'Generate without Lex’s narrative (free)',
+  versions: 'Versions',
+  // §6 the idea's settings (Overview)
+  settings: 'Appraisal settings',
+  periodYears: 'Appraisal period (years)',
+  startYear: 'Start year',
+  priceYear: 'Price year',
+  useDefault: 'Use the default',
+  // §6 the Output Reports
+  report: 'Cost–benefit report',
+  iaDraft: 'Impact Assessment (draft)',
+} as const
