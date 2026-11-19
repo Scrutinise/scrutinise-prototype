@@ -1,5 +1,22 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-19 00:15 UTC - GRAPHS (done by the Search session on CCh-Search's GO, overnight item 6): read-only name lookup on graph_entity_identity
+
+`lib/graph/name-lookup.ts`: `lookupName(name, {kind?, limit?})` turns a name as written ("X MP", "the Y Institute") into candidates.
+- Each candidate carries `entityId`, `kind`, `canonicalName`, `identityTier`, `identityStatement`, `parlMemberId`, `confidence` and the alias surfaces that matched.
+- The tier is read from the view, never re-derived.
+- An ambiguous name returns every candidate (`status: 'many'`); nothing is picked or merged. Candidates are ordered by identity tier, then name.
+- No schema change.
+- ⚠ The normaliser is a copy of `scripts/ingest/position-graph/graph-common.ts`, because the web app can't import across the package boundary (§20 check 0). The check compares the copy with the STORED `surface_norm`, not with the original.
+
+`check:graph-name-lookup`: 9 passed, 0 failed, 3 controls fired, 0 dead.
+- Parity on 2,000 random alias rows: 1,989 exact, 11 truncated, 0 real mismatches. The truncated rows are long panel strings whose stored `surface` is cut while the norm was made from the full text; they're counted and printed.
+- A random identified MP, looked up as "<name> MP", resolves with its tier and member id.
+- A made-up name returns none.
+- An ambiguous surface returns all its entities.
+
+tsc clean; clean-build `--fast` PASS. Not wired to any caller yet.
+
 ## 2026-11-19 00:06 UTC - SEARCH-30: why fts-serve took 86 s (storage-bound boots from 20 Oct, not contention); the noise filter now tags and a fixed rule drops
 
 Full write-up: `docs/SEARCH_30_REPORT.md`. Answers CCh's 22 Oct "SEARCH — priorities changed". No gold run made; reported first, as asked.
