@@ -1,5 +1,17 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-19 13:51 UTC - Design note: relevant people ("friends and foes") per idea (D3). Nothing built
+
+`docs/DESIGN_RELEVANT_PEOPLE.md`: five phases (witnesses, video, web/X actors, the per-idea list, data protection), principles,
+spend per phase, and a pilot on 452c5ade (about £1.10–1.40, cap £3, R2 and census only). Measured for it (read-only):
+- `gave-evidence-to` edges and `graph_evidence` carry no role or organisation (`extract` is NULL everywhere sampled).
+- 126,509 written and 15,806 oral evidence documents. No raw HTML is held for the oral sessions.
+- 35 of 40 random oral transcripts have a parseable witness list (98 of 101 witnesses with a role).
+- 7 of 40 written submissions state their author in a header.
+- The Committees API returns structured witnesses (`organisations[{name, role, cisId}]`), so the oral role is free to re-read.
+- parliamentlive.tv: a session is linkable; a moment within it is not, in any URL form found. Its terms are unverified from here
+  (parliament.uk 403s), so the note stores links only, with no witness images.
+
 ## 2026-11-19 13:42 UTC - Search serves: a slow boot is noticed against its own healthy past, and restarted once automatically (SEARCH-30 fixes 1 and 2)
 
 **Why.** On 20 Oct both serves came back from a restart about 14× slower (vector p50 3.3 s → 46 s, cpu/wall 1.31 → 0.13) and stayed
