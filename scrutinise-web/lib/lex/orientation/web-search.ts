@@ -561,7 +561,8 @@ async function searchOpenAI(opts: WebSearchOptions): Promise<AdapterResult | nul
         tools: [{ type: 'web_search' }],
         tool_choice: 'required',
         max_output_tokens: 2048,
-        temperature: 0.2,
+        // ⚠ NO `temperature` (19 Nov 2026): gpt-6-luna is a reasoning model and answers HTTP 400 "Unsupported parameter:
+        // 'temperature' is not supported with this model". Found by stage 3's first live run; every Luna web search had been failing.
         text: { format: { type: 'json_schema', name: 'web_search_results', schema: XAI_RESULTS_SCHEMA } },
       }),
       signal: ctrl.signal,
