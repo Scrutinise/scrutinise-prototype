@@ -1,5 +1,27 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-19 21:13 UTC - SEARCH-32: bill-vocab flag proved live (10/10); temperature 0 on the gold set, one run of two (43/65); Search's local commits pushed on Charlie's instruction
+
+- **LEX_ROUTER_BILL_VOCAB is live.**
+  - /api/health read true at 16:17 UTC on db705682.
+  - The 10 bill questions, one roll, on production's code and flag string: 10 of 10, all at rank 1 (predicted 9-10).
+  - With the flag forced off: 3 of 10 (predicted 4-7). File: docs/census/s32-bills-live-19nov.json. Spend 5p.
+- **Commit order.** The local commits were reordered so the temperature-0 commit is last. The final tree is byte-identical
+  to the old order, and the old order is kept as local branch backup/pre-reorder-19nov.
+- **Temperature 0 on the 65 gold questions** (local code against the production serves, production's flag string):
+  - Run 1: 43 of 65, against 44 and 43 at 0.2.
+  - It lost 4 questions both 0.2 runs hit. Three of them are bill-vocab gains (S10-Q9, V2-Q6, V2-Q16), which fits SEARCH-28
+    §3c. It gained 2. File: docs/census/s32-gold-t0-1-19nov.json. Spend 19.5p.
+  - Run 2 was stopped by Claude Code at its start because the laptop was low on memory. **So there is no noise-floor figure
+    at 0 and no settled quality verdict.**
+  - Write-up: docs/SEARCH_29_REPORT.md, "SEARCH-32".
+- **Pushed on Charlie's instruction (19 Nov):** the Luna fix, the PASS_PURPOSE entries, the serve-observer auto-restart
+  (⚠ production behaviour change, on the Ops service), the D3 design note, SEARCH_28 §3c, the temperature-0 change
+  (⚠ production behaviour change; it had one gold run of the two CCh asked for) and this entry.
+  - Rollback for temperature, with no code change: set LEX_SEARCH_LLM_TEMPERATURE=0.2 and LEX_QUERY_WRITER_TEMPERATURE=0.3
+    in Vercel, then redeploy.
+- Spend today: about 39p.
+
 ## 2026-11-19 13:51 UTC - Design note: relevant people ("friends and foes") per idea (D3). Nothing built
 
 `docs/DESIGN_RELEVANT_PEOPLE.md`: five phases (witnesses, video, web/X actors, the per-idea list, data protection), principles,

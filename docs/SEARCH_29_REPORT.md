@@ -135,6 +135,46 @@ tolerates this noise because one reworded query rarely moves a gold document acr
 ⚠ **The temperature change is committed locally, not pushed, and is a production behaviour change.** Its effect on answer quality
 is NOT measured: the 65 gold questions have not been run at 0. A two-run gold check at 0 should come before the push.
 
+### SEARCH-32 (19 Nov afternoon): the bill-vocab flag live, and temperature 0 on the gold set (ONE run of two)
+
+**The bill-vocab flag is live (CCh 1502Z, D1).**
+- Charlie set LEX_ROUTER_BILL_VOCAB=true at about 14:50 UTC. /api/health read true at 16:17 UTC, serving db705682
+  (= origin/Main), so the variable is on Production.
+- Engagement proof: the 10 bill questions, one roll, on the Railway measure-job built from db705682 under /api/health's flag
+  string.
+  - Flag on (as production now runs): **10 of 10**, every one at rank 1, all routed to legislation. Predicted 9-10.
+  - Flag forced off at the same moment: 3 of 10 (4 of 10 last night). Predicted 4-7, so wrong on the low side, by one.
+- File: `docs/census/s32-bills-live-19nov.json`. Spend 5p.
+
+**Temperature 0 on the 65 gold questions (CCh 1445Z item 1).**
+- Prediction, recorded 16:22 UTC before the run: each run 41-46 of 65; 2-5 questions flip between two runs at 0 (7 at 0.2);
+  quality held means both runs score at least 41.
+- Run 1, local code 5480589d against the production serves, under production's flag string (bill vocab on):
+  - LEX_SEARCH_LLM_TEMPERATURE=0 and LEX_QUERY_WRITER_TEMPERATURE=0 were set in the launching shell. The harness does not
+    record them.
+  - Score: **43 of 65.** That equals the harness's own summary.
+  - vector-serve was healthy: p50 2.1 s, cpu/wall 2.22.
+  - File: `docs/census/s32-gold-t0-1-19nov.json`. Spend 19.5p.
+
+| | at 0.2, run 1 | at 0.2, run 2 | **at 0, run 1** |
+|---|---|---|---|
+| Hits of 65 | 44 | 43 | **43** |
+
+- Against both 0.2 runs:
+  - Lost 4 that both 0.2 runs hit: S10-Q9 (committees), V2-Q6 (debates), V2-Q15 (legislation, now rank 22) and V2-Q16
+    (legislation, now rank 68).
+  - Gained 2 that both 0.2 runs missed: S10-Q24 (guidance, 14) and V2-Q8 (debates, 7).
+- ⚠ Three of the four lost (S10-Q9, V2-Q6, V2-Q16) are bill-vocab gains. That is what §3c of SEARCH_28 predicts: 5 of the 8
+  gains come from query wording, and a change in wording (here, the temperature) can take them away. One run cannot say
+  whether 0 loses them every time.
+- **Run 2 did not run.** Claude Code stopped it at its start because the laptop was critically low on memory. So there is
+  **no noise-floor figure at 0 and no settled verdict on quality.** On one run, the total held (43 against 44 and 43).
+- **Charlie pushed the change anyway on 19 Nov,** on that one run. It is a production behaviour change.
+  - To roll back without a code change: set LEX_SEARCH_LLM_TEMPERATURE=0.2 and LEX_QUERY_WRITER_TEMPERATURE=0.3 in Vercel
+    and redeploy.
+  - Still owed: run 2, then re-check S10-Q9, V2-Q6, V2-Q15 and V2-Q16. If they miss in both runs at 0, temperature 0 costs
+    about 3 bill-vocab gains, and the choice between temperature 0 and those gains is CCh's.
+
 ---
 
 ## What has been measured so far

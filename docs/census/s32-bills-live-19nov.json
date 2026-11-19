@@ -1,0 +1,252 @@
+{
+  "takenAt": "2026-11-19T16:27:11.324Z",
+  "commit": "db70568230c2aa5c1c6478f6da092ab3e77f3082",
+  "rolls": 1,
+  "reconstructed": true,
+  "result": {
+    "OFF": [
+      {
+        "n": 1,
+        "rolls": [
+          {
+            "hit": false,
+            "rank": null,
+            "unknownRows": 0,
+            "streams": "debates,committees"
+          }
+        ],
+        "majority": false
+      },
+      {
+        "n": 2,
+        "rolls": [
+          {
+            "hit": false,
+            "rank": null,
+            "unknownRows": 0,
+            "streams": "debates"
+          }
+        ],
+        "majority": false
+      },
+      {
+        "n": 3,
+        "rolls": [
+          {
+            "hit": false,
+            "rank": null,
+            "unknownRows": 0,
+            "streams": "debates,committees"
+          }
+        ],
+        "majority": false
+      },
+      {
+        "n": 4,
+        "rolls": [
+          {
+            "hit": false,
+            "rank": null,
+            "unknownRows": 0,
+            "streams": "debates"
+          }
+        ],
+        "majority": false
+      },
+      {
+        "n": 5,
+        "rolls": [
+          {
+            "hit": true,
+            "rank": 1,
+            "unknownRows": 0,
+            "streams": "legislation"
+          }
+        ],
+        "majority": true
+      },
+      {
+        "n": 6,
+        "rolls": [
+          {
+            "hit": false,
+            "rank": null,
+            "unknownRows": 0,
+            "streams": "committees"
+          }
+        ],
+        "majority": false
+      },
+      {
+        "n": 7,
+        "rolls": [
+          {
+            "hit": false,
+            "rank": null,
+            "unknownRows": 0,
+            "streams": "committees"
+          }
+        ],
+        "majority": false
+      },
+      {
+        "n": 8,
+        "rolls": [
+          {
+            "hit": true,
+            "rank": 1,
+            "unknownRows": 0,
+            "streams": "legislation,debates,committees,guidance"
+          }
+        ],
+        "majority": true
+      },
+      {
+        "n": 9,
+        "rolls": [
+          {
+            "hit": false,
+            "rank": null,
+            "unknownRows": 0,
+            "streams": "legislation,debates,committees,guidance"
+          }
+        ],
+        "majority": false
+      },
+      {
+        "n": 10,
+        "rolls": [
+          {
+            "hit": true,
+            "rank": 1,
+            "unknownRows": 0,
+            "streams": "legislation"
+          }
+        ],
+        "majority": true
+      }
+    ],
+    "ON": [
+      {
+        "n": 1,
+        "rolls": [
+          {
+            "hit": true,
+            "rank": 1,
+            "unknownRows": 0,
+            "streams": "legislation"
+          }
+        ],
+        "majority": true
+      },
+      {
+        "n": 2,
+        "rolls": [
+          {
+            "hit": true,
+            "rank": 1,
+            "unknownRows": 0,
+            "streams": "legislation"
+          }
+        ],
+        "majority": true
+      },
+      {
+        "n": 3,
+        "rolls": [
+          {
+            "hit": true,
+            "rank": 1,
+            "unknownRows": 0,
+            "streams": "legislation"
+          }
+        ],
+        "majority": true
+      },
+      {
+        "n": 4,
+        "rolls": [
+          {
+            "hit": true,
+            "rank": 1,
+            "unknownRows": 0,
+            "streams": "legislation"
+          }
+        ],
+        "majority": true
+      },
+      {
+        "n": 5,
+        "rolls": [
+          {
+            "hit": true,
+            "rank": 1,
+            "unknownRows": 0,
+            "streams": "legislation"
+          }
+        ],
+        "majority": true
+      },
+      {
+        "n": 6,
+        "rolls": [
+          {
+            "hit": true,
+            "rank": 1,
+            "unknownRows": 0,
+            "streams": "legislation"
+          }
+        ],
+        "majority": true
+      },
+      {
+        "n": 7,
+        "rolls": [
+          {
+            "hit": true,
+            "rank": 1,
+            "unknownRows": 0,
+            "streams": "legislation"
+          }
+        ],
+        "majority": true
+      },
+      {
+        "n": 8,
+        "rolls": [
+          {
+            "hit": true,
+            "rank": 1,
+            "unknownRows": 0,
+            "streams": "legislation"
+          }
+        ],
+        "majority": true
+      },
+      {
+        "n": 9,
+        "rolls": [
+          {
+            "hit": true,
+            "rank": 1,
+            "unknownRows": 0,
+            "streams": "legislation"
+          }
+        ],
+        "majority": true
+      },
+      {
+        "n": 10,
+        "rolls": [
+          {
+            "hit": true,
+            "rank": 1,
+            "unknownRows": 0,
+            "streams": "legislation"
+          }
+        ],
+        "majority": true
+      }
+    ]
+  }
+}
