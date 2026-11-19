@@ -86,7 +86,46 @@ export async function neonStorageUsd(): Promise<number | null> {
   } catch { return null } finally { await pool.end().catch(() => {}) }
 }
 
-const MEM_ALERT_PCT = 70, P95_ALERT_MS = 5000, CRASH_LOOP_THRESHOLD = 3, CRASH_LOOP_WINDOW_MS = 3600_000
+const MEM_ALERT_PCT = 70, CRASH_LOOP_THRESHOLD = 3, CRASH_LOOP_WINDOW_MS = 3600_000
+
+/**
+ * SEARCH-30 — THE LATENCY ALERTS, REPLACING "p95 > 5 s".
+ *
+ * ⚠ The old rule could not do its job. vector-serve's HEALTHY p95 was 10.6 s (Sept) and both services sit above 5 s on a quiet
+ * day (fts 6.0 s, vector 8.2 s, 18 Nov), so the alert was on every day — and on 20 Oct, when a restart left both services
+ * ~14× slower (vector p50 3.3 s → 46 s), the digest said exactly what it had said the day before.
+ *
+ * What DID change that day was the shape of the time: cpu/wall fell from 1.31 (computing) to 0.13 (waiting on R2 range reads).
+ * So two rules, each quiet on a healthy day and loud on that one, measured from the services' own /stats:
+ *   STORAGE-BOUND — cpu/wall < 0.4 over at least 10 warm queries (healthy: 0.6–1.4; 20 Oct: 0.13).
+ *   SLOW          — warm p50 > 15 s over at least 5 warm queries (healthy: 3.3–4.0 s, i.e. ~4×; 20 Oct: 46 s).
+ * Both need a minimum sample so the first cold-ish queries after a restart cannot trip them.
+ */
+export const STORAGE_BOUND_CPU_OVER_WALL = 0.4, STORAGE_BOUND_MIN_N = 10, SLOW_P50_MS = 15_000, SLOW_MIN_N = 5
+
+export interface ServeStatsShape {
+  memory?: { peak_pct_of_cap?: number }
+  warm_p50_ms?: number | null; warm_n?: number | null
+  /** fts-serve reports cpu/wall at the top level… */
+  cpu_over_wall?: number | null
+  /** …vector-serve inside `stages` */
+  stages?: { cpu_over_wall?: number | null }
+  concurrency?: { rejections?: number | null }
+}
+
+/** Pure: the exception lines one service's /stats produces. Exported for check:serving-alerts. */
+export function servingAlerts(name: string, s: ServeStatsShape): string[] {
+  const out: string[] = []
+  if (s.memory?.peak_pct_of_cap != null && s.memory.peak_pct_of_cap > MEM_ALERT_PCT) out.push(`${name} memory at ${s.memory.peak_pct_of_cap}% of cap`)
+  const n = s.warm_n ?? 0
+  const cow = s.cpu_over_wall ?? s.stages?.cpu_over_wall ?? null
+  if (cow != null && n >= STORAGE_BOUND_MIN_N && cow < STORAGE_BOUND_CPU_OVER_WALL)
+    out.push(`${name} is waiting on storage, not computing (cpu/wall ${cow} over ${n} queries; healthy is 0.6 or more) — restart it and check /stats again`)
+  if (s.warm_p50_ms != null && n >= SLOW_MIN_N && s.warm_p50_ms > SLOW_P50_MS)
+    out.push(`${name} is slow (warm p50 ${Math.round(s.warm_p50_ms / 100) / 10} s over ${n} queries; healthy is about 4 s)`)
+  if (s.concurrency?.rejections != null && s.concurrency.rejections > 0) out.push(`${name} shed ${s.concurrency.rejections} request(s)`)
+  return out
+}
 
 export interface RawServiceStats { name: string; ok: boolean; stats?: unknown; error?: string }
 
@@ -114,11 +153,9 @@ export async function searchServingHealth(): Promise<{ line: string; raw: RawSer
     try {
       const res = await fetch(`${url.replace(/\/$/, '')}/stats`, { signal: AbortSignal.timeout(10_000) })
       if (!res.ok) { exceptions.push(`${name} is not responding (HTTP ${res.status})`); raw.push({ name, ok: false, error: `HTTP ${res.status}` }); continue }
-      const s = await res.json() as { memory?: { peak_pct_of_cap?: number }; warm_p95_ms?: number; concurrency?: { rejections?: number | null } }
+      const s = await res.json() as ServeStatsShape
       raw.push({ name, ok: true, stats: s })
-      if (s.memory?.peak_pct_of_cap != null && s.memory.peak_pct_of_cap > MEM_ALERT_PCT) exceptions.push(`${name} memory at ${s.memory.peak_pct_of_cap}% of cap`)
-      if (s.warm_p95_ms != null && s.warm_p95_ms > P95_ALERT_MS) exceptions.push(`${name} p95 ${Math.round(s.warm_p95_ms)}ms`)
-      if (s.concurrency?.rejections != null && s.concurrency.rejections > 0) exceptions.push(`${name} shed ${s.concurrency.rejections} request(s)`)
+      exceptions.push(...servingAlerts(name, s))
     } catch (e) {
       exceptions.push(`${name} is not responding`)
       raw.push({ name, ok: false, error: e instanceof Error ? e.message : String(e) })

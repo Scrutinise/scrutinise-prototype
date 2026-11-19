@@ -1,5 +1,22 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-19 00:17 UTC - SEARCH-30 fix 1: the digest's latency alert can now tell a healthy service from the 20 Oct state
+
+`lib/lex/cost-digest-data.ts`: the "p95 > 5 s" rule is gone. It fired on healthy days (vector's healthy p95 was 10.6 s; both services sit above 5 s today), so it could not flag the 20 Oct jump. The pure `servingAlerts()` replaces it with two rules from the services' own /stats:
+- **Storage-bound:** cpu/wall < 0.4 over 10 or more warm queries (healthy reads 0.6–2.5; 20 Oct read 0.13).
+- **Slow:** warm p50 > 15 s over 5 or more queries (healthy 3.3–6.3 s; 20 Oct 46 s).
+
+Memory and shed alerts are unchanged.
+
+`check:serving-alerts`: 10 passed, 0 failed, 2 controls fired, 0 dead. Its fixtures are vector-serve's REAL recorded /stats:
+- the healthy 26 Sep boot is quiet;
+- the 20 Oct boot fires both rules;
+- the old rule fired on both;
+- a 2-query fresh boot is quiet;
+- live fts-serve and vector-serve are quiet today (the old rule fires on both).
+
+tsc clean. Not deployed. It reaches the daily digest on the next push.
+
 ## 2026-11-19 00:15 UTC - GRAPHS (done by the Search session on CCh-Search's GO, overnight item 6): read-only name lookup on graph_entity_identity
 
 `lib/graph/name-lookup.ts`: `lookupName(name, {kind?, limit?})` turns a name as written ("X MP", "the Y Institute") into candidates.
