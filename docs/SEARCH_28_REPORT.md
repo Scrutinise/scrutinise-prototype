@@ -92,6 +92,18 @@ Not flipped.
 
 **Recommendation, both arms together.** The flag does what it was built for: bill papers go from 4/10 to 10/10. On the 65 general questions it doesn't cost anything; it gains +7 net, consistently, against a noise floor of 5–7. **Recommend switching `LEX_ROUTER_BILL_VOCAB` on**, after one cheap step: read the router's stream choice for the 8 gained and 1 lost questions, so the unpredicted gain is understood before it ships. Switching on is Charlie's decision, and it is a Vercel variable that only he can set. Not flipped.
 
+### 3c. Why the +7 is real (the router read, 19 Nov 13:08 UTC; no spend) — Charlie decided YES on 19 Nov 09:37 UTC
+
+I read `routedStreams` and the gold document's rank for the 9 questions that changed, from the four gold runs.
+- **3 of the 8 gains (S10-Q31, Q33, Q35) are the designed mechanism.** Each is an impact-assessment cost question. With the flag
+  on, the router adds the legislation stream, and the gold document ranks 1–4; with it off, the document is absent from the
+  first 300. The one loss (S10-Q37) is the mirror image: with the flag on, the router dropped legislation.
+- **The other 5 gains (S10-Q9, S10-Q27, V2-Q6, V2-Q9, V2-Q16) are not the designed mechanism.** They route the same streams or
+  fewer, and the gain comes from the router writing different stream queries under the longer prompt. They repeat in both runs,
+  so they are not noise, but they could move with the next prompt change.
+- ⚠ **So re-measure the 65 gold questions after ANY router prompt change**: this flag, LEX_ROUTER_APPRAISAL, or the temperature
+  change in 7bebefd3.
+
 ## 4. Consequential amendments — the lookup
 
 **Callable now:** `amendingText(row.otherEnd, { mentioning: [targetTitle] })` in `scrutinise-web/lib/lex/amending-text.ts`. The interface note for the graphs stream is `docs/FOR_GRAPHS_amending_text_interface.md`. It takes the same `otherEnd` object `effectsFor()` already returns, so `statute_effects` needs no translation. I could not message the graphs stream from here, so the interface is agreed on paper only: **it is a note for them, not a handshake.** Pushed as SEARCH-28a on 2026-10-21; `statute_effects` (7dd2931) was already on origin/Main by then.
