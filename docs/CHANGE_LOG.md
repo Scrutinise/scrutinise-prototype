@@ -1,5 +1,34 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-19 01:40 UTC - Stage 3 (four-provider check) built, flag OFF and not wired; OpenAI Luna web search no longer 400s, but still returns no results
+
+**Stage 3.** `lib/lex/orientation/stage3.ts`, from the S26 brief in `docs/SPRINT.md` and its three amendments. Built by a sub-agent of the Search session; reviewed and committed by cc-search.
+
+What it does:
+- `runStage3({problem, summary, angle?, providers?, budgetUsd = 2, spentUsd?, userId/ideaId/buildId})` asks Charlie's question of Gemini, Haiku, Luna (each web-search, then answer) and Grok with x_search, in parallel.
+- **Merge.** One merge across providers, with a provider label on each point (internal). A recommendation merges only with recommendations and carries `suggestionNotEvidence`.
+- **Named people.** A point about a named person with no source is dropped and logged. MPs and peers are cross-checked through `lookupName`, never picked by guess.
+- **Cost cap.** The $2 cap is checked before the round; when it is reached the result reads "partial: N of 4 providers".
+- **Failures** are recorded per provider with their reason.
+- **Angle.** An optional `angle` narrows the question (Amendment 3).
+- **Flag.** `LEX_ORIENTATION_STAGE3` is registered, default OFF. Stage 3 is NOT imported by `build.ts`; Lex decides the wiring.
+
+**`check:stage3`:** 51 passed, 0 failed, 14 controls fired, 0 dead; re-run by cc-search with the same result. It runs offline with fetch stubbed. A mutation (side-match removed from the merge) turned it red.
+
+**One live run** on 2ef5358b: $0.26, 31 s, all four providers answered.
+- 79 points, but **0 merged across providers**: v2's 0.6 overlap threshold is too strict for paraphrases. Not tuned.
+- 7 MPs resolved one-to-one through the graph.
+
+⚠ **Open:**
+- the cap-breach email is a TODO: there is no web-side path keyed to a build, and S25's path lives in the ingest package;
+- the stage-3 pass names are not in `PASS_PURPOSE`;
+- `callGrok` failure reasons are coarse.
+
+**Luna fix (`web-search.ts`, Search's adapter).** `searchOpenAI` sent `temperature: 0.2`, which gpt-6-luna refuses: "HTTP 400 Unsupported parameter: 'temperature'". It was reproduced live before the fix. Every Luna web search had been failing. After the fix the call completes and ledgers (0.87p).
+- ⚠ **It returns `ok: true` with 0 results**, so the parse of Luna's response is the next fault. NOT fixed; it is a silent-success signature.
+
+`tsc` clean; clean-build `--fast` PASS. Spend tonight about £1.25.
+
 ## 2026-11-19 01:24 UTC - SEARCH-28 item 3 measured: LEX_ROUTER_BILL_VOCAB takes bill papers from 4/10 to 10/10 and gains +7 on the 65; recommended ON, not flipped
 
 Details are in `docs/SEARCH_28_REPORT.md` §3.

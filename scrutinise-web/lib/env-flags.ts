@@ -258,6 +258,9 @@ export const CAPABILITY_FLAGS = [
   // SEARCH-29 stage 2 — hand orientation v2's vocabulary to the router alongside the user's own words.
   // ⚠ DEFAULT OFF until measured on the 65 gold questions (docs/SEARCH_29_REPORT.md).
   'LEX_ORIENTATION_TERMS',
+  // S26 stage 3 — the four-model check (lib/lex/orientation/stage3.ts: Gemini, Haiku, Luna, Grok+X in parallel).
+  // ⚠ DEFAULT OFF. Not wired into the build — Lex decides where it goes; it spends on four providers per run.
+  'LEX_ORIENTATION_STAGE3',
   // SEARCH-29 Option B — the answer context Lex is given reserves at least two places for each routed
   // source that returned results; the rest go by score. ⚠ DEFAULT OFF until measured on the 65.
   'LEX_ANSWER_STREAM_FLOOR',
