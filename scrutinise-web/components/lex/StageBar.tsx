@@ -13,11 +13,17 @@
 // `border-2` WEIGHT. The checklist's current line carries the words, the weight and bold type. A locked line carries 🔒 AND the word.
 //
 // ⚠ NOT A CLIENT COMPONENT AND NOT STATEFUL: every link is a full navigation, so no screen holds stale state that looks current.
+//
+// ⚠ Z1b (CCh, 18 Nov 23:40, item 4) — ON A DESKTOP (≥ 768 px) THE SEVEN STAGES ARE ONE ROW, NEVER WRAPPED ("In Force" had dropped under the
+//   others): the cards share the width and their state text shrinks instead. Each row carries a label at its left ("Stages", "Chapters"),
+//   from `STAGEBAR_ROW_WORD` (decision 352 may rename them). Below 768 px — panel 1 on a phone — the cards wrap as before, with no labels.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { StageContext } from '@/lib/lex/stage-context'
 import { LEX_STAGES } from '@/lib/lex/stages'
-import { LIFECYCLE_UI } from '@/lib/lex/screen-labels'
+import { LIFECYCLE_UI, STAGEBAR_ROW_WORD } from '@/lib/lex/screen-labels'
+
+const rowLabel = 'hidden md:block w-[4.5rem] shrink-0 pt-1 text-[11px] font-bold uppercase tracking-wide text-zinc-700'
 
 export default function StageBar({ context }: { context: StageContext | null }) {
   // ⚠ NULL ONLY WHEN THE PAGE COULD NOT COMPUTE IT — never as "there is nothing to show".
@@ -26,17 +32,19 @@ export default function StageBar({ context }: { context: StageContext | null }) 
 
   return (
     <nav aria-label="Where you are" className="w-full" data-lifecycle-bar>
-      <ol className="flex flex-wrap items-stretch gap-1.5">
+      <div className="md:flex md:items-start md:gap-2">
+      <span className={rowLabel} data-row-label="stages">{STAGEBAR_ROW_WORD.stages}</span>
+      <ol className="flex flex-wrap md:flex-nowrap items-stretch gap-1.5 md:min-w-0 md:flex-1" data-stage-row>
         {context.lifecycle.map((s) => {
           const current = s.key === context.current
           const body = (
             <>
               <span className="flex items-baseline gap-1.5">
                 <span aria-hidden className="text-[11px] leading-none">{current ? '●' : '○'}</span>
-                <span className={`text-[13px] ${current ? 'font-bold' : 'font-medium'}`}>{s.name}</span>
+                <span className={`text-[13px] md:text-[12px] leading-tight ${current ? 'font-bold' : 'font-medium'}`}>{s.name}</span>
               </span>
               {current && <span className="block text-[10px] font-semibold uppercase tracking-wide text-white/90" data-you-are-here>{LIFECYCLE_UI.youAreHere}</span>}
-              <span className={`block text-[11px] mt-0.5 ${current ? 'text-white/80' : 'text-zinc-600'}`} data-stage-state={s.key}>{s.state}</span>
+              <span className={`block text-[11px] md:text-[10px] md:leading-snug mt-0.5 break-words ${current ? 'text-white/80' : 'text-zinc-600'}`} data-stage-state={s.key}>{s.state}</span>
             </>
           )
           const shell = current
@@ -45,7 +53,7 @@ export default function StageBar({ context }: { context: StageContext | null }) 
               ? 'border-2 border-zinc-200 bg-white text-zinc-700 hover:border-zinc-400 hover:bg-zinc-50'
               : 'border-2 border-dashed border-zinc-200 bg-white text-zinc-500'
           return (
-            <li key={s.key} className="flex-1 min-w-[7.5rem]" data-lifecycle-stage={s.key}>
+            <li key={s.key} className="flex-1 min-w-[7.5rem] md:min-w-0" data-lifecycle-stage={s.key}>
               {s.href && !(current && context.here !== 'deepening') ? (
                 <a href={s.href} {...(current ? { 'aria-current': 'step' as const } : {})} className={`block h-full rounded-xl px-2.5 py-1.5 transition-colors ${shell}`}>{body}</a>
               ) : (
@@ -55,10 +63,13 @@ export default function StageBar({ context }: { context: StageContext | null }) 
           )
         })}
       </ol>
+      </div>
 
       {context.checklist ? (
         // §3a — the Development checklist: one line each, state in words and shape, each opening its page.
-        <ol className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-zinc-700" aria-label="Development — the checklist" data-development-checklist>
+        <div className="mt-1.5 md:flex md:items-start md:gap-2">
+        <span className={rowLabel} data-row-label="chapters">{STAGEBAR_ROW_WORD.chapters}</span>
+        <ol className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-zinc-700 md:min-w-0 md:flex-1" aria-label="Development — the checklist" data-development-checklist>
           {context.checklist.map((l) => {
             const here = l.key === context.checklistHere
             const inner = (
@@ -75,6 +86,7 @@ export default function StageBar({ context }: { context: StageContext | null }) 
             )
           })}
         </ol>
+        </div>
       ) : (
         <p className="mt-1.5 text-xs text-zinc-600">
           <span className="font-semibold text-zinc-800">{screen.name}.</span> {screen.purpose}

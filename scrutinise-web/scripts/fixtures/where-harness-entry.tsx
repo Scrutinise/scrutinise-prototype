@@ -8,7 +8,7 @@
 
 import React from 'react'
 import { createRoot } from 'react-dom/client'
-import FocusShell, { ChaptersPanel, restoreOnArrival } from '@/components/lex/FocusShell'
+import FocusShell, { ChaptersPanel, restoreOnArrival, useArriveAtWorkspace, useSiteHeader, workspaceY } from '@/components/lex/FocusShell'
 import StageBar from '@/components/lex/StageBar'
 import ChatPanel from '@/components/lex/ChatPanel'
 import { chapterHref, chapterOf, parseUrlState, recordHref } from '@/lib/lex/where-am-i'
@@ -67,9 +67,10 @@ function Drafting() {
   )
 }
 
-function App() {
+/** The shell, as the workspace places it: under the site's sticky header, below the stage bar on a desktop (Z1b item 4). */
+function App({ topInset, homeY }: { topInset?: () => number; homeY?: () => number }) {
   return (
-    <FocusShell ideaId={IDEA} stages={stages} chapters={chapters} slots={{
+    <FocusShell ideaId={IDEA} stages={stages} chapters={chapters} topInset={topInset} homeY={homeY} slots={{
       1: <div className="px-4 py-3"><StageBar context={ctx} /></div>,
       2: <div>{lines('todo', 30)}</div>,
       3: (
@@ -86,4 +87,38 @@ function App() {
   )
 }
 
-if (!restoreOnArrival(IDEA)) createRoot(document.getElementById('root')!).render(<App />)
+// Z1b — the page around the shell, built as CreateIdeaClient builds it, with the SAME hooks (`useSiteHeader`, `useArriveAtWorkspace`,
+// `workspaceY`): a sticky site header (PublicNav's is sticky, 56 px here); on a desktop the stage bar above the workspace; the workspace one
+// screen tall in Full view (`?hview=full`, three scrolling columns standing in for the real ones) or at least one screen in Focus view.
+const narrow = window.innerWidth < 768
+const full = !narrow && new URLSearchParams(location.search).get('hview') === 'full'
+const SCREEN = 'calc(100dvh - var(--site-header-h, 0px))'
+function Page() {
+  const pageRef = React.useRef<HTMLDivElement>(null)
+  const wsRef = React.useRef<HTMLDivElement>(null)
+  const inset = useSiteHeader(pageRef)
+  const homeY = React.useCallback(() => workspaceY(wsRef.current, inset()), [inset])
+  useArriveAtWorkspace(wsRef, !narrow, inset)
+  return (
+    <div ref={pageRef} className={`flex flex-col bg-white ${full ? '' : 'min-h-screen'}`}>
+      <header className="sticky top-0 z-50 h-14 border-b bg-white px-4 py-3" data-site-header>Site header</header>
+      {!narrow && (
+        <div className="border-b border-zinc-100 px-4 pt-2 pb-1.5" data-stagebar-above>
+          <div className="max-w-5xl mx-auto"><StageBar context={ctx} /></div>
+        </div>
+      )}
+      <div ref={wsRef} data-workspace className="flex flex-col" style={narrow ? undefined : full ? { height: SCREEN } : { minHeight: SCREEN }}>
+        <div className="h-12 shrink-0 border-b px-4 py-2" data-toolbar>Exit · How this works · Focus view / Full view</div>
+        {full ? (
+          <div className="flex-1 min-h-0 grid grid-cols-3" data-full-columns>
+            {['lex', 'open', 'research'].map((c) => <div key={c} className="h-full min-h-0 overflow-y-auto border-r" data-full-col={c}>{lines(c, 80)}</div>)}
+          </div>
+        ) : (
+          <App topInset={inset} homeY={narrow ? undefined : homeY} />
+        )}
+      </div>
+    </div>
+  )
+}
+
+if (!restoreOnArrival(IDEA)) createRoot(document.getElementById('root')!).render(<Page />)

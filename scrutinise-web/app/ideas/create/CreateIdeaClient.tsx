@@ -11,7 +11,7 @@
 
 import { DRAFTS_UI, WHERE_UI } from '@/lib/lex/screen-labels'
 import { useState, useEffect, useCallback, useRef, useLayoutEffect, useMemo } from 'react'
-import FocusShell, { ChaptersPanel, restoreOnArrival } from '@/components/lex/FocusShell'
+import FocusShell, { ChaptersPanel, restoreOnArrival, useArriveAtWorkspace, useSiteHeader, workspaceY } from '@/components/lex/FocusShell'
 import type { MenuChapter, MenuStage } from '@/components/lex/WhereAmIMenu'
 import { STORE_KEY, chapterHref, parseUrlState, chapterOf, recordHref, safeStore, type ChapterKey } from '@/lib/lex/where-am-i'
 import PublicNav from '@/components/PublicNav'
@@ -319,6 +319,12 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
   }, [])
   const focus = narrow || viewPref === 'focus'
   const chooseView = (v: 'focus' | 'full') => { setViewPref(v); safeStore(() => window.localStorage).set(STORE_KEY.view, v) }
+  // Z1b item 4 — on a desktop the page opens at the workspace, the stage bar above it out of view until the user scrolls up.
+  const pageRef = useRef<HTMLDivElement>(null)
+  const workspaceRef = useRef<HTMLDivElement>(null)
+  const siteHeaderH = useSiteHeader(pageRef)
+  const homeY = useCallback(() => workspaceY(workspaceRef.current, siteHeaderH()), [siteHeaderH])
+  useArriveAtWorkspace(workspaceRef, !narrow && !booting && !!state, siteHeaderH)
 
   /**
    * ══ 26-Z §6.1 (decision 348) — NEVER LOSE YOUR PLACE ════════════════════════════════════════════════════════════════
@@ -1091,8 +1097,34 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
     : null
 
   return (
-    <div className={`flex flex-col bg-white ${focus ? 'min-h-screen' : 'h-screen'}`} data-layout={focus ? 'focus' : 'full'}>
+    <div ref={pageRef} className={`flex flex-col bg-white ${focus ? 'min-h-screen' : ''}`} data-layout={focus ? 'focus' : 'full'}>
       <PublicNav />
+
+      {/* ══ 25-K §1 — THE PERSISTENT STAGE INDICATOR ══════════════════════════
+          On every screen of this surface (all three panels, all four pages, both stages
+          it serves), because "which stage am I in and what is it for" is a question a
+          user asks continuously, not once. It replaces 25-G's build/proposal switch —
+          those were implementation words; see `lib/lex/stages.ts`. */}
+      {/* 26-Z — below 768 px the stage bar is panel 1, "Where am I?"; it is not repeated above every panel.
+          ⚠ Z1b item 4 — ON A DESKTOP (Full view AND Focus view) IT IS ABOVE THE WORKSPACE AND OUT OF VIEW ON ARRIVAL: the page opens scrolled to
+          the workspace (`useArriveAtWorkspace`), and scrolling up deliberately reveals the stages and the chapters. */}
+      {stageCtx && !narrow && (
+        <div className="border-b border-zinc-100 px-4 pt-2 pb-1.5" data-stagebar-above>
+          <div className="max-w-5xl mx-auto">
+            <StageBar context={stageCtx} />
+            {/* ⚠ 25-N §11 — MOBILE ONLY, and it is an instruction rather than a label. The
+                three stage tiles ARE the control, but on a phone they sit above the fold of
+                wherever the user happens to be, so the way to reach them is "scroll up" — and
+                nothing said so. */}
+            <p className="lg:hidden mt-1 text-[11px] text-zinc-500">Pull down to change stage.</p>
+          </div>
+        </div>
+      )}
+
+      {/* ══ THE WORKSPACE — everything below the stage bar. In Full view it is exactly one screen tall under the site header (the columns
+          scroll inside it, as before); in Focus view at least that, so the page can always be scrolled to it. ══ */}
+      <div ref={workspaceRef} data-workspace className="flex flex-col"
+        style={narrow ? undefined : focus ? { minHeight: 'calc(100dvh - var(--site-header-h, 0px))' } : { height: 'calc(100dvh - var(--site-header-h, 0px))' }}>
 
       {error && (
         <div className="bg-amber-50 border-b border-amber-200 text-amber-800 text-xs px-4 py-1.5 text-center">
@@ -1105,25 +1137,6 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
           keep reading, and until now nothing on this screen said a build was in flight — so
           the draft changed under them with no account of why. */}
       {ideaId && <RerunBanner ideaId={ideaId} />}
-
-      {/* ══ 25-K §1 — THE PERSISTENT STAGE INDICATOR ══════════════════════════
-          On every screen of this surface (all three panels, all four pages, both stages
-          it serves), because "which stage am I in and what is it for" is a question a
-          user asks continuously, not once. It replaces 25-G's build/proposal switch —
-          those were implementation words; see `lib/lex/stages.ts`. */}
-      {/* 26-Z — in Focus view the stage bar is panel 1, "Where am I?"; it is not repeated above every panel. */}
-      {stageCtx && !focus && (
-        <div className="border-b border-zinc-100 px-4 pt-2 pb-1.5">
-          <div className="max-w-3xl mx-auto">
-            <StageBar context={stageCtx} />
-            {/* ⚠ 25-N §11 — MOBILE ONLY, and it is an instruction rather than a label. The
-                three stage tiles ARE the control, but on a phone they sit above the fold of
-                wherever the user happens to be, so the way to reach them is "scroll up" — and
-                nothing said so. */}
-            <p className="lg:hidden mt-1 text-[11px] text-zinc-500">Pull down to change stage.</p>
-          </div>
-        </div>
-      )}
 
       {/* Persistent help affordance — a prominent pill, centred above the chat column
           (the left column of the lg 3-col grid) so it's unmissable (Sprint 1.4).
@@ -1285,6 +1298,8 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
             ideaId={state.ideaId}
             stages={menuStages}
             chapters={menuChapters}
+            topInset={siteHeaderH}
+            homeY={narrow ? undefined : homeY}
             slots={{
               1: <div className="px-4 py-3" data-panel-where><StageBar context={stageCtx ?? null} /></div>,
               2: <div className="px-1" data-panel-todo>{workNode}</div>,
@@ -1587,6 +1602,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   )

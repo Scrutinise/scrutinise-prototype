@@ -1,14 +1,16 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// 26-Z §7 — WHERE AM I?, ONE PANEL AT A TIME, NEVER LOSING YOUR PLACE (decisions 344–348).
+// 26-Z §7 — WHERE AM I?, ONE PANEL AT A TIME, NEVER LOSING YOUR PLACE (decisions 344–348), and Z1b (CCh's GO of 18 Nov 23:40, Charlie's
+// phone findings: one bar at the bottom (353), the bar hugging the bottom edge, the address panel, the desktop opening below the stage bar).
 //
 //   npx tsx --tsconfig tsconfig.json --env-file=.env scripts/check-lex-26z.ts
 //
-// A — the pure rules (lib/lex/where-am-i.ts): the address, the menu's order, the swipe rule, the history, the device keys.
-// B — the words: the three sentences verbatim from the brief; a field-guide entry for every new label.
+// A — the pure rules (lib/lex/where-am-i.ts): the address and its lines, the menu's order, the swipe rule, the history, the device keys, the
+//     keyboard lift.
+// B — the words: the three sentences verbatim from the brief; a field-guide entry for every new label; labels from the table.
 // C — the REAL FocusShell, WhereAmIMenu, ChaptersPanel, StageBar and ChatPanel in Chromium (scripts/fixtures/where-harness-entry.tsx), served
-//     at /ideas/create on a stand-in origin so a reload, `location.replace` and `hashchange` behave as on the site. Widths 360 × 740, 412 × 915,
-//     768 × 1024 and 1440 × 900. Touch is REAL touch input (CDP Input.dispatchTouchEvent / synthesizeScrollGesture, and Playwright's tap),
-//     not clicks standing in for it.
+//     at /ideas/create on a stand-in origin so a reload, `location.replace` and `hashchange` behave as on the site, with the page around the
+//     shell built by the workspace's own hooks. Widths 360 × 740, 412 × 915, 768 × 1024, 1024 × 768 and 1440 × 900. Touch is REAL touch
+//     input (CDP Input.dispatchTouchEvent, and Playwright's tap), not clicks standing in for it.
 //
 // Counts what RAN (§23.2). A browser section that cannot launch is NOT RUN and says so — never a pass.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -17,7 +19,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { build } from 'esbuild'
 import * as W from '../lib/lex/where-am-i'
-import { PANEL_WORD, PANEL_PLACE_WORD, WHERE_SENTENCES, WHERE_UI, DRAFT_RESTORE_UI } from '../lib/lex/screen-labels'
+import { PANEL_WORD, PANEL_PLACE_WORD, WHERE_SENTENCES, WHERE_UI, DRAFT_RESTORE_UI, STAGEBAR_ROW_WORD } from '../lib/lex/screen-labels'
 import { guideEntries } from '../lib/lex/field-guide'
 
 let pass = 0, fail = 0, ran = 0, controls = 0, dead = 0, notRun = 0
@@ -28,12 +30,19 @@ const section = (s: string) => console.log(`\n── ${s} ──`)
 const ROOT = join(__dirname, '..')
 const read = (rel: string) => readFileSync(join(ROOT, rel), 'utf8')
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+const stripComments = (s: string) => s.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
 
 function partA() {
   section('A · the pure rules')
   const d = W.parseUrlState('/ideas/create', '?ideaId=x&view=drafting&panel=6', '#38')
   ok('the address of Drafting, panel 6, #38 is "S2 · C5 · P6"', W.address(d) === 'S2 · C5 · P6', W.address(d))
-  ok('…spelled out: "Stage 2 Development · Chapter 5 Drafting · Panel 6 Working on #38"', W.addressSpelled(d) === 'Stage 2 Development · Chapter 5 Drafting · Panel 6 Working on #38', W.addressSpelled(d))
+  ok('…spelled out on one line (its spoken name): "Stage 2 Development · Chapter 5 Drafting · Panel 6 #38"', W.addressSpelled(d) === 'Stage 2 Development · Chapter 5 Drafting · Panel 6 #38', W.addressSpelled(d))
+  const org = W.parseUrlState('/ideas/create', '?ideaId=x&view=organising&panel=6', '')
+  const ls = W.addressLines(org).map((l) => `${l.code}: ${l.text}`)
+  ok('Z1b — the address panel\'s lines are CCh\'s: "S2: Stage 2 Development" / "C4: Chapter 4 Organising the actions" / "P6: Organising the actions"',
+    ls.join(' | ') === 'S2: Stage 2 Development | C4: Chapter 4 Organising the actions | P6: Organising the actions', ls.join(' | '))
+  ok('Z1b — "Working on" is gone from every panel name and every line', ![W.addressSpelled(d), ...W.addressLines(d).map((l) => l.text), ...W.PANEL_NUMBERS.map((n) => W.panelName(n, d))].some((s) => /Working on/i.test(s)))
+  ok('…with no chapter open the chapter line is left out, as in the address ("S2", "P2")', W.addressLines(W.parseUrlState('/ideas/create', '?ideaId=x', '')).map((l) => l.code).join() === 'S2,P2')
   const bare = W.parseUrlState('/ideas/create', '?ideaId=x', '')
   ok('a bare link opens panel 2 (To-do), and its address leaves the chapter out: "S2 · P2"', W.panelOf(bare) === 2 && W.address(bare) === 'S2 · P2', W.address(bare))
   control('a bare link\'s address naming a chapter (must be FALSE)', /C\d/.test(W.address(bare)))
@@ -42,9 +51,8 @@ function partA() {
   ok('a section on the Deepening screen is ignored (the URL names one chapter)', W.chapterOf(W.parseUrlState('/ideas/create', '?ideaId=x&stage=deepening&section=problem', '')) === 'deepening')
   ok('panel=9 is not a panel (falls back by the rule)', W.parseUrlState('/ideas/create', '?ideaId=x&panel=9', '').panel === null)
   ok('Creation is stage 1', W.stageNumberOf(W.parseUrlState('/ideas/build', '?ideaId=x', '')) === 1)
-  ok('from the top the menu runs Stage → Chapter → Panel', W.levelOrder('top').join() === 'stage,chapter,panel')
-  ok('from the bottom it runs Panel → Chapter → Stage', W.levelOrder('bottom').join() === 'panel,chapter,stage')
-  ok('the level opened first is the one nearest the edge', W.nearestLevel('top') === 'stage' && W.nearestLevel('bottom') === 'panel')
+  ok('from the bottom the menu runs Panel → Chapter → Stage', W.levelOrder('bottom').join() === 'panel,chapter,stage')
+  ok('the level opened first is the one nearest the edge (from the bottom: Panel)', W.nearestLevel('bottom') === 'panel')
   ok('a quick sideways stroke is a swipe, each way', W.classifySwipe(-80, 10, 200) === 'left' && W.classifySwipe(80, -10, 200) === 'right')
   ok('…a short one is not (under 60 px)', W.classifySwipe(-55, 0, 100) === null)
   ok('…a diagonal one is not (less than 1.5 × sideways)', W.classifySwipe(-90, 70, 200) === null)
@@ -71,6 +79,12 @@ function partA() {
   try { st.set('k', 'v'); st.set('k', null) } catch { threw = true }
   ok('storage that throws reads as empty and never throws', st.get('k') === null && !threw && W.safeStore(() => { throw new Error('no storage') }).get('k') === null)
   ok('a draft is offered only when it holds text the box does not', W.shouldOfferDraft('typed', '') && !W.shouldOfferDraft('   ', '') && !W.shouldOfferDraft('same', 'same') && !W.shouldOfferDraft(null, ''))
+  // Z1b item 2 — only a keyboard lifts the bar
+  ok('Z1b — the browser toolbar sliding in or out never lifts the bar (a 56 px gap, not typing: 0)', W.keyboardLift(740, 684, 0, false) === 0)
+  ok('…not even while typing (56 px is chrome, not a keyboard)', W.keyboardLift(740, 684, 0, true) === 0)
+  ok('…a keyboard while typing does (300 px: 300)', W.keyboardLift(740, 440, 0, true) === 300)
+  ok('…and a keyboard-sized gap while NOT typing does not (no keyboard is up)', W.keyboardLift(740, 440, 0, false) === 0)
+  control('the old rule — the whole visual-viewport gap — giving 0 for the toolbar (must be FALSE)', Math.max(0, Math.round(740 - 684 - 0)) === 0)
 }
 
 function partB() {
@@ -81,16 +95,22 @@ function partB() {
   const want = [
     ...Object.keys(PANEL_WORD).map((k) => `panel.${k}`), ...Object.keys(PANEL_PLACE_WORD).map((k) => `panelPlace.${k}`),
     ...Object.keys(WHERE_SENTENCES).map((k) => `whereSentence.${k}`), ...Object.keys(WHERE_UI).map((k) => `where.${k}`),
-    ...Object.keys(DRAFT_RESTORE_UI).map((k) => `draftRestore.${k}`),
+    ...Object.keys(DRAFT_RESTORE_UI).map((k) => `draftRestore.${k}`), ...Object.keys(STAGEBAR_ROW_WORD).map((k) => `stageBarRow.${k}`),
   ]
   const missing = want.filter((k) => !keys.has(k))
-  ok(`every new label (${want.length}) has a field-guide entry`, missing.length === 0, missing.join(', '))
+  ok(`every new label (${want.length}) has a field-guide entry, the stage bar's row labels included`, missing.length === 0, missing.join(', '))
   control('a label that does not exist having an entry (must be FALSE)', keys.has('where.noSuchLabel'))
+  // case-sensitive: "Working on" is the dropped label; "the record you are working on" is plain English
+  ok('no field-guide entry still describes "Working on" or a top bar', !guideEntries().some((e) => /Working on|\btop bar\b/.test(`${e.purpose} ${e.fits}`)),
+    guideEntries().filter((e) => /Working on|\btop bar\b/.test(`${e.purpose} ${e.fits}`)).map((e) => e.key).join(', '))
   // labels on screen come from the table: the shell and menu print no hard-coded copy of the button or the sentences
-  const shell = read('components/lex/FocusShell.tsx') + read('components/lex/WhereAmIMenu.tsx')
-  const code = shell.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')
+  const code = stripComments(read('components/lex/FocusShell.tsx') + read('components/lex/WhereAmIMenu.tsx'))
   ok('the shell and the menu write no copy of "Where am I?" or the sentences outside the label table', !/'Where am I\?'|"Where am I\?"|>Where am I\?</.test(code) && !Object.values(WHERE_SENTENCES).some((s) => code.includes(s)))
+  const bar = stripComments(read('components/lex/StageBar.tsx'))
+  ok('the stage bar\'s row labels come from STAGEBAR_ROW_WORD (decision 352 may rename them: one line)', /STAGEBAR_ROW_WORD\.stages/.test(bar) && /STAGEBAR_ROW_WORD\.chapters/.test(bar) && !/>\s*(Stages|Chapters)\s*</.test(bar))
   ok('the workspace calls the same arrival restore the harness tests (no copy of it)', /restoreOnArrival\(initialIdeaId\)/.test(read('app/ideas/create/CreateIdeaClient.tsx')) && !/isBareUrl\(/.test(read('app/ideas/create/CreateIdeaClient.tsx')))
+  const ws = read('app/ideas/create/CreateIdeaClient.tsx')
+  ok('the workspace uses the same desktop-arrival hooks the harness tests (useSiteHeader, useArriveAtWorkspace, workspaceY)', /useSiteHeader\(pageRef\)/.test(ws) && /useArriveAtWorkspace\(workspaceRef,/.test(ws) && /workspaceY\(workspaceRef\.current/.test(ws))
   ok('every device-draft box is wired: Lex, Edit the action, the action details, the Brief, comments, Add research',
     [['components/lex/ChatPanel.tsx', "'lex.message'"], ['components/lex/FieldsPanel.tsx', '.statement`'], ['components/lex/FieldsPanel.tsx', '.details`'], ['components/lex/BriefSection.tsx', '`brief.'], ['components/lex/ActionComments.tsx', '.comment`'], ['components/lex/AddResearch.tsx', "'research.add'"]]
       .every(([f, s]) => read(f).includes(s) && read(f).includes('<DraftOffer')))
@@ -102,9 +122,10 @@ type Page = import('playwright').Page
 type CDP = import('playwright').CDPSession
 const ORIGIN = 'http://lex26z.test'
 const IDEA_URL = `${ORIGIN}/ideas/create?ideaId=fx`
+const HEADER_PX = 56 // the harness's sticky site header (h-14), standing in for PublicNav's
 
 async function partC() {
-  section('C · the browser — 360 / 412 / 768 / 1440, with touch')
+  section('C · the browser — 360 / 412 / 768 / 1024 / 1440, with touch')
   let chromium: typeof import('playwright').chromium
   try { chromium = (await import('playwright')).chromium } catch (e) { skip('the browser section', `playwright is not loadable: ${(e as Error).message}`); return }
   let bundle: string
@@ -128,21 +149,37 @@ async function partC() {
   try { browser = await chromium.launch() } catch (e) { skip('the browser section', `Chromium would not launch: ${(e as Error).message.slice(0, 120)}`); return }
   const errors: string[] = []
 
-  const open = async (w: number, h: number, url = IDEA_URL, opts: { blocked?: boolean } = {}) => {
+  /**
+   * opts.blocked — storage throws. opts.firstSight — the address has never been seen on this device (otherwise it is marked seen before the
+   * page loads, so the address panel's one-time opening does not sit over what a test taps). opts.fakeVv — `window.visualViewport` is a
+   * stand-in whose height the test sets (`__vv.set(h)`), so a browser toolbar and an on-screen keyboard can be emulated.
+   */
+  const open = async (w: number, h: number, url = IDEA_URL, opts: { blocked?: boolean; firstSight?: boolean; fakeVv?: boolean } = {}) => {
     const context = await browser!.newContext({ viewport: { width: w, height: h }, hasTouch: true, isMobile: w < 768, deviceScaleFactor: 1 })
     if (opts.blocked) await context.addInitScript(() => {
       for (const k of ['localStorage', 'sessionStorage']) Object.defineProperty(window, k, { configurable: true, get() { throw new DOMException('The operation is insecure.', 'SecurityError') } })
     })
+    else if (!opts.firstSight) await context.addInitScript((k: string) => { try { localStorage.setItem(k, '1') } catch { /* blocked */ } }, W.STORE_KEY.addressSeen)
+    // a string, not a function: tsx wraps named methods in a `__name` helper the page does not have (measured 19 Nov: the stand-in never
+    // installed, and the toolbar assertion then passed against the REAL visual viewport — which is why section 2 now proves it is in place)
+    if (opts.fakeVv) await context.addInitScript({ content: `(() => {
+      const ls = {}
+      const fake = { height: window.innerHeight, width: window.innerWidth, offsetTop: 0, offsetLeft: 0, pageTop: 0, pageLeft: 0, scale: 1,
+        addEventListener: function (t, f) { (ls[t] = ls[t] || []).push(f) }, removeEventListener: function (t, f) { ls[t] = (ls[t] || []).filter(function (x) { return x !== f }) } }
+      window.__vv = { set: function (hh) { fake.height = hh; (ls.resize || []).forEach(function (f) { f() }) }, isFake: function () { return window.visualViewport === fake } }
+      Object.defineProperty(window, 'visualViewport', { configurable: true, get: function () { return fake } })
+    })()` })
     await context.route('**/*', (r) => r.fulfill({ status: 200, contentType: 'text/html', body: html }))
     const page = await context.newPage()
     page.on('pageerror', (e) => errors.push(`${w}px: ${e.message}`))
     const cdp = await context.newCDPSession(page)
     await page.goto(url)
-    await page.waitForSelector('[data-focus-shell]')
+    await page.waitForSelector('[data-workspace]')
     return { context, page, cdp }
   }
   const panelOf = (p: Page) => p.locator('[data-focus-shell]').getAttribute('data-panel')
-  const centre = async (p: Page, sel: string) => { const b = await p.locator(sel).first().boundingBox(); if (!b) throw new Error(`no box for ${sel}`); return { x: b.x + b.width / 2, y: b.y + b.height / 2 } }
+  const box = async (p: Page, sel: string) => { const b = await p.locator(sel).first().boundingBox(); if (!b) throw new Error(`no box for ${sel}`); return b }
+  const centre = async (p: Page, sel: string) => { const b = await box(p, sel); return { x: b.x + b.width / 2, y: b.y + b.height / 2 } }
   // ⚠ Every synthetic touch sequence is ended with a touchCancel after its touchEnd. Measured 18 Nov: without it, Chromium's gesture state
   //   after a CDP drag swallowed the NEXT tap — even on a freshly loaded document (1 in 4) — and with it, 0 of 8. A real finger lifting does
   //   not leave that state; the flush only stops one synthetic gesture leaking into the next assertion.
@@ -171,10 +208,29 @@ async function partC() {
   }
   const swipeLeft = (cdp: CDP, w: number, y = 400) => swipe(cdp, w * 0.8, y, w * 0.2, y)
   const swipeRight = (cdp: CDP, w: number, y = 400) => swipe(cdp, w * 0.2, y, w * 0.8, y)
-  const chooseViaMenu = async (p: Page, n: number) => {
+  /**
+   * ⚠ MEASURED, NOT HIDDEN: headless Chromium sometimes drops a synthetic tap after a CDP gesture (pointerdown, pointerup, no click). On
+   * 19 Nov two whole-suite runs on an idle machine each died on one such tap, at different steps. Opening the menu therefore tries the tap
+   * a second time if the menu did not open, and EVERY retry is counted and printed at the end — a rising count is a finding, not noise.
+   */
+  let tapRetries = 0
+  const openMenu = async (p: Page) => {
     await p.tap('[data-where-button="bottom"]')
+    if (await p.locator('[data-where-menu]').count() === 0) {
+      await sleep(150)
+      if (await p.locator('[data-where-menu]').count() === 0) { tapRetries++; await p.tap('[data-where-button="bottom"]') }
+    }
+    await p.waitForSelector('[data-where-menu]', { timeout: 3000 })
+  }
+  /** A tap after a synthetic touch drag, with the same counted second try (see `openMenu`): `done` says whether the tap took effect. */
+  const tapAfterDrag = async (p: Page, sel: string, done: () => Promise<boolean>) => {
+    await p.tap(sel); await sleep(150)
+    if (!(await done())) { tapRetries++; await p.tap(sel); await sleep(150) }
+  }
+  const chooseViaMenu = async (p: Page, n: number) => {
+    await openMenu(p)
     await p.tap(`[data-panel-block="${n}"]`)
-    await p.waitForFunction((x) => document.querySelector('[data-focus-shell]')?.getAttribute('data-panel') === String(x), n)
+    await p.waitForFunction((x) => document.querySelector('[data-focus-shell]')?.getAttribute('data-panel') === String(x), n, { timeout: 5000 })
   }
   // a string, not a function: tsx wraps named inner functions in a `__name` helper the page does not have
   const shape = (p: Page) => p.evaluate(`(() => {
@@ -187,9 +243,15 @@ async function partC() {
     walk(document.querySelector('[data-focus-shell]'), 0)
     return out
   })()`) as Promise<string[]>
+  /** What is drawn on the last row of pixels of the screen, at three places across it: each must be the bar (no page content under it). */
+  const footIsBar = (p: Page) => p.evaluate(() => {
+    const y = window.innerHeight - 1
+    return [8, window.innerWidth / 2, window.innerWidth - 8].map((x) => !!document.elementFromPoint(x, y)?.closest('[data-bottom-bar]'))
+  })
+  const barFoot = async (p: Page) => { const b = await box(p, '[data-bottom-bar]'); return b.y + b.height }
 
   try {
-    // ── 1 · every width: one panel, nothing wider than the screen, the bars ──
+    // ── 1 · every width: one panel, nothing wider than the screen, ONE bar at the bottom (Z1b item 1) ──
     const shapes: Record<number, string[]> = {}
     for (const [w, h] of [[360, 740], [412, 915], [768, 1024], [1440, 900]] as const) {
       const { context, page } = await open(w, h)
@@ -197,127 +259,225 @@ async function partC() {
       ok(`${w} px: one panel is shown, and only one`, shown === 1, `shown ${shown}`)
       const sw = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth])
       ok(`${w} px: no horizontal page scroll (scrollWidth ${sw[0]} ≤ ${sw[1]})`, sw[0] <= sw[1])
-      const tb = await page.locator('[data-where-button="top"]').boundingBox(), bb = await page.locator('[data-where-button="bottom"]').boundingBox()
-      ok(`${w} px: both Where am I? buttons are at least 44 px tall`, !!tb && !!bb && tb.height >= 44 && bb.height >= 44, `${tb?.height} / ${bb?.height}`)
-      ok(`${w} px: each bar carries exactly one button`, await page.locator('[data-top-bar] button').count() === 1 && await page.locator('[data-bottom-bar] button').count() === 1)
-      const bottom = await page.locator('[data-bottom-bar]').boundingBox()
-      ok(`${w} px: the bottom bar sits at the foot of the screen`, !!bottom && Math.abs(bottom.y + bottom.height - h) <= 1, `${bottom?.y}+${bottom?.height} vs ${h}`)
+      ok(`${w} px: Z1b — there is no top bar, and ONE Where am I? button, in the bottom bar`,
+        await page.locator('[data-top-bar]').count() === 0 && await page.locator('[data-where-button]').count() === 1 && await page.locator('[data-bottom-bar] [data-where-button="bottom"]').count() === 1)
+      const wb = await box(page, '[data-where-button="bottom"]'), ab = await box(page, '[data-address]'), inner = await box(page, '[data-bottom-bar] > div')
+      ok(`${w} px: Z1b — Where am I? on the left, the address right-aligned`, wb.x < ab.x && wb.x - inner.x <= 20 && inner.x + inner.width - (ab.x + ab.width) <= 20,
+        `button ${Math.round(wb.x)}–${Math.round(wb.x + wb.width)}, address ${Math.round(ab.x)}–${Math.round(ab.x + ab.width)}, bar ${Math.round(inner.x)}–${Math.round(inner.x + inner.width)}`)
+      ok(`${w} px: …the address reads "S2 · P2" (a bare link, To-do)`, (await page.locator('[data-address]').innerText()).trim() === 'S2 · P2')
+      ok(`${w} px: both controls on the bar are at least 44 px tall`, wb.height >= 44 && ab.height >= 44, `${wb.height} / ${ab.height}`)
+      ok(`${w} px: the bottom bar sits at the foot of the screen`, Math.abs(await barFoot(page) - h) <= 1, `${await barFoot(page)} vs ${h}`)
       const mainW = await page.locator('main').evaluate((m) => m.getBoundingClientRect().width)
       ok(`${w} px: the panel is at most 760 px wide`, mainW <= 760.5, String(mainW))
-      // the menu and its blocks work at every width
-      await page.tap('[data-where-button="bottom"]')
+      await openMenu(page)
       const blocks = await page.locator('[data-panel-block]').count()
       const tooWide = await page.evaluate(() => { const m = document.querySelector('[data-where-menu]')!.getBoundingClientRect(); return m.right > window.innerWidth + 0.5 || m.left < -0.5 })
-      ok(`${w} px: the menu opens with the seven panel blocks, inside the screen`, blocks === 7 && !tooWide, `${blocks} blocks`)
+      ok(`${w} px: the menu opens from the bottom with the seven panel blocks, inside the screen`, blocks === 7 && !tooWide && await page.locator('[data-where-menu]').getAttribute('data-edge') === 'bottom', `${blocks} blocks`)
       const small = await page.locator('[data-where-menu] button').evaluateAll((bs) => bs.filter((b) => (b as HTMLElement).offsetParent && b.getBoundingClientRect().height < 44 && !(b as HTMLElement).hasAttribute('data-where-backdrop')).length)
       ok(`${w} px: every control in the menu is at least 44 px tall`, small === 0, `${small} under 44 px`)
       await page.keyboard.press('Escape')
       shapes[w] = await shape(page)
       await context.close()
     }
-    // ── 6 · Focus view at 1440 is the 360 composition ──
+    // ── Focus view at 1440 is the 360 composition ──
     ok('Focus view at 1440 px has the same DOM structure as 360 px', JSON.stringify(shapes[1440]) === JSON.stringify(shapes[360]), `${shapes[1440].length} vs ${shapes[360].length} elements`)
     control('the 360 structure matching a different page (must be FALSE)', JSON.stringify(shapes[360]) === JSON.stringify(shapes[360].slice(1)))
-    skip('Full view unchanged, in a browser', 'the three-column workspace needs a signed-in session and the database; no harness renders it. The 26-X suites render the record and the lists it holds; Charlie’s screen is the check')
+    skip('Full view unchanged, in a browser', 'the three-column workspace needs a signed-in session and the database; no harness renders it. The harness stands in three scrolling columns for the arrival test (section 4); Charlie’s screen is the check for the real ones')
 
-    // ── at 360: scrolling, the top bar, the menu ──
+    // ── 2 · Z1b — the bar hugs the screen's bottom edge, with the toolbar shown and hidden; only a keyboard lifts it ──
+    {
+      const { context, page } = await open(360, 740, IDEA_URL, { fakeVv: true })
+      ok('360 × 740 (Edge toolbar shown): the bar\'s foot is the screen\'s foot', Math.abs(await barFoot(page) - 740) <= 1, String(await barFoot(page)))
+      ok('…and the last row of pixels is the bar, at both edges and the middle (no page content below it)', (await footIsBar(page)).every(Boolean), JSON.stringify(await footIsBar(page)))
+      await page.setViewportSize({ width: 360, height: 796 }); await sleep(250)
+      ok('360 × 796 (the toolbar slid away, the screen 56 px taller): the bar follows the edge', Math.abs(await barFoot(page) - 796) <= 1 && (await footIsBar(page)).every(Boolean), `${await barFoot(page)}; ${JSON.stringify(await footIsBar(page))}`)
+      // the bug Charlie saw: the visual viewport says 56 px of the layout viewport is under browser chrome — the bar must NOT move for it
+      await page.evaluate(() => (window as unknown as { __vv: { set(h: number): void } }).__vv.set(window.innerHeight - 56)); await sleep(150)
+      ok('(the stand-in visual viewport is in place: the page reads the 56 px gap)', await page.evaluate('window.__vv && window.__vv.isFake() && window.innerHeight - window.visualViewport.height === 56') === true)
+      ok('a 56 px toolbar gap reported by the visual viewport, nobody typing: the bar stays on the edge (found 18 Nov in Edge: it floated)',
+        Math.abs(await barFoot(page) - 796) <= 1 && (await footIsBar(page)).every(Boolean), `${await barFoot(page)}; ${JSON.stringify(await footIsBar(page))}`)
+      await page.evaluate(() => (window as unknown as { __vv: { set(h: number): void } }).__vv.set(window.innerHeight)); await sleep(150)
+      await page.setViewportSize({ width: 360, height: 740 }); await sleep(150)
+      await page.evaluate(() => (window as unknown as { __vv: { set(h: number): void } }).__vv.set(window.innerHeight)); await sleep(150)
+      // the keyboard: Lex's box focused, a 300 px keyboard
+      await chooseViaMenu(page, 3)
+      await page.focus('[data-chat-input]')
+      await page.evaluate(() => (window as unknown as { __vv: { set(h: number): void } }).__vv.set(window.innerHeight - 300)); await sleep(200)
+      const foot = await barFoot(page)
+      ok('typing with a 300 px keyboard up: the bar rides on top of the keyboard', Math.abs(foot - 440) <= 1,
+        `${foot}; ${await page.evaluate('JSON.stringify({ active: document.activeElement && document.activeElement.tagName, inner: window.innerHeight, vv: window.visualViewport.height })')}`)
+      const inp = await box(page, '[data-chat-input]'), bar = await box(page, '[data-bottom-bar]')
+      ok('…and Lex\'s typing box is above the bar, in the part of the screen the keyboard leaves', inp.y + inp.height <= bar.y + 0.5 && inp.y >= 0, `input ${Math.round(inp.y)}–${Math.round(inp.y + inp.height)}, bar from ${Math.round(bar.y)}`)
+      await page.locator('[data-chat-input]').blur()
+      await page.evaluate(() => (window as unknown as { __vv: { set(h: number): void } }).__vv.set(window.innerHeight)); await sleep(200)
+      ok('the keyboard down: the bar is back on the edge', Math.abs(await barFoot(page) - 740) <= 1 && (await footIsBar(page)).every(Boolean))
+      await context.close()
+    }
+
+    // ── 3 · Z1b — the address panel: one line per level, a real list, until dismissed ──
+    {
+      const { context, page, cdp } = await open(360, 740, `${IDEA_URL}&view=organising&panel=6`, { firstSight: true })
+      ok('the first time, the address panel opens by itself (the address "spelled out the first time")', await page.locator('[data-address-panel]').count() === 1)
+      const lines = await page.locator('[data-address-panel] ul > li').allInnerTexts()
+      ok('it lists the place one line per level, exactly: S2: Stage 2 Development / C4: Chapter 4 Organising the actions / P6: Organising the actions',
+        lines.map((l) => l.trim()).join(' | ') === 'S2: Stage 2 Development | C4: Chapter 4 Organising the actions | P6: Organising the actions', lines.join(' | '))
+      const tops = await page.locator('[data-address-panel] li').evaluateAll((ls) => ls.map((l) => Math.round(l.getBoundingClientRect().top)))
+      ok('…as a bulleted list, one line under another (real line breaks, not a run-on string)', await page.locator('[data-address-panel] ul').evaluate((u) => getComputedStyle(u).listStyleType) === 'disc' && tops.length === 3 && tops[0] < tops[1] && tops[1] < tops[2], tops.join(','))
+      ok('…with no "Working on"', !/Working on/i.test(await page.locator('[data-address-panel]').innerText()))
+      const pb = await box(page, '[data-address-panel] > div'), bb = await box(page, '[data-bottom-bar]')
+      ok('…sitting just above the bar, inside the screen', pb.y + pb.height <= bb.y + 1 && pb.y >= 0 && pb.x >= 0 && pb.x + pb.width <= 360.5)
+      await page.tap('[data-address-close]')
+      ok('Close dismisses it', await page.locator('[data-address-panel]').count() === 0)
+      await page.reload(); await page.waitForSelector('[data-workspace]')
+      ok('…and only the first time does it open by itself', await page.locator('[data-address-panel]').count() === 0)
+      await page.tap('[data-address]')
+      ok('tapping the address opens it', await page.locator('[data-address-panel]').count() === 1)
+      await sleep(2600)
+      ok('it is not a momentary popup: still open 2.6 s later', await page.locator('[data-address-panel]').count() === 1)
+      await swipe(cdp, 180, 500, 180, 250, 200)
+      ok('…and still open after the page is scrolled', await page.locator('[data-address-panel]').count() === 1)
+      await tapAfterDrag(page, '[data-address]', async () => await page.locator('[data-address-panel]').count() === 0)
+      ok('tapping the address again dismisses it', await page.locator('[data-address-panel]').count() === 0)
+      await page.tap('[data-address]'); await page.keyboard.press('Escape')
+      ok('Esc dismisses it', await page.locator('[data-address-panel]').count() === 0)
+      await context.close()
+    }
+
+    // ── 4 · Z1b — on a desktop the page opens at the workspace; the stage bar above it is one row, labelled ──
+    for (const [w, h] of [[768, 1024], [1024, 768], [1440, 900]] as const) {
+      for (const view of ['focus', 'full'] as const) {
+        const { context, page } = await open(w, h, view === 'full' ? `${IDEA_URL}&hview=full` : IDEA_URL)
+        await sleep(250)
+        const at = await page.evaluate((hh) => { const ws = document.querySelector('[data-workspace]')!.getBoundingClientRect(); const sb = document.querySelector('[data-stagebar-above]')!.getBoundingClientRect(); return { y: window.scrollY, ws: ws.top, sbBottom: sb.bottom, sbH: sb.height, max: document.documentElement.scrollHeight - window.innerHeight, hh } }, HEADER_PX)
+        ok(`${w} × ${h} ${view}: on arrival the stages and chapters are NOT shown — the page opens at the workspace, under the site header`,
+          at.sbH > 20 && at.sbBottom <= HEADER_PX + 0.5 && Math.abs(at.ws - HEADER_PX) <= 1, JSON.stringify(at))
+        if (view === 'full') {
+          const wsB = await box(page, '[data-workspace]')
+          ok(`${w} × ${h} full: the workspace is exactly the rest of the screen (its foot is the screen's foot; the page scrolls no further)`, Math.abs(wsB.y + wsB.height - h) <= 1 && Math.abs(at.max - at.y) <= 1, `foot ${wsB.y + wsB.height}, scroll ${at.y} of ${at.max}`)
+          const c = await centre(page, '[data-full-col="open"]')
+          await page.mouse.move(c.x, c.y); await page.mouse.wheel(0, 600); await sleep(300)
+          ok(`${w} × ${h} full: the wheel over a column scrolls the column, not the page`, await page.locator('[data-full-col="open"]').evaluate((e) => e.scrollTop) > 100 && Math.abs(await page.evaluate(() => window.scrollY) - at.y) <= 1)
+          await page.locator('[data-full-col="open"]').evaluate((e) => { e.scrollTop = 0 })
+        }
+        // scrolling up deliberately reveals them (in Full view: the wheel over a column already at its top carries on to the page)
+        const c2 = await centre(page, view === 'full' ? '[data-full-col="open"]' : 'main')
+        await page.mouse.move(c2.x, Math.min(c2.y, h - 120)); await page.mouse.wheel(0, -1200); await sleep(400)
+        const up = await page.evaluate(() => ({ y: window.scrollY, top: document.querySelector('[data-stagebar-above]')!.getBoundingClientRect().top }))
+        ok(`${w} × ${h} ${view}: scrolling up reveals the stage bar and the checklist`, up.y === 0 && up.top >= HEADER_PX - 0.5, JSON.stringify(up))
+        const stageTops = await page.locator('[data-stagebar-above] [data-lifecycle-stage]').evaluateAll((ls) => ls.map((l) => Math.round(l.getBoundingClientRect().top)))
+        ok(`${w} × ${h} ${view}: all seven stages in ONE row (In Force does not wrap under the others)`, stageTops.length === 7 && new Set(stageTops).size === 1, stageTops.join(','))
+        const ov = await page.locator('[data-stagebar-above] [data-stage-row]').evaluate((o) => o.scrollWidth - o.clientWidth)
+        ok(`${w} × ${h} ${view}: …and nothing in the row is cut off sideways`, ov <= 0, `overflow ${ov} px`)
+        // a string, not a function (the `__name` helper — see `shape`)
+        const lab = await page.evaluate(`(() => {
+          const q = (s) => document.querySelector('[data-stagebar-above] ' + s)
+          return { s: q('[data-row-label="stages"]')?.innerText.trim(), c: q('[data-row-label="chapters"]')?.innerText.trim(),
+            sR: q('[data-row-label="stages"]')?.getBoundingClientRect().right, s1: q('[data-lifecycle-stage]')?.getBoundingClientRect().left,
+            cR: q('[data-row-label="chapters"]')?.getBoundingClientRect().right, c1: q('[data-checklist-line]')?.getBoundingClientRect().left }
+        })()`) as { s?: string; c?: string; sR?: number; s1?: number; cR?: number; c1?: number }
+        ok(`${w} × ${h} ${view}: each row is labelled at its left — "${STAGEBAR_ROW_WORD.stages}", "${STAGEBAR_ROW_WORD.chapters}"`,
+          lab.s?.toLowerCase() === STAGEBAR_ROW_WORD.stages.toLowerCase() && lab.c?.toLowerCase() === STAGEBAR_ROW_WORD.chapters.toLowerCase() && lab.sR! <= lab.s1! && lab.cR! <= lab.c1!, JSON.stringify(lab))
+        if (view === 'focus' && w === 1440) {
+          await page.evaluate(() => window.scrollTo(0, 0)); await sleep(100)
+          await chooseViaMenu(page, 7); await sleep(150)
+          const y7 = await page.evaluate(() => [window.scrollY, Math.round(document.querySelector('[data-workspace]')!.getBoundingClientRect().top)])
+          ok('1440 focus: a panel never visited opens at the workspace too, not at the top of the page', y7[1] === HEADER_PX, JSON.stringify(y7))
+        }
+        await context.close()
+      }
+    }
+    {
+      // control: the same bar on a phone (panel 1) wraps — so "one row" above is a property of the desktop layout, measured, not a constant
+      const { context, page } = await open(360, 740)
+      await chooseViaMenu(page, 1)
+      const tops = await page.locator('[data-focus-panel="1"] [data-lifecycle-stage]').evaluateAll((ls) => ls.map((l) => Math.round(l.getBoundingClientRect().top)))
+      control('the seven stages in one row on a 360 px phone (must be FALSE: there they wrap)', tops.length === 7 && new Set(tops).size === 1)
+      ok('…and on the phone the row labels are not drawn (panel 1 is already named)', await page.locator('[data-focus-panel="1"] [data-row-label]').evaluateAll((ls) => ls.every((l) => (l as HTMLElement).offsetParent === null)))
+      await context.close()
+    }
+    {
+      // a restored place on a desktop wins over the arrival
+      const { context, page } = await open(1440, 900, `${IDEA_URL}&panel=7`)
+      await page.evaluate(() => window.scrollTo(0, 1400)); await sleep(700)
+      await page.goto(IDEA_URL); await page.waitForSelector('[data-workspace]'); await sleep(700)
+      ok('1440: a bare link back puts you where you were (panel 7, scroll 1400), not at the workspace\'s top', await panelOf(page) === '7' && Math.abs(await page.evaluate(() => window.scrollY) - 1400) < 40, `panel ${await panelOf(page)}, scrollY ${await page.evaluate(() => window.scrollY)}`)
+      await context.close()
+    }
+
+    // ── at 360: scrolling, the menu ──
     {
       const { context, page, cdp } = await open(360, 740)
-      // the page scrolls, by touch; a vertical stroke is not a swipe
       // a real touch drag upward (CDP touch events; headless Chromium ignores synthesizeScrollGesture's touch source — measured)
       await swipe(cdp, 180, 650, 180, 150, 200)
       await sleep(400)
       const y1 = await page.evaluate(() => window.scrollY)
       ok('360 px: a touch scroll scrolls the PAGE (not a box inside it)', y1 > 200, `scrollY ${y1}`)
-      ok('360 px: …and the top bar hides on scroll down', await page.locator('[data-top-bar]').getAttribute('data-hidden') === 'true')
+      ok('360 px: …the bar stays on the edge while the page scrolls', Math.abs(await barFoot(page) - 740) <= 1)
       ok('360 px: …and a vertical stroke neither changed the panel nor opened the menu', await panelOf(page) === '2' && await page.locator('[data-where-menu]').count() === 0)
-      await swipe(cdp, 180, 200, 180, 450, 200)
-      await sleep(400)
-      ok('360 px: the top bar returns on scroll up', await page.locator('[data-top-bar]').getAttribute('data-hidden') !== 'true')
-      control('the bar hidden after scrolling back up (must be FALSE)', await page.locator('[data-top-bar]').getAttribute('data-hidden') === 'true')
       await page.evaluate(() => window.scrollTo(0, 0)); await sleep(150)
 
       // the first-time explainer
-      await page.evaluate(() => { (window as unknown as { __ev: string[] }).__ev = []; for (const t of ['click', 'pointerdown', 'pointerup', 'pointercancel', 'touchstart', 'touchend']) document.addEventListener(t, (e) => (window as unknown as { __ev: string[] }).__ev.push(e.type), true) })
-      await page.tap('[data-where-button="top"]')
+      await openMenu(page)
       await sleep(150)
       const ex = await page.locator('[data-where-explainer]').innerText({ timeout: 1000 }).catch(() => '')
-      const why = ex ? '' : JSON.stringify(await page.evaluate(() => {
-        const b = document.querySelector('[data-where-button="top"]')!.getBoundingClientRect()
-        const at = document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2) as HTMLElement | null
-        return { menu: document.querySelectorAll('[data-where-menu]').length, scrollY: window.scrollY, bar: (document.querySelector('[data-top-bar]') as HTMLElement).style.transform, btn: [b.x, b.y, b.width, b.height], at: at?.dataset.whereButton ?? at?.tagName, ev: (window as unknown as { __ev: string[] }).__ev.join(' ') }
-      }))
-      ok('the three sentences show the first time the menu opens', Object.values(WHERE_SENTENCES).every((s) => ex.includes(s)), ex || why)
+      ok('the three sentences show the first time the menu opens', Object.values(WHERE_SENTENCES).every((s) => ex.includes(s)), ex)
       await page.tap('[data-where-got-it]')
       ok('"Got it" folds them away', await page.locator('[data-where-explainer]').count() === 0)
       await page.tap('[data-where-explain]')
       ok('"?" brings them back', await page.locator('[data-where-explainer]').count() === 1)
       await page.tap('[data-where-got-it]')
 
-      // order from the top; the current item marked
-      const topOrder = await page.locator('[data-where-menu] [data-level]').evaluateAll((xs) => xs.map((x) => (x as HTMLElement).dataset.level).join())
-      ok('from the top: Stage → Chapter → Panel', topOrder === 'stage,chapter,panel', topOrder)
-      ok('…opened from the top bar, as a sheet at the top', await page.locator('[data-where-menu]').getAttribute('data-edge') === 'top' && ((await page.locator('[data-where-menu]').boundingBox())?.y ?? 99) < 5)
+      const botOrder = await page.locator('[data-where-menu] [data-level]').evaluateAll((xs) => xs.map((x) => (x as HTMLElement).dataset.level).join())
+      ok('from the bottom: Panel → Chapter → Stage', botOrder === 'panel,chapter,stage', botOrder)
+      ok('…as a sheet at the foot, with the panel level (under the thumb) open', await page.locator('[data-where-menu]').getAttribute('data-edge') === 'bottom' && await page.locator('[data-level-head="panel"]').getAttribute('aria-expanded') === 'true')
+      // keyboard and screen-reader order: Tab reaches the levels in the same order as they are drawn
+      const heads: string[] = []
+      await page.focus('[data-level-head="panel"]')
+      for (let i = 0; i < 40; i++) { const f = await page.evaluate(() => (document.activeElement as HTMLElement | null)?.dataset.levelHead ?? null); if (f && !heads.includes(f)) heads.push(f); await page.keyboard.press('Tab') }
+      ok('Tab reaches the levels in the order they are drawn (Panel, Chapter, Stage)', heads.join() === 'panel,chapter,stage', heads.join())
+      ok('…and focusing a level opens it (the last focused is open)', await page.locator('[data-level-head="stage"]').getAttribute('aria-expanded') === 'true')
       const stageHere = await page.locator('[data-item^="stage:"][aria-current]').innerText()
       ok('the Stage level marks Development: ● and "You are here"', /●/.test(stageHere) && /Development/.test(stageHere) && /You are here/i.test(stageHere), stageHere)
       ok('stages with nothing built cannot be chosen, and say why', await page.locator('[data-item="stage:3"]').isDisabled() && /not yet open/.test(await page.locator('[data-item="stage:3"]').innerText()))
-      // keyboard and screen-reader order: Tab reaches the levels in the same order as they are drawn
-      const heads: string[] = []
-      await page.focus('[data-level-head="stage"]')
-      for (let i = 0; i < 40; i++) { const f = await page.evaluate(() => (document.activeElement as HTMLElement | null)?.dataset.levelHead ?? null); if (f && !heads.includes(f)) heads.push(f); await page.keyboard.press('Tab') }
-      ok('Tab reaches the levels in the order they are drawn (Stage, Chapter, Panel)', heads.join() === 'stage,chapter,panel', heads.join())
-      ok('…and focusing a level opens it (the last focused is open)', await page.locator('[data-level-head="panel"]').getAttribute('aria-expanded') === 'true')
       await page.keyboard.press('Escape')
       ok('Esc closes the menu', await page.locator('[data-where-menu]').count() === 0)
 
-      // tapping outside closes it; swiping the top sheet back up closes it
-      await page.tap('[data-where-button="top"]')
-      await page.touchscreen.tap(180, 720)
+      // tapping outside closes it; swiping the sheet back down closes it, and the page behind does not move
+      await openMenu(page)
+      await page.touchscreen.tap(180, 60)
       ok('tapping outside closes it', await page.locator('[data-where-menu]').count() === 0)
-      // part-way down the page (the top bar has hidden itself, so the bottom bar is the one in reach): open, swipe the sheet down, closed
       await page.evaluate(() => window.scrollTo(0, 300)); await sleep(200)
-      await page.tap('[data-where-button="bottom"]')
+      await openMenu(page)
       const hb = await centre(page, '[data-where-head] h2')
       await swipe(cdp, hb.x, hb.y, hb.x, hb.y + 120)
       await sleep(300)
       const yAfter = await page.evaluate(() => window.scrollY)
-      ok('swiping the bottom sheet back down closes it, and the page behind it did not move (found 18 Nov: it scrolled a screen or more)', await page.locator('[data-where-menu]').count() === 0 && yAfter === 300, `scrollY ${yAfter}`)
-      await page.reload(); await page.waitForSelector('[data-focus-shell]') // a fresh document: see the measured residual below
+      ok('swiping the sheet back down closes it, and the page behind it did not move (found 18 Nov: it scrolled a screen or more)', await page.locator('[data-where-menu]').count() === 0 && yAfter === 300, `scrollY ${yAfter}`)
+      await page.reload(); await page.waitForSelector('[data-workspace]')
       await sleep(700)
-      ok('a reload that puts the scroll back (300 px) leaves the top bar showing — the page scrolling itself is not the user scrolling', await page.evaluate(() => window.scrollY) === 300 && await page.locator('[data-top-bar]').getAttribute('data-hidden') !== 'true')
-      await page.evaluate(() => window.scrollTo(0, 0)); await sleep(200)
-      await page.tap('[data-where-button="top"]')
-      const hd = await centre(page, '[data-where-head] h2')
-      await swipe(cdp, hd.x, hd.y, hd.x, hd.y - 120)
-      await sleep(300)
-      ok('swiping the top sheet back up closes it', await page.locator('[data-where-menu]').count() === 0)
+      ok('a reload puts the scroll back (300 px)', await page.evaluate(() => window.scrollY) === 300)
       // ⚠ MEASURED, NOT PASSED: in headless Chromium the first tap after a swipe-close is sometimes dropped (pointerdown and pointerup, no
-      // click). Tap-closes and Esc-closes never do this. Printed as a rate so it is visible; Charlie's phone settles whether it is real.
+      // click). Tap-closes and Esc-closes never do this. Charlie did not report it on his phone (CCh, 18 Nov 23:40: leave it).
       let dropped = 0
       for (let k = 0; k < 5; k++) {
-        await page.tap('[data-where-button="top"]'); await sleep(150)
+        await page.tap('[data-where-button="bottom"]'); await sleep(150)
         if (await page.locator('[data-where-menu]').count() === 0) { dropped++; continue } // the open itself was the dropped tap
         const h2 = await centre(page, '[data-where-head] h2')
-        await swipe(cdp, h2.x, h2.y, h2.x, h2.y - 120); await sleep(400)
+        await swipe(cdp, h2.x, h2.y, h2.x, h2.y + 120); await sleep(400)
         await page.tap('[data-where-button="bottom"]'); await sleep(150)
         if (await page.locator('[data-where-menu]').count() === 0) dropped++
         else await page.keyboard.press('Escape')
         await sleep(150)
       }
-      skip(`the first tap after closing the sheet by swipe always lands (measured: ${dropped} of 5 dropped)`, 'a headless-Chromium synthetic-touch effect cannot be told from a real one here; Charlie’s phone (§8, "swiping it back") is the check')
-      await page.reload(); await page.waitForSelector('[data-focus-shell]')
+      skip(`the first tap after closing the sheet by swipe always lands (measured: ${dropped} of 5 dropped)`, 'a headless-Chromium synthetic-touch effect cannot be told from a real one here; Charlie did not report it on his phone')
+      await page.reload(); await page.waitForSelector('[data-workspace]')
       await page.evaluate(() => window.scrollTo(0, 0)); await sleep(200)
 
-      // from the bottom: Panel → Chapter → Stage, panel open first
-      await page.tap('[data-where-button="bottom"]')
-      const botOrder = await page.locator('[data-where-menu] [data-level]').evaluateAll((xs) => xs.map((x) => (x as HTMLElement).dataset.level).join())
-      ok('from the bottom: Panel → Chapter → Stage', botOrder === 'panel,chapter,stage', botOrder)
-      ok('…as a sheet at the foot, with the panel level (under the thumb) open', await page.locator('[data-where-menu]').getAttribute('data-edge') === 'bottom' && await page.locator('[data-level-head="panel"]').getAttribute('aria-expanded') === 'true')
+      // drag: the finger moves over a level and it opens; lifted on an item, it goes there
+      await openMenu(page)
       const blocks = await page.locator('[data-panel-block]').evaluateAll((bs) => bs.map((b) => b.getAttribute('aria-label') ?? ''))
       ok('the seven blocks are labelled "Panel N · name · where on desktop"', blocks.length === 7 && blocks.every((l, i) => new RegExp(`^Panel ${i + 1} · .+ · (across the top|left|centre|right) on desktop$`).test(l)), blocks.join(' | '))
       ok('…and the current block says "You are here"', /You are here/i.test(await page.locator('[data-panel-block][aria-current]').innerText()))
-
-      // drag: the finger moves over a level and it opens; lifted on an item, it goes there
       const s0 = await centre(page, '[data-level-head="stage"]')
       await touch(cdp, 'touchStart', s0.x, s0.y); await touch(cdp, 'touchMove', s0.x, s0.y - 12); await sleep(60)
       ok('drag: the finger over Stage opens Stage', await page.locator('[data-level-head="stage"]').getAttribute('aria-expanded') === 'true')
@@ -330,10 +490,10 @@ async function partC() {
       await touch(cdp, 'touchEnd')
       ok('drag: lifting on "5. Drafting" goes to Drafting, in panel 6', await nav && /panel=6/.test(page.url()), page.url())
       await page.waitForSelector('[data-focus-shell]')
-      ok('…where the address reads "S2 · C5 · P6"', (await page.locator('[data-address]').innerText()).startsWith('S2 · C5 · P6'))
+      ok('…where the address reads "S2 · C5 · P6"', (await page.locator('[data-address]').innerText()).trim() === 'S2 · C5 · P6')
 
       // tap-tap
-      await page.tap('[data-where-button="top"]')
+      await openMenu(page)
       await page.tap('[data-level-head="chapter"]')
       ok('tap: the first tap on a level opens it (and goes nowhere)', await page.locator('[data-level-head="chapter"]').getAttribute('aria-expanded') === 'true' && /view=drafting/.test(page.url()))
       const nav2 = page.waitForURL(/view=organising/, { timeout: 4000 }).then(() => true).catch(() => false)
@@ -342,7 +502,7 @@ async function partC() {
       await context.close()
     }
 
-    // ── 3 · each block opens its panel ──
+    // ── each block opens its panel ──
     {
       const { context, page } = await open(360, 740)
       const reached: number[] = []
@@ -352,7 +512,7 @@ async function partC() {
       await context.close()
     }
 
-    // ── 4 · gestures ──
+    // ── gestures ──
     {
       const { context, page, cdp } = await open(360, 740)
       await chooseViaMenu(page, 7); await chooseViaMenu(page, 5)
@@ -373,7 +533,7 @@ async function partC() {
       const before = await panelOf(page)
       await swipe(cdp, 300, t.y, 60, t.y)
       ok('a sideways stroke inside a horizontally scrollable table fires no swipe', await panelOf(page) === before && await page.locator('[data-where-menu]').count() === 0)
-      control('the same stroke outside the table not changing the panel (must be FALSE)', await (async () => { await swipe(cdp, 300, 690, 60, 690); return (await panelOf(page)) === before })())
+      control('the same stroke outside the table not changing the panel (must be FALSE)', await (async () => { await swipe(cdp, 300, 600, 60, 600); return (await panelOf(page)) === before })())
       // back returns to a panel at the same scroll
       await chooseViaMenu(page, 7)
       await page.evaluate(() => window.scrollTo(0, 1500)); await sleep(650)
@@ -393,31 +553,25 @@ async function partC() {
       await page.waitForFunction(() => document.querySelector('[data-focus-shell]')?.getAttribute('data-panel') === '6')
       await page.waitForFunction(() => document.querySelector('[data-open-record]')?.textContent === 'open: #38', undefined, { timeout: 2000 }).catch(() => {}) // hashchange is async
       ok('panel 5 → 6: choosing #38 opens it in panel 6, with no page load', await page.locator('[data-open-record]').innerText() === 'open: #38' && await page.evaluate(() => (window as unknown as { __marker?: number }).__marker === 1))
-      ok('…and the address reads "S2 · C5 · P6"', (await page.locator('[data-address]').innerText()).startsWith('S2 · C5 · P6'))
+      ok('…and the address reads "S2 · C5 · P6"', (await page.locator('[data-address]').innerText()).trim() === 'S2 · C5 · P6')
       await swipeLeft(cdp, 360, 300)
       ok('…and swipe left goes back to panel 5', await panelOf(page) === '5')
       await context.close()
     }
     {
-      const { context, page, cdp } = await open(360, 740, `${IDEA_URL}&view=drafting&panel=6#38`)
+      const { context, page } = await open(360, 740, `${IDEA_URL}&view=drafting&panel=6#38`)
       ok('a deep link opens the right panel at 360 px (Drafting, panel 6, #38)', await panelOf(page) === '6' && await page.locator('[data-open-record]').innerText() === 'open: #38')
-      const sp = await page.locator('[data-address-spelled]').innerText().catch(() => '')
-      ok('the first time, the address is spelled out: "Stage 2 Development · Chapter 5 Drafting · Panel 6 Working on #38"', sp === 'Stage 2 Development · Chapter 5 Drafting · Panel 6 Working on #38', sp)
-      await page.reload(); await page.waitForSelector('[data-focus-shell]')
-      ok('…and only the first time', await page.locator('[data-address-spelled]').count() === 0)
-      const a = await centre(page, '[data-address]')
-      await touch(cdp, 'touchStart', a.x, a.y); await sleep(700)
-      const tip = await page.locator('[data-address-tooltip]').innerText().catch(() => '')
-      await touch(cdp, 'touchEnd')
-      ok('a long press on the address spells it out', tip === 'Stage 2 Development · Chapter 5 Drafting · Panel 6 Working on #38', tip)
+      await page.tap('[data-address]')
+      const lines = (await page.locator('[data-address-panel] li').allInnerTexts()).map((l) => l.trim())
+      ok('…and its address panel reads "S2: Stage 2 Development" / "C5: Chapter 5 Drafting" / "P6: #38"', lines.join(' | ') === 'S2: Stage 2 Development | C5: Chapter 5 Drafting | P6: #38', lines.join(' | '))
       await context.close()
     }
 
-    // ── 1440: the keyboard, and hover ──
+    // ── 1440: the keyboard, and the address by click ──
     {
       const { context, page } = await open(1440, 900)
       await page.keyboard.press('w')
-      ok('1440 px: W opens Where am I? (from the top)', await page.locator('[data-where-menu]').getAttribute('data-edge') === 'top')
+      ok('1440 px: W opens Where am I? (from the bottom)', await page.locator('[data-where-menu]').getAttribute('data-edge') === 'bottom')
       await page.keyboard.press('Escape')
       ok('1440 px: Esc closes it', await page.locator('[data-where-menu]').count() === 0)
       await chooseViaMenu(page, 7); await chooseViaMenu(page, 4)
@@ -425,11 +579,10 @@ async function partC() {
       ok('1440 px: ← goes back (4 → 7)', await panelOf(page) === '7')
       await page.keyboard.press('ArrowRight')
       ok('1440 px: → goes forward (7 → 4)', await panelOf(page) === '4')
-      // the first sight spells it out inline; from then on, hover does
-      ok('1440 px: the first time, the address is spelled out inline', await page.locator('[data-address-spelled]').count() === 1)
-      await page.reload(); await page.waitForSelector('[data-focus-shell]')
-      await page.hover('[data-address]')
-      ok('1440 px: hovering the address spells it out', /^Stage 2 Development · Panel 4 Notes$/.test(await page.locator('[data-address-tooltip]').innerText().catch(() => '')))
+      await page.click('[data-address]')
+      ok('1440 px: clicking the address opens the panel ("P4: Notes")', (await page.locator('[data-address-panel] li').allInnerTexts()).map((l) => l.trim()).join(' | ') === 'S2: Stage 2 Development | P4: Notes')
+      await page.keyboard.press('Escape')
+      ok('1440 px: Esc dismisses it', await page.locator('[data-address-panel]').count() === 0)
       await chooseViaMenu(page, 3)
       await page.focus('[data-chat-input]')
       await page.keyboard.press('w')
@@ -478,11 +631,13 @@ async function partC() {
       const { context, page } = await open(360, 740, `${IDEA_URL}&panel=3`, { blocked: true })
       const thrown = await page.evaluate(() => { try { void window.localStorage; return false } catch { return true } })
       ok('storage blocked (control: reading localStorage throws in this page)', thrown)
+      if (await page.locator('[data-address-panel]').count()) await page.tap('[data-address-close]') // with nothing remembered, it is a first sight
       await chooseViaMenu(page, 7).catch(() => {})
       ok('with storage blocked the page still loads, the menu still works, and nothing throws', await panelOf(page) === '7' && errors.length === before, errors.slice(before).join(' | '))
       await context.close()
     }
     ok('no page error in any of the browser runs', errors.length === 0, errors.join(' | '))
+    console.log(`  · measured: ${tapRetries} tap(s) had to be tried a second time in this run (opening the menu, or after a drag; headless Chromium; see openMenu)`)
   } finally {
     await browser.close()
   }
@@ -495,4 +650,4 @@ async function main() {
   console.log(`\n${ran} ran, ${pass} passed, ${fail} failed · ${controls} controls, ${dead} dead · ${notRun} not run`)
   process.exit(fail || dead ? 1 : 0)
 }
-main().catch((e) => { console.error(e); process.exit(1) })
+main().catch((e) => { console.error(e); console.log(`\n${ran} ran, ${pass} passed, ${fail} failed · ${controls} controls, ${dead} dead · ${notRun} not run — STOPPED by the error above`); process.exit(1) })

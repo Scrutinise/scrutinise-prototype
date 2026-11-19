@@ -319,7 +319,7 @@ export const PAGE_UI = {
 
 // ══ 26-Z (decisions 344–348) — Where am I?, the panels, Focus view, never losing your place ══════════════════════════════════════════
 
-/** 344 / §2c — the seven panels, in order. Panel 6's name is "Working on …" when something is open (`workingOn`). */
+/** 344 / §2c — the seven panels, in order. Panel 6's name is the open chapter, or the open record ("#38"), when something is open. */
 export const PANEL_WORD = {
   1: 'Where am I?',
   2: 'To-do',
@@ -348,7 +348,8 @@ export const WHERE_UI = {
   explain: '?',
   explainLabel: 'What are stages, chapters and panels?',
   close: 'Close',
-  workingOn: (what: string) => `Working on ${what}`,
+  /** Z1b (CCh, 18 Nov 23:40, item 3) — the panel the address opens: one line per level, until dismissed. "Working on" is dropped. */
+  addressPanelTitle: 'Your place',
   backWhereYouWere: 'Back where you were',
   focusView: 'Focus view',
   fullView: 'Full view',
@@ -357,6 +358,12 @@ export const WHERE_UI = {
   noChaptersOutside: (stageAndState: string) => `Chapters of ${stageAndState}`,
   chaptersOfActions: 'The actions on this page',
   addressLabel: 'Your place: stage, chapter and panel',
+} as const
+/** Z1b (CCh, 18 Nov 23:40, item 4) — the label at the left of each row of the stage bar on a desktop.
+ *  ⚠ The word may change: decision 352 is open with Charlie. It lives here so a rename is one line. */
+export const STAGEBAR_ROW_WORD = {
+  stages: 'Stages',
+  chapters: 'Chapters',
 } as const
 /** §6.2 — the offer to restore unsent text. Never sent by itself. */
 export const DRAFT_RESTORE_UI = {

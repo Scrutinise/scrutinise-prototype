@@ -140,3 +140,83 @@ Charlie's phone settles it. If it is real, it reads as "I tapped the bar and not
 - **Panel 1** is the desktop's stage bar and checklist, drawn as a panel. The menu shows the same lines.
 - **Every panel stays mounted** (hidden when not shown), so a half-typed message or an open record survives a switch.
 - **Panels 3 and 4** are separate panels in Focus view, although on the desktop they are two tabs of one half-column.
+
+## Z1b — Charlie's phone findings (CCh's GO, 18 Nov 23:40)
+
+Charlie: "It works but a little buggy. The different sections all work very well though and open up nicely when you touch them. The
+desktop switched between focus and full nicely." Four changes. The dropped tap after a swipe-close (my measured residual) was not
+reported on his phone; CCh said leave it.
+
+### What a user sees now
+
+1. **One bar, at the bottom (decision 353).** The top bar is gone. Before, you could only see it after scrolling all the way back up.
+   The bottom bar has "Where am I?" on the left and the address ("S2 · C4 · P6") right-aligned. The menu rises from the bottom,
+   Panel → Chapter → Stage. On a desktop in Focus view, W opens it from the bottom too.
+2. **The bar stays on the screen's bottom edge.** The cause, found in the code: the bar was positioned from the *visual* viewport.
+   When Edge's toolbar slid away, the bar stayed where the toolbar's edge had been, and page content showed underneath it. The bar is
+   now `position: fixed; bottom: 0` on the layout viewport, with the safe-area inset. The visual viewport is read only for the
+   on-screen keyboard, and only while you are typing with a gap of at least 150 px (`keyboardLift`). A toolbar is about 56 px; a phone
+   keyboard is 250 px or more. Lex's panel is one screen tall (`100dvh` less the bar and the site header), or the part the keyboard
+   leaves while you type.
+3. **Tapping the address opens a panel that stays open.** It closes with Close, a second tap on the address, or Esc, and nothing
+   else. It is a real bulleted list, one line per level:
+   - S2: Stage 2 Development
+   - C4: Chapter 4 Organising the actions
+   - P6: Organising the actions
+
+   "Working on" is gone everywhere: panel 6 is now named by its chapter, or by its record ("P6: #38").
+4. **On a desktop (Full view and Focus view), the page opens at the workspace.** The stage bar and the checklist sit above it, out of
+   view, and scrolling up reveals them. In Full view the workspace is exactly one screen tall under the site header, and the columns
+   scroll inside it as before. A mouse wheel over a column at its top carries on to the page. Arrival is skipped when a remembered
+   place has already scrolled the page, so "Back where you were" still wins. A panel never visited in desktop Focus view also opens at
+   the workspace, not at the top of the page. When shown:
+   - all seven stages are in one row at 768 px and up: the cards share the width and their state text is smaller;
+   - each row has a label at its left, "Stages" and "Chapters", from `STAGEBAR_ROW_WORD`. Decision 352 may rename them in one line.
+
+   Below 768 px, panel 1 is unchanged: the cards wrap and the row labels are not drawn.
+
+### Decided while building (say if wrong)
+
+- **"Spelled out the first time" (§2d)** used to be inline on the top bar. With that bar gone, the address panel opens by itself once,
+  the first time on a device, and then only when tapped.
+- **The site header was hiding things.** The site's own header (PublicNav) is sticky, so the shell now allows for it. Lex's panel, the
+  record's jump band and the Organising strip stick below it rather than behind it, and the desktop arrival scrolls to just under it.
+- **The Exit / How this works / Focus · Full toolbar is part of the workspace**, so it is in view on arrival. The run-in-progress banner
+  and any error line moved from above the stage bar to the top of the workspace, so arrival does not scroll them out of view.
+- **"Desktop" means 768 px and up**, the same breakpoint as Z1. The stage bar container widened from `max-w-3xl` to `max-w-5xl`, so
+  the one row has room.
+
+### The check (`check:lex-26z`, extended)
+
+- **The harness page** is now built the way the workspace builds it, with the same hooks (`useSiteHeader`, `useArriveAtWorkspace`,
+  `workspaceY`). It has a sticky 56 px site header, the stage bar above the workspace on a desktop, and `?hview=full` for three
+  scrolling columns standing in for Full view.
+- **New assertions per item:**
+  - (1) no top bar; one button, on the left; the address right-aligned; both at least 44 px tall; at 360, 412, 768 and 1440.
+  - (2) the bar's foot is the screen's foot, and the last row of pixels at both edges and the middle is the bar. Checked at 360 × 740
+    and 360 × 796 (the toolbar shown and hidden), with a stand-in visual viewport reporting a 56 px toolbar gap, and with a 300 px
+    keyboard while typing. The stand-in proves it is in place before the toolbar assertion counts. The first draft's stand-in never
+    installed, and the toolbar assertion passed against the real viewport.
+  - (3) it opens by itself the first time and not again; CCh's three lines exactly; a disc list with three lines stacked; no "Working
+    on"; still open 2.6 s later and after a scroll; closed by a second tap, by Close and by Esc.
+  - (4) at 768 × 1024, 1024 × 768 and 1440 × 900, in Focus and in Full: the stage bar is out of view on arrival; the Full workspace
+    exactly fills the screen; the wheel scrolls a column and, at its top, the page; seven stages share one top; nothing is cut off
+    sideways; the labels sit at the left of their rows. Control: on a 360 px phone the same bar wraps. A remembered place at 1440 wins
+    over the arrival.
+- **Mutations, each red then restored:**
+
+  | Mutation | Failed assertions |
+  |---|---|
+  | M1: the address before the button | 4, one per width |
+  | M2: the old whole-gap lift | 4 |
+  | M3: the panel closes itself after 1.5 s | 2 |
+  | M4a: the stage row as it was | 2 |
+  | M4b: no arrival scroll | 9 |
+  | M4c: nowrap without letting the cards shrink | 3, a horizontal page scroll at 768 among them |
+
+  A first M4, `flex-nowrap` removed alone, stayed **green**: the row already fits because the cards may shrink. It was not a break,
+  so it was replaced by M4a (both changes undone, which is the original bug) and M4c.
+- **Taps.** Headless Chromium sometimes drops a synthetic tap after a CDP gesture. On 19 Nov two whole-suite runs on an idle machine
+  each died on one at a different step: CCh's request to run Z1's check alone found this. Opening the menu, and the address tap after
+  a drag, now try a second time when the first did not take, and every second try is counted and printed: 1 in the green run. The
+  swipe-close rate is still printed as NOT RUN: 1 of 5 in that run.

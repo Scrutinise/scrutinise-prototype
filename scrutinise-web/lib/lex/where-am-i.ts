@@ -68,12 +68,12 @@ export function panelOf(u: UrlState): PanelN {
   return chapterOf(u) || u.record != null ? 6 : 2
 }
 
-/** Panel 6's name: "Working on #38", "Working on Drafting", or "The open chapter". */
+/** Panel 6's name: "#38", "Organising the actions", or "The open chapter". (Z1b: "Working on" dropped.) */
 export function panelName(n: PanelN, u: UrlState): string {
   if (n !== 6) return PANEL_WORD[n]
-  if (u.record != null) return WHERE_UI.workingOn(`#${u.record}`)
+  if (u.record != null) return `#${u.record}`
   const c = chapterOf(u)
-  return c ? WHERE_UI.workingOn(CHECKLIST_WORD[c]) : PANEL_WORD[6]
+  return c ? CHECKLIST_WORD[c] : PANEL_WORD[6]
 }
 
 /** §2d — "S2 · C5 · P6". The chapter is left out when none is open ("S2 · P2"). */
@@ -82,7 +82,19 @@ export function address(u: UrlState, panel: PanelN = panelOf(u)): string {
   return [`S${stageNumberOf(u)}`, c ? `C${chapterNumber(c)}` : null, `P${panel}`].filter(Boolean).join(' · ')
 }
 
-/** 344 — the address spelled out: "Stage 2 Development · Chapter 5 Drafting · Panel 6 Working on #38". */
+/** Z1b item 3 — the address one line per level, as the address panel lists it:
+ *    S2: Stage 2 Development · C4: Chapter 4 Organising the actions · P6: Organising the actions
+ *  The chapter line is left out when no chapter is open, as in the address itself. */
+export function addressLines(u: UrlState, panel: PanelN = panelOf(u)): Array<{ code: string; text: string }> {
+  const s = stageNumberOf(u)
+  const c = chapterOf(u)
+  const out = [{ code: `S${s}`, text: `${WHERE_UI.stage} ${s} ${s === 1 ? LIFECYCLE_STAGE_WORD.creation : LIFECYCLE_STAGE_WORD.development}` }]
+  if (c) out.push({ code: `C${chapterNumber(c)}`, text: `${WHERE_UI.chapter} ${chapterNumber(c)} ${CHECKLIST_WORD[c]}` })
+  out.push({ code: `P${panel}`, text: panelName(panel, u) })
+  return out
+}
+
+/** 344 — the address spelled out on one line, for its spoken name and hover title: "Stage 2 Development · Chapter 5 Drafting · Panel 6 #38". */
 export function addressSpelled(u: UrlState, panel: PanelN = panelOf(u)): string {
   const s = stageNumberOf(u)
   const c = chapterOf(u)
@@ -91,6 +103,24 @@ export function addressSpelled(u: UrlState, panel: PanelN = panelOf(u)): string 
     c ? `${WHERE_UI.chapter} ${chapterNumber(c)} ${CHECKLIST_WORD[c]}` : null,
     `${WHERE_UI.panel} ${panel} ${panelName(panel, u)}`,
   ].filter(Boolean).join(' · ')
+}
+
+// ── Z1b item 2 — the bottom bar hugs the bottom edge; only the on-screen keyboard lifts it ────────────────────────────────────────────
+
+/** A gap between the layout viewport's foot and the visual viewport's foot smaller than this is browser chrome (Edge's and Chrome's own
+ *  bottom toolbar sliding in and out), never a keyboard. Phone keyboards are 250 px and more. */
+export const KEYBOARD_MIN_PX = 150
+
+/**
+ * How far the bottom bar is lifted off `bottom: 0`. ⚠ ZERO unless the user is TYPING and the gap is keyboard-sized.
+ * Found by Charlie on 18 Nov in Edge on Android: the bar was placed from the visual viewport, so when Edge's toolbar slid away the bar
+ * stayed where the toolbar's edge had been and page content showed below it. The layout viewport (`position: fixed; bottom: 0`) is what
+ * follows the screen's edge; the visual viewport is consulted only for the keyboard.
+ */
+export function keyboardLift(innerHeight: number, vvHeight: number, vvOffsetTop: number, typing: boolean): number {
+  if (!typing) return 0
+  const gap = Math.round(innerHeight - vvHeight - vvOffsetTop)
+  return gap >= KEYBOARD_MIN_PX ? gap : 0
 }
 
 /** A URL with `panel=N` set (or replaced), everything else kept, the hash kept unless `record` says otherwise. */
