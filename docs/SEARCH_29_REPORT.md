@@ -62,6 +62,81 @@ With the bill-vocab flag ON, the context changes on 34 questions and the net is 
 
 ---
 
+## SEARCH-31 item 1: the noise floor at temperature 0 (CCh-Search 0908Z GO)
+
+### Correction to the paragraph above, written 2026-11-19 13:14 UTC
+
+"The query writer, then the router" was half wrong. `measure-orientation-stage2.ts` writes the opening query **once per idea** and
+reuses it for both WITHOUT runs. So the query writer cannot have made those two runs differ. What can: the router (a Gemini call
+at 0.2), the query expansion (the same helper, 0.2), a search leg that timed out or was shed (latency-dependent), and anything
+non-repeatable in the serves. The reranker is already at temperature 0.
+
+### What changed (local commit, not pushed)
+
+- `query-expansion.ts`: the router and the query expansion move from 0.2 to `SEARCH_LLM_TEMPERATURE`, default 0.
+- `build-query.ts`: the build's query writer moves from 0.3 to `QUERY_WRITER_TEMPERATURE`, default 0.
+- ⚠ **This changes production behaviour once pushed:** every build and every Lex search routes at temperature 0. The env
+  overrides exist only so that a measurement can run the old value on the same code.
+
+### PREDICTIONS — recorded 2026-11-19 13:14 UTC, before either run
+
+Design: the five ideas, two identical WITHOUT runs each, `--floor-only` (no stage 1). Run **locally** against the production serves,
+under production's flag string, at 0.2 and then at 0, on the same code. Both arms therefore share the network path, unlike last
+night's Railway run.
+- At **0.2** locally, the floor is in the same range as on Railway last night: **10 to 36** per idea. The routed streams differ
+  between the two runs on **at least 3 of 10** searches.
+- At **0**, the routed streams are identical on **all 10** searches, or 9 of 10. The floor falls to **6 or fewer on at least 4 of 5
+  ideas**, against 12 to 36.
+- Cost: under **5p** for both arms together. Time: about **3 to 5 minutes** per arm.
+- **What would change my mind:** if the streams match at 0 but the floor stays above 10, the variation is downstream of the
+  router. The suspects in order: a failed or degraded leg (the run records which), the per-stream query wording (not recorded),
+  then the serves. If that happens, stage 2 does NOT run (the GO's rule), and the report names which.
+
+### MEASURED 19 Nov 13:16–13:29 UTC (local, production serves, production flags at db705682)
+
+Files: `docs/census/s31-floor-t02-19nov.json` and `s31-floor-t0-19nov.json`.
+
+| | temperature 0.2 | temperature 0 | prediction | |
+|---|---|---|---|---|
+| noise floor per idea (452c5ade, 2ef5358b, 5c7287d2, a379e439, 31055aef) | 2, 8, 32, 0, 26 | **38**, 2, 16, 4, 0 | 0.2: 10–36. 0: ≤6 on ≥4 of 5 | 0.2 **WRONG** (3 of 5 below 10). 0 **WRONG** (3 of 5) |
+| searches routed to the same streams in both runs | 8 of 10 | **10 of 10** | 0.2: ≤7. 0: 9–10 | 0.2 **WRONG** (narrowly). 0 **held** |
+| per-stream result lists identical, content and order | 26 of 48 | **39 of 46** | — | |
+| searches identical in every stream | 1 of 10 | 7 of 10 | — | |
+| cost (both runs, all five ideas) | 4.9p | 3.4p | under 5p for both arms | **WRONG** (8.3p; the reranker is 0.2p a call) |
+| search time (both runs, all five ideas) | 5.9 min | 5.7 min | 3–5 min an arm | **WRONG** |
+| failed or degraded search legs | 0 of 20 | 0 of 20 | — | |
+
+**Why the floor stays high on two ideas, measured.** I called the router six times on identical input:
+- At temperature 0 it returns **2 distinct outputs in 6 calls** on each of two ideas. On 452c5ade, all four stream queries are
+  reworded (for example "Public Services (Social Value) Act 2012…" against "Public Bodies Act 2011…"). On 5c7287d2, only the
+  guidance query changes.
+- That matches the floor run exactly. 452c5ade's 38 is one search where every stream differs. 5c7287d2's 16 is the
+  guidance stream alone.
+- A fixed `seed` changed nothing: still 2 distinct outputs in 6, on both ideas. **gemini-2.5-flash is not repeatable at
+  temperature 0, with or without a seed.** No seed is sent.
+- The two small floors (2 and 4) have identical per-stream lists in both runs. They come from the reranker's order (an LLM call,
+  already at 0).
+
+**Also measured, not explained:** at 0.2, this local run's floor (median 8) is much lower than last night's Railway run at the same
+temperature (median 26). The two runs differ in machine, time of day and serve load, and last night's run did not record why
+each run came out as it did. So the 12–36 of last night may include something about that environment as well as the router.
+
+**Decision (the GO's rule).** The floor did not fall to a level where a stage-2 effect could be seen on every idea: two of five are
+still at 16 and 38. So **stage 2 on the 20 gold questions was not run**, and nothing was spent on it.
+
+**What would make idea-level search repeatable.** The router has two answers for the same input, and temperature cannot remove
+that. Two options; neither is built:
+1. Reuse the router's decision for identical input within one build, so a build's searches agree with each other. Cheap; no
+   schema. It doesn't make a rebuild repeat.
+2. Store the decision per idea and query, so a rebuild repeats too. That needs a table, so it is Charlie's decision.
+For measurement, the honest alternative is the gold design (SEARCH-28): paired runs per arm, judged on hit or miss. That
+tolerates this noise because one reworded query rarely moves a gold document across the 20 line.
+
+⚠ **The temperature change is committed locally, not pushed, and is a production behaviour change.** Its effect on answer quality
+is NOT measured: the 65 gold questions have not been run at 0. A two-run gold check at 0 should come before the push.
+
+---
+
 ## What has been measured so far
 
 ### Why orientation produced nothing — found, and it is not what the brief guessed

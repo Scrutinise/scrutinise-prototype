@@ -67,6 +67,32 @@ and its automatic restarts in the last 24 h to the digest's serving line. The st
 bytes (no sources) the same check trusts 0 of 8, so the filter still rejects when there is no evidence from the tool.
 Cost $0.034 for the two calls.
 
+## 2026-11-19 13:31 UTC - SEARCH-31 item 1: router, query expansion and query writer move to temperature 0 (⚠ production behaviour change, local commit, not pushed); the noise floor re-measured
+
+**What changed.**
+- `lib/lex/query-expansion.ts`: the router and the query expansion move from 0.2 to `SEARCH_LLM_TEMPERATURE` (default 0).
+- `lib/lex/build-query.ts`: the build's query writer moves from 0.3 to `QUERY_WRITER_TEMPERATURE` (default 0).
+- The env overrides (`LEX_SEARCH_LLM_TEMPERATURE`, `LEX_QUERY_WRITER_TEMPERATURE`) exist only so that a measurement can run the
+  old value on the same code. ⚠ **Once pushed, every build and every Lex search routes at temperature 0.** Its effect on the 65 gold
+  questions is NOT measured yet.
+- `scripts/measure-orientation-stage2.ts` gained `--floor-only` (no stage 1, no WITH arm). It records, per search, the routed
+  streams, failed or degraded legs, per-stream ids and the merge. It refuses to run locally with the serve URLs unset, because
+  that silently degrades the search to keyword-only on Postgres.
+
+**Predictions** (recorded 13:14 UTC in `docs/SEARCH_29_REPORT.md`, before either run) **and results** (13:16–13:29 UTC; the five
+ideas, two identical runs each, locally against the production serves):
+- Floor: 0.2 gave 2, 8, 32, 0, 26; 0 gave 38, 2, 16, 4, 0. The prediction of 6 or fewer on 4 of 5 ideas was **WRONG** (3 of 5).
+- Same routed streams: 8/10 at 0.2, 10/10 at 0. **Held at 0.**
+- Per-stream lists identical: 26/48 at 0.2, 39/46 at 0.
+- Cost 8.3p, against under 5p predicted: **WRONG**.
+- **Cause of the remaining floor, measured:** the router gives 2 distinct outputs in 6 identical calls at temperature 0, with or
+  without a fixed `seed` (tried, no effect, not shipped).
+- **Stage 2 on 20 gold questions was NOT run** (the GO's rule: the floor did not fall on every idea).
+
+**Also in this session (no code):** pushed 239658bb..db705682 after a full `check-clean-build.sh` PASS. Live `/api/health` reads
+db705682 and carries `LEX_ORIENTATION_STAGE3`, which only this push adds. build-worker deployment 95d1e010 is SUCCESS on
+db705682. D1 and D4 reports went to the inbox.
+
 ## 2026-11-19 01:40 UTC - Stage 3 (four-provider check) built, flag OFF and not wired; OpenAI Luna web search no longer 400s, but still returns no results
 
 **Stage 3.** `lib/lex/orientation/stage3.ts`, from the S26 brief in `docs/SPRINT.md` and its three amendments. Built by a sub-agent of the Search session; reviewed and committed by cc-search.

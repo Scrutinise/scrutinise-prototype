@@ -267,6 +267,8 @@ const WRITER_SYSTEM = [
  * Returns a map keyed by job id. A job the writer omitted, or wrote a defective query for,
  * is simply absent — the caller falls back and RECORDS that it did.
  */
+export const QUERY_WRITER_TEMPERATURE = Number(process.env.LEX_QUERY_WRITER_TEMPERATURE ?? '0')
+
 export async function writeQueries(input: {
   jobs: QueryJob[]
   /** What the proposal is, in the user's own words where possible. */
@@ -296,7 +298,9 @@ export async function writeQueries(input: {
     schema: WRITER_SCHEMA,
     maxOutputTokens: 4000,
     timeoutMs: parseInt(process.env.LEX_BUILD_TIMEOUT_MS ?? '90000', 10),
-    temperature: 0.3,
+    // SEARCH-31 (19 Nov 2026): 0 so that the same idea gets the same opening query on a rebuild. Was 0.3.
+    // ⚠ PRODUCTION BEHAVIOUR CHANGE. The override exists only so a measurement can run the old value on the same code.
+    temperature: QUERY_WRITER_TEMPERATURE,
     label: 'build-query-writer',
   })
   if (input.onUsage) input.onUsage(result.usage)

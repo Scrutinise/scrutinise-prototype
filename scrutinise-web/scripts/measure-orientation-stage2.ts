@@ -19,6 +19,8 @@ import path from 'node:path'
 const argv = process.argv.slice(2)
 const arg = (k: string) => { const i = argv.indexOf(`--${k}`); return i >= 0 ? argv[i + 1] : undefined }
 const OUT = path.join(__dirname, '../../docs/census', arg('out') ?? 's29-five-ideas.json')
+/** --floor-only: no stage 1 and no WITH arm; just the two identical WITHOUT runs per idea (the noise floor). */
+const FLOOR_ONLY = argv.includes('--floor-only')
 
 async function main() {
   // ⚠ production's flag string is set BEFORE any lib module is imported (CLAUDE.md §29.2: imports hoist, so a flag set after them is too late).
@@ -41,6 +43,9 @@ async function main() {
   const ids = (arg('ideas') ?? '').split(',').map((s) => s.trim()).filter(Boolean)
   if (!ids.length) throw new Error('--ideas <id>,<id>,…')
   console.log(`production ${String(prod.commit).slice(0, 7)} flags ${JSON.stringify(prod.capabilities)}`)
+  // ⚠ Run locally, an unset serve URL silently degrades the search to keyword-only on Postgres, and the result looks normal.
+  if (!process.env.FTS_SEARCH_URL || (prod.retrieval?.vectorSearchUrl && !process.env.VECTOR_SEARCH_URL)) throw new Error('FTS_SEARCH_URL / VECTOR_SEARCH_URL unset here but set in production — set them in the launching shell')
+  console.log(`search LLM temperature ${process.env.LEX_SEARCH_LLM_TEMPERATURE ?? '0 (default)'}, query writer ${process.env.LEX_QUERY_WRITER_TEMPERATURE ?? '0 (default)'}`)
 
   const ledger = async (ideaId: string, since: Date) => {
     await new Promise((r) => setTimeout(r, 2500)) // the ledger writes are fire-and-forget
@@ -62,13 +67,16 @@ async function main() {
     console.log(`\n=== ${id}  "${(idea.title ?? '').slice(0, 60)}"  input ${input.length} chars`)
     const rec: any = { ideaId: id, title: idea.title, inputChars: input.length }
 
-    // stage 1
+    // stage 1 (skipped under --floor-only: the noise floor needs only the two WITHOUT runs)
     let since = new Date(); let t0 = Date.now()
-    const o = await runOrientationV2({ input, noiseFilter: true })
-    rec.stage1 = { ms: Date.now() - t0, costPence: penceOf(await ledger(id, since), /^orientation\./), failed: o.failed, arguments: o.arguments.length, dropped: o.dropped.length, vocabulary: Object.fromEntries(Object.entries(o.vocabulary).map(([k, v]) => [k, (v as string[]).length])), calls: o.calls.map((c) => ({ call: c.call, ok: c.ok, ms: c.ms, costUsd: c.costUsd, reason: c.reason })) }
-    const terms = termsForSearch(o)
-    rec.terms = terms
-    console.log(`  stage 1: ${rec.stage1.ms}ms  ${rec.stage1.costPence.toFixed(2)}p  ${o.arguments.length} arguments  ${terms.length} terms${o.failed ? '  ⚠ FAILED' : ''}`)
+    let terms: string[] = []
+    if (!FLOOR_ONLY) {
+      const o = await runOrientationV2({ input, noiseFilter: true })
+      rec.stage1 = { ms: Date.now() - t0, costPence: penceOf(await ledger(id, since), /^orientation\./), failed: o.failed, arguments: o.arguments.length, dropped: o.dropped.length, vocabulary: Object.fromEntries(Object.entries(o.vocabulary).map(([k, v]) => [k, (v as string[]).length])), calls: o.calls.map((c) => ({ call: c.call, ok: c.ok, ms: c.ms, costUsd: c.costUsd, reason: c.reason })) }
+      terms = termsForSearch(o)
+      rec.terms = terms
+      console.log(`  stage 1: ${rec.stage1.ms}ms  ${rec.stage1.costPence.toFixed(2)}p  ${o.arguments.length} arguments  ${terms.length} terms${o.failed ? '  ⚠ FAILED' : ''}`)
+    }
 
     // the opening query, as the build writes it
     since = new Date(); t0 = Date.now()
@@ -83,18 +91,34 @@ async function main() {
       const s = new Date(); const t = Date.now()
       const seen = new Set<string>(); const merged: Array<{ id: string; title: string; corpus: string }> = []
       let failed = false
+      // Why a run came out as it did: which streams the router chose, which dense legs did not run and why,
+      // and the ids per stream. With these, a difference between two identical runs can be traced to the
+      // router, to a failed leg, or to neither.
+      const why: any[] = []
       for (const intent of ['BACKGROUND_BRIEFING', 'LEGAL_LANDSCAPE'] as const) {
         const out = await runSearch({ keywords: opening.terms, intent, ideaContext: framed.ideaContext, limit: 16, ...(extraTerms.length ? { extraTerms } : {}) })
+        why.push({ intent, failed: out.failed, failureReason: out.failureReason ?? null, routedStreams: out.meta.routedStreams ?? null, denseDegraded: (out.meta as any).denseDegraded ?? null, perStream: (out.meta.perStream ?? []).map((p) => ({ stream: p.stream, ids: p.ids.slice(0, 20) })), merge: out.meta.merge ?? null, returned: out.results.length })
         if (out.failed) { failed = true; continue }
         for (const r of out.results) if (!seen.has(r.id)) { seen.add(r.id); merged.push({ id: r.id, title: (r as any).title ?? r.id, corpus: r.id.split(':')[0] }) }
       }
       const top = merged.slice(0, 20)
       const cost = penceOf(await ledger(id, s), /^search\./)
       console.log(`  ${label.padEnd(10)} ${Date.now() - t}ms  ${cost.toFixed(2)}p  ${top.length} results  corpora ${[...new Set(top.map((r) => r.corpus))].join(',')}${failed ? '  ⚠ a search failed' : ''}`)
-      return { label, ms: Date.now() - t, costPence: cost, failed, top }
+      return { label, ms: Date.now() - t, costPence: cost, failed, top, why }
     }
     const w1 = await arm('WITHOUT_1', [])
     const w2 = await arm('WITHOUT_2', [])
+    if (FLOOR_ONLY) {
+      const a = new Set(w1.top.map((r) => r.id)), b = new Set(w2.top.map((r) => r.id))
+      const xor = w1.top.filter((r) => !b.has(r.id)).length + w2.top.filter((r) => !a.has(r.id)).length
+      const sameStreams = w1.why.map((x: any) => JSON.stringify(x.routedStreams)).join('|') === w2.why.map((x: any) => JSON.stringify(x.routedStreams)).join('|')
+      const degraded = [...w1.why, ...w2.why].filter((x: any) => x.failed || x.denseDegraded?.length).length
+      rec.arms = { WITHOUT_1: w1, WITHOUT_2: w2 }
+      rec.comparison = { noiseFloorSymmetricDifference: xor, sameRoutedStreams: sameStreams, runsWithAFailedOrDegradedLeg: degraded }
+      console.log(`  noise floor: ${xor}   same routed streams: ${sameStreams}   searches with a failed/degraded leg: ${degraded} of 4`)
+      report.push(rec)
+      continue
+    }
     const wi = await arm('WITH', terms)
     const ids1 = new Set(w1.top.map((r) => r.id)), ids2 = new Set(w2.top.map((r) => r.id)), idsW = new Set(wi.top.map((r) => r.id))
     const foundByStage2 = wi.top.filter((r) => !ids1.has(r.id) && !ids2.has(r.id))
@@ -110,7 +134,9 @@ async function main() {
     report.push(rec)
   }
   fs.mkdirSync(path.dirname(OUT), { recursive: true })
-  fs.writeFileSync(OUT, JSON.stringify({ takenAt: new Date().toISOString(), commit: prod.commit, flags: prod.capabilities, report }, null, 1))
+  const { SEARCH_LLM_TEMPERATURE } = await import('../lib/lex/query-expansion')
+  const { QUERY_WRITER_TEMPERATURE } = await import('../lib/lex/build-query')
+  fs.writeFileSync(OUT, JSON.stringify({ takenAt: new Date().toISOString(), commit: prod.commit, flags: prod.capabilities, floorOnly: FLOOR_ONLY, searchLlmTemperature: SEARCH_LLM_TEMPERATURE, queryWriterTemperature: QUERY_WRITER_TEMPERATURE, ftsUrlSet: !!process.env.FTS_SEARCH_URL, vectorUrlSet: !!process.env.VECTOR_SEARCH_URL, report }, null, 1))
   console.log(`\n-> ${OUT}`)
   await prisma.$disconnect()
 }

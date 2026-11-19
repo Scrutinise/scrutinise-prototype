@@ -96,6 +96,20 @@ type GeminiJsonResult =
  */
 const DEFAULT_MAX_OUTPUT_TOKENS = 4096
 
+/**
+ * SEARCH-31 (19 Nov 2026), item 1 of CCh-Search's 0908Z GO: the router and the query expansion run at
+ * temperature 0, so that the same question asked twice routes the same way.
+ *
+ * ⚠ PRODUCTION BEHAVIOUR CHANGE. This was 0.2 until 19 Nov. On 19 Nov, two identical searches for the same
+ * idea differed by 12 to 36 of their first 40 documents (docs/SEARCH_29_REPORT.md), which made every
+ * idea-level measurement unreadable. The env override exists ONLY so that a measurement can run the old value
+ * on the same code (`LEX_SEARCH_LLM_TEMPERATURE=0.2`). It is not a production setting.
+ * Temperature 0 makes Gemini close to repeatable, not exactly repeatable.
+ */
+export const SEARCH_LLM_TEMPERATURE = Number(process.env.LEX_SEARCH_LLM_TEMPERATURE ?? '0')
+// ⚠ A fixed `seed` was tried on 19 Nov and changed nothing: 2 distinct router outputs in 6 identical calls on each of two
+// ideas, with and without it. gemini-2.5-flash is not repeatable at temperature 0 even with a seed. So no seed is sent.
+
 async function callGeminiJson(opts: {
   model: string
   apiKey: string
@@ -124,7 +138,7 @@ async function callGeminiJson(opts: {
           system_instruction: { parts: [{ text: opts.systemPrompt }] },
           contents: [{ role: 'user', parts: [{ text: opts.userMessage }] }],
           generationConfig: {
-            temperature: 0.2,
+            temperature: SEARCH_LLM_TEMPERATURE,
             maxOutputTokens: opts.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS,
             responseMimeType: 'application/json',
             responseSchema: opts.schema,
