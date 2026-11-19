@@ -1,6 +1,6 @@
 {
-  "takenAt": "2026-10-19T01:13:21.889Z",
-  "commit": "0d83f18e29dd98daa4fbf2552546ff74ee1b59ef",
+  "takenAt": "2026-11-19T01:23:08.778Z",
+  "commit": "239658bb015574238d11c95f0f5a4df79e2fdaad",
   "rolls": 3,
   "reconstructed": true,
   "result": {
@@ -36,7 +36,7 @@
             "hit": false,
             "rank": null,
             "unknownRows": 0,
-            "streams": "debates"
+            "streams": "debates,committees"
           },
           {
             "hit": false,
@@ -60,19 +60,19 @@
             "hit": false,
             "rank": null,
             "unknownRows": 0,
-            "streams": "debates"
+            "streams": "debates,committees"
           },
           {
             "hit": false,
             "rank": null,
             "unknownRows": 0,
-            "streams": "debates"
+            "streams": "debates,committees"
           },
           {
             "hit": false,
             "rank": null,
             "unknownRows": 0,
-            "streams": "debates"
+            "streams": "debates,committees"
           }
         ],
         "majority": false
@@ -87,16 +87,16 @@
             "streams": "legislation,debates,committees"
           },
           {
-            "hit": true,
-            "rank": 1,
-            "unknownRows": 0,
-            "streams": "legislation,debates,committees"
-          },
-          {
             "hit": false,
             "rank": null,
             "unknownRows": 0,
             "streams": "debates"
+          },
+          {
+            "hit": true,
+            "rank": 1,
+            "unknownRows": 0,
+            "streams": "legislation,debates,committees"
           }
         ],
         "majority": true
@@ -184,7 +184,7 @@
           },
           {
             "hit": true,
-            "rank": 1,
+            "rank": 2,
             "unknownRows": 0,
             "streams": "legislation,debates,committees,guidance"
           },

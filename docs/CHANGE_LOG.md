@@ -1,5 +1,32 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-19 01:24 UTC - SEARCH-28 item 3 measured: LEX_ROUTER_BILL_VOCAB takes bill papers from 4/10 to 10/10 and gains +7 on the 65; recommended ON, not flipped
+
+Details are in `docs/SEARCH_28_REPORT.md` §3.
+
+**How it was run.**
+- On the Railway `measure-job` service, one run at a time.
+- Every deployment read back as `meta.commitHash = 239658bb`, under production's live flags.
+- vector-serve was healthy throughout (cpu/wall 1.5–2.3).
+
+**Results.**
+- **65 gold questions (document in the first 20):** ON 44 and 43, OFF 38 and 35.
+  - Means 43.5 against 36.5.
+  - Noise floor: 5 questions flip between the OFF runs, 7 between the ON runs.
+  - Consistent effect: +8 gained, −1 lost (S10-Q37).
+- **10 bill-paper questions (majority of 3 rolls):** OFF 4, ON 10.
+
+**Against the 19 Oct predictions.**
+- Held: OFF on the 65; both bill arms.
+- **WRONG:** "no gain on the 65" (predicted net −2; measured +7) and "costs 2–5 questions" (it costs 1). By the prediction's own stated test, the flag is doing something unmodelled. Half the gains are impact assessments.
+
+**Recommendation:** switch on after reading the router's stream choice for the 9 changed questions. Charlie's decision (a Vercel variable).
+
+**Also.**
+- New: `scripts/report-s28-gold.ts`. It refuses to run if its count differs from the harness summary.
+- Census: `s28-gold-{on,off}-{1,2}-19nov.json`, `s28-bills.json`.
+- Spend: about 96p tonight in total, all ledgered as measurement.
+
 ## 2026-11-19 00:17 UTC - SEARCH-30 fix 1: the digest's latency alert can now tell a healthy service from the 20 Oct state
 
 `lib/lex/cost-digest-data.ts`: the "p95 > 5 s" rule is gone. It fired on healthy days (vector's healthy p95 was 10.6 s; both services sit above 5 s today), so it could not flag the 20 Oct jump. The pure `servingAlerts()` replaces it with two rules from the services' own /stats:

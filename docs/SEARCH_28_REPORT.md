@@ -1,4 +1,4 @@
-# SEARCH-28 — report (DRAFT, in progress)
+# SEARCH-28 — report (item 3 complete 19 Nov 2026; §3 is the measurement)
 
 *Started 2026-10-19. Part A is `docs/SEARCH_STATE_19OCT.md`. This file is completed at the end of the sprint; below are the predictions, recorded before the measurement in item 3 was run.*
 
@@ -13,6 +13,8 @@
 - ON: headline within noise of OFF (a difference of 3 or fewer). Net most likely **-2** (range -4 to +1). No gold question is a bill-papers question, so I predict **no gain** from the flag on the 65.
 - The flag will cost questions, not gain any: **2 to 5 questions that hit with it OFF and miss with it ON** in both runs, and C5 (leasehold, committees) will be one of them, as S24 found. S24's stream-loss figure (8 of 68 against a noise floor of 3) predicts the same direction.
 - **What would change my mind:** if ON gains 3 or more on the 65, the flag is doing something I did not model; if it loses 6 or more, S24's cost estimate was low.
+
+**Re-stated 2026-11-19 00:16 UTC, before the resumed runs.** The 23 Oct ON-1, ON-2 and OFF-2 runs all aborted after 10 of 65 questions on the harness's p95 guard (vector-serve p95 78–84 s; see `docs/SEARCH_30_REPORT.md` §1), so no prediction above has been tested. They stand unchanged. One addition: OFF-1 (20 Oct) is a month older than the runs that follow it, and the index was rebuilt on 4 Nov (govuk-core-docs re-run), so OFF-1 is not used as a noise-floor run; the floor comes from tonight's two OFF runs only.
 
 ---
 
@@ -35,6 +37,60 @@ The Lex machine has no `FTS_SEARCH_URL` and no stats-database credential. I ran 
 `app/api/search/route.ts`, `app/api/ideas/[id]/search/route.ts` and `app/api/legislation-guide/suggestions/route.ts` returned `parsed.error.flatten()`. All three now return `describeIssues(...)` as a sentence plus the structured `rejected` list, with the user's own words for each input ("the search words", "your email address"). The clients that read them already prefer a string `error` (`SuggestImprovementDialog`); the `fieldErrors` branch in `ResearchTab.tsx` belongs to Lex's research route, not these.
 
 `npm run check:search-161`: **13 assertions through the real handlers, 2 controls, 0 dead.** The idea-search route is exercised on a scratch copy of 452c5ade, deleted afterwards.
+
+## 3. `LEX_ROUTER_BILL_VOCAB` — the measurement (run 19 Nov 2026, 00:18–01:13 UTC)
+
+**In plain English.** Telling the query router what bill papers are called helps the 65 general gold questions as well, which I predicted it would not. Across two runs of each setting, it finds the right document for about 7 more questions out of 65 (43.5 against 36.5). That's bigger than the run-to-run noise (5–7 questions flip between identical runs), and it shows on the same 8 questions both times. The bill-paper questions are the separate ten-question arm (§3b).
+
+**How it was run.** Four `--arms gateway` runs of `measure-s19-grain.ts` on the Railway `measure-job` service, one at a time:
+- order ON, OFF, ON, OFF;
+- every deployment read back as `meta.commitHash = 239658bb`;
+- every run under production's live flag string, the arms differing only by `--set LEX_ROUTER_BILL_VOCAB=true`;
+- all four completed 65/65 with no abort;
+- vector-serve healthy in all four (warm p50 2.0–3.1 s, cpu/wall 1.5–2.3), unlike the 23 Oct attempts, which aborted at question 10 (§PREDICTIONS re-statement);
+- comparison by `scripts/report-s28-gold.ts`, which refuses to run if its hit count differs from each file's own summary.
+
+| run | flag | document in first 20 |
+|---|---|---|
+| on-1 (00:32) | ON | 44 / 65 |
+| off-1 (00:45) | OFF | 38 / 65 |
+| on-2 (00:59) | ON | 43 / 65 |
+| off-2 (01:13) | OFF | 35 / 65 |
+| **mean** | | **ON 43.5 · OFF 36.5 · +7.0** |
+
+**Noise floor.** 5 questions flip between the two OFF runs, and 7 between the two ON runs.
+
+**Consistent effect** (hit in both runs of one arm, miss in both of the other):
+- **+8 gained:** S10-Q9 committees, S10-Q27 guidance, S10-Q31, Q33 and Q35 impact-assessments, V2-Q6 and V2-Q9 debates, V2-Q16 legislation.
+- **−1 lost:** S10-Q37 impact-assessments.
+- **Net +7.**
+
+**Against the predictions (recorded 19 Oct 01:02 UTC):**
+- OFF 32–36 of 65 → **36.5. Held**, at the top of the range.
+- ON within noise of OFF, net most likely −2 (range −4 to +1), "no gain" → **WRONG.** Net +7, well outside the range. By the prediction's own stated test ("if ON gains 3 or more on the 65, the flag is doing something I did not model"), the flag is doing something I did not model.
+- The flag costs 2–5 questions, C5 among them → **WRONG in direction.** It costs 1 (S10-Q37). C5 does not exist under that id in this question set, so that part could not be scored as written.
+
+**What it may be doing (NOT yet measured).** Half the gains are impact-assessment questions. Two possibilities: the vocabulary block's publication words ("impact assessment", "explanatory notes", "memorandum") steer the router towards the streams that hold those documents for non-bill questions too; or the extra prompt text changes routing in general. Reading the router's stream choice per gained question, ON against OFF, would tell which. It's the next step before any flip.
+
+**Recommendation.** On this evidence the flag is a **candidate to switch on**: +7 net on the 65, consistently, against a noise floor of 5–7, with 1 loss. But not yet:
+- (a) the mechanism above is unexplained, and a gain I didn't predict is worth understanding before it ships;
+- (b) the ten bill-paper questions (§3b) are its stated purpose and still have to be read;
+- (c) the decision to switch on is Charlie's.
+
+Not flipped.
+
+### 3b. The ten bill-paper questions
+
+`measure-s28-bills.ts --rolls 3` on Railway (deployment `4e5fa16a`, `meta.commitHash = 239658bb`, finished 01:23 UTC; `docs/census/s28-bills.json`).
+- A hit is a `bills-api` row of the right bill AND the right publication type in the first 20; the verdict is the majority of 3 rolls.
+- ⚠ The ten are S24's reconstruction of S23's questions, not their literal text.
+
+| | hits (majority of 3 rolls) | prediction (19 Oct) | |
+|---|---|---|---|
+| Flag OFF | **4 of 10** (#4, #5, #8, #10) | 4 to 6, most likely 5 | **held** |
+| Flag ON | **10 of 10** | 9 or 10, at least 9 | **held** |
+
+**Recommendation, both arms together.** The flag does what it was built for: bill papers go from 4/10 to 10/10. On the 65 general questions it doesn't cost anything; it gains +7 net, consistently, against a noise floor of 5–7. **Recommend switching `LEX_ROUTER_BILL_VOCAB` on**, after one cheap step: read the router's stream choice for the 8 gained and 1 lost questions, so the unpredicted gain is understood before it ships. Switching on is Charlie's decision, and it is a Vercel variable that only he can set. Not flipped.
 
 ## 4. Consequential amendments — the lookup
 
