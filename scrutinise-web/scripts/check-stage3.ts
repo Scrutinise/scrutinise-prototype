@@ -196,6 +196,15 @@ async function main() {
   control('the import detector misses a real stage3 import', !importsStage3(`import { runStage3 } from './orientation/stage3'\n`))
   ok('the import detector ignores a commented-out import', !importsStage3(`// import { runStage3 } from './orientation/stage3'\n`))
 
+  // Every pass name stage3.ts writes to the ledger has a purpose. Read from the source, so a new pass cannot be missed.
+  const { purposeFor } = await import('../lib/lex/spend-ledger')
+  const stage3Src = stripComments(fs.readFileSync(path.join(__dirname, '../lib/lex/orientation/stage3.ts'), 'utf8'))
+  const passNames = [...new Set([...stage3Src.matchAll(/pass:\s*'([^']+)'/g)].map((m) => m[1]))]
+  ok(`premise: stage3.ts names its ledger passes (${passNames.join(', ')})`, passNames.length >= 3)
+  const unmapped = passNames.filter((p) => purposeFor(p) === null)
+  ok(`every stage-3 pass has a PASS_PURPOSE${unmapped.length ? ` (unmapped: ${unmapped.join(', ')})` : ''}`, unmapped.length === 0)
+  control('an unmapped pass name has a purpose', purposeFor('orientation.stage3-not-a-pass') !== null)
+
   console.log(`\ncheck:stage3 — ${pass} passed, ${fail} failed; controls ${controlsFired} fired, ${controlsDead} dead`)
   process.exit(fail || controlsDead ? 1 : 0)
 }

@@ -560,6 +560,10 @@ export const PASS_PURPOSE: Record<string, SpendPurpose> = {
   'orientation.web-search': 'web orientation',
   'orientation.web-fallback': 'web orientation',
   'orientation.x': 'web orientation',
+  // SEARCH-31 (stage 3, the four-provider check; flag LEX_ORIENTATION_STAGE3). Asserted by check:stage3 from stage3.ts's own pass names.
+  'orientation.stage3-search': 'web orientation',
+  'orientation.stage3-answer': 'web orientation',
+  'orientation.stage3-x': 'web orientation',
 
   'search.reranker': 'search',
   'search.query-expansion': 'search',
