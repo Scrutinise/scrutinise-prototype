@@ -1,4 +1,4 @@
-# SEARCH-29 — report (DRAFT, in progress)
+# SEARCH-29 — report (Option B and five-ideas measured 19 Nov; stage 2 on the 65 still waiting on spend approval)
 
 *Started 2026-10-21. Written for Charlie: plain English first, detail after. Sections marked **PENDING** have not been measured; nothing in them is a result.*
 
@@ -22,6 +22,43 @@
 - Stage 1: **8 to 15p and 25 to 45 seconds** per idea. Stage 2's search with terms costs **under 1p more** and **under 3 seconds more** than without.
 - "Found by stage 2" (in the first 20 with terms, in neither of two runs without): the two runs without terms will differ from each other by **2 to 6** documents on their own (the router is an LLM call). I predict stage 2 adds **no more than 2 documents per idea beyond that**, and that on **at least one of five ideas** a statute named in the vocabulary appears in the first 20 that was absent from both runs without terms.
 - **What would change my mind:** 5 or more new documents on most ideas, past the noise floor, means stage 2 is the largest retrieval gain in this programme; none on any idea means orientation's vocabulary adds nothing the user's words and the router did not already supply.
+
+---
+
+## MEASURED 19 Nov 2026 (cc-search, Railway measure-job at `meta.commitHash = 239658bb`, production's flags) — scored against the predictions above
+
+**In plain English.**
+- **Option B (two places per routed source)** reshapes the answer context on most questions but decides the right answer on only one of 65. It is harmless and small.
+- **The five-ideas run** could not measure stage 2. The same idea searched twice in exactly the same way returns very different documents (12 to 36 of 40 differ), so anything stage 2 adds is lost in that noise. Making the idea-level search repeatable comes before measuring stage 2 again.
+- **Stage 2 on the 65 gold questions** was not run: it needs about £5–8 of stage-1 calls, over tonight's approval. That's a QUESTION to CCh.
+
+**Option B**, read from the paired before/after inside tonight's four SEARCH-28 gold runs (no extra spend). The OFF arms are production's configuration.
+
+| | OFF-1 | OFF-2 | prediction | |
+|---|---|---|---|---|
+| questions where a routed source reached none of the 16 context places | 42 | 38 | 20–35 | **WRONG** (commoner than modelled) |
+| questions where the context changes at all | 48 | 43 | 30–50 | held |
+| gold document in the context, net | +1 (S10-Q12) | +1 (S10-Q12) | +1 (−2 to +4) | held |
+| losses | 0 | 0 | 0–3 | held |
+
+With the bill-vocab flag ON, the context changes on 34 questions and the net is 0 / −1 (S10-Q4 lost on one run).
+
+**Five real ideas** (`measure-orientation-stage2.ts`, `docs/census/s29-five-ideas-19nov.json`; 452c5ade, 2ef5358b, 5c7287d2, a379e439, 31055aef). ⚠ This ran the 22 Oct stage-1 code on origin/Main. Tonight's SEARCH-30 noise-filter change was local only; it doesn't affect vocabulary.
+
+| idea | stage 1 | WITHOUT-1 vs WITHOUT-2 differ by (noise) | found by stage 2 | lost |
+|---|---|---|---|---|
+| 452c5ade | 45 s · 12.4p | 36 | 19 | 2 |
+| 2ef5358b | 32 s · 7.3p | 30 | 18 | 5 |
+| 5c7287d2 | 39 s · 13.7p | 26 | 8 | 3 |
+| a379e439 | 38 s · 9.7p | 12 | 14 | 12 |
+| 31055aef | 30 s · 21.2p | 26 | 2 | 1 |
+
+- **Stage 1 cost and time:** 7.3–21.2p and 30–45 s. Predicted 8–15p and 25–45 s; mostly held, with 31055aef over.
+- **Stage 2's extra cost and time on the search:** about +0.04p, and no slower (24.5 s against 27.4 s). Predicted under 1p and under 3 s; **held**.
+- **Noise floor** (symmetric difference of the two identical WITHOUT runs' first 20): **12–36**. Predicted 2–6, so **WRONG by a wide margin**.
+- **Consequence:** "found by stage 2" (2–19 per idea) is the same size as the noise floor. Stage 2's effect at idea level is **not measurable** with this design. The prediction "no more than 2 beyond noise" can't be scored either way.
+- **Why the floor is that large (inferred, not measured):** the build's search goes through two LLM steps (the query writer, then the router). Each can produce different stream queries on a rerun, and per-stream results then diverge.
+- **Before stage 2 is measured again:** make the two LLM steps repeatable (temperature 0, as was done tonight for the X filter), re-measure the floor, and only then run with and without terms.
 
 ---
 

@@ -1,0 +1,2468 @@
+{
+ "takenAt": "2026-11-19T01:37:17.714Z",
+ "commit": "239658bb015574238d11c95f0f5a4df79e2fdaad",
+ "flags": {
+  "LEX_QUERY_EXPANSION": true,
+  "LEX_QUERY_ROUTER": true,
+  "LEX_WEB_ORIENTATION": true,
+  "LEX_SEARCH_VECTOR": true,
+  "LEX_SEARCH_RERANKER": true,
+  "LEX_SEARCH_GRAPH": false,
+  "LEX_COHERENCE_CORPUS": false,
+  "LEX_SEARCH_STUB": false,
+  "LEX_TIER_FUSION": true,
+  "LEX_BUILD_PERSPECTIVES": false,
+  "LEX_ROUTER_STREAMS_V2": false,
+  "LEX_STATS_STREAM": true,
+  "LEX_FUSION_WEIGHTS": false,
+  "LEX_SEARCH_JUDGED_MERGE": true,
+  "LEX_ROUTER_CONFIDENCE": false,
+  "LEX_ROUTER_APPRAISAL": false,
+  "LEX_SEARCH_GRAIN": false,
+  "LEX_CHAT_WEB_SEARCH": false,
+  "LEX_SEARCH_WITHIN_DOC": false,
+  "LEX_ROUTER_BILL_VOCAB": false,
+  "LEX_ORIENTATION_V2": false,
+  "LEX_ORIENTATION_TERMS": false,
+  "LEX_ANSWER_STREAM_FLOOR": false
+ },
+ "report": [
+  {
+   "ideaId": "452c5ade-3153-400a-bf48-3b71aaa52773",
+   "title": "Enhancing Individual Accountability in the Civil Service",
+   "inputChars": 5698,
+   "stage1": {
+    "ms": 45116,
+    "costPence": 12.38,
+    "failed": false,
+    "arguments": 24,
+    "dropped": 4,
+    "vocabulary": {
+     "keyTerms": 30,
+     "statutoryTerms": 3,
+     "people": 18,
+     "organisations": 29,
+     "places": 8
+    },
+    "calls": [
+     {
+      "call": "v2-web",
+      "ok": true,
+      "ms": 37672,
+      "costUsd": 0.0079163
+     },
+     {
+      "call": "v2-x",
+      "ok": true,
+      "ms": 45106,
+      "costUsd": 0.13570745
+     }
+    ]
+   },
+   "terms": [
+    "Civil Service Act",
+    "Constitutional Reform and Governance Act 2010 (CRAG)",
+    "Online Safety Act",
+    "accountability",
+    "productivity",
+    "performance management",
+    "politicisation",
+    "quangos",
+    "arm's-length bodies (ALBs)",
+    "Non-Departmental Public Bodies (NDPBs)",
+    "ministerial accountability",
+    "individual ministerial accountability",
+    "collective cabinet responsibility",
+    "Northcote-Trevelyan moment",
+    "Whitehall",
+    "rewiring the state",
+    "public service productivity",
+    "Performance Improvement Plans",
+    "Business Appointment Rules (BARs)",
+    "meritocracy"
+   ],
+   "openingQuery": {
+    "terms": [
+     "civil service accountability",
+     "public sector performance",
+     "ministerial responsibility",
+     "Next Steps agencies",
+     "public bodies governance",
+     "parliamentary oversight",
+     "civil service management",
+     "public appointments"
+    ],
+    "provenance": "written",
+    "ms": 1153,
+    "costPence": 0.071
+   },
+   "arms": {
+    "WITHOUT_1": {
+     "label": "WITHOUT_1",
+     "ms": 27386,
+     "costPence": 0.497,
+     "failed": false,
+     "top": [
+      {
+       "id": "govuk-core-docs:government/publications/managing-public-money:136",
+       "title": "Managing Public Money › Annex 7.2 Framework documents",
+       "corpus": "govuk-core-docs"
+      },
+      {
+       "id": "quangos-govuk:government/publications/national-forest-company-nfc-triennial-review-2013:3",
+       "title": "Principles of Corporate Governance",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "quangos-govuk:government/publications/framework-agreement-between-the-department-of-health-and-public-health-england:6",
+       "title": "Framework agreement between DHSC and PHE 2018 Annex D wider guidance",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "quangos-govuk:government/publications/new-sponsors-of-arms-length-bodies:2",
+       "title": "Introduction to sponsorship: induction pack for new sponsors of arm's length bodies",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "quangos-govuk:government/publications/dhsc-and-hee-framework-agreement-2018-to-2021:3",
+       "title": "Framework agreement between DHSC and HEE – annex A: wider guidance",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "quangos-govuk:government/publications/the-approvals-process-for-the-creation-of-new-arms-length-bodies:2",
+       "title": "The Approvals Process for the Creation of New Arm’s-Length Bodies",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "quangos-govuk:government/publications/public-bodies-reform-reports:6",
+       "title": "Public bodies reforms: checklist for departments",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "quangos-govuk:government/publications/code-of-practice-for-ministerial-appointments-to-public-bodies:1",
+       "title": "Guidance for ministerial appointments to public bodies",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "quangos-govuk:government/publications/triennial-review-of-the-environment-agency-ea-and-natural-england-ne:3",
+       "title": "Environment Agency and Natural England: Assessment against principles of good corporate governance ",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "quangos-govuk:government/publications/located-framework-document:2",
+       "title": "LocatED framework document",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "quangos-govuk:government/publications/framework-agreement-between-the-law-officers-and-the-director-of-the-serious-fraud-office:2",
+       "title": "Framework Agreement between the Attorney General’s Office and the Serious Fraud Office",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "quangos-govuk:government/publications/met-office-framework-2025:2",
+       "title": "Met Office Framework Document 2025",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "hmrc-codes-guidance:-government-publications-public-bodies-review-programme:1",
+       "title": "hmrc-codes-guidance",
+       "corpus": "hmrc-codes-guidance"
+      },
+      {
+       "id": "quangos-govuk:government/publications/government-internal-audit-agency-framework-agreement-2023:1",
+       "title": "Government Internal Audit Agency Framework Agreement",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "quangos-govuk:government/publications/monitor-and-the-department-of-health-framework-agreement:6",
+       "title": "Annex D - Wider guidance",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "committees-reports:publication:14705:arc-0001",
+       "title": "Report: 14th Report - Accounting for democracy: making sure Parliament, the people and ministers know how and why public money is spent — Public Administration and Constitutional Affairs Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:17049:arc-0001",
+       "title": "Report: 6th Report - Accounting for Democracy Revisited: The Government Response and Proposed Review — Public Administration and Constitutional Affairs Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:21121:arc-0002",
+       "title": "Report: Work of the Committee since the 2017 General Election — Public Administration and Constitutional Affairs Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:11758:arc-0014",
+       "title": "Report: 7th Report - Our work in the 2010-2015 Parliament — Public Administration Committee — Our work in the 2010–2015 Parliament 17",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:11165:arc-0008",
+       "title": "Report: 1st Report - Who's accountable? Relationships between Government and arm's-length bodies — Public Administration Committee — Table 2: One possible taxonomy of arm’s-length bodies 36",
+       "corpus": "committees-reports"
+      }
+     ]
+    },
+    "WITHOUT_2": {
+     "label": "WITHOUT_2",
+     "ms": 27516,
+     "costPence": 0.462,
+     "failed": false,
+     "top": [
+      {
+       "id": "primary-acts-2000plus:ukpga/2011/24:section-8",
+       "title": "Public Bodies Act 2011",
+       "corpus": "primary-acts-2000plus"
+      },
+      {
+       "id": "pwdata-debates:debates1997-02-12a:29",
+       "title": "Ministerial Accountability and Responsibility",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-debates:debates1979-01-15a:275",
+       "title": "Orders of the Day — THE CIVIL SERVICE",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-lords:daylord2013-02-07a:85",
+       "title": "Accountability of Civil Servants: Constitution Committee Report — Motion to Take Note",
+       "corpus": "pwdata-lords"
+      },
+      {
+       "id": "scottish-parliament-or:20083:111",
+       "title": "Scottish Parliament: Legacy Issues (Public Administration)",
+       "corpus": "scottish-parliament-or"
+      },
+      {
+       "id": "pwdata-lords:daylord2012-12-13a:55",
+       "title": "Civil Service: Permanent Secretaries — Question",
+       "corpus": "pwdata-lords"
+      },
+      {
+       "id": "committees-reports:publication:21121:arc-0002",
+       "title": "Report: Work of the Committee since the 2017 General Election — Public Administration and Constitutional Affairs Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "pwdata-lords:daylord2024-11-28b:128",
+       "title": "Civil Service: Politicisation - Motion to Take Note",
+       "corpus": "pwdata-lords"
+      },
+      {
+       "id": "pwdata-wrans:answers2005-10-10e:153",
+       "title": "INTERNATIONAL DEVELOPMENT — Parliamentary Scrutiny",
+       "corpus": "pwdata-wrans"
+      },
+      {
+       "id": "historic-hansard:S5LV0558P0:331",
+       "title": "Lords: Deregulation and Contracting Out Bill",
+       "corpus": "historic-hansard"
+      },
+      {
+       "id": "committees-reports:publication:11165:arc-0001",
+       "title": "Report: 1st Report - Who's accountable? Relationships between Government and arm's-length bodies — Public Administration Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:14705:arc-0001",
+       "title": "Report: 14th Report - Accounting for democracy: making sure Parliament, the people and ministers know how and why public money is spent — Public Administration and Constitutional Affairs Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "pwdata-wrans:answers2006-03-20d:21",
+       "title": "INTERNATIONAL DEVELOPMENT — Government Accountability",
+       "corpus": "pwdata-wrans"
+      },
+      {
+       "id": "bills-api:3332:1",
+       "title": "Public Service (Integrity and Ethics) Bill [HL] — 1st reading (last updated 2023)",
+       "corpus": "bills-api"
+      },
+      {
+       "id": "bills-api:3924:1",
+       "title": "Public Service (Ethics, Integrity and Independence) Bill [HL] — 1st reading (last updated 2026)",
+       "corpus": "bills-api"
+      },
+      {
+       "id": "bills-api:3552:1",
+       "title": "Public Service (Integrity and Ethics) Bill [HL] — 1st reading (last updated 2024)",
+       "corpus": "bills-api"
+      },
+      {
+       "id": "pwdata-wms:ministerial2025-07-21:11",
+       "title": "Cabinet Office — Government of service",
+       "corpus": "pwdata-wms"
+      },
+      {
+       "id": "pwdata-lordswms:lordswms2025-07-21:11",
+       "title": "Cabinet Office — Government of service",
+       "corpus": "pwdata-lordswms"
+      },
+      {
+       "id": "bills-api:3552:2",
+       "title": "Public Service (Integrity and Ethics) Bill [HL] — 1st reading (last updated 2024)",
+       "corpus": "bills-api"
+      },
+      {
+       "id": "committees-reports:publication:23469:arc-0001",
+       "title": "Report: 4th report - Pre-appointment hearing: First Civil Service Commissioner and Commissioner for Public Appointments — Public Administration Committee",
+       "corpus": "committees-reports"
+      }
+     ]
+    },
+    "WITH": {
+     "label": "WITH",
+     "ms": 24478,
+     "costPence": 0.506,
+     "failed": false,
+     "top": [
+      {
+       "id": "pwdata-westminster:westminster2025-11-12a:70",
+       "title": "Public Bodies: Governance and Accountability",
+       "corpus": "pwdata-westminster"
+      },
+      {
+       "id": "pwdata-lordswms:lordswms2026-04-23:2",
+       "title": "Ministry of Defence — MOD Arm’s Length Bodies Reforms",
+       "corpus": "pwdata-lordswms"
+      },
+      {
+       "id": "pwdata-debates:debates2025-03-14b:79",
+       "title": "Arm’s-Length Bodies (Review) Bill",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-debates:debates2025-04-24b:69",
+       "title": "Cabinet Office — Civil Service Reform",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "niassembly-hansard:281882:608",
+       "title": "NI Assembly: Private Members' Business — Arm's-length Bodies",
+       "corpus": "niassembly-hansard"
+      },
+      {
+       "id": "pwdata-lords:daylord2005-12-15c:17",
+       "title": "Non-departmental Public Bodies",
+       "corpus": "pwdata-lords"
+      },
+      {
+       "id": "committees-reports:publication:24925:arc-0035",
+       "title": "Report: 6th Report - The accountability of civil servants — Constitution Committee — Nonetheless, on occasion a select committee will want to question a — ¶128",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "quangos-govuk:government/publications/triennial-review-of-the-environment-agency-ea-and-natural-england-ne:3",
+       "title": "Environment Agency and Natural England: Assessment against principles of good corporate governance ",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "historic-hansard:S5LV0543P0:205",
+       "title": "Lords: Regional Government",
+       "corpus": "historic-hansard"
+      },
+      {
+       "id": "pwdata-lords:daylord2005-11-30c:50",
+       "title": "Public Bodies",
+       "corpus": "pwdata-lords"
+      },
+      {
+       "id": "pwdata-debates:debates1991-11-15a:5",
+       "title": "PRAYERS — Citizens Charter",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-wrans:answers2025-03-07:63",
+       "title": "Treasury — Arms Length Bodies: Whitehall",
+       "corpus": "pwdata-wrans"
+      },
+      {
+       "id": "nao-reports:central-oversight-of-arms-length-bodies:1",
+       "title": "central oversight of arms length bodies",
+       "corpus": "nao-reports"
+      },
+      {
+       "id": "nao-reports:accountability-in-small-government-bodies:1",
+       "title": "accountability in small government bodies",
+       "corpus": "nao-reports"
+      },
+      {
+       "id": "nao-reports:accountability-in-small-government-bodies:2",
+       "title": "accountability in small government bodies",
+       "corpus": "nao-reports"
+      },
+      {
+       "id": "nao-reports:non-departmental-public-bodies-performance-reporting-to-departments:1",
+       "title": "non departmental public bodies performance reporting to departments",
+       "corpus": "nao-reports"
+      },
+      {
+       "id": "nao-reports:accounting-officer-assessments-improving-decision-making-and-transparency-over-governments-major-programmes:1",
+       "title": "accounting officer assessments improving decision making and transparency over governments major programmes",
+       "corpus": "nao-reports"
+      },
+      {
+       "id": "quangos-govuk:government/publications/government-functional-standard-govs-009-internal-audit:2",
+       "title": "GovS 009: Internal Audit",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "quangos-govuk:government/publications/government-internal-audit-agency-framework-agreement:2",
+       "title": "Government Internal Audit Agency Framework Agreement",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "nao-reports:the-statement-on-internal-control-a-guide-for-audit-committees:1",
+       "title": "the statement on internal control a guide for audit committees",
+       "corpus": "nao-reports"
+      }
+     ]
+    }
+   },
+   "comparison": {
+    "noiseFloorSymmetricDifference": 36,
+    "foundByStage2": [
+     {
+      "id": "pwdata-westminster:westminster2025-11-12a:70",
+      "title": "Public Bodies: Governance and Accountability",
+      "corpus": "pwdata-westminster"
+     },
+     {
+      "id": "pwdata-lordswms:lordswms2026-04-23:2",
+      "title": "Ministry of Defence — MOD Arm’s Length Bodies Reforms",
+      "corpus": "pwdata-lordswms"
+     },
+     {
+      "id": "pwdata-debates:debates2025-03-14b:79",
+      "title": "Arm’s-Length Bodies (Review) Bill",
+      "corpus": "pwdata-debates"
+     },
+     {
+      "id": "pwdata-debates:debates2025-04-24b:69",
+      "title": "Cabinet Office — Civil Service Reform",
+      "corpus": "pwdata-debates"
+     },
+     {
+      "id": "niassembly-hansard:281882:608",
+      "title": "NI Assembly: Private Members' Business — Arm's-length Bodies",
+      "corpus": "niassembly-hansard"
+     },
+     {
+      "id": "pwdata-lords:daylord2005-12-15c:17",
+      "title": "Non-departmental Public Bodies",
+      "corpus": "pwdata-lords"
+     },
+     {
+      "id": "committees-reports:publication:24925:arc-0035",
+      "title": "Report: 6th Report - The accountability of civil servants — Constitution Committee — Nonetheless, on occasion a select committee will want to question a — ¶128",
+      "corpus": "committees-reports"
+     },
+     {
+      "id": "historic-hansard:S5LV0543P0:205",
+      "title": "Lords: Regional Government",
+      "corpus": "historic-hansard"
+     },
+     {
+      "id": "pwdata-lords:daylord2005-11-30c:50",
+      "title": "Public Bodies",
+      "corpus": "pwdata-lords"
+     },
+     {
+      "id": "pwdata-debates:debates1991-11-15a:5",
+      "title": "PRAYERS — Citizens Charter",
+      "corpus": "pwdata-debates"
+     },
+     {
+      "id": "pwdata-wrans:answers2025-03-07:63",
+      "title": "Treasury — Arms Length Bodies: Whitehall",
+      "corpus": "pwdata-wrans"
+     },
+     {
+      "id": "nao-reports:central-oversight-of-arms-length-bodies:1",
+      "title": "central oversight of arms length bodies",
+      "corpus": "nao-reports"
+     },
+     {
+      "id": "nao-reports:accountability-in-small-government-bodies:1",
+      "title": "accountability in small government bodies",
+      "corpus": "nao-reports"
+     },
+     {
+      "id": "nao-reports:accountability-in-small-government-bodies:2",
+      "title": "accountability in small government bodies",
+      "corpus": "nao-reports"
+     },
+     {
+      "id": "nao-reports:non-departmental-public-bodies-performance-reporting-to-departments:1",
+      "title": "non departmental public bodies performance reporting to departments",
+      "corpus": "nao-reports"
+     },
+     {
+      "id": "nao-reports:accounting-officer-assessments-improving-decision-making-and-transparency-over-governments-major-programmes:1",
+      "title": "accounting officer assessments improving decision making and transparency over governments major programmes",
+      "corpus": "nao-reports"
+     },
+     {
+      "id": "quangos-govuk:government/publications/government-functional-standard-govs-009-internal-audit:2",
+      "title": "GovS 009: Internal Audit",
+      "corpus": "quangos-govuk"
+     },
+     {
+      "id": "quangos-govuk:government/publications/government-internal-audit-agency-framework-agreement:2",
+      "title": "Government Internal Audit Agency Framework Agreement",
+      "corpus": "quangos-govuk"
+     },
+     {
+      "id": "nao-reports:the-statement-on-internal-control-a-guide-for-audit-committees:1",
+      "title": "the statement on internal control a guide for audit committees",
+      "corpus": "nao-reports"
+     }
+    ],
+    "lostByStage2": [
+     {
+      "id": "committees-reports:publication:14705:arc-0001",
+      "title": "Report: 14th Report - Accounting for democracy: making sure Parliament, the people and ministers know how and why public money is spent — Public Administration and Constitutional Affairs Committee",
+      "corpus": "committees-reports"
+     },
+     {
+      "id": "committees-reports:publication:21121:arc-0002",
+      "title": "Report: Work of the Committee since the 2017 General Election — Public Administration and Constitutional Affairs Committee",
+      "corpus": "committees-reports"
+     }
+    ],
+    "withVsWithout1Overlap": 1
+   }
+  },
+  {
+   "ideaId": "2ef5358b-8961-49e7-b765-f328daa35316",
+   "title": "Streamlining Illegal Immigrant Deportation",
+   "inputChars": 650,
+   "stage1": {
+    "ms": 31911,
+    "costPence": 7.2860000000000005,
+    "failed": false,
+    "arguments": 6,
+    "dropped": 14,
+    "vocabulary": {
+     "keyTerms": 29,
+     "statutoryTerms": 13,
+     "people": 22,
+     "organisations": 18,
+     "places": 20
+    },
+    "calls": [
+     {
+      "call": "v2-web",
+      "ok": true,
+      "ms": 23238,
+      "costUsd": 0.0090542
+     },
+     {
+      "call": "v2-x",
+      "ok": true,
+      "ms": 31910,
+      "costUsd": 0.079397
+     }
+    ]
+   },
+   "terms": [
+    "Illegal Migration Act 2023",
+    "Safety of Rwanda (Asylum and Immigration) Bill",
+    "Safety of Rwanda (Asylum and Immigration) Act 2024",
+    "Nationality and Borders Act 2022",
+    "Human Rights Act 1998",
+    "European Convention on Human Rights (ECHR)",
+    "1951 Refugee Convention",
+    "Immigration Act 2014",
+    "Town and Country Planning Act 1990",
+    "Levelling-up and Regeneration Act 2023 (LURA)",
+    "Immigration and Asylum Bill",
+    "Victims and Prisoners Bill",
+    "Borders Act 2007",
+    "illegal immigrants",
+    "unlawful entrants",
+    "detention centres",
+    "deportation",
+    "appeals",
+    "planning objections",
+    "asylum seekers"
+   ],
+   "openingQuery": {
+    "terms": [
+     "illegal immigration",
+     "unlawful entry",
+     "detention centres",
+     "deportation",
+     "asylum appeals",
+     "planning objections",
+     "Home Secretary powers",
+     "Immigration Act",
+     "Nationality Immigration Asylum Act"
+    ],
+    "provenance": "written",
+    "ms": 1032,
+    "costPence": 0.051
+   },
+   "arms": {
+    "WITHOUT_1": {
+     "label": "WITHOUT_1",
+     "ms": 29083,
+     "costPence": 0.505,
+     "failed": false,
+     "top": [
+      {
+       "id": "pwdata-debates:debates1999-02-22a:184",
+       "title": "Orders of the Day — Immigration and Asylum Bill",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-wrans:answers2016-01-22:18",
+       "title": "Home Office — Undocumented Migrants: Deportation",
+       "corpus": "pwdata-wrans"
+      },
+      {
+       "id": "pwdata-debates:debates2013-06-10a:106",
+       "title": "HOME DEPARTMENT — Asylum Seekers: Deportation",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-wrans:answers2025-04-25:101",
+       "title": "Home Office — Asylum and Undocumented Migrants: Deportation",
+       "corpus": "pwdata-wrans"
+      },
+      {
+       "id": "pwdata-wrans:answers2019-06-17:297",
+       "title": "Home Office — Asylum: Deportation",
+       "corpus": "pwdata-wrans"
+      },
+      {
+       "id": "pwdata-wrans:answers2022-06-01:131",
+       "title": "Home Office — Asylum: Deportation",
+       "corpus": "pwdata-wrans"
+      },
+      {
+       "id": "pwdata-wrans:answers2010-10-11d:510",
+       "title": "HOME DEPARTMENT — Illegal Immigrants",
+       "corpus": "pwdata-wrans"
+      },
+      {
+       "id": "pwdata-lordswrans:lordswrans2000-09-27a:6",
+       "title": "Asylum Seekers",
+       "corpus": "pwdata-lordswrans"
+      },
+      {
+       "id": "pwdata-debates:debates1996-06-24a:197",
+       "title": "Asylum Seekers (Benefits)",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "committees-reports:publication:19426:arc-0004",
+       "title": "Report: 14th Report - Immigration detention — Home Affairs Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:19426:arc-0001",
+       "title": "Report: 14th Report - Immigration detention — Home Affairs Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:19426:arc-0005",
+       "title": "Report: 14th Report - Immigration detention — Home Affairs Committee — ¶3",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:19426:arc-0099",
+       "title": "Report: 14th Report - Immigration detention — Home Affairs Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-evidence:writtenevidence:96574:141850",
+       "title": "Immigration detention inquiry — IMD0049",
+       "corpus": "committees-evidence"
+      },
+      {
+       "id": "committees-reports:publication:19426:arc-0098",
+       "title": "Report: 14th Report - Immigration detention — Home Affairs Committee — ¶63",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:41514:204389",
+       "title": "Correspondence: Letter from Kate Eves, Chair of the Brook House Inquiry, on the publication of the Brook House Inquiry Report, dated 19 September 2023",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-evidence:writtenevidence:89417:134943",
+       "title": "Immigration detention inquiry — IDD0024",
+       "corpus": "committees-evidence"
+      },
+      {
+       "id": "committees-evidence:writtenevidence:81211:126653",
+       "title": "Brook House Immigration Removal Centre inquiry — BRK0009",
+       "corpus": "committees-evidence"
+      },
+      {
+       "id": "committees-reports:publication:19426:arc-0006",
+       "title": "Report: 14th Report - Immigration detention — Home Affairs Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "tna-caselaw:[2014] EWHC 2245 (Admin):1",
+       "title": "Detention Action v Secretary of State for the Home Department",
+       "corpus": "tna-caselaw"
+      }
+     ]
+    },
+    "WITHOUT_2": {
+     "label": "WITHOUT_2",
+     "ms": 33498,
+     "costPence": 0.493,
+     "failed": false,
+     "top": [
+      {
+       "id": "primary-acts-2000plus:ukpga/2022/36:section-40",
+       "title": "Nationality and Borders Act 2022",
+       "corpus": "primary-acts-2000plus"
+      },
+      {
+       "id": "primary-acts-2000plus:ukpga/2025/31:section-44",
+       "title": "Border Security, Asylum and Immigration Act 2025",
+       "corpus": "primary-acts-2000plus"
+      },
+      {
+       "id": "primary-acts-pre-2000:ukpga/1971/77:schedule-2-paragraph-11",
+       "title": "Immigration Act 1971",
+       "corpus": "primary-acts-pre-2000"
+      },
+      {
+       "id": "primary-acts-pre-2000:ukpga/1971/77:schedule-2-paragraph-10",
+       "title": "Immigration Act 1971",
+       "corpus": "primary-acts-pre-2000"
+      },
+      {
+       "id": "primary-acts-pre-2000:ukpga/1971/77:schedule-2-paragraph-13",
+       "title": "Immigration Act 1971",
+       "corpus": "primary-acts-pre-2000"
+      },
+      {
+       "id": "primary-acts-pre-2000:ukpga/1971/77:schedule-2-paragraph-12",
+       "title": "Immigration Act 1971",
+       "corpus": "primary-acts-pre-2000"
+      },
+      {
+       "id": "primary-acts-pre-2000:ukpga/1971/77:schedule-2-paragraph-14",
+       "title": "Immigration Act 1971",
+       "corpus": "primary-acts-pre-2000"
+      },
+      {
+       "id": "primary-acts-pre-2000:ukpga/1971/77:schedule-2-paragraph-16",
+       "title": "Immigration Act 1971",
+       "corpus": "primary-acts-pre-2000"
+      },
+      {
+       "id": "primary-acts-pre-2000:ukpga/1971/77:schedule-4-paragraph-4",
+       "title": "Immigration Act 1971",
+       "corpus": "primary-acts-pre-2000"
+      },
+      {
+       "id": "primary-acts-pre-2000:ukpga/1971/77:section-11",
+       "title": "Immigration Act 1971",
+       "corpus": "primary-acts-pre-2000"
+      },
+      {
+       "id": "pwdata-wrans:answers2016-01-22:18",
+       "title": "Home Office — Undocumented Migrants: Deportation",
+       "corpus": "pwdata-wrans"
+      },
+      {
+       "id": "pwdata-wrans:answers2025-04-25:101",
+       "title": "Home Office — Asylum and Undocumented Migrants: Deportation",
+       "corpus": "pwdata-wrans"
+      },
+      {
+       "id": "pwdata-wrans:answers2019-06-17:297",
+       "title": "Home Office — Asylum: Deportation",
+       "corpus": "pwdata-wrans"
+      },
+      {
+       "id": "pwdata-wrans:answers2022-06-01:131",
+       "title": "Home Office — Asylum: Deportation",
+       "corpus": "pwdata-wrans"
+      },
+      {
+       "id": "pwdata-wrans:answers2024-03-19:117",
+       "title": "Home Office — Offenders: Deportation",
+       "corpus": "pwdata-wrans"
+      },
+      {
+       "id": "pwdata-debates:debates2013-06-10a:106",
+       "title": "HOME DEPARTMENT — Asylum Seekers: Deportation",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "historic-hansard:S5LV0532P0:394",
+       "title": "Lords: Address in Reply to Her Majesty's Most Gracious Speech",
+       "corpus": "historic-hansard"
+      },
+      {
+       "id": "pwdata-lords:daylord2025-11-05b:176",
+       "title": "Border Security, Asylum and Immigration Bill - Report (3rd Day) — Amendment 46",
+       "corpus": "pwdata-lords"
+      },
+      {
+       "id": "pwdata-wrans:answers2007-02-27b:186",
+       "title": "HOME DEPARTMENT — Deportation: Appeals",
+       "corpus": "pwdata-wrans"
+      },
+      {
+       "id": "pwdata-debates:debates1936-11-26a:134",
+       "title": "Oral Answers to Questions — METROPOLITAN POLICE. — DISCIPLINARY BOARD (APPEALS).",
+       "corpus": "pwdata-debates"
+      }
+     ]
+    },
+    "WITH": {
+     "label": "WITH",
+     "ms": 32814,
+     "costPence": 0.469,
+     "failed": false,
+     "top": [
+      {
+       "id": "primary-acts-2000plus:ukpga/2022/36:section-40",
+       "title": "Nationality and Borders Act 2022",
+       "corpus": "primary-acts-2000plus"
+      },
+      {
+       "id": "primary-acts-2000plus:ukpga/2025/31:section-44",
+       "title": "Border Security, Asylum and Immigration Act 2025",
+       "corpus": "primary-acts-2000plus"
+      },
+      {
+       "id": "bills-api:3429:46",
+       "title": "Illegal Migration Act 2023 — Bill papers, became an Act",
+       "corpus": "bills-api"
+      },
+      {
+       "id": "bills-api:3429:12",
+       "title": "Illegal Migration Act 2023 — Bill papers, became an Act",
+       "corpus": "bills-api"
+      },
+      {
+       "id": "primary-acts-2000plus:ukpga/2025/31:section-41",
+       "title": "Border Security, Asylum and Immigration Act 2025",
+       "corpus": "primary-acts-2000plus"
+      },
+      {
+       "id": "explanatory-notes:en:ukpga/2025/31:1-0004",
+       "title": "Explanatory Notes — Border Security, Asylum and Immigration Act 2025",
+       "corpus": "explanatory-notes"
+      },
+      {
+       "id": "explanatory-notes:en:ukpga/2025/31:1-0002",
+       "title": "Explanatory Notes — Border Security, Asylum and Immigration Act 2025",
+       "corpus": "explanatory-notes"
+      },
+      {
+       "id": "pwdata-lords:daylord2024-03-04a:167",
+       "title": "Safety of Rwanda (Asylum and Immigration) Bill - Report (1st Day) — Amendment 17",
+       "corpus": "pwdata-lords"
+      },
+      {
+       "id": "pwdata-debates:debates2024-01-16e:318",
+       "title": "Safety of Rwanda (Asylum and Immigration) Bill — Clause 2 - Safety of the Republic of Rwanda",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-debates:debates2024-01-16e:176",
+       "title": "Safety of Rwanda (Asylum and Immigration) Bill — Clause 2 - Safety of the Republic of Rwanda",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "primary-acts-2000plus:ukpga/2022/36:section-41",
+       "title": "Nationality and Borders Act 2022",
+       "corpus": "primary-acts-2000plus"
+      },
+      {
+       "id": "tna-caselaw:[2004] EWHC 588 (Admin):1",
+       "title": "G, R (on the application of) v Immigration Appeal Tribunal",
+       "corpus": "tna-caselaw"
+      },
+      {
+       "id": "tna-caselaw:[2010] EWHC 3558 (Admin):1",
+       "title": "Rana, R (on the application of) v Upper Tribunal (Immigration & Asylum) & Anor",
+       "corpus": "tna-caselaw"
+      },
+      {
+       "id": "tna-caselaw:[2004] EWCA Civ 1731:1",
+       "title": "M, R (on the application of) v Immigration Appeal Tribunal & Anor",
+       "corpus": "tna-caselaw"
+      },
+      {
+       "id": "ni-judgments:2012-niqb-86:1",
+       "title": "A and ORS Application and In the matter of a decision of the Immigration and Asylum Chamber (Upper Tribunal)",
+       "corpus": "ni-judgments"
+      },
+      {
+       "id": "tna-caselaw:[2017] EWCA Civ 59:1",
+       "title": "AB, R (On the Application Of) v The Secretary of State for the Home Department",
+       "corpus": "tna-caselaw"
+      },
+      {
+       "id": "tna-caselaw:[2014] UKUT 439 (IAC):1",
+       "title": "Bilal Mahmood, R (on the application of) v The Secretary of State for the Home Department",
+       "corpus": "tna-caselaw"
+      },
+      {
+       "id": "scottish-courts:media/v1wpxt1o/2015csoh159-petition-of-zbigniew-gacek-for-judicial-review-of-a-decision-of-the-secretary-of-state-for-the-home-de4partment-to-decline-to-accept-that:1",
+       "title": "Court of Session: 2015csoh159 petition of zbigniew gacek for judicial review of a decision of the secretary of state for the home de4partment to decline to accept that",
+       "corpus": "scottish-courts"
+      },
+      {
+       "id": "tna-caselaw:[2015] EWHC 505 (Admin):1",
+       "title": "Qadeer v The Secretary of State for the Home Department",
+       "corpus": "tna-caselaw"
+      },
+      {
+       "id": "ni-judgments:2013-niqb-107:1",
+       "title": "Siuksteris (Arturas)’s Application (In the matter of an application by Arturas Siuksteris for judicial review and in the matter of a decision of the Northern Ireland Prison Service made on 7 November 2012)",
+       "corpus": "ni-judgments"
+      }
+     ]
+    }
+   },
+   "comparison": {
+    "noiseFloorSymmetricDifference": 30,
+    "foundByStage2": [
+     {
+      "id": "bills-api:3429:46",
+      "title": "Illegal Migration Act 2023 — Bill papers, became an Act",
+      "corpus": "bills-api"
+     },
+     {
+      "id": "bills-api:3429:12",
+      "title": "Illegal Migration Act 2023 — Bill papers, became an Act",
+      "corpus": "bills-api"
+     },
+     {
+      "id": "primary-acts-2000plus:ukpga/2025/31:section-41",
+      "title": "Border Security, Asylum and Immigration Act 2025",
+      "corpus": "primary-acts-2000plus"
+     },
+     {
+      "id": "explanatory-notes:en:ukpga/2025/31:1-0004",
+      "title": "Explanatory Notes — Border Security, Asylum and Immigration Act 2025",
+      "corpus": "explanatory-notes"
+     },
+     {
+      "id": "explanatory-notes:en:ukpga/2025/31:1-0002",
+      "title": "Explanatory Notes — Border Security, Asylum and Immigration Act 2025",
+      "corpus": "explanatory-notes"
+     },
+     {
+      "id": "pwdata-lords:daylord2024-03-04a:167",
+      "title": "Safety of Rwanda (Asylum and Immigration) Bill - Report (1st Day) — Amendment 17",
+      "corpus": "pwdata-lords"
+     },
+     {
+      "id": "pwdata-debates:debates2024-01-16e:318",
+      "title": "Safety of Rwanda (Asylum and Immigration) Bill — Clause 2 - Safety of the Republic of Rwanda",
+      "corpus": "pwdata-debates"
+     },
+     {
+      "id": "pwdata-debates:debates2024-01-16e:176",
+      "title": "Safety of Rwanda (Asylum and Immigration) Bill — Clause 2 - Safety of the Republic of Rwanda",
+      "corpus": "pwdata-debates"
+     },
+     {
+      "id": "primary-acts-2000plus:ukpga/2022/36:section-41",
+      "title": "Nationality and Borders Act 2022",
+      "corpus": "primary-acts-2000plus"
+     },
+     {
+      "id": "tna-caselaw:[2004] EWHC 588 (Admin):1",
+      "title": "G, R (on the application of) v Immigration Appeal Tribunal",
+      "corpus": "tna-caselaw"
+     },
+     {
+      "id": "tna-caselaw:[2010] EWHC 3558 (Admin):1",
+      "title": "Rana, R (on the application of) v Upper Tribunal (Immigration & Asylum) & Anor",
+      "corpus": "tna-caselaw"
+     },
+     {
+      "id": "tna-caselaw:[2004] EWCA Civ 1731:1",
+      "title": "M, R (on the application of) v Immigration Appeal Tribunal & Anor",
+      "corpus": "tna-caselaw"
+     },
+     {
+      "id": "ni-judgments:2012-niqb-86:1",
+      "title": "A and ORS Application and In the matter of a decision of the Immigration and Asylum Chamber (Upper Tribunal)",
+      "corpus": "ni-judgments"
+     },
+     {
+      "id": "tna-caselaw:[2017] EWCA Civ 59:1",
+      "title": "AB, R (On the Application Of) v The Secretary of State for the Home Department",
+      "corpus": "tna-caselaw"
+     },
+     {
+      "id": "tna-caselaw:[2014] UKUT 439 (IAC):1",
+      "title": "Bilal Mahmood, R (on the application of) v The Secretary of State for the Home Department",
+      "corpus": "tna-caselaw"
+     },
+     {
+      "id": "scottish-courts:media/v1wpxt1o/2015csoh159-petition-of-zbigniew-gacek-for-judicial-review-of-a-decision-of-the-secretary-of-state-for-the-home-de4partment-to-decline-to-accept-that:1",
+      "title": "Court of Session: 2015csoh159 petition of zbigniew gacek for judicial review of a decision of the secretary of state for the home de4partment to decline to accept that",
+      "corpus": "scottish-courts"
+     },
+     {
+      "id": "tna-caselaw:[2015] EWHC 505 (Admin):1",
+      "title": "Qadeer v The Secretary of State for the Home Department",
+      "corpus": "tna-caselaw"
+     },
+     {
+      "id": "ni-judgments:2013-niqb-107:1",
+      "title": "Siuksteris (Arturas)’s Application (In the matter of an application by Arturas Siuksteris for judicial review and in the matter of a decision of the Northern Ireland Prison Service made on 7 November 2012)",
+      "corpus": "ni-judgments"
+     }
+    ],
+    "lostByStage2": [
+     {
+      "id": "pwdata-wrans:answers2016-01-22:18",
+      "title": "Home Office — Undocumented Migrants: Deportation",
+      "corpus": "pwdata-wrans"
+     },
+     {
+      "id": "pwdata-debates:debates2013-06-10a:106",
+      "title": "HOME DEPARTMENT — Asylum Seekers: Deportation",
+      "corpus": "pwdata-debates"
+     },
+     {
+      "id": "pwdata-wrans:answers2025-04-25:101",
+      "title": "Home Office — Asylum and Undocumented Migrants: Deportation",
+      "corpus": "pwdata-wrans"
+     },
+     {
+      "id": "pwdata-wrans:answers2019-06-17:297",
+      "title": "Home Office — Asylum: Deportation",
+      "corpus": "pwdata-wrans"
+     },
+     {
+      "id": "pwdata-wrans:answers2022-06-01:131",
+      "title": "Home Office — Asylum: Deportation",
+      "corpus": "pwdata-wrans"
+     }
+    ],
+    "withVsWithout1Overlap": 0
+   }
+  },
+  {
+   "ideaId": "5c7287d2-c059-4c84-a4e4-5cf1e97c19db",
+   "title": "Operational independence of the Bank of England",
+   "inputChars": 1161,
+   "stage1": {
+    "ms": 39065,
+    "costPence": 13.742999999999999,
+    "failed": false,
+    "arguments": 37,
+    "dropped": 13,
+    "vocabulary": {
+     "keyTerms": 30,
+     "statutoryTerms": 4,
+     "people": 18,
+     "organisations": 16,
+     "places": 11
+    },
+    "calls": [
+     {
+      "call": "v2-web",
+      "ok": true,
+      "ms": 39062,
+      "costUsd": 0.0125048
+     },
+     {
+      "call": "v2-x",
+      "ok": true,
+      "ms": 35507,
+      "costUsd": 0.1546726
+     }
+    ]
+   },
+   "terms": [
+    "Bank of England Act 1998",
+    "Bank of England Act 1946",
+    "Deed of Indemnity",
+    "Bank of England Independence Act 1998",
+    "Monetary policy",
+    "distributional consequences",
+    "operational independence",
+    "Bank of England",
+    "electorate",
+    "political choice",
+    "technical choice",
+    "Monetary Policy Committee (MPC)",
+    "interest rates",
+    "inflation target",
+    "financial stability",
+    "regulation of banks and insurance companies",
+    "quantitative easing (QE)",
+    "quantitative tightening (QT)",
+    "fiscal policy",
+    "democratic legitimacy"
+   ],
+   "openingQuery": {
+    "terms": [
+     "Bank of England Act 1998",
+     "operational independence",
+     "monetary policy committee",
+     "accountability framework",
+     "Treasury remit",
+     "financial stability"
+    ],
+    "provenance": "written",
+    "ms": 1160,
+    "costPence": 0.055
+   },
+   "arms": {
+    "WITHOUT_1": {
+     "label": "WITHOUT_1",
+     "ms": 33879,
+     "costPence": 0.501,
+     "failed": false,
+     "top": [
+      {
+       "id": "primary-acts-pre-2000:ukpga/1998/11:section-13",
+       "title": "Bank of England Act 1998",
+       "corpus": "primary-acts-pre-2000"
+      },
+      {
+       "id": "primary-acts-2000plus:ukpga/2016/14:section-7",
+       "title": "Bank of England and Financial Services Act 2016",
+       "corpus": "primary-acts-2000plus"
+      },
+      {
+       "id": "primary-acts-2000plus:ukpga/2016/14:section-8",
+       "title": "Bank of England and Financial Services Act 2016",
+       "corpus": "primary-acts-2000plus"
+      },
+      {
+       "id": "primary-acts-2000plus:ukpga/2012/21:section-1",
+       "title": "Financial Services Act 2012",
+       "corpus": "primary-acts-2000plus"
+      },
+      {
+       "id": "primary-acts-2000plus:ukpga/2012/21:section-3",
+       "title": "Financial Services Act 2012",
+       "corpus": "primary-acts-2000plus"
+      },
+      {
+       "id": "primary-acts-2000plus:ukpga/2016/14:section-6",
+       "title": "Bank of England and Financial Services Act 2016",
+       "corpus": "primary-acts-2000plus"
+      },
+      {
+       "id": "primary-acts-pre-2000:ukpga/1998/11:section-30F",
+       "title": "Bank of England Act 1998",
+       "corpus": "primary-acts-pre-2000"
+      },
+      {
+       "id": "explanatory-notes:en:ukpga/2016/14:1-0012",
+       "title": "Explanatory Notes — Bank of England and Financial Services Act 2016",
+       "corpus": "explanatory-notes"
+      },
+      {
+       "id": "primary-acts-pre-2000:ukpga/1998/11:schedule-1-paragraph-11",
+       "title": "Bank of England Act 1998",
+       "corpus": "primary-acts-pre-2000"
+      },
+      {
+       "id": "primary-acts-pre-2000:ukpga/1998/11:schedule-1-paragraph-1",
+       "title": "Bank of England Act 1998",
+       "corpus": "primary-acts-pre-2000"
+      },
+      {
+       "id": "committees-reports:publication:42289:210852-0040",
+       "title": "Report: 1st Report - Making an independent Bank of England work better — Economic Affairs Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-evidence:writtenevidence:120037:191976",
+       "title": "Bank of England: how is independence working? — IBE0007",
+       "corpus": "committees-evidence"
+      },
+      {
+       "id": "pwdata-debates:debates1998-01-22a:196",
+       "title": "Orders of the Day — Bank of England Bill — ROLE OF TREASURY COMMITTEE IN APPOINTMENTS UNDER SECTION 13(2)(c)",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "committees-reports:publication:24600:arc-0014",
+       "title": "Report: 1st Report - Financial Services Bill (Report, together with formal minutes) — Treasury Committee — Financial Services Bill 13",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:24175:arc-0023",
+       "title": "Report: 21st Report - Accountability of the Bank of England - additional written evidence (Volume II\r\nAdditional written evidence) — Treasury Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:24305:arc-0016",
+       "title": "Report: 27th Report - Accountability of the Bank of England: Response from the Court of the Bank to the Twenty-first Report from the Committee — Treasury Committee — 24 See Response from the Court, para 5",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:25078:arc-0009",
+       "title": "Report: 8th Report - Appointment of Dr Mark Carney — Treasury Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "pwdata-debates:debates1997-11-11a:289",
+       "title": "Orders of the Day — Bank of England Bill",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-wrans:answers2011-09-07b:60",
+       "title": "TREASURY — Finanical Services",
+       "corpus": "pwdata-wrans"
+      },
+      {
+       "id": "pwdata-debates:debates2012-07-06a:48",
+       "title": "Bank of England (Appointment of Governor) Bill",
+       "corpus": "pwdata-debates"
+      }
+     ]
+    },
+    "WITHOUT_2": {
+     "label": "WITHOUT_2",
+     "ms": 27208,
+     "costPence": 0.34600000000000003,
+     "failed": false,
+     "top": [
+      {
+       "id": "primary-acts-pre-2000:ukpga/1998/11:section-13",
+       "title": "Bank of England Act 1998",
+       "corpus": "primary-acts-pre-2000"
+      },
+      {
+       "id": "committees-reports:publication:42289:210852-0050",
+       "title": "Report: 1st Report - Making an independent Bank of England work better — Economic Affairs Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "primary-acts-pre-2000:ukpga/1998/11:section-19",
+       "title": "Bank of England Act 1998",
+       "corpus": "primary-acts-pre-2000"
+      },
+      {
+       "id": "quangos-govuk:government/publications/memorandum-of-understanding-between-hm-treasury-and-the-bank-of-england-2025:1",
+       "title": "Memorandum of Understanding Between HM Treasury and the Bank of England 2025",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "quangos-govuk:government/publications/financial-relationship-between-the-treasury-and-the-bank-of-england:1",
+       "title": "Memorandum of Understanding Between HM Treasury and the Bank of England 2018",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "quangos-govuk:government/publications/financial-relationship-between-the-treasury-and-the-bank-of-england:2",
+       "title": "Financial Relationship between the Treasury and the Bank of England: memorandum of understanding",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "quangos-govuk:government/publications/memorandum-of-understanding-between-hm-treasury-and-the-bank-of-england-2025:2",
+       "title": "Joint statement on the Bank of England and HM Treasury financial relationship (PDF)",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "primary-acts-pre-2000:ukpga/1998/11:schedule-1-paragraph-11",
+       "title": "Bank of England Act 1998",
+       "corpus": "primary-acts-pre-2000"
+      },
+      {
+       "id": "explanatory-notes:en:ukpga/2016/14:1-0012",
+       "title": "Explanatory Notes — Bank of England and Financial Services Act 2016",
+       "corpus": "explanatory-notes"
+      },
+      {
+       "id": "primary-acts-pre-2000:ukpga/1998/11:section-16",
+       "title": "Bank of England Act 1998",
+       "corpus": "primary-acts-pre-2000"
+      },
+      {
+       "id": "primary-acts-pre-2000:ukpga/1998/11:section-20",
+       "title": "Bank of England Act 1998",
+       "corpus": "primary-acts-pre-2000"
+      },
+      {
+       "id": "primary-acts-2000plus:ukpga/2016/14:section-8",
+       "title": "Bank of England and Financial Services Act 2016",
+       "corpus": "primary-acts-2000plus"
+      },
+      {
+       "id": "primary-acts-2000plus:ukpga/2016/14:section-7",
+       "title": "Bank of England and Financial Services Act 2016",
+       "corpus": "primary-acts-2000plus"
+      },
+      {
+       "id": "primary-acts-pre-2000:ukpga/1998/11:schedule-3-paragraph-15",
+       "title": "Bank of England Act 1998",
+       "corpus": "primary-acts-pre-2000"
+      },
+      {
+       "id": "primary-acts-pre-2000:ukpga/1998/11:schedule-1-paragraph-1",
+       "title": "Bank of England Act 1998",
+       "corpus": "primary-acts-pre-2000"
+      },
+      {
+       "id": "historic-hansard:S5LV0606P0:3951",
+       "title": "Lords: Monetary Policy Committee: Select Committee Report",
+       "corpus": "historic-hansard"
+      },
+      {
+       "id": "pwdata-lordswrans:lordswrans2011-02-28a:16",
+       "title": "Bank of England",
+       "corpus": "pwdata-lordswrans"
+      },
+      {
+       "id": "pwdata-debates:debates2006-07-13b:67",
+       "title": "TREASURY — Monetary Policy Committee",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-lords:daylord2024-05-02b:81",
+       "title": "Bank of England (Economic Affairs Committee Report) - Motion to Take Note",
+       "corpus": "pwdata-lords"
+      },
+      {
+       "id": "pwdata-debates:debates1998-01-22a:196",
+       "title": "Orders of the Day — Bank of England Bill — ROLE OF TREASURY COMMITTEE IN APPOINTMENTS UNDER SECTION 13(2)(c)",
+       "corpus": "pwdata-debates"
+      }
+     ]
+    },
+    "WITH": {
+     "label": "WITH",
+     "ms": 32179,
+     "costPence": 0.498,
+     "failed": false,
+     "top": [
+      {
+       "id": "primary-acts-pre-2000:ukpga/1998/11:section-13",
+       "title": "Bank of England Act 1998",
+       "corpus": "primary-acts-pre-2000"
+      },
+      {
+       "id": "committees-evidence:writtenevidence:121865:197013",
+       "title": "Bank of England: how is independence working? — IBE0020",
+       "corpus": "committees-evidence"
+      },
+      {
+       "id": "pwdata-lords:daylord2024-05-02b:68",
+       "title": "Bank of England (Economic Affairs Committee Report) - Motion to Take Note",
+       "corpus": "pwdata-lords"
+      },
+      {
+       "id": "committees-evidence:writtenevidence:120037:191976",
+       "title": "Bank of England: how is independence working? — IBE0007",
+       "corpus": "committees-evidence"
+      },
+      {
+       "id": "committees-reports:publication:24305:arc-0015",
+       "title": "Report: 27th Report - Accountability of the Bank of England: Response from the Court of the Bank to the Twenty-first Report from the Committee — Treasury Committee — 24 See Response from the Court, para 5",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:24305:arc-0016",
+       "title": "Report: 27th Report - Accountability of the Bank of England: Response from the Court of the Bank to the Twenty-first Report from the Committee — Treasury Committee — 24 See Response from the Court, para 5",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:24305:arc-0023",
+       "title": "Report: 27th Report - Accountability of the Bank of England: Response from the Court of the Bank to the Twenty-first Report from the Committee — Treasury Committee — 24 See Response from the Court, para 5",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:25078:arc-0009",
+       "title": "Report: 8th Report - Appointment of Dr Mark Carney — Treasury Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:25078:arc-0079",
+       "title": "Report: 8th Report - Appointment of Dr Mark Carney — Treasury Committee — 73 Q 113",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:24600:arc-0014",
+       "title": "Report: 1st Report - Financial Services Bill (Report, together with formal minutes) — Treasury Committee — Financial Services Bill 13",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "primary-acts-2000plus:ukpga/2012/21:section-1",
+       "title": "Financial Services Act 2012",
+       "corpus": "primary-acts-2000plus"
+      },
+      {
+       "id": "primary-acts-2000plus:ukpga/2016/14:section-8",
+       "title": "Bank of England and Financial Services Act 2016",
+       "corpus": "primary-acts-2000plus"
+      },
+      {
+       "id": "primary-acts-2000plus:ukpga/2016/14:section-7",
+       "title": "Bank of England and Financial Services Act 2016",
+       "corpus": "primary-acts-2000plus"
+      },
+      {
+       "id": "primary-acts-2000plus:ukpga/2016/14:section-6",
+       "title": "Bank of England and Financial Services Act 2016",
+       "corpus": "primary-acts-2000plus"
+      },
+      {
+       "id": "primary-acts-2000plus:ukpga/2012/21:section-3",
+       "title": "Financial Services Act 2012",
+       "corpus": "primary-acts-2000plus"
+      },
+      {
+       "id": "primary-acts-pre-2000:ukpga/1998/11:section-30F",
+       "title": "Bank of England Act 1998",
+       "corpus": "primary-acts-pre-2000"
+      },
+      {
+       "id": "primary-acts-2000plus:ukpga/2012/21:schedule-1-paragraph-2",
+       "title": "Financial Services Act 2012",
+       "corpus": "primary-acts-2000plus"
+      },
+      {
+       "id": "explanatory-notes:en:ukpga/2016/14:1-0012",
+       "title": "Explanatory Notes — Bank of England and Financial Services Act 2016",
+       "corpus": "explanatory-notes"
+      },
+      {
+       "id": "explanatory-notes:en:ukpga/2016/14:1-0005",
+       "title": "Explanatory Notes — Bank of England and Financial Services Act 2016",
+       "corpus": "explanatory-notes"
+      },
+      {
+       "id": "primary-acts-pre-2000:ukpga/1998/11:schedule-1-paragraph-12A",
+       "title": "Bank of England Act 1998",
+       "corpus": "primary-acts-pre-2000"
+      }
+     ]
+    }
+   },
+   "comparison": {
+    "noiseFloorSymmetricDifference": 26,
+    "foundByStage2": [
+     {
+      "id": "committees-evidence:writtenevidence:121865:197013",
+      "title": "Bank of England: how is independence working? — IBE0020",
+      "corpus": "committees-evidence"
+     },
+     {
+      "id": "pwdata-lords:daylord2024-05-02b:68",
+      "title": "Bank of England (Economic Affairs Committee Report) - Motion to Take Note",
+      "corpus": "pwdata-lords"
+     },
+     {
+      "id": "committees-reports:publication:24305:arc-0015",
+      "title": "Report: 27th Report - Accountability of the Bank of England: Response from the Court of the Bank to the Twenty-first Report from the Committee — Treasury Committee — 24 See Response from the Court, para 5",
+      "corpus": "committees-reports"
+     },
+     {
+      "id": "committees-reports:publication:24305:arc-0023",
+      "title": "Report: 27th Report - Accountability of the Bank of England: Response from the Court of the Bank to the Twenty-first Report from the Committee — Treasury Committee — 24 See Response from the Court, para 5",
+      "corpus": "committees-reports"
+     },
+     {
+      "id": "committees-reports:publication:25078:arc-0079",
+      "title": "Report: 8th Report - Appointment of Dr Mark Carney — Treasury Committee — 73 Q 113",
+      "corpus": "committees-reports"
+     },
+     {
+      "id": "primary-acts-2000plus:ukpga/2012/21:schedule-1-paragraph-2",
+      "title": "Financial Services Act 2012",
+      "corpus": "primary-acts-2000plus"
+     },
+     {
+      "id": "explanatory-notes:en:ukpga/2016/14:1-0005",
+      "title": "Explanatory Notes — Bank of England and Financial Services Act 2016",
+      "corpus": "explanatory-notes"
+     },
+     {
+      "id": "primary-acts-pre-2000:ukpga/1998/11:schedule-1-paragraph-12A",
+      "title": "Bank of England Act 1998",
+      "corpus": "primary-acts-pre-2000"
+     }
+    ],
+    "lostByStage2": [
+     {
+      "id": "primary-acts-pre-2000:ukpga/1998/11:schedule-1-paragraph-11",
+      "title": "Bank of England Act 1998",
+      "corpus": "primary-acts-pre-2000"
+     },
+     {
+      "id": "primary-acts-pre-2000:ukpga/1998/11:schedule-1-paragraph-1",
+      "title": "Bank of England Act 1998",
+      "corpus": "primary-acts-pre-2000"
+     },
+     {
+      "id": "pwdata-debates:debates1998-01-22a:196",
+      "title": "Orders of the Day — Bank of England Bill — ROLE OF TREASURY COMMITTEE IN APPOINTMENTS UNDER SECTION 13(2)(c)",
+      "corpus": "pwdata-debates"
+     }
+    ],
+    "withVsWithout1Overlap": 12
+   }
+  },
+  {
+   "ideaId": "a379e439-5ca8-4afc-a3be-548382fe0e5e",
+   "title": "The Sentencing Council and sentencing guidelines",
+   "inputChars": 1184,
+   "stage1": {
+    "ms": 37938,
+    "costPence": 9.749,
+    "failed": false,
+    "arguments": 20,
+    "dropped": 7,
+    "vocabulary": {
+     "keyTerms": 22,
+     "statutoryTerms": 7,
+     "people": 26,
+     "organisations": 10,
+     "places": 2
+    },
+    "calls": [
+     {
+      "call": "v2-web",
+      "ok": true,
+      "ms": 26621,
+      "costUsd": 0.0071787
+     },
+     {
+      "call": "v2-x",
+      "ok": true,
+      "ms": 37937,
+      "costUsd": 0.11204745
+     }
+    ]
+   },
+   "terms": [
+    "Coroners and Justice Act 2009",
+    "Criminal Justice Act 2003",
+    "Sentencing Act 2020",
+    "Sentencing Act 2026",
+    "Crime and Disorder Act 1998",
+    "Sentencing Bill",
+    "Sentencing Guidelines (Pre-sentence Reports) Bill",
+    "Sentencing Council",
+    "sentencing guidelines",
+    "two-tier justice",
+    "judicial independence",
+    "democratic deficit",
+    "non-departmental public body",
+    "quango",
+    "pre-sentence reports",
+    "aggravating factors",
+    "mitigating circumstances",
+    "average custodial sentence",
+    "sentence inflation",
+    "democratic lock"
+   ],
+   "openingQuery": {
+    "terms": [
+     "Sentencing Council",
+     "sentencing guidelines",
+     "Corston Report",
+     "Criminal Justice Act 2003",
+     "judicial independence",
+     "executive oversight"
+    ],
+    "provenance": "written",
+    "ms": 1040,
+    "costPence": 0.055
+   },
+   "arms": {
+    "WITHOUT_1": {
+     "label": "WITHOUT_1",
+     "ms": 28952,
+     "costPence": 0.48000000000000004,
+     "failed": false,
+     "top": [
+      {
+       "id": "pwdata-debates:debates2025-04-30a:254",
+       "title": "Sentencing Guidelines (Pre-sentence Reports) Bill — Clause 1 - Sentencing guidelines about pre-sentence reports",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-wrans:answers2025-09-10:150",
+       "title": "Ministry of Justice — Sentencing: Parliamentary Scrutiny",
+       "corpus": "pwdata-wrans"
+      },
+      {
+       "id": "pwdata-debates:debates2012-02-02a:384",
+       "title": "BILL PRESENTED — Water Industry (Financial Assistance) Bill — Transparency and Consistency of Sentencing",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-debates:debates2025-04-01b:270",
+       "title": "Sentencing Council Guidelines",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-debates:debates2025-04-30a:290",
+       "title": "Sentencing Guidelines (Pre-sentence Reports) Bill — Clause 1 - Sentencing guidelines about pre-sentence reports",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-lords:daylord2003-02-13a:62",
+       "title": "Sentencing Guidelines",
+       "corpus": "pwdata-lords"
+      },
+      {
+       "id": "pwdata-debates:debates2003-05-20:323",
+       "title": "Criminal Justice Bill — [3rd Alloted Day] — New Clause 28 — Sentencing Guidelines Council: Supplementary Provisions",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-debates:debates2025-04-30a:258",
+       "title": "Sentencing Guidelines (Pre-sentence Reports) Bill — Clause 1 - Sentencing guidelines about pre-sentence reports",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-debates:debates2025-03-17c:209",
+       "title": "Sentencing Council Guidelines",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "committees-reports:publication:3285:30976",
+       "title": "Correspondence: Letter to Lord Holroyde, dated 4 November 2020 on the Sentencing Council consultation What next for the Sentencing Council",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:11846:arc-0018",
+       "title": "Report: Second Report: Work of the Committee in 2008-09 — Justice Committee — 16 Work of the Committee in 2008–09",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:46022:229139",
+       "title": "Correspondence: Letter from Andy Slaughter MP, Chair of the Committee to David Gauke, Chair of the Sentencing Review, dated 10 December 2024 regarding the Committee's submission to the Review",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:11833:arc-0014",
+       "title": "Report: Sixth Report: Sentencing Guidelines and Parliament: building a bridge — Justice Committee — A democratic deficit?",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "pwdata-debates:debates2009-01-26e:204",
+       "title": "Coroners and Justice Bill",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "committees-reports:publication:11833:arc-0002",
+       "title": "Report: Sixth Report: Sentencing Guidelines and Parliament: building a bridge — Justice Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:11833:arc-0040",
+       "title": "Report: Sixth Report: Sentencing Guidelines and Parliament: building a bridge — Justice Committee — Appendix A: Letter from the Secretary of State for Justice",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:42938:213506-0014",
+       "title": "Special Report: Second Special Report - Public opinion and understanding of sentencing: Government and Sentencing Council responses to the Committee’s Tenth Report of Session 2022–23 — Justice Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:11833:arc-0008",
+       "title": "Report: Sixth Report: Sentencing Guidelines and Parliament: building a bridge — Justice Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:42938:213506-0003",
+       "title": "Special Report: Second Special Report - Public opinion and understanding of sentencing: Government and Sentencing Council responses to the Committee’s Tenth Report of Session 2022–23 — ¶3 — Justice Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:1544:14262-0002",
+       "title": "Report: 2nd Report - Sentencing Council consultation on changes to magistrates’ court sentencing guidelines — Justice Committee",
+       "corpus": "committees-reports"
+      }
+     ]
+    },
+    "WITHOUT_2": {
+     "label": "WITHOUT_2",
+     "ms": 27952,
+     "costPence": 0.333,
+     "failed": false,
+     "top": [
+      {
+       "id": "pwdata-debates:debates2025-04-30a:254",
+       "title": "Sentencing Guidelines (Pre-sentence Reports) Bill — Clause 1 - Sentencing guidelines about pre-sentence reports",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-wrans:answers2025-09-10:150",
+       "title": "Ministry of Justice — Sentencing: Parliamentary Scrutiny",
+       "corpus": "pwdata-wrans"
+      },
+      {
+       "id": "pwdata-debates:debates2012-02-02a:384",
+       "title": "BILL PRESENTED — Water Industry (Financial Assistance) Bill — Transparency and Consistency of Sentencing",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-debates:debates2025-04-30a:290",
+       "title": "Sentencing Guidelines (Pre-sentence Reports) Bill — Clause 1 - Sentencing guidelines about pre-sentence reports",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-lords:daylord2003-02-13a:62",
+       "title": "Sentencing Guidelines",
+       "corpus": "pwdata-lords"
+      },
+      {
+       "id": "pwdata-debates:debates2003-05-20:323",
+       "title": "Criminal Justice Bill — [3rd Alloted Day] — New Clause 28 — Sentencing Guidelines Council: Supplementary Provisions",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-debates:debates2025-04-30a:258",
+       "title": "Sentencing Guidelines (Pre-sentence Reports) Bill — Clause 1 - Sentencing guidelines about pre-sentence reports",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-debates:debates2025-03-17c:209",
+       "title": "Sentencing Council Guidelines",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-debates:debates2025-04-01b:270",
+       "title": "Sentencing Council Guidelines",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "primary-acts-2000plus:ukpga/2009/25:section-118",
+       "title": "Coroners and Justice Act 2009",
+       "corpus": "primary-acts-2000plus"
+      },
+      {
+       "id": "committees-reports:publication:11833:arc-0007",
+       "title": "Report: Sixth Report: Sentencing Guidelines and Parliament: building a bridge — Justice Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:11846:arc-0018",
+       "title": "Report: Second Report: Work of the Committee in 2008-09 — Justice Committee — 16 Work of the Committee in 2008–09",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:11833:arc-0002",
+       "title": "Report: Sixth Report: Sentencing Guidelines and Parliament: building a bridge — Justice Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:11833:arc-0004",
+       "title": "Report: Sixth Report: Sentencing Guidelines and Parliament: building a bridge — Justice Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "pwdata-debates:debates2009-01-26e:204",
+       "title": "Coroners and Justice Bill",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "committees-reports:publication:46022:229139",
+       "title": "Correspondence: Letter from Andy Slaughter MP, Chair of the Committee to David Gauke, Chair of the Sentencing Review, dated 10 December 2024 regarding the Committee's submission to the Review",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:11618:arc-0023",
+       "title": "Report: 10th Report - The work of the Committee in the 2010-2015 Parliament — Justice Committee — Public engagement: core task 10",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:34396:189429",
+       "title": "Correspondence: Letter to the Chairman of the Sentencing Council, dated 14 March 2023, on the consultation on proposed changes to the Totality sentencing guideline",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:11833:arc-0008",
+       "title": "Report: Sixth Report: Sentencing Guidelines and Parliament: building a bridge — Justice Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:11840:arc-0007",
+       "title": "Report: Fourth Report: Work of the Committee in 2007-08 — Justice Committee",
+       "corpus": "committees-reports"
+      }
+     ]
+    },
+    "WITH": {
+     "label": "WITH",
+     "ms": 29756,
+     "costPence": 0.48100000000000004,
+     "failed": false,
+     "top": [
+      {
+       "id": "pwdata-debates:debates2025-04-01b:270",
+       "title": "Sentencing Council Guidelines",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-debates:debates2025-04-22b:23",
+       "title": "Justice — Sentencing Council",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-debates:debates2025-04-22b:22",
+       "title": "Justice — Sentencing Council",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-lords:daylord2025-12-01a:183",
+       "title": "Sentencing Bill - Committee (2nd Day) (Continued) — Amendment 80",
+       "corpus": "pwdata-lords"
+      },
+      {
+       "id": "pwdata-debates:debates2003-05-20:312",
+       "title": "Criminal Justice Bill — [3rd Alloted Day] — New Clause 28 — Sentencing Guidelines Council: Supplementary Provisions",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-debates:debates2025-04-01b:271",
+       "title": "Sentencing Council Guidelines",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-debates:debates2008-06-17b:336",
+       "title": "Opposition Day — [14th Allotted Day] — Sentencing Policy",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-debates:debates2012-02-02a:384",
+       "title": "BILL PRESENTED — Water Industry (Financial Assistance) Bill — Transparency and Consistency of Sentencing",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "committees-reports:publication:11833:arc-0004",
+       "title": "Report: Sixth Report: Sentencing Guidelines and Parliament: building a bridge — Justice Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:11833:arc-0014",
+       "title": "Report: Sixth Report: Sentencing Guidelines and Parliament: building a bridge — Justice Committee — A democratic deficit?",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:11618:arc-0023",
+       "title": "Report: 10th Report - The work of the Committee in the 2010-2015 Parliament — Justice Committee — Public engagement: core task 10",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:11833:arc-0018",
+       "title": "Report: Sixth Report: Sentencing Guidelines and Parliament: building a bridge — Justice Committee — A democratic deficit?",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:11833:arc-0003",
+       "title": "Report: Sixth Report: Sentencing Guidelines and Parliament: building a bridge — Justice Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:11840:arc-0007",
+       "title": "Report: Fourth Report: Work of the Committee in 2007-08 — Justice Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:11833:arc-0038",
+       "title": "Report: Sixth Report: Sentencing Guidelines and Parliament: building a bridge — Justice Committee — 64 Criminal Justice Act 2003, Section 170",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "explanatory-notes:en:ukpga/2009/25:1-0091",
+       "title": "Explanatory Notes — Coroners and Justice Act 2009",
+       "corpus": "explanatory-notes"
+      },
+      {
+       "id": "explanatory-notes:en:ukpga/2009/25:1-0089",
+       "title": "Explanatory Notes — Coroners and Justice Act 2009",
+       "corpus": "explanatory-notes"
+      },
+      {
+       "id": "explanatory-notes:en:ukpga/2009/25:1-0090",
+       "title": "Explanatory Notes — Coroners and Justice Act 2009",
+       "corpus": "explanatory-notes"
+      },
+      {
+       "id": "explanatory-notes:en:ukpga/2009/25:1-0002",
+       "title": "Explanatory Notes — Coroners and Justice Act 2009",
+       "corpus": "explanatory-notes"
+      },
+      {
+       "id": "explanatory-notes:en:ukpga/2009/25:1-0092",
+       "title": "Explanatory Notes — Coroners and Justice Act 2009",
+       "corpus": "explanatory-notes"
+      }
+     ]
+    }
+   },
+   "comparison": {
+    "noiseFloorSymmetricDifference": 12,
+    "foundByStage2": [
+     {
+      "id": "pwdata-debates:debates2025-04-22b:23",
+      "title": "Justice — Sentencing Council",
+      "corpus": "pwdata-debates"
+     },
+     {
+      "id": "pwdata-debates:debates2025-04-22b:22",
+      "title": "Justice — Sentencing Council",
+      "corpus": "pwdata-debates"
+     },
+     {
+      "id": "pwdata-lords:daylord2025-12-01a:183",
+      "title": "Sentencing Bill - Committee (2nd Day) (Continued) — Amendment 80",
+      "corpus": "pwdata-lords"
+     },
+     {
+      "id": "pwdata-debates:debates2003-05-20:312",
+      "title": "Criminal Justice Bill — [3rd Alloted Day] — New Clause 28 — Sentencing Guidelines Council: Supplementary Provisions",
+      "corpus": "pwdata-debates"
+     },
+     {
+      "id": "pwdata-debates:debates2025-04-01b:271",
+      "title": "Sentencing Council Guidelines",
+      "corpus": "pwdata-debates"
+     },
+     {
+      "id": "pwdata-debates:debates2008-06-17b:336",
+      "title": "Opposition Day — [14th Allotted Day] — Sentencing Policy",
+      "corpus": "pwdata-debates"
+     },
+     {
+      "id": "committees-reports:publication:11833:arc-0018",
+      "title": "Report: Sixth Report: Sentencing Guidelines and Parliament: building a bridge — Justice Committee — A democratic deficit?",
+      "corpus": "committees-reports"
+     },
+     {
+      "id": "committees-reports:publication:11833:arc-0003",
+      "title": "Report: Sixth Report: Sentencing Guidelines and Parliament: building a bridge — Justice Committee",
+      "corpus": "committees-reports"
+     },
+     {
+      "id": "committees-reports:publication:11833:arc-0038",
+      "title": "Report: Sixth Report: Sentencing Guidelines and Parliament: building a bridge — Justice Committee — 64 Criminal Justice Act 2003, Section 170",
+      "corpus": "committees-reports"
+     },
+     {
+      "id": "explanatory-notes:en:ukpga/2009/25:1-0091",
+      "title": "Explanatory Notes — Coroners and Justice Act 2009",
+      "corpus": "explanatory-notes"
+     },
+     {
+      "id": "explanatory-notes:en:ukpga/2009/25:1-0089",
+      "title": "Explanatory Notes — Coroners and Justice Act 2009",
+      "corpus": "explanatory-notes"
+     },
+     {
+      "id": "explanatory-notes:en:ukpga/2009/25:1-0090",
+      "title": "Explanatory Notes — Coroners and Justice Act 2009",
+      "corpus": "explanatory-notes"
+     },
+     {
+      "id": "explanatory-notes:en:ukpga/2009/25:1-0002",
+      "title": "Explanatory Notes — Coroners and Justice Act 2009",
+      "corpus": "explanatory-notes"
+     },
+     {
+      "id": "explanatory-notes:en:ukpga/2009/25:1-0092",
+      "title": "Explanatory Notes — Coroners and Justice Act 2009",
+      "corpus": "explanatory-notes"
+     }
+    ],
+    "lostByStage2": [
+     {
+      "id": "pwdata-debates:debates2025-04-30a:254",
+      "title": "Sentencing Guidelines (Pre-sentence Reports) Bill — Clause 1 - Sentencing guidelines about pre-sentence reports",
+      "corpus": "pwdata-debates"
+     },
+     {
+      "id": "pwdata-wrans:answers2025-09-10:150",
+      "title": "Ministry of Justice — Sentencing: Parliamentary Scrutiny",
+      "corpus": "pwdata-wrans"
+     },
+     {
+      "id": "pwdata-debates:debates2025-04-30a:290",
+      "title": "Sentencing Guidelines (Pre-sentence Reports) Bill — Clause 1 - Sentencing guidelines about pre-sentence reports",
+      "corpus": "pwdata-debates"
+     },
+     {
+      "id": "pwdata-lords:daylord2003-02-13a:62",
+      "title": "Sentencing Guidelines",
+      "corpus": "pwdata-lords"
+     },
+     {
+      "id": "pwdata-debates:debates2003-05-20:323",
+      "title": "Criminal Justice Bill — [3rd Alloted Day] — New Clause 28 — Sentencing Guidelines Council: Supplementary Provisions",
+      "corpus": "pwdata-debates"
+     },
+     {
+      "id": "pwdata-debates:debates2025-04-30a:258",
+      "title": "Sentencing Guidelines (Pre-sentence Reports) Bill — Clause 1 - Sentencing guidelines about pre-sentence reports",
+      "corpus": "pwdata-debates"
+     },
+     {
+      "id": "pwdata-debates:debates2025-03-17c:209",
+      "title": "Sentencing Council Guidelines",
+      "corpus": "pwdata-debates"
+     },
+     {
+      "id": "committees-reports:publication:11846:arc-0018",
+      "title": "Report: Second Report: Work of the Committee in 2008-09 — Justice Committee — 16 Work of the Committee in 2008–09",
+      "corpus": "committees-reports"
+     },
+     {
+      "id": "committees-reports:publication:46022:229139",
+      "title": "Correspondence: Letter from Andy Slaughter MP, Chair of the Committee to David Gauke, Chair of the Sentencing Review, dated 10 December 2024 regarding the Committee's submission to the Review",
+      "corpus": "committees-reports"
+     },
+     {
+      "id": "pwdata-debates:debates2009-01-26e:204",
+      "title": "Coroners and Justice Bill",
+      "corpus": "pwdata-debates"
+     },
+     {
+      "id": "committees-reports:publication:11833:arc-0002",
+      "title": "Report: Sixth Report: Sentencing Guidelines and Parliament: building a bridge — Justice Committee",
+      "corpus": "committees-reports"
+     },
+     {
+      "id": "committees-reports:publication:11833:arc-0008",
+      "title": "Report: Sixth Report: Sentencing Guidelines and Parliament: building a bridge — Justice Committee",
+      "corpus": "committees-reports"
+     }
+    ],
+    "withVsWithout1Overlap": 3
+   }
+  },
+  {
+   "ideaId": "31055aef-3476-4ea5-b24b-cc2896f7c042",
+   "title": "Mandating Transparency in Government and Quango Forecasts",
+   "inputChars": 935,
+   "stage1": {
+    "ms": 30253,
+    "costPence": 21.222,
+    "failed": false,
+    "arguments": 19,
+    "dropped": 3,
+    "vocabulary": {
+     "keyTerms": 28,
+     "statutoryTerms": 6,
+     "people": 19,
+     "organisations": 25,
+     "places": 2
+    },
+    "calls": [
+     {
+      "call": "v2-web",
+      "ok": true,
+      "ms": 30251,
+      "costUsd": 0.0075945000000000006
+     },
+     {
+      "call": "v2-x",
+      "ok": true,
+      "ms": 23092,
+      "costUsd": 0.2511711
+     }
+    ]
+   },
+   "terms": [
+    "Ministerial Code (Paragraph 5.2)",
+    "Charter for Budget Responsibility",
+    "Memorandum of Understanding (OBR, HM Treasury, HM Revenue and Customs, Departmen",
+    "Public Bodies 2012",
+    "Budget Responsibility Act",
+    "OBR forecast",
+    "Scientific Advisory Group for Emergencies (SAGE)",
+    "Office for Budget Responsibility (OBR)",
+    "HM Treasury",
+    "Quangos",
+    "arm's-length bodies (ALBs)",
+    "forecasts",
+    "assumptions",
+    "models",
+    "transparency",
+    "accountability",
+    "independent scrutiny",
+    "scientific advice to government",
+    "fiscal forecasts",
+    "economic forecasts"
+   ],
+   "openingQuery": {
+    "terms": [
+     "forecasting transparency",
+     "model assumptions disclosure",
+     "public sector analytical models",
+     "government economic forecasts",
+     "Office Budget Responsibility",
+     "Code Practice Official Statistics",
+     "duty candour",
+     "scientific advice government"
+    ],
+    "provenance": "written",
+    "ms": 1258,
+    "costPence": 0.057
+   },
+   "arms": {
+    "WITHOUT_1": {
+     "label": "WITHOUT_1",
+     "ms": 24317,
+     "costPence": 0.46900000000000003,
+     "failed": false,
+     "top": [
+      {
+       "id": "pwdata-debates:debates2011-03-22b:388",
+       "title": "Dangerous and Reckless Cycling (Offences) — Clause 2 — Annual Budget documents",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-debates:debates1980-02-07a:429",
+       "title": "Orders of the Day — INDUSTRY BILL — PLANNING AGREEMENTS AND DISCLOSURE OF INFORMATION",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "scottish-parliament-or:16713:65",
+       "title": "Scottish Parliament: Draft Climate Change Plan",
+       "corpus": "scottish-parliament-or"
+      },
+      {
+       "id": "scottish-parliament-or:11164:59",
+       "title": "Scottish Parliament: Economic Data",
+       "corpus": "scottish-parliament-or"
+      },
+      {
+       "id": "pwdata-debates:debates1968-06-25a:41",
+       "title": "Oral Answers to Questions — NATIONAL FINANCE — Economic Outlook (Forecasts)",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-lords:daylord2015-01-12a:91",
+       "title": "Pension Schemes Bill — Committee (2nd Day)",
+       "corpus": "pwdata-lords"
+      },
+      {
+       "id": "committees-evidence:writtenevidence:162135:286658",
+       "title": "The OBR: 15 years on — OBR0014",
+       "corpus": "committees-evidence"
+      },
+      {
+       "id": "quangos-govuk:government/publications/forecast-evaluation-report-october-2012:2",
+       "title": "Forecast evaluation report [October 2012] - Full Text",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "quangos-govuk:government/publications/economic-and-fiscal-outlook:2",
+       "title": "Economic and fiscal outlook - Full Text",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "scottish-parliament-or:16374:53",
+       "title": "Scottish Parliament: Scottish Budget Process in Practice",
+       "corpus": "scottish-parliament-or"
+      },
+      {
+       "id": "quangos-govuk:government/publications/forecast-evaluation-report-october-2017:3",
+       "title": "Forecast evaluation report: October 2017 (print)",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "quangos-govuk:government/publications/forecast-evaluation-report-october-2016:2",
+       "title": "Forecast evaluation report: October 2016",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "quangos-govuk:government/publications/forecast-evaluation-report-june-2026:2",
+       "title": "Forecast evaluation report – June 2026",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "quangos-govuk:government/publications/forecast-evaluation-report-october-2015:2",
+       "title": "Forecast evaluation report: October 2015",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "committees-evidence:writtenevidence:92780:137659",
+       "title": "Andy King, Nominated Member of the Budget Responsibility Committee — AKG0001",
+       "corpus": "committees-evidence"
+      },
+      {
+       "id": "nao-reports:examination-of-the-forecasts-prepared-by-the-office-for-budget-responsibility-for-29-november-2010:1",
+       "title": "examination of the forecasts prepared by the office for budget responsibility for 29 november 2010",
+       "corpus": "nao-reports"
+      },
+      {
+       "id": "committees-evidence:writtenevidence:162204:286674",
+       "title": "The OBR: 15 years on — OBR0022",
+       "corpus": "committees-evidence"
+      },
+      {
+       "id": "committees-evidence:writtenevidence:162180:286665",
+       "title": "The OBR: 15 years on — OBR0017",
+       "corpus": "committees-evidence"
+      },
+      {
+       "id": "committees-evidence:writtenevidence:162070:286650",
+       "title": "The OBR: 15 years on — OBR0007",
+       "corpus": "committees-evidence"
+      },
+      {
+       "id": "committees-evidence:writtenevidence:162100:286654",
+       "title": "The OBR: 15 years on — OBR0011",
+       "corpus": "committees-evidence"
+      }
+     ]
+    },
+    "WITHOUT_2": {
+     "label": "WITHOUT_2",
+     "ms": 22796,
+     "costPence": 0.337,
+     "failed": false,
+     "top": [
+      {
+       "id": "quangos-govuk:government/publications/forecast-evaluation-report-october-2017:3",
+       "title": "Forecast evaluation report: October 2017 (print)",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "committees-evidence:writtenevidence:162204:286674",
+       "title": "The OBR: 15 years on — OBR0022",
+       "corpus": "committees-evidence"
+      },
+      {
+       "id": "committees-evidence:writtenevidence:162180:286665",
+       "title": "The OBR: 15 years on — OBR0017",
+       "corpus": "committees-evidence"
+      },
+      {
+       "id": "quangos-govuk:government/publications/office-for-budget-responsibility-and-hm-treasury-framework-document-may-2014:2",
+       "title": "OBR and HM Treasury: framework document",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "committees-reports:publication:23396:arc-0028",
+       "title": "Report: 4th report - Office for Budget Responsibility - additional written evidence — Treasury Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "quangos-govuk:government/publications/economic-and-fiscal-outlook:2",
+       "title": "Economic and fiscal outlook - Full Text",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "committees-evidence:writtenevidence:162276:286681",
+       "title": "The OBR: 15 years on — OBR0027",
+       "corpus": "committees-evidence"
+      },
+      {
+       "id": "govuk-core-docs:government/publications/the-magenta-book:345",
+       "title": "Transparency in Government Evaluation Research (T I G E R) (HTML) › Benefits of adopting transparent evaluation practices",
+       "corpus": "govuk-core-docs"
+      },
+      {
+       "id": "scottish-parliament-or:11164:59",
+       "title": "Scottish Parliament: Economic Data",
+       "corpus": "scottish-parliament-or"
+      },
+      {
+       "id": "pwdata-debates:debates1968-06-25a:41",
+       "title": "Oral Answers to Questions — NATIONAL FINANCE — Economic Outlook (Forecasts)",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-lords:daylord2015-01-12a:91",
+       "title": "Pension Schemes Bill — Committee (2nd Day)",
+       "corpus": "pwdata-lords"
+      },
+      {
+       "id": "scottish-parliament-or:arch-9895:175",
+       "title": "Scottish Parliament Official Report",
+       "corpus": "scottish-parliament-or"
+      },
+      {
+       "id": "scottish-parliament-or:10725:71",
+       "title": "Scottish Parliament: Draft Budget 2017-18",
+       "corpus": "scottish-parliament-or"
+      },
+      {
+       "id": "scottish-parliament-or:arch-10064:125",
+       "title": "Scottish Parliament Official Report",
+       "corpus": "scottish-parliament-or"
+      },
+      {
+       "id": "scottish-parliament-or:11909:111",
+       "title": "Scottish Parliament: Committees’ Pre-budget Scrutiny",
+       "corpus": "scottish-parliament-or"
+      },
+      {
+       "id": "pwdata-wrans:answers2023-12-12:83",
+       "title": "Treasury — Migration: Forecasts",
+       "corpus": "pwdata-wrans"
+      },
+      {
+       "id": "pwdata-wrans:answers2001-12-06:269",
+       "title": "TREASURY — Budgetary Forecasts",
+       "corpus": "pwdata-wrans"
+      },
+      {
+       "id": "scottish-parliament-or:12177:118",
+       "title": "Scottish Parliament: Economic and Fiscal Forecasts",
+       "corpus": "scottish-parliament-or"
+      },
+      {
+       "id": "committees-reports:publication:25041:arc-0008",
+       "title": "Report: 7th Report - Autumn Statement 2012 (Report, together with formal minutes) — Treasury Committee — 6 Autumn Statement 2012",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-reports:publication:25041:arc-0007",
+       "title": "Report: 7th Report - Autumn Statement 2012 (Report, together with formal minutes) — Treasury Committee — 6 Autumn Statement 2012",
+       "corpus": "committees-reports"
+      }
+     ]
+    },
+    "WITH": {
+     "label": "WITH",
+     "ms": 21715,
+     "costPence": 0.499,
+     "failed": false,
+     "top": [
+      {
+       "id": "scottish-parliament-or:11164:59",
+       "title": "Scottish Parliament: Economic Data",
+       "corpus": "scottish-parliament-or"
+      },
+      {
+       "id": "pwdata-debates:debates1968-06-25a:41",
+       "title": "Oral Answers to Questions — NATIONAL FINANCE — Economic Outlook (Forecasts)",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "committees-evidence:writtenevidence:162204:286674",
+       "title": "The OBR: 15 years on — OBR0022",
+       "corpus": "committees-evidence"
+      },
+      {
+       "id": "quangos-govuk:government/publications/economic-and-fiscal-outlook:2",
+       "title": "Economic and fiscal outlook - Full Text",
+       "corpus": "quangos-govuk"
+      },
+      {
+       "id": "scottish-parliament-or:arch-10064:125",
+       "title": "Scottish Parliament Official Report",
+       "corpus": "scottish-parliament-or"
+      },
+      {
+       "id": "committees-evidence:writtenevidence:162276:286681",
+       "title": "The OBR: 15 years on — OBR0027",
+       "corpus": "committees-evidence"
+      },
+      {
+       "id": "scottish-parliament-or:10725:71",
+       "title": "Scottish Parliament: Draft Budget 2017-18",
+       "corpus": "scottish-parliament-or"
+      },
+      {
+       "id": "committees-reports:publication:23396:arc-0028",
+       "title": "Report: 4th report - Office for Budget Responsibility - additional written evidence — Treasury Committee",
+       "corpus": "committees-reports"
+      },
+      {
+       "id": "committees-evidence:writtenevidence:162180:286665",
+       "title": "The OBR: 15 years on — OBR0017",
+       "corpus": "committees-evidence"
+      },
+      {
+       "id": "pwdata-debates:debates1980-02-07a:429",
+       "title": "Orders of the Day — INDUSTRY BILL — PLANNING AGREEMENTS AND DISCLOSURE OF INFORMATION",
+       "corpus": "pwdata-debates"
+      },
+      {
+       "id": "pwdata-lords:daylord2015-01-12a:91",
+       "title": "Pension Schemes Bill — Committee (2nd Day)",
+       "corpus": "pwdata-lords"
+      },
+      {
+       "id": "pwdata-wrans:answers2001-12-06:269",
+       "title": "TREASURY — Budgetary Forecasts",
+       "corpus": "pwdata-wrans"
+      },
+      {
+       "id": "scottish-parliament-or:12177:118",
+       "title": "Scottish Parliament: Economic and Fiscal Forecasts",
+       "corpus": "scottish-parliament-or"
+      },
+      {
+       "id": "scottish-parliament-or:arch-9895:175",
+       "title": "Scottish Parliament Official Report",
+       "corpus": "scottish-parliament-or"
+      },
+      {
+       "id": "pwdata-wrans:answers2023-12-12:83",
+       "title": "Treasury — Migration: Forecasts",
+       "corpus": "pwdata-wrans"
+      },
+      {
+       "id": "scottish-parliament-or:11909:111",
+       "title": "Scottish Parliament: Committees’ Pre-budget Scrutiny",
+       "corpus": "scottish-parliament-or"
+      },
+      {
+       "id": "committees-evidence:writtenevidence:92780:137659",
+       "title": "Andy King, Nominated Member of the Budget Responsibility Committee — AKG0001",
+       "corpus": "committees-evidence"
+      },
+      {
+       "id": "committees-evidence:writtenevidence:162133:286657",
+       "title": "The OBR: 15 years on — OBR0013",
+       "corpus": "committees-evidence"
+      },
+      {
+       "id": "nao-reports:examination-of-the-forecasts-prepared-by-the-office-for-budget-responsibility-for-29-november-2010:1",
+       "title": "examination of the forecasts prepared by the office for budget responsibility for 29 november 2010",
+       "corpus": "nao-reports"
+      },
+      {
+       "id": "committees-evidence:writtenevidence:157475:286644",
+       "title": "The OBR: 15 years on — OBR0001",
+       "corpus": "committees-evidence"
+      }
+     ]
+    }
+   },
+   "comparison": {
+    "noiseFloorSymmetricDifference": 26,
+    "foundByStage2": [
+     {
+      "id": "committees-evidence:writtenevidence:162133:286657",
+      "title": "The OBR: 15 years on — OBR0013",
+      "corpus": "committees-evidence"
+     },
+     {
+      "id": "committees-evidence:writtenevidence:157475:286644",
+      "title": "The OBR: 15 years on — OBR0001",
+      "corpus": "committees-evidence"
+     }
+    ],
+    "lostByStage2": [
+     {
+      "id": "quangos-govuk:government/publications/forecast-evaluation-report-october-2017:3",
+      "title": "Forecast evaluation report: October 2017 (print)",
+      "corpus": "quangos-govuk"
+     }
+    ],
+    "withVsWithout1Overlap": 9
+   }
+  }
+ ]
+}
