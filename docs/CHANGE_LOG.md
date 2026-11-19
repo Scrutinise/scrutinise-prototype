@@ -1,5 +1,41 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-19 00:06 UTC - SEARCH-30: why fts-serve took 86 s (storage-bound boots from 20 Oct, not contention); the noise filter now tags and a fixed rule drops
+
+Full write-up: `docs/SEARCH_30_REPORT.md`. Answers CCh's 22 Oct "SEARCH — priorities changed". No gold run made; reported first, as asked.
+
+**Slowness.**
+- From its 20 Oct 08:15 restart, vector-serve's own `/stats` (kept in the 23 Oct census files) read warm p50 46–48 s, ANN 36 s, **cpu/wall 0.13**. On the previous boot it read 3.3 s and 1.31. So it was about 14× slower and waiting on R2 range reads.
+- fts-serve restarted two minutes earlier, so Lex's 86 s fits the same state. That part is inferred: fts-serve's `/stats` from that boot were never captured.
+- It was not contention: at 00:45 the ledger holds only Lex's check, and fts CPU peaked at 0.15 of 8 vCPU.
+- Today the condition is gone: the same query takes 4–7.5 s, the zero-match control 14 ms.
+- Still true today:
+  - one `search_corpus` call sends 8 fts and 8 vector requests at limit 60 (asks for 12, fetches 300), 20–29 s per search;
+  - the digest's 5 s p95 alert is above both services' normal p95, so it was firing daily before 20 Oct and could not flag the jump.
+- Proposed (none applied):
+  1. an alert on cpu/wall < 0.4 and on p50 > 3× the last healthy boot;
+  2. Ops restarts a serve when that alert fires twice;
+  3. Lance tables on a Railway volume (decision, spend);
+  4. a lower per-stream limit for `search_corpus`, after a gold run.
+- Lex's 120 s timeout should come back down after item 1.
+
+**Noise filter.**
+- `orientation/v2.ts`: the X call tags every post (`argument | abuse | sarcasm | pile-on | no-argument`) at temperature 0. The pure `applyNoiseRule()` drops by tag and logs each drop with its reason and URL. The call is identical with the filter on or off.
+- `callGrok` takes `temperature` (v1 keeps 0.2).
+- `measure-s30-noise.ts` on 2ef5358b, three runs:
+  - kept 30 / 25 / 25, dropped 1 / 1 / 2 (it was 21 → 6, dropping 3 → 14);
+  - the 6 of 6 posts seen in more than one run got the same tag every time.
+- ⚠ Live retrieval still varies: 33 distinct X posts, 1 in all three runs.
+- Spend: 31.8p, ledgered as a measurement.
+- Checks: `check:search-29` 42 passed, 0 failed, 6 controls fired, 0 dead. Web tsc clean.
+- **Not committed, not deployed.**
+
+**Also.**
+- 763c620 is an ancestor of production's `a95a6d9c`.
+- The Railway token works (tested read-only).
+- `NEON_API_KEY` is still absent.
+- SEARCH-28 item 3's 23 Oct gold runs (and the Railway smoke run) all aborted after 10 of 65 questions on the harness's own p95 guard, a second record of the slow state. Only off-1 (20 Oct) is complete.
+
 ## 2026-11-18 23:44 UTC - INGEST CBA-1 EXECUTE (decisions 326–331): STOPPED at a Charlie decision; half already on production since 14 Nov, verified; nothing written
 
 **Brief:** `docs/BRIEF_INGEST_CBA_1_EXECUTE.md`. **Report:** `docs/INGEST_CBA_1_EXECUTE_REPORT.md`. Inbox QUESTION 11:08 UTC (CCh acked

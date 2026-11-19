@@ -1,0 +1,313 @@
+{
+ "takenAt": "2026-11-19T00:05:50.891Z",
+ "ideaId": "2ef5358b-8961-49e7-b765-f328daa35316",
+ "title": "Streamlining Illegal Immigrant Deportation",
+ "runs": 3,
+ "xTemperature": "0",
+ "perRun": [
+  {
+   "kept": 30,
+   "dropped": 1,
+   "droppedByReason": {
+    "abuse": 1
+   },
+   "xTags": [
+    {
+     "kind": "argument",
+     "url": "https://x.com/griptmedia/status/1847628276740640896",
+     "claim": "Councils can use reserved powers to halt asylum centres"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/_the_GBC/status/2121209736213532974",
+     "claim": "Executive planning powers were used to override local councils for migrant sites"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/CharlieSansom/status/1960251095466246610",
+     "claim": "Migrants arriving on small boats should be arrested, detained on RAF bases and denied asylum or appeals"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/nadhimzahawi/status/1979180797652324407",
+     "claim": "Home Secretary should reverse decisions by legislation if necessary"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/RogerHelmetMEP1/status/2122426524041203956",
+     "claim": "EU return hubs differ from UK scheme as they are post-rejection"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/kwets11/status/2107430141542449410",
+     "claim": "Government must process applications at own cost leading to community housing and appeals delaying deportation"
+    },
+    {
+     "kind": "abuse",
+     "url": "https://x.com/CollinsBaz74615/status/2121020585157255456",
+     "claim": "Government is retarded radicalised scum for illegal migrants"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/sandieshoes/status/1826169831239872537",
+     "claim": "Labour's deportation plans are woefully inadequate"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/juneslater17/status/2123036720182517926",
+     "claim": "Deporting 10 million is a pipe dream due to logistics of flights, finding people, destinations and cost"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/NewsNew97351204/status/2122159313057677759",
+     "claim": "Next Conservative government would deport every illegal immigrant by leaving ECHR"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/HouseofAyres/status/2118787701747126380",
+     "claim": "Restore Britain's 30,000-place detention estate with three centres, modular build and 12-month timeline is needed for universal detention and removals"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/docrussjackson/status/2110712374835454238",
+     "claim": "Reform UK councillors' racist abuse shows party extremism"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/The5th_estateUK/status/2107153853007237382",
+     "claim": "Reform policy requires mandatory deportation, data fusion, immediate detention, zero appeals via leaving ECHR"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/TheXLector/status/2106973346667855949",
+     "claim": "Government brings illegal immigrants ashore instead of deporting"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/InclusiveBuild/status/2106386403906994385",
+     "claim": "Deport illegal migrants alongside other policies like banning green belt development"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/mikeerwydd1968/status/2106296573185359875",
+     "claim": "Tories failed to deport during 14 years; Reform will do it"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/FletchedFletch/status/2103587789254402510",
+     "claim": "Labour cannot stop Channel migrants or set deadline; must leave ECHR to deport"
+    }
+   ],
+   "calls": [
+    {
+     "call": "v2-web",
+     "ok": true,
+     "ms": 28726,
+     "provider": "google",
+     "costUsd": 0.0089616
+    },
+    {
+     "call": "v2-x",
+     "ok": true,
+     "ms": 51463,
+     "provider": "xai",
+     "costUsd": 0.1479012,
+     "postsFetched": 23,
+     "kept": 16,
+     "discarded": 1
+    }
+   ],
+   "costUsd": 0.15686280000000002,
+   "ms": 51485
+  },
+  {
+   "kept": 25,
+   "dropped": 1,
+   "droppedByReason": {
+    "no-argument": 1
+   },
+   "xTags": [
+    {
+     "kind": "argument",
+     "url": "https://x.com/kwets11/status/2107430141542449410",
+     "claim": "Current asylum processing forces government to house claimants in communities for months/years at public cost while they appeal rejections, delaying deportation"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/ptcs36/status/2123063958579867865",
+     "claim": "Welfare, illegal work and appeals must be removed to stop illegal immigration; deportation with no right to appeal is straightforward."
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/lane_d12/status/2121268320515002514",
+     "claim": "Overriding local objections to house 1,256 men in Piddington via fast-track shows government prioritises asylum accommodation over communities; deportation is n"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/sandieshoes/status/1826169831239872537",
+     "claim": "Labour's increased detention places and deportation vows are inadequate because migrants discard passports, UN blocks returns (e.g. Syria), DNA ruled out, and w"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/griptmedia/status/1847628276740640896",
+     "claim": "County council powers to prohibit temporary dwellings can halt proposed asylum centres housing up to 1,000 males."
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/RogerHelmetMEP1/status/2122425270468747658",
+     "claim": "UK Supreme Court blocked Rwanda-style outsourcing of unprocessed claims due to refoulement risk; EU return hubs are post-rejection only."
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/CharlieSansom/status/1960251095466246610",
+     "claim": "Migrants arriving on small boats should face immediate arrest, detention on RAF bases, no asylum claim or appeal right; build facilities for 24,000 in 18 months"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/grok/status/2081683012941435026",
+     "claim": "Reform UK's Operation Restoring Justice requires leaving ECHR, repealing Human Rights Act, Illegal Migration (Mass Deportation) Bill barring asylum for illegal "
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/HugoandBob/status/2023084514591842548",
+     "claim": "Leaving ECHR or ignoring law does not make mass deportations feasible; millions of cases, Home Office capacity limits, need for documentation, appeals, 15,000 o"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/grok/status/2023773265982812306",
+     "claim": "Reform UK's plan includes 5-year Operation Restoring Justice, leave ECHR, repeal Human Rights Act, Mass Deportation Bill blocking appeals, detention centres for"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/BullishBlighty/status/2120982612260839831",
+     "claim": "Angela Rayner used emergency powers to override 3,177 local objections for 1,256-place asylum camp in Piddington, prioritising national demand over community sa"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/KherKabeer/status/1959003759532806516",
+     "claim": "Reform UK will introduce Illegal Migration (Mass Deportation) Bill barring asylum for small boat arrivals, hold them in RAF base detention centres, leave ECHR a"
+    }
+   ],
+   "calls": [
+    {
+     "call": "v2-web",
+     "ok": true,
+     "ms": 31962,
+     "provider": "google",
+     "costUsd": 0.006739
+    },
+    {
+     "call": "v2-x",
+     "ok": true,
+     "ms": 43859,
+     "provider": "xai",
+     "costUsd": 0.15307635,
+     "postsFetched": 25,
+     "kept": 12,
+     "discarded": 0
+    }
+   ],
+   "costUsd": 0.15981535,
+   "ms": 43861
+  },
+  {
+   "kept": 25,
+   "dropped": 2,
+   "droppedByReason": {
+    "no-argument": 2
+   },
+   "xTags": [
+    {
+     "kind": "argument",
+     "url": "https://x.com/kwets11/status/2107430141542449410",
+     "claim": "Government must process thousands of asylum applications by force at their own cost, taking months or years, during which applicants live in communities and can"
+    },
+    {
+     "kind": "no-argument",
+     "url": "https://x.com/DailyMail/status/2122405298384040087",
+     "claim": "Rejected asylum seekers and illegal migrants could be deported within hours of appeals failing under crackdown proposed by Home Secretary Shabana Mahmood"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/nadhimzahawi/status/1979180797652324407",
+     "claim": "Home Secretary should get very upset and reverse decisions by legislation if necessary to enable deportations."
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/KEdge23/status/1957841842499695063",
+     "claim": "If worried about housing illegal migrants, deport them instead of seeking injunctions."
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/RogerHelmetMEP1/status/2122425270468747658",
+     "claim": "UK Supreme Court blocked British scheme due to refoulement risk; EU nations propose post-rejection return hubs for denied asylum seekers."
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/LeeAndersonMP_/status/1983860732027351207",
+     "claim": "Labour Government lacks will to deport illegal migrants as rejected claims lead only to voluntary departure or possible enforced removal, with judicial review o"
+    },
+    {
+     "kind": "no-argument",
+     "url": "https://x.com/MorEdge_Insight/status/2037475172723081694",
+     "claim": "Link to article on policy analysis"
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/nikki_plummer/status/2073670407505273138",
+     "claim": "Reform UK proposal for large detention centres in Green Party constituencies caused lefty meltdown."
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/Neither_Extreme/status/1923278607905947840",
+     "claim": "Ireland needs very large detention centres for people entering illegally as most are scammers."
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/RupertLowe10/status/1915381350728692091",
+     "claim": "Mass deportation of illegal migrants is possible with Great Repeal Act to remove obstructive legislation including ECHR, offshore detention, expanded detention "
+    },
+    {
+     "kind": "argument",
+     "url": "https://x.com/DrJohnChisholm/status/1467581793725464582",
+     "claim": "Nationality & Borders Bill has dire health implications, breaks international law; large detention centres and offshoring are inhumane."
+    }
+   ],
+   "calls": [
+    {
+     "call": "v2-web",
+     "ok": true,
+     "ms": 24791,
+     "provider": "google",
+     "costUsd": 0.008998599999999999
+    },
+    {
+     "call": "v2-x",
+     "ok": true,
+     "ms": 29286,
+     "provider": "xai",
+     "costUsd": 0.0774265,
+     "postsFetched": 13,
+     "kept": 9,
+     "discarded": 2
+    }
+   ],
+   "costUsd": 0.08642509999999999,
+   "ms": 29286
+  }
+ ],
+ "decision": {
+  "repeated": 6,
+  "agreed": 6,
+  "disagreements": []
+ },
+ "retrieval": {
+  "distinctXPosts": 33,
+  "inAllRuns": 1
+ },
+ "keptStable": [
+  1,
+  0,
+  1
+ ]
+}

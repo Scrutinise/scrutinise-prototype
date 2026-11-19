@@ -16,9 +16,15 @@
 //
 // ⚠ THE FILTER DROPS ONLY WHAT CHARLIE NAMED: abuse, sarcasm, pile-ons, and posts with no
 // argument. Every drop is LOGGED with its reason (`dropped`). Nothing else is removed, and a
-// near-duplicate is MERGED (counted in `repetitions`), never dropped. With the filter OFF the
-// same call is made with a neutral instruction and nothing is dropped, so the two runs are
-// comparable and what the filter removes is a measured number.
+// near-duplicate is MERGED (counted in `repetitions`), never dropped.
+//
+// ⚠⚠ THE MODEL TAGS; THE CODE DECIDES (SEARCH-30, CCh 22 Oct). Until SEARCH-30 the X call was
+// told to DROP the four kinds itself, and the same idea kept 21 arguments one run and 6 the
+// next (dropping 3, then 14). The drop was a judgement made inside a live search, so nothing
+// held it still. Now the X call returns EVERY post it read, each with a `kind`, at temperature
+// 0, and `applyNoiseRule` — a pure function of those tags — decides what is dropped. The call
+// is IDENTICAL with the filter on or off; only the rule differs, so "what the filter removes"
+// is read off one response instead of being the difference between two different calls.
 //
 // ⚠ THE 30-POST CAP IS ADVISORY HERE AND LOGGED. `x_search` has no max-results parameter
 // (orientation/x-orientation.ts, ORIENTATION_X_POST_CAP). v1 enforced the cap by sequencing two
@@ -43,7 +49,10 @@ export interface V2Source { label: string; url: string; date: string; tier: Tier
 export interface V2Argument { claim: string; reason: string; side: Side; source: V2Source; repetitions: number; undated: boolean }
 export interface V2Vocabulary { keyTerms: string[]; statutoryTerms: string[]; people: string[]; organisations: string[]; places: string[] }
 export type DropReason = 'abuse' | 'sarcasm' | 'pile-on' | 'no-argument'
-export interface V2Dropped { what: string; reason: DropReason; tier: Tier }
+export interface V2Dropped { what: string; reason: DropReason; tier: Tier; /** the post's URL where the model gave one (SEARCH-30: lets runs be compared post by post) */ url?: string }
+/** SEARCH-30 — what the X call says each post IS. Only `argument` survives the rule. */
+export type PostKind = 'argument' | DropReason
+export const POST_KINDS: readonly PostKind[] = ['argument', 'abuse', 'sarcasm', 'pile-on', 'no-argument']
 
 export interface OrientationV2 {
   version: 2
@@ -54,6 +63,8 @@ export interface OrientationV2 {
   dropped: V2Dropped[]
   /** arguments merged into another because they said the same thing (kept, counted in repetitions) */
   merged: number
+  /** SEARCH-30 — every X post as the model labelled it, before the rule (absent on results stored before SEARCH-30) */
+  xTags?: Array<{ kind: PostKind; url: string; claim: string }>
   calls: CallOutcome[]
   failed: boolean
   xCapExceeded: boolean
@@ -112,25 +123,18 @@ const X_SCHEMA = {
       items: {
         type: 'object', additionalProperties: false,
         properties: {
+          kind: { type: 'string', enum: [...POST_KINDS] },
           claim: { type: 'string' }, reason: { type: 'string' },
           side: { type: 'string', enum: ['for', 'against', 'nuanced'] },
           date: { type: 'string' }, author: { type: 'string' }, url: { type: 'string' },
           timesSeen: { type: 'integer' }, lowCredibility: { type: 'boolean' },
         },
-        required: ['claim', 'reason', 'side', 'date', 'author', 'url', 'timesSeen', 'lowCredibility'],
+        required: ['kind', 'claim', 'reason', 'side', 'date', 'author', 'url', 'timesSeen', 'lowCredibility'],
       },
     },
     vocabulary: { type: 'object', additionalProperties: false, properties: VOCAB_PROPS, required: VOCAB_REQUIRED },
-    dropped: {
-      type: 'array',
-      items: {
-        type: 'object', additionalProperties: false,
-        properties: { what: { type: 'string' }, reason: { type: 'string', enum: ['abuse', 'sarcasm', 'pile-on', 'no-argument'] } },
-        required: ['what', 'reason'],
-      },
-    },
   },
-  required: ['arguments', 'vocabulary', 'dropped'],
+  required: ['arguments', 'vocabulary'],
 }
 
 // ── prompts ──────────────────────────────────────────────────────────────────
@@ -144,8 +148,15 @@ VOCABULARY: the words the debate itself uses —
   people, organisations, places: those taking part, and the places where something like this has been tried.
 Never carry over a subject, an example or a figure from these instructions. Take every term from the sources.`
 
-const FILTER_ON = `DROP ONLY these four kinds of post and say what you dropped and why: abuse (attacks on the person rather than the position); sarcasm with no argument in it; pile-ons (a reply or dunk that only repeats a point already captured); posts that make no argument at all. Anything else is kept. A post that quotes an insult but argues a point is kept. If twenty posts make the same argument, return the clearest one and set timesSeen to how many you saw.`
-const FILTER_OFF = `Do not filter. Return every argument you find, whatever its tone. Leave "dropped" empty.`
+// SEARCH-30: one instruction, whether the filter is on or off. The model never drops; it labels.
+const TAG_EVERY_POST = `Return EVERY post you read as one entry — do not leave any out, whatever its tone. Give each a "kind":
+  "argument"    — it makes a point about the proposal and gives a reason, even if rude, weak or one-sided;
+  "abuse"       — it attacks a person rather than the position, and makes no point beyond that;
+  "sarcasm"     — sarcasm or mockery with no point in it;
+  "pile-on"     — a reply or dunk that only repeats a point another entry already makes, adding nothing;
+  "no-argument" — it makes no point about the proposal at all (news link with no comment, off-topic, a question).
+A post that quotes an insult but argues a point is "argument". When unsure between "argument" and anything else, choose "argument".
+For every entry fill "claim" (the point, or a short neutral description of the post if it makes none) and "reason" (empty when it gives none). If several posts make the same argument, return the clearest as "argument" with timesSeen = how many you saw, and the others as "pile-on".`
 
 function webGroundedSystem(): string {
   return `You are a UK policy researcher. Search the web for what is being argued about the proposal the person describes, and report in COMPACT BULLETS — one or two sentences each, no preamble, no closing summary.
@@ -161,14 +172,14 @@ ${fetchedContentIsData('research note')}
 
 You are given a numbered SOURCES list. For an argument, \`sourceIndex\` is the number of the source that supports it; if no listed source supports it, use 0 — never guess an index and never invent a URL. \`date\` is yyyy-mm-dd; if the note gives only a month or year use the first day of it; if it gives none, return an empty string. Keep every argument in the note. Vocabulary entries are short terms, not sentences; leave a list empty rather than inventing entries.`
 
-function xSystem(filterOn: boolean, cap: number): string {
+function xSystem(cap: number): string {
   return `You search X for what is being argued about the proposal the person describes. This is what is CIRCULATING on X — never treated as fact and never as "public opinion"; X is a skewed sample and downstream it is labelled as such. Report attributed, dated positions and state nothing as established truth.
 
 Read about ${cap} posts at most, then stop.
 
 ${WHAT_TO_REPORT}
 
-${filterOn ? FILTER_ON : FILTER_OFF}
+${TAG_EVERY_POST}
 For each argument give the post date (yyyy-mm-dd), the author handle, the post URL, and lowCredibility (true for an anonymous-viral or bot-like source) — flag such a source, do not drop it.
 
 ${fetchedContentIsData('post text')}`
@@ -279,42 +290,72 @@ async function webBranch(input: string, deadline: number): Promise<Branch> {
   }
 }
 
-async function xBranch(input: string, filterOn: boolean, deadline: number): Promise<Branch> {
+/** SEARCH-30 — one X post as the model labelled it, before any rule is applied. */
+export interface TaggedPost { kind: PostKind; argument: V2Argument }
+
+/** A label the model did not give from the list is read as "argument": the rule may only drop what was
+ *  positively tagged as one of Charlie's four kinds, never what was left unlabelled or mislabelled. */
+export function readKind(v: unknown): PostKind {
+  const k = str(v).toLowerCase() as PostKind
+  return POST_KINDS.includes(k) ? k : 'argument'
+}
+
+/**
+ * SEARCH-30 — THE NOISE RULE, and the only place a post is dropped. Pure and deterministic: the same
+ * tags in give the same kept/dropped out, every time. Filter ON drops a post tagged abuse, sarcasm,
+ * pile-on or no-argument, and an "argument" that gives no reason (no-argument); filter OFF keeps every
+ * post. Every drop is returned with its reason, never silently lost.
+ */
+export function applyNoiseRule(posts: TaggedPost[], filterOn: boolean): { kept: V2Argument[]; dropped: V2Dropped[] } {
+  if (!filterOn) return { kept: posts.map((p) => p.argument), dropped: [] }
+  const kept: V2Argument[] = []
+  const dropped: V2Dropped[] = []
+  for (const { kind, argument: a } of posts) {
+    const reason: DropReason | null = kind !== 'argument' ? kind : !a.reason ? 'no-argument' : null
+    if (reason) dropped.push({ what: a.claim.slice(0, 300), reason, tier: a.source.tier, ...(a.source.url ? { url: a.source.url } : {}) })
+    else kept.push(a)
+  }
+  return { kept, dropped }
+}
+
+/** Temperature for the X call. 0 so that the same posts get the same labels; overridable for measurement only. */
+const X_TEMPERATURE = Number(process.env.ORIENTATION_X_TEMPERATURE ?? '0')
+
+async function xBranch(input: string, filterOn: boolean, deadline: number): Promise<Branch & { tagged: TaggedPost[] }> {
   const t0 = Date.now()
   const apiKey = process.env.GROK_API_KEY
-  if (!apiKey) return failedBranch('GROK_API_KEY not set', 0)
+  if (!apiKey) return { ...failedBranch('GROK_API_KEY not set', 0), tagged: [] }
   const model = process.env.ORIENTATION_X_MODEL ?? 'grok-4.3'
   const timeoutMs = Math.min(parseInt(process.env.ORIENTATION_X_TIMEOUT_MS ?? '75000', 10), Math.max(5000, deadline - Date.now()))
   const res = await callGrok({
     model, apiKey, timeoutMs,
-    instructions: xSystem(filterOn, ORIENTATION_X_POST_CAP),
+    instructions: xSystem(ORIENTATION_X_POST_CAP),
     user: `The proposal, in the person's own words:\n${input}`,
     schema: X_SCHEMA, schemaName: 'x_orientation_v2', logTag: 'orientation:v2-x', pass: 'orientation.x',
+    temperature: X_TEMPERATURE,
   })
-  if (!res) return failedBranch('the X search did not answer', Date.now() - t0)
+  if (!res) return { ...failedBranch('the X search did not answer', Date.now() - t0), tagged: [] }
   const p = res.parsed
-  const args: V2Argument[] = []
+  const tagged: TaggedPost[] = []
   for (const e of (Array.isArray(p.arguments) ? p.arguments : []) as Array<Record<string, unknown>>) {
-    const claim = str(e.claim); const sd = side(e.side)
-    if (!claim || !sd) continue
+    const claim = str(e.claim)
+    if (!claim) continue
+    // a non-argument post may carry no side; give it a neutral one so it can still be logged and compared
+    const sd = side(e.side) ?? 'nuanced'
     const date = normaliseDate(e.date) ?? ''
     const author = str(e.author); const url = str(e.url)
     const label = (author || 'an X account (handle not given)') + (e.lowCredibility === true ? ' (low-credibility source)' : '')
-    args.push({
-      claim, reason: str(e.reason), side: sd, undated: !date,
-      repetitions: typeof e.timesSeen === 'number' && e.timesSeen > 0 ? Math.trunc(e.timesSeen) : 1,
-      source: { label, url, date, tier: 'C', verified: !!(author && url) },
+    tagged.push({
+      kind: readKind(e.kind),
+      argument: {
+        claim, reason: str(e.reason), side: sd, undated: !date,
+        repetitions: typeof e.timesSeen === 'number' && e.timesSeen > 0 ? Math.trunc(e.timesSeen) : 1,
+        source: { label, url, date, tier: 'C', verified: !!(author && url) },
+      },
     })
   }
-  const dropped: V2Dropped[] = filterOn
-    ? ((Array.isArray(p.dropped) ? p.dropped : []) as Array<Record<string, unknown>>)
-        .map((d): V2Dropped | null => {
-          const r = str(d.reason) as DropReason; const what = str(d.what)
-          return what && ['abuse', 'sarcasm', 'pile-on', 'no-argument'].includes(r) ? { what: what.slice(0, 300), reason: r, tier: 'C' } : null
-        })
-        .filter((d): d is V2Dropped => d !== null)
-    : []
-  return { arguments: args, vocabulary: cleanVocab(p.vocabulary), dropped, costUsd: res.costUsd, postsFetched: res.postsFetched, ms: Date.now() - t0, ok: true }
+  const { kept, dropped } = applyNoiseRule(tagged, filterOn)
+  return { arguments: kept, vocabulary: cleanVocab(p.vocabulary), dropped, costUsd: res.costUsd, postsFetched: res.postsFetched, ms: Date.now() - t0, ok: true, tagged }
 }
 
 // ── entry point ──────────────────────────────────────────────────────────────
@@ -358,9 +399,10 @@ export async function runOrientationV2(opts: {
     } finally { clearTimeout(timer) }
   }
 
+  let xTagged: TaggedPost[] = []
   const [web, x] = await Promise.all([
     guarded('web', () => webBranch(input, deadline)),
-    xOn ? guarded('x', () => xBranch(input, filterOn, deadline)) : Promise.resolve(null),
+    xOn ? guarded('x', async () => { const b = await xBranch(input, filterOn, deadline); xTagged = b.tagged; return b }) : Promise.resolve(null),
   ])
 
   // pool, then merge restatements of the same argument on the same side (kept, counted)
@@ -393,6 +435,7 @@ export async function runOrientationV2(opts: {
   const result: OrientationV2 = {
     version: 2, ranAt: new Date().toISOString(), noiseFilter: filterOn,
     arguments: finalArgs, vocabulary: mergeVocab(web.vocabulary, x?.vocabulary ?? EMPTY_VOCAB()), dropped, merged,
+    xTags: xTagged.map((t) => ({ kind: t.kind, url: t.argument.source.url, claim: t.argument.claim.slice(0, 160) })),
     calls, failed: !web.ok && !(x?.ok ?? false), xCapExceeded,
     totalMs: Date.now() - t0, totalCostUsd: web.costUsd + (x?.costUsd ?? 0),
   }

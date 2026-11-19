@@ -8,7 +8,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { selectAnswerContext } from '../lib/lex/answer-context'
-import { runOrientationV2, termsForSearch, type OrientationV2 } from '../lib/lex/orientation/v2'
+import { runOrientationV2, termsForSearch, applyNoiseRule, readKind, type OrientationV2, type TaggedPost, type PostKind } from '../lib/lex/orientation/v2'
 
 let pass = 0, fail = 0, controlsFired = 0, controlsDead = 0
 const ok = (name: string, cond: boolean, detail = '') => { if (cond) pass++; else { fail++; console.log(`  ✗ ${name}${detail ? ' — ' + detail : ''}`) } }
@@ -87,6 +87,22 @@ async function v2checks() {
   ok('termsForSearch: statutory terms first, then key terms, then organisations; case-duplicates collapsed; people and places excluded', JSON.stringify(t) === JSON.stringify(['The Example Act 1999', 'term one', 'term two', 'Some Regulator']), JSON.stringify(t))
   ok('termsForSearch: a failed orientation yields no terms', termsForSearch(fake({ keyTerms: ['x'] }, true)).length === 0)
   ok('termsForSearch: cap holds', termsForSearch(fake({ keyTerms: Array.from({ length: 40 }, (_, i) => 't' + i) }), 20).length === 20)
+
+  // ── SEARCH-30: the model tags, the rule drops ───────────────────────────────────────────────────────────
+  const post = (kind: PostKind, claim: string, reason = 'because'): TaggedPost => ({ kind, argument: { claim, reason, side: 'against', repetitions: 1, undated: false, source: { label: '@a', url: `https://x.com/a/status/${claim}`, date: '2026-10-01', tier: 'C', verified: true } } })
+  const tagged = [post('argument', '1'), post('abuse', '2'), post('sarcasm', '3'), post('pile-on', '4'), post('no-argument', '5'), post('argument', '6', '')]
+  const on = applyNoiseRule(tagged, true)
+  ok('rule ON: only an "argument" with a reason is kept', on.kept.map((a) => a.claim).join() === '1', on.kept.map((a) => a.claim).join())
+  ok('rule ON: every other post is dropped WITH its tag as the reason; a reasonless argument is "no-argument"', JSON.stringify(on.dropped.map((d) => d.reason)) === JSON.stringify(['abuse', 'sarcasm', 'pile-on', 'no-argument', 'no-argument']), JSON.stringify(on.dropped.map((d) => d.reason)))
+  ok('rule ON: each drop carries the post URL, so runs can be compared post by post', on.dropped.every((d) => d.url?.startsWith('https://x.com/')))
+  ok('rule OFF: nothing is dropped, every post is kept', applyNoiseRule(tagged, false).kept.length === 6 && applyNoiseRule(tagged, false).dropped.length === 0)
+  ok('rule is deterministic: the same tags give the same answer, 50 times over', Array.from({ length: 50 }, () => JSON.stringify(applyNoiseRule(tagged, true))).every((s, _, a) => s === a[0]))
+  ok('an unknown or missing label reads as "argument" (the rule only drops what was positively tagged)', readKind('rant') === 'argument' && readKind(undefined) === 'argument' && readKind('Abuse') === 'abuse')
+  control('a post tagged abuse survives the rule', applyNoiseRule([post('abuse', 'z')], true).kept.length === 1)
+  control('an unknown label is dropped', readKind('rant') !== 'argument')
+  ok('v2.ts: the X prompt no longer tells the model to DROP anything (it tags every post)', !/DROP ONLY/.test(src('lib/lex/orientation/v2.ts')) && /Return EVERY post you read/.test(src('lib/lex/orientation/v2.ts')))
+  ok('v2.ts: the X call is made at temperature 0 by default', /ORIENTATION_X_TEMPERATURE \?\? '0'/.test(src('lib/lex/orientation/v2.ts')) && /temperature: X_TEMPERATURE/.test(src('lib/lex/orientation/v2.ts')))
+  ok('x-orientation.ts: callGrok honours a passed temperature', /temperature: opts\.temperature \?\? 0\.2/.test(src('lib/lex/orientation/x-orientation.ts')))
 }
 
 // ── reached? (CLAUDE.md §23.1) ─────────────────────────────────────────────────────────────────────────

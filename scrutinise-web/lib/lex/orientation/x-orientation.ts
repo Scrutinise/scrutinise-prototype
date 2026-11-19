@@ -165,6 +165,8 @@ export async function callGrok(opts: {
   logTag: string
   /** Ledger attribution (S21 §6 — every xAI call must reach LlmSpend). */
   pass: string
+  /** Default 0.2 (v1's value). Orientation v2 passes 0 (SEARCH-30). */
+  temperature?: number
 }): Promise<XCallResult | null> {
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs)
@@ -182,7 +184,7 @@ export async function callGrok(opts: {
         input: [{ role: 'user', content: opts.user }],
         tools: [tool],
         text: { format: { type: 'json_schema', name: opts.schemaName, schema: opts.schema } },
-        temperature: 0.2,
+        temperature: opts.temperature ?? 0.2,
       }),
       signal: ctrl.signal,
     })
