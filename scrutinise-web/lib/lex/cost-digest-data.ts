@@ -127,13 +127,41 @@ export function servingAlerts(name: string, s: ServeStatsShape): string[] {
   return out
 }
 
+/**
+ * Pure: what the serve-observer's persisted state adds to the digest line. Two things the digest cannot compute itself:
+ *  - "p50 over 3× the last healthy boot": only the observer keeps that baseline. Read for the boot running now only.
+ *  - the observer's automatic restarts in the last 24 h, with why and how each went.
+ * The storage-bound rule is NOT repeated from here; servingAlerts() computes it live.
+ */
+export function observerServingLines(
+  name: string,
+  state: { verdict?: Record<string, { bootAt: string | null; slow: boolean; reasons: string[] }>; autoRestartLog?: Record<string, Array<{ at: string; reasons: string[]; outcome?: string; detail?: string }>> },
+  liveBootAt: string | null, nowMs: number,
+): string[] {
+  const out: string[] = []
+  const v = state.verdict?.[name]
+  if (v?.slow && v.bootAt && v.bootAt === liveBootAt)
+    for (const r of v.reasons.filter((x) => /× the last healthy boot/.test(x))) out.push(`${name} is slow: ${r}`)
+  for (const e of state.autoRestartLog?.[name] ?? []) {
+    if (nowMs - Date.parse(e.at) > 24 * 3600_000) continue
+    const how = e.outcome === 'failed' ? `the restart FAILED (${e.detail ?? 'no detail'})` : e.outcome === 'skipped-off' ? 'not restarted (automatic restart is switched off)' : 'restarted automatically'
+    out.push(`${name} ${how} at ${e.at.slice(11, 16)} UTC because: ${e.reasons.join('; ')}`)
+  }
+  return out
+}
+
 export interface RawServiceStats { name: string; ok: boolean; stats?: unknown; error?: string }
 
 /** Reads serve-observer's OWN persisted R2 state (data, not code) plus a live /stats fetch. */
 export async function searchServingHealth(): Promise<{ line: string; raw: RawServiceStats[] }> {
   const exceptions: string[] = []
   const raw: RawServiceStats[] = []
-  let state: { restartLog?: Record<string, Array<{ at: string; kind: string }>>; downSince?: Record<string, string> } = {}
+  let state: {
+    restartLog?: Record<string, Array<{ at: string; kind: string }>>; downSince?: Record<string, string>
+    /** SEARCH-31: the observer's own verdict (it holds the last-healthy-boot baseline the 3× rule needs) and its automatic restarts. */
+    verdict?: Record<string, { bootAt: string | null; slow: boolean; reasons: string[] }>
+    autoRestartLog?: Record<string, Array<{ at: string; reasons: string[]; outcome?: string; detail?: string }>>
+  } = {}
   try {
     const rawState = await r2Get('_search/serve-observer-state.json')
     if (rawState) state = JSON.parse(rawState)
@@ -153,9 +181,10 @@ export async function searchServingHealth(): Promise<{ line: string; raw: RawSer
     try {
       const res = await fetch(`${url.replace(/\/$/, '')}/stats`, { signal: AbortSignal.timeout(10_000) })
       if (!res.ok) { exceptions.push(`${name} is not responding (HTTP ${res.status})`); raw.push({ name, ok: false, error: `HTTP ${res.status}` }); continue }
-      const s = await res.json() as ServeStatsShape
+      const s = await res.json() as ServeStatsShape & { started_at?: string }
       raw.push({ name, ok: true, stats: s })
       exceptions.push(...servingAlerts(name, s))
+      exceptions.push(...observerServingLines(name, state, s.started_at ?? null, Date.now()))
     } catch (e) {
       exceptions.push(`${name} is not responding`)
       raw.push({ name, ok: false, error: e instanceof Error ? e.message : String(e) })

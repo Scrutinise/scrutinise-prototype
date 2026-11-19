@@ -7,8 +7,10 @@
  *
  * Usage: tsx search/check-serve-observer.ts
  */
+import fs from 'node:fs'
+import path from 'node:path'
 import {
-  evaluateServe, renderDigest, classifyRestart, summarizeHealth,
+  evaluateServe, renderDigest, classifyRestart, summarizeHealth, bootVerdict,
   type Observation, type NeonObservation, type ServeState, type RestartEvidenceEvent,
 } from './serve-observer'
 import { SERVICES } from '../ops/sleep-state'
@@ -216,8 +218,76 @@ function main() {
     check('renders an unreachable service loudly', withDown.includes('NOT RESPONDING'))
   }
 
+  slowBootCases()
+
   console.log(`\n${passed} passed, ${failed} failed`)
   if (failed) process.exit(1)
+}
+
+/**
+ * SEARCH-31 — the slow-boot rules and the one automatic restart, on vector-serve's OWN recorded /stats:
+ * the healthy 26 Sep boot (p50 3.3 s, cpu/wall 1.31) and the 20 Oct boot (p50 46 s, cpu/wall 0.13), from the census files.
+ */
+function slowBootCases() {
+  const census = (f: string) => JSON.parse(fs.readFileSync(path.join(__dirname, '../../../docs/census', f), 'utf8'))
+  const healthyStats = census('s28-gold-off-1.json').vectorServeBefore
+  const slowStats = census('s28-gold-on-2.json').vectorServeBefore
+  const obs = (stats: any): Observation => ({ name: 'vector-serve', url: 'https://vector-serve.example', ok: true, stats })
+  const T = (min: number) => NOW + min * 60_000
+
+  console.log('\nSEARCH-31 slow boot — the premise')
+  check('fixtures are the 26 Sep healthy and 20 Oct slow boots', String(healthyStats.started_at).startsWith('2026-09-26') && String(slowStats.started_at).startsWith('2026-10-20'))
+
+  console.log('\nSEARCH-31 a healthy boot sets the baseline and restarts nothing')
+  const h = evaluateServe([obs(healthyStats)], OK_NEON, FRESH, T(0), [], true, true)
+  const v0 = bootVerdict(healthyStats, undefined, T(0))
+  check('the 26 Sep boot is healthy, not slow', v0.healthy && !v0.slow, v0.reasons.join('; '))
+  check('its p50 becomes the baseline', h.nextState.healthyBaseline?.['vector-serve']?.warmP50Ms === healthyStats.warm_p50_ms)
+  check('no restart, no event', h.restarts.length === 0 && h.events.length === 0)
+  check('state written before 19 Nov (no new keys) loads and works', !!h.nextState.verdict?.['vector-serve'])
+
+  console.log('\nSEARCH-31 the 20 Oct boot: slow on both rules; restarted once, on the second tick')
+  const t1 = evaluateServe([obs(slowStats)], OK_NEON, h.nextState, T(15), [], true, true)
+  const v1 = t1.nextState.verdict!['vector-serve']
+  check('storage-bound rule fires (cpu/wall 0.13)', v1.reasons.some((r) => /waiting on storage/.test(r)), v1.reasons.join('; '))
+  check('slow-vs-healthy rule fires (46 s against 3.3 s)', v1.reasons.some((r) => /× the last healthy boot/.test(r)), v1.reasons.join('; '))
+  check('tick 1: no restart yet', t1.restarts.length === 0)
+  check('a slow boot does not move the baseline', t1.nextState.healthyBaseline?.['vector-serve']?.warmP50Ms === healthyStats.warm_p50_ms)
+  const t2 = evaluateServe([obs(slowStats)], OK_NEON, t1.nextState, T(30), [], true, true)
+  check('tick 2: restart requested for vector-serve', t2.restarts.length === 1 && t2.restarts[0] === 'vector-serve', t2.restarts.join(','))
+  check('the request is logged with its reasons', t2.nextState.autoRestartLog?.['vector-serve']?.at(-1)?.outcome === 'requested')
+  const t3 = evaluateServe([obs(slowStats)], OK_NEON, t2.nextState, T(45), [], true, true)
+  check('tick 3, same boot: not restarted a second time', t3.restarts.length === 0)
+  // found by this check on its first run: the old process still answering 15 min after the request is NOT "slow after a restart"
+  check('tick 3: no "still slow after restart" email while the old process is still the one answering', !t3.events.some((e) => e.key === 'vector-serve:slow-after-restart'), keys(t3.events).join(','))
+  const t4 = evaluateServe([obs(slowStats)], OK_NEON, t3.nextState, T(60), [], true, true)
+  check('30 min after the request, same boot still answering: "the restart did not take" is emailed', t4.events.some((e) => e.key === 'vector-serve:restart-did-not-take'), keys(t4.events).join(','))
+
+  console.log('\nSEARCH-31 slow again after the restart, inside the cooldown: one email, no loop')
+  const reboot = { ...slowStats, started_at: new Date(T(50)).toISOString() }
+  const a1 = evaluateServe([obs(reboot)], OK_NEON, t3.nextState, T(60), [], true, true)
+  const a2 = evaluateServe([obs(reboot)], OK_NEON, a1.nextState, T(75), [], true, true)
+  check('the new boot is not restarted (cooldown)', a1.restarts.length === 0 && a2.restarts.length === 0)
+  check('"still slow after an automatic restart" is emailed', a2.events.some((e) => e.key === 'vector-serve:slow-after-restart'), keys(a2.events).join(','))
+  const a3 = evaluateServe([obs(reboot)], OK_NEON, a2.nextState, T(90), [], true, true)
+  check('and not re-emailed 15 minutes later', !a3.events.some((e) => e.key === 'vector-serve:slow-after-restart'))
+
+  console.log('\nSEARCH-31 the kill switch, the minimum sample, drift')
+  const off1 = evaluateServe([obs(slowStats)], OK_NEON, h.nextState, T(15), [], true, false)
+  const off2 = evaluateServe([obs(slowStats)], OK_NEON, off1.nextState, T(30), [], true, false)
+  check('SERVE_AUTO_RESTART=off: no restart, logged as skipped', off2.restarts.length === 0 && off2.nextState.autoRestartLog?.['vector-serve']?.at(-1)?.outcome === 'skipped-off')
+  const fresh = bootVerdict({ ...slowStats, warm_n: 2 }, h.nextState.healthyBaseline!['vector-serve'], T(0))
+  check('a boot with 2 warm queries is neither slow nor healthy', !fresh.slow && !fresh.healthy, fresh.reasons.join('; '))
+  const drift = bootVerdict({ ...healthyStats, warm_p50_ms: healthyStats.warm_p50_ms * 2, stages: { ...(healthyStats.stages ?? {}), cpu_over_wall: 1.0 } }, h.nextState.healthyBaseline!['vector-serve'], T(0))
+  check('a computing boot at 2× the baseline is not slow (under 3×) and does not become the baseline (over 1.5×)', !drift.slow && !drift.healthy, drift.reasons.join('; '))
+  const r1 = evaluateServe([obs(slowStats)], OK_NEON, h.nextState, T(15), [], true, true)
+  const r2 = evaluateServe([obs({ ...slowStats, warm_n: 3 })], OK_NEON, r1.nextState, T(30), [], true, true)
+  const r3 = evaluateServe([obs(slowStats)], OK_NEON, r2.nextState, T(45), [], true, true)
+  check('a tick that is not slow resets the streak (no restart on the next slow tick)', r3.restarts.length === 0)
+
+  console.log('\nSEARCH-31 controls (each must be FALSE)')
+  check('control: the slow fixture reads as healthy', !bootVerdict(slowStats, h.nextState.healthyBaseline!['vector-serve'], T(0)).healthy)
+  check('control: the healthy fixture reads as slow', !bootVerdict(healthyStats, h.nextState.healthyBaseline!['vector-serve'], T(0)).slow)
 }
 
 main()

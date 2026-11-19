@@ -39,6 +39,29 @@ async function main() {
   ok('fts-serve shape (cpu/wall at the top level) is read as well as vector-serve\'s (in stages)', servingAlerts('fts-serve', { warm_n: 20, cpu_over_wall: 0.1 }).some((l) => /storage/.test(l)))
   ok('memory and shed alerts are unchanged', servingAlerts('x', { memory: { peak_pct_of_cap: 80 }, concurrency: { rejections: 2 } }).length === 2)
 
+  // SEARCH-31: the observer and the digest use the SAME storage-bound numbers. The observer is in the ingest package, which
+  // the web program must not import (CLAUDE.md §20 check 0), so its source is read as text.
+  const obsSrc = fs.readFileSync(path.join(__dirname, '../../scripts/ingest/search/serve-observer.ts'), 'utf8')
+  const num = (re: RegExp) => { const m = obsSrc.match(re); return m ? Number(m[1]) : NaN }
+  const { STORAGE_BOUND_CPU_OVER_WALL, STORAGE_BOUND_MIN_N, observerServingLines } = await import('../lib/lex/cost-digest-data')
+  ok('premise: the observer source was read and defines its storage-bound threshold', /STORAGE_BOUND_CPU_OVER_WALL\s*=/.test(obsSrc))
+  ok('observer and digest agree on the storage-bound cpu/wall threshold', num(/STORAGE_BOUND_CPU_OVER_WALL\s*=\s*([\d.]+)/) === STORAGE_BOUND_CPU_OVER_WALL, `${num(/STORAGE_BOUND_CPU_OVER_WALL\s*=\s*([\d.]+)/)} vs ${STORAGE_BOUND_CPU_OVER_WALL}`)
+  ok('observer and digest agree on its minimum sample', num(/STORAGE_BOUND_MIN_N\s*=\s*(\d+)/) === STORAGE_BOUND_MIN_N)
+
+  // SEARCH-31: what the observer's persisted state adds to the digest
+  const boot = '2026-10-20T08:15:57.196Z', NOWD = Date.parse('2026-10-20T10:00:00Z')
+  const st = {
+    verdict: { 'vector-serve': { bootAt: boot, slow: true, reasons: ['waiting on storage, not computing: cpu/wall 0.13', 'warm p50 46000 ms over 50 queries is 13.9× the last healthy boot (3300 ms, booted 2026-09-26T02:10:13.171Z)'] } },
+    autoRestartLog: { 'vector-serve': [{ at: '2026-10-20T09:30:00.000Z', reasons: ['cpu/wall 0.13'], outcome: 'requested' }, { at: '2026-10-18T09:30:00.000Z', reasons: ['old'], outcome: 'requested' }] },
+  }
+  const lines = observerServingLines('vector-serve', st, boot, NOWD)
+  ok('the 3× rule reaches the digest line for the boot running now', lines.some((l) => /13\.9× the last healthy boot/.test(l)), lines.join(' | '))
+  ok('the storage-bound reason is NOT repeated from the observer (servingAlerts computes it live)', !lines.some((l) => /waiting on storage/.test(l)))
+  ok('an automatic restart in the last 24 h is named, with its reason', lines.some((l) => /restarted automatically at 09:30 UTC because: cpu\/wall 0\.13/.test(l)), lines.join(' | '))
+  ok('one older than 24 h is not', !lines.some((l) => /because: old/.test(l)))
+  control('a verdict for a DIFFERENT boot still reaches the digest', observerServingLines('vector-serve', st, '2026-10-21T00:00:00.000Z', NOWD).some((l) => /last healthy boot/.test(l)))
+  ok('a failed restart says FAILED', observerServingLines('x', { autoRestartLog: { x: [{ at: '2026-10-20T09:30:00.000Z', reasons: ['r'], outcome: 'failed', detail: 'Bad Access' }] } }, null, NOWD).some((l) => /FAILED \(Bad Access\)/.test(l)))
+
   // live: both services were measured healthy on 18 Nov; today they must raise no latency alert
   for (const [name, url] of [['fts-serve', 'https://fts-serve-production-4cea.up.railway.app'], ['vector-serve', 'https://vector-serve-production.up.railway.app']]) {
     try {

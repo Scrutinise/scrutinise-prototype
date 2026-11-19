@@ -125,6 +125,32 @@ const RESTART_LOG_MAX_PER_SERVICE = 200 // ~a day of 15-min ticks, generously
 // condition has persisted this long — which in practice is the second consecutive miss.
 const DOWN_ALERT_MS = parseInt(process.env.SERVE_DOWN_ALERT_MS ?? '300000', 10)
 
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+// SEARCH-31 — A SLOW BOOT IS NOTICED, AND RESTARTED ONCE, WITHOUT A PERSON (CCh-Search 0908Z item 7; D5 fix 2,
+// approved by Charlie 19 Nov 2026).
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+// On 20 Oct both serves came back from a restart ~14× slower and stayed that way for days (vector p50 3.3 s → 46 s,
+// cpu/wall 1.31 → 0.13: waiting on R2 range reads, not computing). Nothing noticed; a restart was the remedy.
+// Two rules, either one makes a boot SLOW:
+//   STORAGE-BOUND   cpu/wall < 0.4 over ≥ 10 warm queries (healthy 0.6–1.4; 20 Oct 0.13). Same numbers as the digest's
+//                   rule in scrutinise-web/lib/lex/cost-digest-data.ts; check:serving-alerts asserts the two agree.
+//   SLOW VS HEALTHY warm p50 > 3 × the p50 of the LAST HEALTHY BOOT, over ≥ 5 warm queries. A fixed number (15 s) cannot
+//                   tell a heavier day from a broken boot; the service's own healthy past can.
+// A HEALTHY boot is one with ≥ 20 warm queries, cpu/wall ≥ 0.6, and (when a baseline exists) p50 within 1.5× of it — so
+// one slow-but-computing boot cannot raise the baseline by more than half in one step.
+// When a boot is SLOW on 2 consecutive ticks (15-min ticks, so 15–30 min), the observer restarts that service ONCE
+// (deploymentRedeploy of its newest SUCCESS deployment: same build, fresh process). At most once per service per
+// AUTO_RESTART_COOLDOWN; if it is still slow after that, it emails once that it needs a person, instead of looping.
+// Kill switch: SERVE_AUTO_RESTART=off (it then only reports).
+export const STORAGE_BOUND_CPU_OVER_WALL = 0.4, STORAGE_BOUND_MIN_N = 10
+export const SLOW_VS_HEALTHY_FACTOR = 3, SLOW_MIN_N = 5
+export const HEALTHY_MIN_N = 20, HEALTHY_CPU_OVER_WALL = 0.6, HEALTHY_DRIFT_FACTOR = 1.5
+export const AUTO_RESTART_AFTER_TICKS = 2
+const AUTO_RESTART_COOLDOWN_MS = parseInt(process.env.SERVE_AUTO_RESTART_COOLDOWN_MS ?? String(6 * 3600_000), 10)
+const AUTO_RESTART_ON = (process.env.SERVE_AUTO_RESTART ?? 'on') !== 'off'
+/** Two 15-min ticks: a restart requested this long ago with the old boot still answering did not take. */
+const AUTO_RESTART_NO_REBOOT_MS = parseInt(process.env.SERVE_AUTO_RESTART_NO_REBOOT_MS ?? String(30 * 60_000), 10)
+
 export interface ServiceTarget { name: string; url: string }
 
 /** Both serve services. URLs are env-overridable so a staging URL can be watched instead. */
@@ -151,6 +177,37 @@ export interface ServeStats {
   cache?: { hits?: number; misses?: number; coalesced?: number; evictions?: number; size?: number; hitRate?: number | null; ttlMs?: number }
   memory?: { rss_mb?: number; peak_rss_mb?: number; peak_rss_at?: string; cap_mb?: number; pct_of_cap?: number; peak_pct_of_cap?: number }
   uptime_s?: number; started_at?: string
+  /** fts-serve reports cpu/wall at the top level, vector-serve inside `stages`. */
+  cpu_over_wall?: number | null
+  stages?: { cpu_over_wall?: number | null }
+}
+
+/** The last healthy boot of a service: what "slow" is measured against. */
+export interface HealthyBaseline { bootAt: string; warmP50Ms: number; warmN: number; cpuOverWall: number; recordedAt: string }
+/** One tick's reading of a boot, persisted so the digest reads the observer's verdict rather than recomputing it. */
+export interface BootVerdict {
+  at: string; bootAt: string | null; slow: boolean; reasons: string[]; healthy: boolean
+  warmP50Ms: number | null; warmN: number; cpuOverWall: number | null; baselineP50Ms: number | null
+}
+export interface AutoRestartEntry { at: string; bootAt: string | null; reasons: string[]; outcome?: 'requested' | 'failed' | 'skipped-off'; detail?: string }
+
+/**
+ * PURE. Is this boot slow, is it healthy, and why. Never both. A boot with too few warm queries is neither: it says so
+ * in `reasons` and does not count towards a restart.
+ */
+export function bootVerdict(s: ServeStats, baseline: HealthyBaseline | undefined, nowMs: number): BootVerdict {
+  const n = s.warm_n ?? 0
+  const p50 = s.warm_p50_ms ?? null
+  const cow = s.cpu_over_wall ?? s.stages?.cpu_over_wall ?? null
+  const reasons: string[] = []
+  if (cow != null && n >= STORAGE_BOUND_MIN_N && cow < STORAGE_BOUND_CPU_OVER_WALL)
+    reasons.push(`waiting on storage, not computing: cpu/wall ${cow} over ${n} queries (healthy is ${HEALTHY_CPU_OVER_WALL} or more)`)
+  if (baseline && p50 != null && n >= SLOW_MIN_N && p50 > SLOW_VS_HEALTHY_FACTOR * baseline.warmP50Ms)
+    reasons.push(`warm p50 ${Math.round(p50)} ms over ${n} queries is ${(p50 / baseline.warmP50Ms).toFixed(1)}× the last healthy boot (${Math.round(baseline.warmP50Ms)} ms, booted ${baseline.bootAt})`)
+  const slow = reasons.length > 0
+  const healthy = !slow && n >= HEALTHY_MIN_N && cow != null && cow >= HEALTHY_CPU_OVER_WALL && p50 != null
+    && (!baseline || p50 <= HEALTHY_DRIFT_FACTOR * baseline.warmP50Ms)
+  return { at: new Date(nowMs).toISOString(), bootAt: s.started_at ?? null, slow, reasons, healthy, warmP50Ms: p50, warmN: n, cpuOverWall: cow, baselineP50Ms: baseline?.warmP50Ms ?? null }
 }
 
 export interface Observation { name: string; url: string; ok: boolean; error?: string; stats?: ServeStats }
@@ -180,10 +237,17 @@ export interface ServeState {
   restartLog: Record<string, RestartLogEntry[]>
   /** service → ISO time it was FIRST observed unreachable, this outage. Cleared on recovery. */
   downSince: Record<string, string>
+  /** SEARCH-31. Optional so state written before 19 Nov loads unchanged. */
+  healthyBaseline?: Record<string, HealthyBaseline>
+  /** service → consecutive ticks THIS boot has been slow. Reset to 0 by a healthy-or-unknown tick or a new boot. */
+  slowStreak?: Record<string, { bootAt: string | null; ticks: number }>
+  verdict?: Record<string, BootVerdict>
+  autoRestartLog?: Record<string, AutoRestartEntry[]>
 }
 export interface ServeEvent { kind: 'alert' | 'digest'; severity: 'critical' | 'warning' | 'info'; key: string; subject: string; body: string }
 
-const FRESH_STATE: ServeState = { startedAt: {}, lastAlertAt: {}, lastDigestDay: '', embedCallsBaseline: {}, restartLog: {}, downSince: {} }
+const FRESH_STATE: ServeState = { startedAt: {}, lastAlertAt: {}, lastDigestDay: '', embedCallsBaseline: {}, restartLog: {}, downSince: {}, healthyBaseline: {}, slowStreak: {}, verdict: {}, autoRestartLog: {} }
+const AUTO_RESTART_LOG_MAX = 50
 
 /**
  * PURE. `serviceName` (e.g. 'fts-serve') → its Railway service id, from the same
@@ -227,7 +291,8 @@ export function evaluateServe(
   nowMs: number,
   restartEvidence: RestartEvidenceEvent[] = [],
   restartEvidenceOk = true,
-): { events: ServeEvent[]; nextState: ServeState } {
+  autoRestartOn = AUTO_RESTART_ON,
+): { events: ServeEvent[]; nextState: ServeState; restarts: string[] } {
   const next: ServeState = {
     startedAt: { ...state.startedAt },
     lastAlertAt: { ...state.lastAlertAt },
@@ -235,8 +300,13 @@ export function evaluateServe(
     embedCallsBaseline: { ...state.embedCallsBaseline },
     restartLog: Object.fromEntries(Object.entries(state.restartLog ?? {}).map(([k, v]) => [k, [...v]])),
     downSince: { ...(state.downSince ?? {}) },
+    healthyBaseline: { ...(state.healthyBaseline ?? {}) },
+    slowStreak: { ...(state.slowStreak ?? {}) },
+    verdict: { ...(state.verdict ?? {}) },
+    autoRestartLog: Object.fromEntries(Object.entries(state.autoRestartLog ?? {}).map(([k, v]) => [k, [...v]])),
   }
   const events: ServeEvent[] = []
+  const restarts: string[] = []
 
   const shouldAlert = (key: string) => {
     const last = state.lastAlertAt[key]
@@ -341,6 +411,47 @@ export function evaluateServe(
       }
     }
 
+    // ── SEARCH-31: a slow boot. Verdict every tick; baseline from healthy boots; restart once after
+    // AUTO_RESTART_AFTER_TICKS consecutive slow ticks of the SAME boot; cooldown, then one "needs a person" email. ──
+    {
+      const baseline = next.healthyBaseline![o.name]
+      const v = bootVerdict(s, baseline, nowMs)
+      next.verdict![o.name] = v
+      if (v.healthy && v.bootAt && v.warmP50Ms != null && v.cpuOverWall != null)
+        next.healthyBaseline![o.name] = { bootAt: v.bootAt, warmP50Ms: v.warmP50Ms, warmN: v.warmN, cpuOverWall: v.cpuOverWall, recordedAt: v.at }
+      const prevStreak = state.slowStreak?.[o.name]
+      const sameBoot = prevStreak && prevStreak.bootAt === v.bootAt
+      const ticks = v.slow ? (sameBoot ? prevStreak!.ticks : 0) + 1 : 0
+      next.slowStreak![o.name] = { bootAt: v.bootAt, ticks }
+      if (ticks >= AUTO_RESTART_AFTER_TICKS) {
+        const log = (next.autoRestartLog![o.name] ??= [])
+        const thisBoot = log.find((e) => e.bootAt === v.bootAt && e.outcome !== 'skipped-off')
+        const lastReal = [...log].reverse().find((e) => e.outcome === 'requested')
+        const cooling = lastReal && nowMs - Date.parse(lastReal.at) < AUTO_RESTART_COOLDOWN_MS
+        if (!autoRestartOn) {
+          if (!log.some((e) => e.bootAt === v.bootAt)) log.push({ at: v.at, bootAt: v.bootAt, reasons: v.reasons, outcome: 'skipped-off', detail: 'SERVE_AUTO_RESTART=off' })
+        } else if (thisBoot) {
+          // A restart of THIS boot was already requested (or failed, which emailed on its own). The same boot still answering
+          // AUTO_RESTART_NO_REBOOT_MS later means Railway accepted the request and nothing restarted: say so, once.
+          if (thisBoot.outcome === 'requested' && nowMs - Date.parse(thisBoot.at) >= AUTO_RESTART_NO_REBOOT_MS)
+            raise('warning', `${o.name}:restart-did-not-take`, `🟠 ${o.name} was restarted automatically, and the same process is still running`,
+              `The observer asked Railway to restart ${o.name} at ${thisBoot.at} (${thisBoot.detail ?? 'no deployment id recorded'}) because: ${thisBoot.reasons.join('; ')}.\n\n` +
+              `${Math.round((nowMs - Date.parse(thisBoot.at)) / 60_000)} min later /stats still reports the boot of ${v.bootAt}. The restart did not take. Restart it by hand and read started_at.`)
+        } else if (!cooling) {
+          restarts.push(o.name)
+          log.push({ at: v.at, bootAt: v.bootAt, reasons: v.reasons, outcome: 'requested' })
+        } else {
+          // Restarted within the cooldown and slow again: a restart did not fix it. One email, re-alerting on the usual cadence.
+          raise('warning', `${o.name}:slow-after-restart`, `🟠 ${o.name} is still slow after an automatic restart`,
+            `${o.name} was restarted automatically at ${lastReal!.at} because: ${lastReal!.reasons.join('; ')}.\n\n` +
+            `It is slow again on this boot (${v.bootAt ?? 'boot time unknown'}): ${v.reasons.join('; ')}.\n\n` +
+            `The observer restarts a service at most once every ${Math.round(AUTO_RESTART_COOLDOWN_MS / 3600_000)} h, so this needs a person. ` +
+            `Read /stats, then the service's logs (docs/SEARCH_30_REPORT.md has the 20 Oct diagnosis).`)
+        }
+        if (log.length > AUTO_RESTART_LOG_MAX) log.splice(0, log.length - AUTO_RESTART_LOG_MAX)
+      }
+    }
+
     // ── memory / latency / load-shedding — S25: NO LONGER an immediate email. ──
     // The brief names exactly four immediate-email rules (down>5min, crash loop, spend
     // threshold, build failure) and says "everything else goes to the digest." These three
@@ -365,7 +476,7 @@ export function evaluateServe(
   // change to a JSON blob for no gain; `DIGEST_HOUR`/`londonParts` (whose only caller this
   // was) are removed below since they have no other use.
 
-  return { events, nextState: next }
+  return { events, nextState: next, restarts }
 }
 
 export interface HealthSummary { healthy: boolean; exceptions: string[] }
@@ -391,6 +502,8 @@ export function summarizeHealth(obs: Observation[], neon: NeonObservation, state
     const recentCrashes = crashLog.filter((e) => e.kind === 'crash' && nowMs - Date.parse(e.at) <= CRASH_LOOP_WINDOW_MS).length
     if (recentCrashes >= CRASH_LOOP_THRESHOLD) exceptions.push(`${o.name} crash-looping (${recentCrashes} in the last hour)`)
     if (state.downSince?.[o.name]) exceptions.push(`${o.name} down since ${state.downSince[o.name]}`)
+    const v = state.verdict?.[o.name]
+    if (v?.slow && v.bootAt === s.started_at) exceptions.push(`${o.name} slow: ${v.reasons.join('; ')}`)
   }
   if (!neon.ok) exceptions.push(`Neon check failed: ${neon.error ?? 'unknown'}`)
   else if (neon.pctOfBudget != null && neon.pctOfBudget > 100) {
@@ -531,6 +644,25 @@ async function fetchRestartEvidence(): Promise<{ ok: boolean; events: RestartEvi
   }
 }
 
+/**
+ * Restart one serve: deploymentRedeploy of its newest SUCCESS deployment (same build, fresh process, fresh openTable).
+ * ⚠ The newest deployment RECORD is usually a SKIPPED one (every push that misses the watch paths writes one), and
+ * redeploying that is not a restart of what is running. So the newest SUCCESS is chosen explicitly.
+ * Returns the deployment id restarted.
+ */
+async function restartService(name: string): Promise<string> {
+  const serviceId = railwayServiceId(name)
+  if (!serviceId) throw new Error(`no Railway service id for ${name}`)
+  const r = await rail<{ deployments: { edges: Array<{ node: { id: string; status: string } }> } }>(`
+    query D($serviceId: String!, $environmentId: String!) {
+      deployments(first: 20, input: { serviceId: $serviceId, environmentId: $environmentId }) { edges { node { id status } } }
+    }`, { serviceId, environmentId: RAILWAY_ENVIRONMENT_ID })
+  const live = r.deployments.edges.map((e) => e.node).find((n) => n.status === 'SUCCESS')
+  if (!live) throw new Error(`no SUCCESS deployment among the last 20 for ${name}`)
+  await rail(`mutation R($id: String!) { deploymentRedeploy(id: $id) { id status } }`, { id: live.id })
+  return live.id
+}
+
 async function sendEmail(subject: string, body: string): Promise<void> {
   const key = process.env.RESEND_API_KEY
   if (!key) { console.warn(`[serve-observer] RESEND_API_KEY unset — would have sent: ${subject}`); return }
@@ -558,13 +690,31 @@ export async function checkServeHealth(opts: { dry?: boolean } = {}): Promise<Se
   const [obs, neon, state, restartEvidence] = await Promise.all([
     Promise.all(ts.map(fetchStats)), checkNeon(), loadState(), fetchRestartEvidence(),
   ])
-  const { events, nextState } = evaluateServe(obs, neon, state, Date.now(), restartEvidence.events, restartEvidence.ok)
+  const { events, nextState, restarts } = evaluateServe(obs, neon, state, Date.now(), restartEvidence.events, restartEvidence.ok)
+
+  for (const name of restarts) {
+    const entry = [...(nextState.autoRestartLog?.[name] ?? [])].reverse().find((e) => e.outcome === 'requested')
+    if (opts.dry) { console.log(`[serve-observer] (dry) would restart ${name}: ${entry?.reasons.join('; ')}`); continue }
+    try {
+      const dep = await restartService(name)
+      console.log(`[serve-observer] restarted ${name} (deploymentRedeploy ${dep.slice(0, 8)}, same build): ${entry?.reasons.join('; ')}`)
+      if (entry) entry.detail = `deploymentRedeploy ${dep}`
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      console.error(`[serve-observer] automatic restart of ${name} FAILED: ${msg}`)
+      if (entry) { entry.outcome = 'failed'; entry.detail = msg }
+      events.push({ kind: 'alert', severity: 'warning', key: `${name}:auto-restart-failed`, subject: `🟠 ${name} is slow and the automatic restart failed`,
+        body: `${name} has been slow for ${AUTO_RESTART_AFTER_TICKS} ticks (${entry?.reasons.join('; ')}).\nThe observer tried to restart it and Railway refused: ${msg}\nRestart it by hand: npx tsx search/${name === 'fts-serve' ? 'fts' : 'vector'}-serve-run.ts restart` })
+    }
+  }
 
   for (const ev of events) {
     if (opts.dry) console.log(`[serve-observer] (dry) ${ev.severity.toUpperCase()} ${ev.subject}\n${ev.body}\n`)
     else await sendEmail(ev.subject, ev.body)
   }
   if (!opts.dry) await r2Put(STATE_KEY, JSON.stringify(nextState, null, 1), 'application/json')
+  for (const [name, v] of Object.entries(nextState.verdict ?? {}))
+    console.log(`[serve-observer] ${name}: ${v.slow ? `SLOW (streak ${nextState.slowStreak?.[name]?.ticks ?? 0}) — ${v.reasons.join('; ')}` : v.healthy ? 'healthy boot' : 'neither (too few queries, or between the rules)'}; p50 ${v.warmP50Ms ?? '—'} ms n ${v.warmN} cpu/wall ${v.cpuOverWall ?? '—'}; baseline ${nextState.healthyBaseline?.[name]?.warmP50Ms ?? 'none yet'} ms`)
   console.log(`[serve-observer] ${obs.filter((o) => o.ok).length}/${obs.length} services healthy, ${events.length} event(s)`)
   return events
 }

@@ -1,5 +1,43 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-19 13:42 UTC - Search serves: a slow boot is noticed against its own healthy past, and restarted once automatically (SEARCH-30 fixes 1 and 2)
+
+**Why.** On 20 Oct both serves came back from a restart about 14× slower (vector p50 3.3 s → 46 s, cpu/wall 1.31 → 0.13) and stayed
+that way for days. A restart was the remedy. Nothing noticed.
+
+**`scripts/ingest/search/serve-observer.ts`** (Ops, every 15 min):
+- `bootVerdict()` (pure). A boot is SLOW if it is storage-bound (cpu/wall < 0.4 over ≥ 10 warm queries) or if its warm p50 is
+  over 3× the last healthy boot's (≥ 5 queries).
+- HEALTHY means ≥ 20 queries, cpu/wall ≥ 0.6, and p50 within 1.5× of the baseline. A healthy boot becomes the baseline,
+  kept in the observer's R2 state.
+- Slow on 2 consecutive ticks of the same boot → `deploymentRedeploy` of the service's newest **SUCCESS** deployment (same build,
+  fresh process). The newest record is usually a SKIPPED one, so it is not used.
+- At most one automatic restart per service per 6 h. Slow again after a restart: one email that it needs a person. Same process
+  still answering 30 min after a restart was requested: one email that the restart did not take. A failed Railway call: one email.
+- Kill switch `SERVE_AUTO_RESTART=off`: it then only reports.
+- State written before today loads unchanged; the new keys are optional.
+
+**`scrutinise-web/lib/lex/cost-digest-data.ts`**: `observerServingLines()` adds the observer's 3× verdict (for the boot running now)
+and its automatic restarts in the last 24 h to the digest's serving line. The storage-bound rule is still computed live by
+`servingAlerts()`.
+
+**Checks.**
+- `check-serve-observer.ts`: 71 passed, 0 failed, on vector-serve's own recorded /stats (healthy 26 Sep boot, slow 20 Oct boot).
+  Its first run failed one case on a real bug: the old process still answering 15 min after a restart request was read as "still
+  slow after the restart", and that email then suppressed the real one. Fixed, and two cases added.
+- `check:serving-alerts`: 18 passed, 3 controls fired. It now asserts the observer and the digest use the same storage-bound
+  numbers, reading the observer's source as text because the package boundary forbids the import.
+- The forced crash-loop test still passes.
+- Dry run against live services: both boots read healthy; the baselines would be 4.8 s (fts) and 2.0 s (vector).
+
+⚠ **Production behaviour change once pushed: Ops will restart a serve by itself.** Approved by Charlie on 19 Nov (D5 fix 2).
+
+## 2026-11-19 13:42 UTC - Stage 3's three ledger passes have a spend purpose; check:stage3 reads them from stage3.ts
+
+- `orientation.stage3-search`, `-answer` and `-x` map to "web orientation" in `PASS_PURPOSE`.
+- `check:stage3` extracts every `pass: '…'` from stage3.ts and asserts each has a purpose: 53 passed, 15 controls fired.
+- Removing one entry fails it, naming `orientation.stage3-x`.
+
 ## 2026-11-19 13:34 UTC - Luna (OpenAI) web search returns results again: the trust check now reads the tool's own source list
 
 **The fault, measured from the bytes** (one call, raw response saved before any hypothesis):
