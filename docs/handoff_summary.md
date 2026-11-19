@@ -1034,6 +1034,13 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-11-19 21:17 UTC (desktop, cc-lex-26z): Z1b pushed to Main (rebased onto `db705682`; re-checked: tsc, `check:lex-26z` 201/201,
+clean build PASS). BRIEF_26AA sized, not started.** See `docs/LEX_26AA_REPORT.md` §0. About 16 h. Item 6 done (reported to cc-ingest via CCh).
+- **Item 1 is stopped** on the QUESTION `to-cch/2026-11-19T0047Z_cc-lex-26z_cch_26AA-sized-item1-questions.md` (Needs-Charlie): the archive
+  columns on four production tables (stop rule 3), the scope (Central's two routes, IdeaGroup), whether the A3 security fix ships alone,
+  and whether items 2–5 may go first. ⚠ A3: `legislation-link` DELETE deletes by row id with no idea scope; an API-only authorization bug.
+- **Next for the Lex session:** read the answer in `to-cc\`, then 26AA from the worktree `C:\lex26aa` (branch `wip/26aa`). Z2 still waits for CCh's GO.
+
 **▶ 2026-11-19 00:38 UTC (desktop, cc-lex-26z): 26-Z Z1b committed on `wip/26z`, on top of Main `a95a6d9c`; the push to Main is Charlie's.** These
 are Charlie's phone findings, from CCh's GO of 18 Nov 23:40: one bar at the bottom (353), the bar on the bottom edge in Edge, the address
 panel, and the desktop opening at the workspace with a one-row, labelled stage bar. See `docs/LEX_26Z_REPORT.md` § Z1b.
