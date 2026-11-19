@@ -1,5 +1,22 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-19 13:34 UTC - Luna (OpenAI) web search returns results again: the trust check now reads the tool's own source list
+
+**The fault, measured from the bytes** (one call, raw response saved before any hypothesis):
+- HTTP 200, status `completed`, two `web_search_call` items.
+- The message held 8 well-formed results in the JSON schema, but **0 `url_citation` annotations**. Under `text.format = json_schema`
+  the Responses API does not annotate.
+- The adapter trusts only URLs the tool produced. With no annotations it dropped all 8, and returned `ok` with 0 results.
+
+**Fix** (`lib/lex/orientation/web-search.ts`, `searchOpenAI` only):
+- The request asks for `include: ['web_search_call.action.sources']`.
+- The trusted set is the annotations plus those sources. URLs are compared by `sourceKey`, which ignores only `utm_source` and a
+  trailing slash.
+
+**Proof, one live call:** 8 results. 36 tool sources; all 8 of the model's URLs are among them, matching exactly. On the pre-fix
+bytes (no sources) the same check trusts 0 of 8, so the filter still rejects when there is no evidence from the tool.
+Cost $0.034 for the two calls.
+
 ## 2026-11-19 01:40 UTC - Stage 3 (four-provider check) built, flag OFF and not wired; OpenAI Luna web search no longer 400s, but still returns no results
 
 **Stage 3.** `lib/lex/orientation/stage3.ts`, from the S26 brief in `docs/SPRINT.md` and its three amendments. Built by a sub-agent of the Search session; reviewed and committed by cc-search.

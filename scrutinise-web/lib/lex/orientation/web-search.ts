@@ -539,6 +539,20 @@ async function searchAnthropic(opts: WebSearchOptions): Promise<AdapterResult | 
  * ⚠ NOT IN `DEFAULT_ORDER` — same status as Anthropic after S24b: built and measured, not a
  * live fallback. See this file's `DEFAULT_ORDER` comment and docs/SEARCH_S25_REPORT.md.
  */
+/**
+ * The comparison key for "did the tool produce this URL". OpenAI adds `utm_source=openai` to the URLs it reports, while
+ * the model's JSON may carry the URL without it. Only that parameter and a trailing slash are ignored; anything else must
+ * match exactly, so a URL the model rewrote still fails.
+ */
+export function sourceKey(url: string): string {
+  try {
+    const u = new URL(url.trim())
+    u.searchParams.delete('utm_source')
+    u.hash = ''
+    return u.toString().replace(/\/$/, '')
+  } catch { return url.trim() }
+}
+
 async function searchOpenAI(opts: WebSearchOptions): Promise<AdapterResult | null> {
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) return null
@@ -560,6 +574,10 @@ async function searchOpenAI(opts: WebSearchOptions): Promise<AdapterResult | nul
         input: [{ role: 'user', content: opts.query }],
         tools: [{ type: 'web_search' }],
         tool_choice: 'required',
+        // ⚠ 19 Nov 2026: with `text.format = json_schema` the message carries NO url_citation annotations (measured: 0 on a
+        // response holding 8 results), so the citation check below dropped every result and Luna "succeeded" with nothing.
+        // The tool's own source list is the trusted alternative, and it is only returned when asked for.
+        include: ['web_search_call.action.sources'],
         max_output_tokens: 2048,
         // ⚠ NO `temperature` (19 Nov 2026): gpt-6-luna is a reasoning model and answers HTTP 400 "Unsupported parameter:
         // 'temperature' is not supported with this model". Found by stage 3's first live run; every Luna web search had been failing.
@@ -573,7 +591,11 @@ async function searchOpenAI(opts: WebSearchOptions): Promise<AdapterResult | nul
     }
     type Resp = {
       status?: string
-      output?: Array<{ type?: string; content?: Array<{ type?: string; text?: string; annotations?: Array<{ type?: string; url?: string }> }> }>
+      output?: Array<{
+        type?: string
+        content?: Array<{ type?: string; text?: string; annotations?: Array<{ type?: string; url?: string }> }>
+        action?: { sources?: Array<{ type?: string; url?: string }> }
+      }>
     }
     const data = await res.json() as Resp
     const priced = await recordOpenaiUsage(data, {
@@ -589,11 +611,13 @@ async function searchOpenAI(opts: WebSearchOptions): Promise<AdapterResult | nul
     const parts = message?.content ?? []
     const text = parts.filter((p) => !p.type || p.type === 'output_text').map((p) => p.text ?? '').join('')
     // ⚠ SAME DEFENCE AS THE OTHER THREE ADAPTERS: a URL the model writes itself cannot
-    // survive. Only a URL that appears in the tool's OWN `url_citation` annotations is trusted.
+    // survive. Only a URL the TOOL produced is trusted: its `url_citation` annotations, or the
+    // sources its web_search_call actions report (the only one present under a JSON schema; see `include`).
     const citedUrls = new Set(
-      parts.flatMap((p) => p.annotations ?? [])
-        .filter((a) => a.type === 'url_citation' && typeof a.url === 'string')
-        .map((a) => a.url as string),
+      [
+        ...parts.flatMap((p) => p.annotations ?? []).filter((a) => a.type === 'url_citation').map((a) => a.url),
+        ...(data.output ?? []).filter((o) => o.type === 'web_search_call').flatMap((o) => o.action?.sources ?? []).map((s) => s.url),
+      ].filter((u): u is string => typeof u === 'string').map(sourceKey),
     )
     if (!text.trim()) return { results: [], costUsd }
     let parsed: { results?: unknown }
@@ -607,7 +631,7 @@ async function searchOpenAI(opts: WebSearchOptions): Promise<AdapterResult | nul
         const e = r as Record<string, unknown>
         const url = typeof e.url === 'string' ? e.url.trim() : ''
         const title = typeof e.title === 'string' ? e.title.trim() : ''
-        if (!url || !title || !citedUrls.has(url)) return null
+        if (!url || !title || !citedUrls.has(sourceKey(url))) return null
         return { url, title, date: normaliseDate(e.date), snippet: typeof e.snippet === 'string' ? e.snippet.trim() : '', provider: 'openai' }
       })
       .filter((r): r is WebSearchResult => r !== null)
