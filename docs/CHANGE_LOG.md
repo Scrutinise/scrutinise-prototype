@@ -1,5 +1,39 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-19 00:38 UTC - LEX 26-Z Z1b (CCh's GO of 18 Nov 23:40, Charlie's phone findings; decision 353): one bar at the bottom, the bar hugs the bottom edge, the address panel, the desktop opens at the workspace
+
+Charlie on his phone: "It works but a little buggy." Four changes, in `docs/LEX_26Z_REPORT.md` § Z1b.
+- **One bar, at the bottom (353).** The top bar is removed. The bottom bar has "Where am I?" on the left and the address on the right;
+  the menu opens from the bottom only, W included.
+- **The bar hugs the bottom edge.** The cause: it was placed from the visual viewport, so in Edge on Android it floated where the
+  toolbar's edge had been. It is now `fixed; bottom: 0` on the layout viewport, plus the safe-area inset. Only a keyboard while typing
+  (a gap of 150 px or more, `keyboardLift`) lifts it. Lex's panel is `100dvh` less the bar and the site header.
+- **The address opens a panel until dismissed**, one bulleted line per level ("S2: Stage 2 Development" / "C4: Chapter 4 Organising
+  the actions" / "P6: Organising the actions"). "Working on" is dropped everywhere. The panel opens by itself once, the first time.
+- **Desktop (Full and Focus) opens at the workspace.** The stage bar sits above it and is revealed by scrolling up. In Full view the
+  workspace is exactly one screen under the sticky site header. The seven stages are one row at 768 px and up, and the rows are
+  labelled "Stages" and "Chapters" (`STAGEBAR_ROW_WORD`; decision 352 may rename them). The run banner and any error line moved under
+  the stage bar.
+- **Files:**
+  - `lib/lex/where-am-i.ts`: `addressLines`, `keyboardLift`; `panelName` without "Working on".
+  - `lib/lex/screen-labels.ts`: `WHERE_UI.addressPanelTitle` added, `workingOn` removed, `STAGEBAR_ROW_WORD` added.
+  - `lib/lex/field-guide.ts`: entries for the new labels; wording updated.
+  - `components/lex/FocusShell.tsx`: the bar, the panel, and `useSiteHeader` / `useArriveAtWorkspace` / `workspaceY`.
+  - `components/lex/StageBar.tsx`: one row, the labels.
+  - `app/ideas/create/CreateIdeaClient.tsx`: the stage bar above the workspace on a desktop, and the arrival.
+  - `scripts/check-lex-26z.ts` and `scripts/fixtures/where-harness-entry.tsx`.
+- **Checks:**
+  - `check:lex-26z`: 201 ran, 201 passed, 8 controls, 0 dead, 2 not run (Full view's real columns; the swipe-close tap rate).
+  - Six mutations, each red and restored: M1, M2, M3, M4a, M4b, M4c. A first M4 stayed green because it was not a break, and was
+    replaced.
+  - Regression, one suite at a time: 25k 18 · stages-ui 24 · 26x 110 · x2 75 · x3 62 · x3b 36 · w 66 · w-b 60 · v 66 · v1b 81 · v2b 47
+    · v2d 62 · u 67 · p 126 · s2 (exit 0) · s2-structure 108 · s2-browser 33 · 26y 129 · prompt-examples · client-boundary ·
+    llm-guards 9 · costing-params 11.
+  - **Red: `check:lex-25g` 25/27, which predates this change.** It asserts "Stage {here.n} of 3" in StageBar, a line 26-X X1 removed,
+    and a field count in `stage-context.ts`, which this change does not touch. Main's StageBar has neither.
+  - `tsc` clean.
+- **Pushed to `wip/26z` only; the push to Main is Charlie's.**
+
 ## 2026-11-18 23:44 UTC - INGEST CBA-1 EXECUTE (decisions 326–331): STOPPED at a Charlie decision; half already on production since 14 Nov, verified; nothing written
 
 **Brief:** `docs/BRIEF_INGEST_CBA_1_EXECUTE.md`. **Report:** `docs/INGEST_CBA_1_EXECUTE_REPORT.md`. Inbox QUESTION 11:08 UTC (CCh acked

@@ -17,7 +17,7 @@ import {
   PROVISION_COLUMNS, PRECEDENT_COLUMNS, STATEMENT_LABEL, COMMENTARY_LABEL, FACET_WORD, WORKSPACE_UI, WORKSPACE_VIEW_WORD, NOTEBOOK_UI, shown,
   LIFECYCLE_STAGE_WORD, LIFECYCLE_UI, PROGRESS_WORD, CHECKLIST_WORD, PAGE_UI, DRAFTING_FILTER_WORD, DEEPENING_LOCK_UI,
   ORGANISING_TOOLBAR_UI, ADD_ACTION_UI, BRIEF_UI, BRIEF_FIELD_WORD, TONE_WORD, DEEPENING_UI, DRAFTS_UI, CBA_UI,
-  PANEL_WORD, PANEL_PLACE_WORD, WHERE_SENTENCES, WHERE_UI, DRAFT_RESTORE_UI,
+  PANEL_WORD, PANEL_PLACE_WORD, WHERE_SENTENCES, WHERE_UI, DRAFT_RESTORE_UI, STAGEBAR_ROW_WORD,
 } from './screen-labels'
 import { EXTENTS } from './action-draft-pure'
 import { RECORD_SECTIONS, type RecordSection } from './record-layout-pure'
@@ -388,12 +388,12 @@ const PAGE_G: Record<keyof typeof PAGE_UI, GuideText> = {
 // ── 26-Z (decisions 344–348) — Where am I?, the panels, Focus view, never losing your place ──────────────────────────────────────────
 type PanelKey = '1' | '2' | '3' | '4' | '5' | '6' | '7'
 const PANEL_G: Record<PanelKey, GuideText> = {
-  1: { purpose: 'Panel 1: where you are — the seven stages and Development’s seven chapters, each with its state.', fits: 'On a desktop in Full view it is the bar across the top. In Focus view and on a phone it is a panel of its own, and the Where am I? menu shows the same lines.', tool: none('a screen; Lex reads the same state through its own tools') },
+  1: { purpose: 'Panel 1: where you are — the seven stages and Development’s seven chapters, each with its state.', fits: 'On a desktop (Full view and Focus view) it is the bar above the workspace, out of view when the page opens: scroll up to see it. On a phone it is a panel of its own, and the Where am I? menu shows the same lines.', tool: none('a screen; Lex reads the same state through its own tools') },
   2: { purpose: 'Panel 2: what to do next — the worklist, then what to read, the gaps and what you know that we do not.', fits: 'Left column, top half, on a desktop. The panel opened when the address names nothing else.', tool: none('a screen') },
   3: { purpose: 'Panel 3: the conversation with Lex.', fits: 'Left column, lower half, "Lex" tab, on a desktop. On a phone its typing box stays above the bottom bar and above the keyboard.', tool: none('this is Lex') },
   4: { purpose: 'Panel 4: your private notes on this idea.', fits: 'Left column, lower half, "Notes" tab, on a desktop. Private to you.', tool: none('notes are private; Lex does not read them') },
   5: { purpose: 'Panel 5: the chapters to work on and, under Organising and Drafting, the actions by number.', fits: 'Choosing one opens it in panel 6; going back returns to this list where you left it.', tool: 'list_actions' },
-  6: { purpose: 'Panel 6: the chapter or the record you are working on ("Working on #38").', fits: 'The centre column on a desktop: the problem, the causes, the policy, the Organising or Drafting list with the record open, or the Deepening.', tool: 'get_action' },
+  6: { purpose: 'Panel 6: the chapter or the record you are working on; its name is that chapter ("Organising the actions") or that record ("#38").', fits: 'The centre column on a desktop: the problem, the causes, the policy, the Organising or Drafting list with the record open, or the Deepening.', tool: 'get_action' },
   7: { purpose: 'Panel 7: the research and sources.', fits: 'The right column on a desktop.', tool: 'read_source' },
 }
 const PANEL_PLACE_G: Record<keyof typeof PANEL_PLACE_WORD, GuideText> = {
@@ -408,7 +408,7 @@ const WHERE_SENTENCES_G: Record<keyof typeof WHERE_SENTENCES, GuideText> = {
   panels: { purpose: 'The third sentence: what a panel is.', fits: 'As the first.', tool: none('a sentence') },
 }
 const WHERE_UI_G: Record<keyof typeof WHERE_UI, GuideText> = {
-  button: { purpose: 'Opens the Where am I? menu: Stage, Chapter and Panel.', fits: 'The one button on the top bar and the one on the bottom bar. From the top it runs Stage → Chapter → Panel downwards; from the bottom Panel → Chapter → Stage upwards, so the nearest level is under your thumb. Drag over a level to open it and lift on an item to go there, or tap a level then tap an item. On a desktop in Focus view, W opens it.', tool: none('a screen control') },
+  button: { purpose: 'Opens the Where am I? menu: Panel, Chapter and Stage.', fits: 'At the left of the bar along the foot of the screen. The menu rises from the bottom, Panel → Chapter → Stage upwards, so the nearest level is under your thumb. Drag over a level to open it and lift on an item to go there, or tap a level then tap an item. On a desktop in Focus view, W opens it.', tool: none('a screen control') },
   stage: { purpose: 'The menu’s Stage level: the seven stages, each with its state.', fits: 'Choosing Development opens its To-do; stages with nothing built yet say so and cannot be chosen.', tool: none('a screen control') },
   chapter: { purpose: 'The menu’s Chapter level: Development’s seven chapters, each with its state and the Deepening’s lock.', fits: 'Choosing one opens it in panel 6.', tool: none('a screen control') },
   panel: { purpose: 'The menu’s Panel level: a small picture of the desktop with its seven panels.', fits: 'Tap a block to work in that panel; each block says where it sits on a desktop.', tool: none('a screen control') },
@@ -417,14 +417,18 @@ const WHERE_UI_G: Record<keyof typeof WHERE_UI, GuideText> = {
   explain: { purpose: 'Brings back the three sentences about stages, chapters and panels.', fits: 'At the top of the Where am I? menu.', tool: 'explain_field' },
   explainLabel: { purpose: 'The spoken name of the "?" button.', fits: 'Read by a screen reader and shown on hover.', tool: none('a label') },
   close: { purpose: 'Closes the Where am I? menu without going anywhere.', fits: 'Tapping outside it, pressing Esc, or swiping it back to its edge does the same.', tool: none('a screen control') },
-  workingOn: { purpose: 'Panel 6’s name when something is open: "Working on #38", "Working on Drafting".', fits: 'Part of the address when spelled out.', tool: none('a label') },
+  addressPanelTitle: { purpose: 'The panel the address opens: your place one line per level — "S2: Stage 2 Development", "C4: Chapter 4 Organising the actions", "P6: Organising the actions".', fits: 'Tap the address at the right of the bottom bar to open it; it stays until you press Close, tap the address again or press Esc. It opens by itself the first time.', tool: none('a screen panel') },
   backWhereYouWere: { purpose: 'Says the page has put you back where you were on this device: the same chapter, record, panel and scroll.', fits: 'Shown briefly after a reload or a plain link to the idea. A link that names a place goes there instead.', tool: none('a message') },
-  focusView: { purpose: 'Shows one panel at a time on a desktop, exactly as on a phone, with the two Where am I? buttons.', fits: 'Keys: ← back, → forward, W opens Where am I?, Esc closes it. Remembered in this browser. Below 768 px Focus view is the only layout.', tool: none('a screen control') },
+  focusView: { purpose: 'Shows one panel at a time on a desktop, exactly as on a phone, with the Where am I? bar along the foot.', fits: 'Keys: ← back, → forward, W opens Where am I?, Esc closes it. Remembered in this browser. Below 768 px Focus view is the only layout.', tool: none('a screen control') },
   fullView: { purpose: 'Shows the three columns side by side, as before; panels can be hidden and resized.', fits: 'Remembered in this browser.', tool: none('a screen control') },
   focusToggleLabel: { purpose: 'The spoken name of the Focus view · Full view switch.', fits: 'In the header on a desktop.', tool: none('a label') },
   noChaptersOutside: { purpose: 'What the Chapter level says outside Development: that stage and its state.', fits: 'Only Development has chapters today.', tool: none('a label') },
   chaptersOfActions: { purpose: 'The list of actions under Organising or Drafting in panel 5.', fits: 'Choosing one opens its record in panel 6. Swipe left to come back.', tool: 'list_actions' },
-  addressLabel: { purpose: 'Your place as an address, "S2 · C5 · P6": stage, chapter, panel.', fits: 'On the top bar. Spelled out the first time you see it ("Stage 2 Development · Chapter 5 Drafting · Panel 6 Working on #38"), then on hover or a long press. It comes from the page’s address, so a copied link opens the same place.', tool: none('a label') },
+  addressLabel: { purpose: 'Your place as an address, "S2 · C5 · P6": stage, chapter, panel.', fits: 'At the right of the bottom bar. Tap it to see it spelled out one line per level. It comes from the page’s address, so a copied link opens the same place.', tool: none('a label') },
+}
+const STAGEBAR_ROW_G: Record<keyof typeof STAGEBAR_ROW_WORD, GuideText> = {
+  stages: { purpose: 'Labels the row of the seven stages, from Creation to In Force, on the bar above the workspace.', fits: 'On a desktop, at the left of the row. The seven stages always sit in one row there.', tool: none('a label') },
+  chapters: { purpose: 'Labels the row of Development’s seven chapters, each with its state, under the stages.', fits: 'On a desktop, at the left of the row. Each chapter opens its page.', tool: none('a label') },
 }
 const DRAFT_RESTORE_G: Record<keyof typeof DRAFT_RESTORE_UI, GuideText> = {
   offer: { purpose: 'Says this box held text you had not sent or saved when the page was closed or reloaded.', fits: 'Kept on this device only, for Lex’s message, Edit the action, Edit the action details, the Brief, comments and Add research. Never sent by itself.', tool: none('kept on the device, not on the server') },
@@ -618,6 +622,7 @@ export function guideEntries(): GuideEntry[] {
     ...fromTable('workspace', 'panelPlace', PANEL_PLACE_WORD, PANEL_PLACE_G),
     ...fromTable('workspace', 'whereSentence', WHERE_SENTENCES, WHERE_SENTENCES_G),
     ...fromTable('workspace', 'where', WHERE_UI, WHERE_UI_G),
+    ...fromTable('workspace', 'stageBarRow', STAGEBAR_ROW_WORD, STAGEBAR_ROW_G),
     ...fromTable('common', 'draftRestore', DRAFT_RESTORE_UI, DRAFT_RESTORE_G),
     // 26-Y
     ...fromTable('record', 'cba', CBA_UI, CBA_G),

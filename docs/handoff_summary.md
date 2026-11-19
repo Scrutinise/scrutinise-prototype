@@ -1034,6 +1034,13 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-11-19 00:38 UTC (desktop, cc-lex-26z): 26-Z Z1b committed on `wip/26z`, on top of Main `a95a6d9c`; the push to Main is Charlie's.** These
+are Charlie's phone findings, from CCh's GO of 18 Nov 23:40: one bar at the bottom (353), the bar on the bottom edge in Edge, the address
+panel, and the desktop opening at the workspace with a one-row, labelled stage bar. See `docs/LEX_26Z_REPORT.md` § Z1b.
+- **Next for this session:** BRIEF_26AA, in its own worktree `C:\lex26aa` (Charlie: Z1b first). Z2 still waits for CCh's GO.
+- **Open:** decision 352, the row-label word ("Stages" / "Chapters"), is a one-line change in `STAGEBAR_ROW_WORD`. `check:lex-25g`
+  has been red since 26-X X1 ("Stage N of 3" was removed), which is not Z1b's.
+
 **▶ 2026-11-18 17:01 UTC (desktop, cc-lex-26y): 26-Y committed on top of 26-Z (474198e6), push left to Charlie. 26-Y built whole, Y1 + Y2: benefit lines, the engine, the Cost–benefit report, the companion re-templated, Deepening section 5, the settings, Lex's tools and honesty rule.**
 See `docs/LEX_26Y_REPORT.md` and the CHANGE_LOG entry for this commit.
 - **The schema was already on Neon** (BenefitLine, CostLine.citationKey, Idea appraisal columns) from a laptop session that never pushed. It was
