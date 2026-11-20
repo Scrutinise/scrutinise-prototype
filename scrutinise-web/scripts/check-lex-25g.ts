@@ -58,6 +58,28 @@ function loadSources(): Sources {
   return out
 }
 
+/** 26-AA 25g-A6 (b): a control whose search string has gone stale corrupts nothing, so the "corrupted" copy is the real source and the
+ *  self-test reports a sound guard as useless, or, worse, a useless one as sound. Every `break` is handed these strict strings instead:
+ *  `.replace` and `.split` THROW when their search string is absent, naming the file and the string, so a stale control names itself. */
+class StaleControl extends Error {}
+class StrictSource extends String {
+  constructor(private readonly file: string, text: string) { super(text) }
+  private need(search: unknown): void {
+    const text = this.valueOf()
+    const found = search instanceof RegExp ? new RegExp(search.source, search.flags.replace('g', '')).test(text) : text.includes(String(search))
+    if (!found) throw new StaleControl(`STALE CONTROL — ${this.file} does not contain ${search instanceof RegExp ? String(search) : JSON.stringify(String(search))}`)
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  override replace(search: any, replacement: any): string { this.need(search); return this.valueOf().replace(search, replacement) }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  override split(separator: any, limit?: number): string[] { this.need(separator); return this.valueOf().split(separator, limit) }
+}
+function strictSources(src: Sources): Sources {
+  const out: Sources = {}
+  for (const [f, text] of Object.entries(src)) out[f] = new StrictSource(f, text) as unknown as string
+  return out
+}
+
 /** A finished previous log, for the reuse tests. */
 function doneLog(): PassRecord[] {
   return freshPassLog().map((p) => ({
@@ -434,7 +456,9 @@ const CHECKS: Check[] = [
     break: (src) => ({
       ...src,
       'app/ideas/build/BuildIdeaClient.tsx': src['app/ideas/build/BuildIdeaClient.tsx']
-        .replace("if (text.trim() || correction.trim() || ruledOut.trim()) setExitPrompt(true)", "if (false) setExitPrompt(true)"),
+        // 26-AA 25g-A6 (CCh GO 20 Nov 17:50): 26-B (a6e4a82d) removed "ruled out", so the old search string matched nothing and the
+        // "corrupted" copy was the real source. This breaks the line as it reads today; strictSources() now makes a stale one throw.
+        .replace('if (text.trim() || correction.trim()) setExitPrompt(true)', 'if (false) setExitPrompt(true)'),
     }),
   },
 
@@ -584,8 +608,17 @@ function main() {
       console.log('       ⚠ NO NEGATIVE CONTROL — asserts against imported code, not source text')
       continue
     }
+    // A break that throws is a stale control, never a passing one (26-AA 25g-A6 b). Only the CHECK throwing on corrupted source counts as
+    // rejecting it, so the two are caught apart.
+    let corrupted: Sources
+    try { corrupted = c.break(strictSources(src)) } catch (e) {
+      fail++; console.log(`       ✗ ${e instanceof StaleControl ? e.message : `the control itself threw: ${e instanceof Error ? e.message : String(e)}`}`); continue
+    }
+    // Strict strings a break left untouched go back to plain ones, so the check reads the same type it reads unbroken.
+    for (const f of Object.keys(corrupted)) corrupted[f] = String(corrupted[f])
+    if (FILES.every((f) => corrupted[f] === src[f])) { fail++; console.log('       ✗ STALE CONTROL — the break changed nothing'); continue }
     let broken: string | null
-    try { broken = c.run(c.break(src)) } catch { broken = 'threw' }
+    try { broken = c.run(corrupted) } catch { broken = 'threw' }
     if (broken) console.log('       ↳ control OK — rejects the corrupted source')
     else { fail++; console.log('       ✗ CONTROL FAILED — the corrupted source PASSES, so this check proves nothing') }
   }

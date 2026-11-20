@@ -1,5 +1,23 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-20 23:31 UTC - LEX 26-AA 25g A6: the self-test control that failed on Main now breaks the current line, and a stale control names itself
+
+CCh's GO of 20 Nov 17:50, point 3, `scripts/check-lex-25g.ts` only.
+- **(a)** §3 A6's control searched for a line that 26-B (a6e4a82d, 17 Sep) removed:
+  - the old line was `… || ruledOut.trim()) setExitPrompt(true)`;
+  - its `.replace` matched nothing, so the "corrupted" copy was the real source and the self-test said CONTROL FAILED;
+  - it now breaks the current line, `if (text.trim() || correction.trim()) setExitPrompt(true)`.
+- **(b)** Every `break` now gets strict sources:
+  - `.replace` and `.split` **throw** when their search string is absent, naming the file and the string;
+  - a break that changes nothing fails.
+  - ⚠ The old `try { c.run(c.break(src)) } catch { broken = 'threw' }` would have counted that throw as "control OK", so the break now
+    runs in its own try, and only the check throwing counts as rejecting.
+- **Other stale breaks exposed by (b): 0.** `--self-test` gives 27 passed, 0 failed, 21 controls OK, 6 with no control (unchanged).
+- **Watched failing:** the old A6 string back gives `STALE CONTROL — app/ideas/build/BuildIdeaClient.tsx does not contain "…ruledOut…"`.
+  A stale `.split` gives the same for RerunDialogue.tsx. Both mutants were removed.
+- tsc (scripts program): no errors in this file. The only errors are item 6's three Ingest errors, fixed on Main in 51223b68, which
+  wip/26aa doesn't carry yet.
+
 ## 2026-11-20 13:41 UTC - LEX 26-AA item 8 (decision 355): background notes were refused for reporting their sources; the guard is fixed, 62% refused → 0 of 7
 
 Charlie's decision 355 (20 Nov 13:21): find and fix the cause of the refusals, and raise the price only if they remain.
