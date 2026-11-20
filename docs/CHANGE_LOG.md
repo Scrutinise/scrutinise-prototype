@@ -1,5 +1,22 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-20 07:52 UTC - SEARCH-32 closed: temperature 0 gold run 2 = 41/65; the four losses repeat; recommend rolling back to 0.2/0.3 (Charlie's Vercel change, not made); laptop hand-over to Dropbox
+
+- **Run 2.** On the Railway measure-job at 4a374215, under production's flag string, with temperature 0 as the code
+  default: **41 of 65.** Predicted 41-46.
+  - The two runs at 0 average 42; the two at 0.2 average 43.5.
+  - Noise floor at 0: 4 flips (7 at 0.2).
+  - S10-Q9, V2-Q6, V2-Q15 and V2-Q16 are lost in both runs at 0, and three of them are bill-vocab gains. The consistent
+    effect is net -3.
+  - File: docs/census/s32-gold-t0-2-20nov.json. Spend 15.7p. Write-up: SEARCH_29_REPORT "SEARCH-32", "Run 2".
+- **Recommendation: roll back** by setting LEX_SEARCH_LLM_TEMPERATURE=0.2 and LEX_QUERY_WRITER_TEMPERATURE=0.3 in Vercel
+  and redeploying. Temperature 0 stays live until Charlie does.
+- docs/FOR_CHARLIE/00_CHARLIES_TODO.md committed (written by CCh-Search; committed as Search on CCh's instruction).
+- Laptop hand-over: C:\Dropbox\handover_laptop_2026-11-19\ holds copies only; MANIFEST.txt lists every item.
+  - It has the project memory, untracked and ignored files, the Lex worktrees' extra files, a bundle of
+    backup/pre-reorder-19nov and the session scratchpad.
+  - Not copied, and listed by name in the manifest: 15 files that hold secrets, and about 2.5 GB of bulk ingest output.
+
 ## 2026-11-19 21:13 UTC - SEARCH-32: bill-vocab flag proved live (10/10); temperature 0 on the gold set, one run of two (43/65); Search's local commits pushed on Charlie's instruction
 
 - **LEX_ROUTER_BILL_VOCAB is live.**

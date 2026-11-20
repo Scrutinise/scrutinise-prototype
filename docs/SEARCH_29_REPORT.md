@@ -175,6 +175,37 @@ is NOT measured: the 65 gold questions have not been run at 0. A two-run gold ch
   - Still owed: run 2, then re-check S10-Q9, V2-Q6, V2-Q15 and V2-Q16. If they miss in both runs at 0, temperature 0 costs
     about 3 bill-vocab gains, and the choice between temperature 0 and those gains is CCh's.
 
+**Run 2 (20 Nov, CCh 2350Z GO, Charlie's approval).**
+- Where and how: the Railway measure-job at origin/Main 4a374215, where temperature 0 is the code default, under
+  production's flag string. No overrides.
+- Prediction, recorded 07:32 UTC: 41-46 of 65; 2-5 flips against run 1; at least 2 of S10-Q9, V2-Q6 and V2-Q16 lost again.
+- Result: **41 of 65.** That equals the harness's own summary. Not aborted. vector-serve p50 2.8 s, cpu/wall 2.02.
+  File: `docs/census/s32-gold-t0-2-20nov.json`. Spend 15.7p.
+- ⚠ Run 1 ran locally against the production serves; run 2 ran on Railway. A hit or miss at rank 20 does not depend on
+  where the harness runs, but the two environments are not identical.
+
+| | at 0.2, run 1 | at 0.2, run 2 | at 0, run 1 | at 0, run 2 |
+|---|---|---|---|---|
+| Hits of 65 | 44 | 43 | 43 | **41** |
+| Flips between the two runs | 7 | | 4 | |
+| Mean | 43.5 | | **42** | |
+
+- **Noise floor at 0: 4 flips** (S10-Q24, S10-Q39, S10-Q44, V2-Q9), against 7 at 0.2. Lower, not zero. Predicted 2-5; right.
+- **All four losses repeat.** S10-Q9, V2-Q6, V2-Q15 (rank 22) and V2-Q16 (rank 68) miss in both runs at 0 and hit in both
+  at 0.2. Predicted at least 2 of 3; right.
+  - Three of the four are bill-vocab gains, all from wording.
+  - V2-Q9, a fourth bill-vocab gain, misses in run 2.
+  - Consistent effect of temperature 0 over the four runs: **-4 lost, +1 gained (V2-Q8), net -3.**
+- **Recommendation: roll back to 0.2/0.3.**
+  - Temperature 0 makes search somewhat more repeatable (7 flips to 4), but it does not make it repeatable: the router
+    still varies.
+  - It costs three of the eight bill-vocab gains outright, and a fourth half the time. That reverses most of the reason
+    the bill-vocab flag was turned on.
+  - Rollback, with no code change: set LEX_SEARCH_LLM_TEMPERATURE=0.2 and LEX_QUERY_WRITER_TEMPERATURE=0.3 in Vercel,
+    then redeploy. This is Charlie's change. I have not made it.
+- If repeatability is still wanted, the route is to reuse the router's decision (option 1 above), not to change the
+  temperature.
+
 ---
 
 ## What has been measured so far
