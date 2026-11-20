@@ -1,5 +1,29 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-20 23:46 UTC - LEX 26-AA item 1 and 352: checks complete (870d70ab was WIP); 26z's chapters sentence restated for 352
+
+870d70ab (item 1: hard deletes become archives with restore; 352: "Chapters" becomes "Elements", address letter E) was committed as WIP,
+because the earlier mutant run was killed for memory. Everything below was run one at a time.
+- **Item 1 mutants M6–M12: all RED.**
+  - M6 note archive loses its userId scope;
+  - M7 law link hard-deleted;
+  - M8 re-add ignores the archived link;
+  - M9 source findings hard-deleted;
+  - M10 ungroup hard-deletes;
+  - M11 restoreGroup takes an idea from another group;
+  - M12 the screen says "Delete" again.
+  - With M1–M5 from the killed run, that is 12 of 12. Each mutant was reverted and its revert read back.
+- **check:lex-26z found a real miss in 352.** Its "chapters sentence is the brief's, verbatim" compared against BRIEF_26Z's "7 chapters",
+  which 352 renamed. 870d70ab restated the address expectations but not this sentence.
+  - The sentence is now asserted as the brief's with that one word changed, and nothing else.
+  - New assertion: panel 5 is "Elements".
+  - 352 mutants: N1 (letter C back) goes RED on 7 assertions; N2 (panel 5 "Chapters") goes RED on the new assertion. Before the fix, N2's
+    RED was only the same failing sentence, so it proved nothing.
+- **Regression:**
+  - check:lex-26z: 202 passed, 8 controls, 2 not run (as before);
+  - full check:lex-26aa: 118 passed, 23 controls, 0 dead, 1 not run (the item-1 legacy re-read, which spends a model call).
+- tsc (app): clean for everything committed. The only error is in an uncommitted 26-AB file still being built.
+
 ## 2026-11-20 23:31 UTC - LEX 26-AA 25g A6: the self-test control that failed on Main now breaks the current line, and a stale control names itself
 
 CCh's GO of 20 Nov 17:50, point 3, `scripts/check-lex-25g.ts` only.

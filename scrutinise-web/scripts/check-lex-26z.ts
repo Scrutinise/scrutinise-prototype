@@ -90,7 +90,10 @@ function partA() {
 function partB() {
   section('B · the words')
   const brief = read('../docs/BRIEF_26Z.md')
-  for (const [k, s] of Object.entries(WHERE_SENTENCES)) ok(`the ${k} sentence is the brief's, verbatim`, brief.includes(s), s)
+  // 352 (Charlie, 20 Nov): "chapters" is "elements". The chapters sentence is the brief's with that ONE word changed, and nothing else.
+  const as352 = (s: string) => s.replace(/\b7 chapters to develop\b/, '7 elements to develop')
+  for (const [k, s] of Object.entries(WHERE_SENTENCES)) ok(`the ${k} sentence is the brief's, verbatim${k === 'chapters' ? ' (with 352\'s "elements")' : ''}`, k === 'chapters' ? as352(brief).includes(s) && !brief.includes(s) : brief.includes(s), s)
+  ok('352: panel 5 is "Elements"', PANEL_WORD[5 as keyof typeof PANEL_WORD] === 'Elements', PANEL_WORD[5 as keyof typeof PANEL_WORD])
   const keys = new Set(guideEntries().map((e) => e.key))
   const want = [
     ...Object.keys(PANEL_WORD).map((k) => `panel.${k}`), ...Object.keys(PANEL_PLACE_WORD).map((k) => `panelPlace.${k}`),
