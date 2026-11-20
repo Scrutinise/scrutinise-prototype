@@ -1,5 +1,28 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-20 12:48 UTC - LEX 26-AA item 4: three document kinds re-measured with the 26-W template (19.8p spent of the £1.50 cap)
+
+BRIEF_26AA item 4. Run with `scripts/measure-26aa-kinds.ts` (new) on a scratch copy of 452c5ade, deleted afterwards. The cost lines
+and cited sources were read from 452c5ade only; nothing was written to it.
+
+| Kind | Old (24 Oct, V2b template) | New (20 Nov, 26-W template) |
+|---|---|---|
+| Specification | 1.71p (n=2) | **1.55p** (n=3: 1.94, 1.33, 1.37) |
+| Operating text | 0.97p (n=4) | **1.01p** (n=3: 1.14, 1.09, 0.80) |
+| Background note | 1.08p (n=2) | **1.57p** (n=4: 1.37, 1.15, 1.04, 2.72) |
+| Costing | not re-run | 0.48p (n=3), already re-measured by 26-Y on 18 Nov after its template changed |
+
+- **The V2b figures are replaced, not averaged in** (`KIND_RUNS`, document-drafting-pure.ts). The button's price is the mean of the
+  new runs.
+- ⚠ **Background note: 3 of 7 attempts were REFUSED** by the product's own guard ("reads as a list of proposals, not a background
+  note") on #24, #25 and #36. They were not saved, but they still spent 1.2p, 1.2p and 3.5p.
+  - The figures above are the saved drafts only, as for every kind.
+  - The refusal rate is reported, not changed. Whether the price should allow for it is a decision for CCh or Charlie.
+- **Spent:** 19.84p in all, refused attempts included. Cap £1.50.
+- **`check:lex-26aa`**: 46 ran, 46 passed, 8 controls. Each of the four kinds has n ≥ 3, every run dated after its template changed,
+  none from 24 Oct, and the button's price is their mean.
+- **Regression:** 26v2b 47/47, 26w 66/66, 26v2c 44/44, 26y 129/129. tsc is clean.
+
 ## 2026-11-20 12:39 UTC - LEX 26-AA item 3: draft_heading_needs, "Draft what this heading needs" from the chat
 
 BRIEF_26AA item 3. It uses the button's own plan (`planFor`) and queue (`queueDrafting`), so it runs on the same worker and the same

@@ -23,6 +23,7 @@ import type { ToolCtx } from '../lib/lex/agent/types'
 import { guideEntries, toolsNamed } from '../lib/lex/field-guide'
 import { CAUSE_UI, TREE_UI } from '../lib/lex/screen-labels'
 import { planFor } from '../lib/lex/document-drafting'
+import { KIND_RUNS, kindPrice } from '../lib/lex/document-drafting-pure'
 
 const ROOT = join(__dirname, '..')
 /** Comments are stripped before a source is scanned, so a comment naming a literal cannot satisfy or fail a check. */
@@ -257,9 +258,25 @@ async function part3() {
   }
 }
 
+// ── item 4 — the four kinds' prices are re-measured, n ≥ 3, with the current template ─────────────────────────────────────────────
+function part4() {
+  section('4 · the prices of the four kinds whose templates changed in 26-W: n ≥ 3, measured after the change, no V2b figure left')
+  const since = { SPECIFICATION: '2026-11-20', OPERATING_TEXT: '2026-11-20', BACKGROUND_NOTE: '2026-11-20', COSTING: '2026-11-18' } as const
+  const measuredSince = (runs: Array<{ on: string }>, day: string) => runs.length >= 3 && runs.every((r) => (/\d{4}-\d{2}-\d{2}/.exec(r.on)?.[0] ?? '') >= day)
+  for (const [k, day] of Object.entries(since) as Array<[keyof typeof since, string]>) {
+    const runs = KIND_RUNS[k]
+    const dates = runs.map((r) => /\d{4}-\d{2}-\d{2}/.exec(r.on)?.[0] ?? '')
+    ok(`${k}: n = ${runs.length} (≥ 3), every run dated ${day} or later — none from the 24 Oct template`, measuredSince(runs, day), dates.join(', '))
+    const p = kindPrice(k)
+    ok(`${k}: the button's price is the mean of those runs (${p.pence}p, n=${p.n})`, p.n === runs.length && p.pence != null && Math.abs(p.pence - runs.reduce((s, r) => s + r.pence, 0) / runs.length) < 0.06)
+  }
+  control('two new runs, or three with one from 24 Oct, fail that test', !measuredSince([{ on: '2026-11-20' }, { on: '2026-11-20' }], '2026-11-20') && !measuredSince([{ on: '2026-11-20' }, { on: '2026-11-20' }, { on: 'x, 2026-10-24 (#7)' }], '2026-11-20'))
+}
+
 async function main() {
   part2Static()
   part3Static()
+  part4()
   if (process.argv.includes('--pure')) { notRun += 3; console.log('  (A3, items 2 and 3 on the database not run: --pure)') }
   else { await partA3(); await part2(); await part3() }
   console.log(`\n${ran} ran · ${pass} passed · ${fail} failed · ${controls} controls (${dead} dead) · ${notRun} not run`)
