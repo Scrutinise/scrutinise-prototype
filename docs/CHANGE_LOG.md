@@ -1,5 +1,29 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-20 12:27 UTC - LEX 26-AA item 2: Lex can add, edit and remove the Diagnosis's causes (add_cause, edit_cause, retire_cause)
+
+BRIEF_26AA item 2, on CCh's GO of 20 Nov 07:40 (Q4: items 2–5 while item 1 waited). This closes the one gap 26-W-b's inventory left.
+- **Three tools** go through the same functions as the Diagnosis page's buttons (`addCause`, `updateCause`, `removeCause`) and behind
+  the same gate (the Diagnosis must have been entered).
+  - Causes are named by their number, which never moves.
+  - **All three ask first.** Adding asks too: a cause the button adds is the owner's, and so is one from the chat, once the owner has
+    confirmed it.
+  - `retire_cause` archives (never deletes) the cause and those beneath it. Its undo is `restore_cause`, which is held back as an inverse
+    and not offered to the model. It is backed by the new `restoreCause` in field-machine.ts, which brings back the causes archived in the
+    same act.
+  - The screen's depth limit ("deepest level", four) holds for the chat too.
+- **The labels.** The cause buttons ("Add cause", "Add another cause", "Edit", "+ cause beneath", "Add", "Remove") now come from
+  `CAUSE_UI` in screen-labels.ts. Each has a field-guide entry naming its tool.
+- **`check:lex-26aa`**: 29 ran, 29 passed, 5 controls, 0 dead.
+  - Asks first: no write until confirmed.
+  - Parity on twin scratch copies of 452c5ade: every cause compared field by field, archived ones too, for add, add beneath, edit,
+    clearing the evidence, and remove.
+  - A raw write on one twin breaks the match (control).
+  - The undo restores both causes with their numbers. The depth limit and the gate are tested against the route's 409.
+  - **Five mutations, all red:** Lex given as the source; retire not asking; the depth limit dropped; the gate dropped; restore
+    ignoring the sub-causes.
+- **Regression, one at a time:** 26w-b 60/60, 26p 126/126, 26y 129/129, 26s2 215/215, 26x 110/110, 26z 201/201. tsc is clean.
+
 ## 2026-11-20 12:01 UTC - LEX 26-AA A3: the legislation-link DELETE is scoped to the idea (a security fix, shipped on its own)
 
 CCh's GO of 20 Nov 07:40, Q3: ship it first, on its own. No schema.

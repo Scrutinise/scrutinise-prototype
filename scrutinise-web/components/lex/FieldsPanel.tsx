@@ -30,7 +30,7 @@ import { COST_CATEGORIES } from '@/lib/lex/page4-config'
 import PriorVersions from './PriorVersions'
 import { collapsedByDefault as pageCollapsedByDefault } from '@/lib/lex/panel-collapse'
 import CauseMap from './CauseMap'
-import { COMMON_UI, RECORD_UI, STATEMENT_LABEL, COMMENTARY_LABEL } from '@/lib/lex/screen-labels'
+import { COMMON_UI, RECORD_UI, STATEMENT_LABEL, COMMENTARY_LABEL, CAUSE_UI } from '@/lib/lex/screen-labels'
 
 // Grouped causes-loop + root-cause handlers (Page 2). Kept as one object so the panel
 // signature stays readable.
@@ -926,20 +926,20 @@ function CauseCard({ cause, depth, busy, api }: { cause: CanonicalCause; depth: 
         <ClassChips cause={cause} busy={busy} api={api} />
       </div>
       <div className="flex flex-wrap items-center gap-2 mt-1.5">
-        <button disabled={busy} onClick={() => setEditing(true)} className="text-[11px] text-zinc-400 hover:text-zinc-700">Edit</button>
+        <button disabled={busy} onClick={() => setEditing(true)} className="text-[11px] text-zinc-400 hover:text-zinc-700">{CAUSE_UI.edit}</button>
         {canGoDeeper ? (
-          <button disabled={busy} onClick={() => setAdding((a) => !a)} className="text-[11px] text-zinc-400 hover:text-zinc-700">+ cause beneath</button>
+          <button disabled={busy} onClick={() => setAdding((a) => !a)} className="text-[11px] text-zinc-400 hover:text-zinc-700">{CAUSE_UI.addBeneath}</button>
         ) : (
           <span className="text-[11px] text-zinc-300" title="Consolidate rather than go deeper — a diagnosis should get clear, not exhaustive">deepest level</span>
         )}
-        <button disabled={busy} onClick={() => api.remove(cause.id)} className="text-[11px] text-zinc-400 hover:text-red-600">Remove</button>
+        <button disabled={busy} onClick={() => api.remove(cause.id)} className="text-[11px] text-zinc-400 hover:text-red-600">{CAUSE_UI.remove}</button>
       </div>
       {adding && canGoDeeper && (
         <div className="mt-2 flex gap-1.5">
           <input value={subC} onChange={(e) => setSubC(e.target.value)} placeholder="…because of this deeper cause"
             className="flex-1 text-xs p-1.5 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />
           <button disabled={busy || !subC.trim()} onClick={() => { api.add({ cause: subC.trim(), parentCauseId: cause.id }); setSubC(''); setAdding(false) }}
-            className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">Add</button>
+            className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-900 text-white disabled:opacity-40">{CAUSE_UI.addBeneathSubmit}</button>
         </div>
       )}
     </div>
@@ -1040,7 +1040,7 @@ function CausesField({ field, causes, busy, api, ideaId, archived = 0 }: { field
         <RefTextarea value={why} onChange={(e) => setWhy(e.target.value)} rows={4} placeholder="Why has it persisted? (optional)"
           className="w-full text-xs p-1.5 rounded border border-zinc-200 resize-y focus:outline-none focus:border-blue-400" />
         <button disabled={busy || !c.trim()} onClick={() => { api.add({ cause: c.trim(), whyPersisted: why.trim() || undefined }); setC(''); setWhy('') }}
-          className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-40">{terminal ? 'Add another cause' : 'Add cause'}</button>
+          className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-40">{terminal ? CAUSE_UI.addAnother : CAUSE_UI.add}</button>
       </div>
 
       {!terminal && (

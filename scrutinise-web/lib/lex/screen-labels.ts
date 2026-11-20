@@ -359,6 +359,16 @@ export const WHERE_UI = {
   chaptersOfActions: 'The actions on this page',
   addressLabel: 'Your place: stage, chapter and panel',
 } as const
+/** 26-AA item 2 — the Diagnosis's cause buttons (FieldsPanel's CauseCard and CausesField). Each has a field-guide entry naming the Lex tool
+ *  that does the same (add_cause, edit_cause, retire_cause). */
+export const CAUSE_UI = {
+  add: 'Add cause',
+  addAnother: 'Add another cause',
+  edit: 'Edit',
+  addBeneath: '+ cause beneath',
+  addBeneathSubmit: 'Add',
+  remove: 'Remove',
+} as const
 /** Z1b (CCh, 18 Nov 23:40, item 4) — the label at the left of each row of the stage bar on a desktop.
  *  ⚠ The word may change: decision 352 is open with Charlie. It lives here so a rename is one line. */
 export const STAGEBAR_ROW_WORD = {

@@ -876,6 +876,32 @@ export async function removeCause(ideaId: string, causeId: string): Promise<numb
   return ids.length
 }
 
+/**
+ * 26-AA item 2 — THE UNDO FOR `removeCause`. Brings back the cause and the sub-causes archived WITH it (the same `archivedAt` instant, which
+ * is how `removeCause` marks one act), with their numbers, which were never reused. A sub-cause archived separately, earlier, stays archived.
+ * The root-cause mark is not restored: `removeCause` cleared the field, and choosing the root cause again is the owner's.
+ * Returns how many came back (0 = no archived cause with that id on this idea).
+ */
+export async function restoreCause(ideaId: string, causeId: string): Promise<number> {
+  // ⚠ `archivedAt` is named in each query, so lib/prisma.ts's live-only filter steps aside and the archived rows are visible here.
+  const row = await prisma.diagnosisCause.findFirst({ where: { id: causeId, ideaId, archivedAt: { not: null } }, select: { id: true, archivedAt: true, parentCauseId: true } })
+  if (!row?.archivedAt) return 0
+  // If its parent has been archived since, it comes back at the top level rather than under a cause the list does not show.
+  const parentGone = row.parentCauseId
+    ? !(await prisma.diagnosisCause.findFirst({ where: { id: row.parentCauseId, ideaId }, select: { id: true } }))
+    : false
+  if (parentGone) await prisma.diagnosisCause.update({ where: { id: causeId }, data: { parentCauseId: null } })
+  const ids = [causeId]
+  let frontier = [causeId]
+  while (frontier.length) {
+    const kids = await prisma.diagnosisCause.findMany({ where: { ideaId, parentCauseId: { in: frontier }, archivedAt: row.archivedAt }, select: { id: true } })
+    frontier = kids.map((k) => k.id).filter((k) => !ids.includes(k))
+    ids.push(...frontier)
+  }
+  await prisma.diagnosisCause.updateMany({ where: { ideaId, id: { in: ids } }, data: { archivedAt: null } })
+  return ids.length
+}
+
 /** Mark exactly one cause as the root cause (§7.1 field 4) and accept the rootCause field. */
 export async function setRootCause(ideaId: string, causeId: string): Promise<boolean> {
   const chosen = await prisma.diagnosisCause.findFirst({ where: { id: causeId, ideaId }, select: { id: true, cause: true } })

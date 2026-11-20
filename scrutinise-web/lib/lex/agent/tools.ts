@@ -57,7 +57,9 @@ import { validateFieldValue } from '@/lib/lex/proposal-schema'
 import {
   offerRedraft, acceptField, skipField, reopenField, dismissProposal, setProposal,
   addPolicyOption, addAction, updateAction,
+  addCause, updateCause, removeCause, restoreCause,
 } from '@/lib/lex/field-machine'
+import { assertWritableField } from '@/lib/lex/stage'
 import { applyFieldEdit, fieldEditFailed } from '@/lib/lex/field-edit-write'
 import { applyPolicyOp, rejectPolicyOption, syncPolicyField } from '@/lib/lex/guiding-policy-state'
 import { testIsCompound } from '@/lib/lex/rumelt-tests'
@@ -2398,6 +2400,99 @@ const notebookNotesTool: ToolDefinition = {
   },
 }
 
+// ══ 26-AA item 2 — THE DIAGNOSIS'S CAUSES, THROUGH LEX (the one gap 26-W-b's inventory left) ═══════════════════════════════════════
+//
+// The SAME functions the Diagnosis page's buttons reach through POST /causes (addCause, updateCause, removeCause), behind the SAME gate
+// (assertWritableField 'causes'), so the chat and the buttons store the same rows (check:lex-26aa, on twin scratch copies).
+// ⚠ ALL THREE ASK FIRST. Editing and removing change the owner's words. Adding asks too: a cause the button adds is the owner's (source
+// USER), and so is one added from the chat, because the owner pressed the confirm button for it. Adding without asking would put Lex's
+// words in the owner's Diagnosis under the owner's name.
+// ⚠ Causes are named by their NUMBER, which never moves (25-S §2a): "cause 3 is wrong" means one cause, however the list is ordered.
+const CAUSE_DEPTH_LIMIT = 4 // the Diagnosis page's MAX_CAUSE_DEPTH: "+ cause beneath" is not offered on the deepest level
+const causeByNumber = (ctx: ToolCtx, number: number) =>
+  prisma.diagnosisCause.findFirst({ where: { ideaId: ctx.ideaId, number }, select: { id: true, number: true, cause: true, whyPersisted: true, evidence: true, parentCauseId: true } })
+const noCause = (n: number) => fail(`there is no cause ${n} on this idea (a removed cause keeps its number but is no longer on the list).`)
+async function causesGate(ctx: ToolCtx): Promise<ToolResult | null> {
+  return (await assertWritableField(ctx.ideaId, 'causes')) ? fail('the Diagnosis has not been started yet, so its causes cannot be changed — the screen refuses the same.') : null
+}
+async function causeDepth(ctx: ToolCtx, causeId: string): Promise<number> {
+  const all = await prisma.diagnosisCause.findMany({ where: { ideaId: ctx.ideaId }, select: { id: true, parentCauseId: true } })
+  const parent = new Map(all.map((c) => [c.id, c.parentCauseId]))
+  let d = 0, at: string | null | undefined = parent.get(causeId)
+  while (at && d < 10) { d++; at = parent.get(at) }
+  return d
+}
+const CAUSE_TEXT = { cause: z.string().trim().min(1).max(2000), why: z.string().trim().max(4000), evidence: z.string().trim().max(4000) }
+
+const addCauseTool: ToolDefinition = {
+  name: 'add_cause', category: 'change', tier: 'ask',
+  description: 'Add a cause to the Diagnosis, as "Add cause" does — or beneath an existing cause (`beneath`: its number), as "+ cause beneath" does, for a cause that drives that one. The cause is the owner\'s once they confirm. The result gives its number. Asks the user to confirm first.',
+  schema: z.object({ cause: CAUSE_TEXT.cause, whyPersisted: CAUSE_TEXT.why.optional(), evidence: CAUSE_TEXT.evidence.optional(), beneath: z.number().int().optional().describe('the number of the cause this one sits beneath') }),
+  describe: ({ cause, beneath }) => `Add the cause “${clip(cause, 160)}”${beneath != null ? ` beneath cause ${beneath}` : ''}.`,
+  async run(ctx, input) {
+    const gate = await causesGate(ctx); if (gate) return gate
+    let parentCauseId: string | undefined
+    if (input.beneath != null) {
+      const p = await causeByNumber(ctx, input.beneath); if (!p) return noCause(input.beneath)
+      if ((await causeDepth(ctx, p.id)) + 1 >= CAUSE_DEPTH_LIMIT) return fail(`cause ${input.beneath} is on the deepest level (${CAUSE_DEPTH_LIMIT}), so nothing can go beneath it — the screen offers "deepest level" there: consolidate rather than go deeper.`)
+      parentCauseId = p.id
+    }
+    const row = await addCause(ctx.ideaId, { cause: input.cause, whyPersisted: input.whyPersisted, evidence: input.evidence, parentCauseId, source: 'USER' })
+    const made = await prisma.diagnosisCause.findUnique({ where: { id: row.id }, select: { number: true } }) // the number is the database trigger's
+    return { ok: true, data: { number: made?.number ?? null, beneath: input.beneath ?? null, say: `Added as cause ${made?.number ?? '(numbered shortly)'}.` }, ui: [{ type: 'highlight_field', fieldKey: 'causes' }], undo: made?.number != null ? await undoToken(ctx, 'retire_cause', { number: made.number }, `Undo: remove cause ${made.number}`) : undefined }
+  },
+}
+
+const editCauseTool: ToolDefinition = {
+  name: 'edit_cause', category: 'change', tier: 'ask',
+  description: 'Rewrite a cause\'s statement, its "why has it persisted?" or its evidence, as the cause\'s "Edit" → Save does. Only what you pass changes; an empty string clears "why" or evidence. The old wording comes back with undo. Asks the user to confirm first.',
+  schema: z.object({ number: z.number().int(), cause: CAUSE_TEXT.cause.optional(), whyPersisted: CAUSE_TEXT.why.optional(), evidence: CAUSE_TEXT.evidence.optional() }),
+  describe: (i) => `Change cause ${i.number}: ${[i.cause !== undefined ? `the cause to “${clip(i.cause, 120)}”` : '', i.whyPersisted !== undefined ? `why it persists to “${clip(i.whyPersisted, 80)}”` : '', i.evidence !== undefined ? `the evidence to “${clip(i.evidence, 80)}”` : ''].filter(Boolean).join('; ')}. The old wording is kept for undo.`,
+  async run(ctx, input) {
+    if (input.cause === undefined && input.whyPersisted === undefined && input.evidence === undefined) return fail('nothing to change: pass the cause, whyPersisted or evidence.')
+    const gate = await causesGate(ctx); if (gate) return gate
+    const c = await causeByNumber(ctx, input.number); if (!c) return noCause(input.number)
+    const done = await updateCause(ctx.ideaId, c.id, { cause: input.cause, whyPersisted: input.whyPersisted, evidence: input.evidence })
+    if (!done) return noCause(input.number)
+    const back: Record<string, unknown> = { number: input.number }
+    if (input.cause !== undefined) back.cause = c.cause
+    if (input.whyPersisted !== undefined) back.whyPersisted = c.whyPersisted ?? ''
+    if (input.evidence !== undefined) back.evidence = c.evidence ?? ''
+    return { ok: true, data: { number: input.number, changed: Object.keys(back).filter((k) => k !== 'number') }, ui: [{ type: 'highlight_field', fieldKey: 'causes' }], undo: await undoToken(ctx, 'edit_cause', back, `Undo: put cause ${input.number}'s earlier wording back`) }
+  },
+}
+
+const retireCauseTool: ToolDefinition = {
+  name: 'retire_cause', category: 'change', tier: 'ask',
+  description: 'Remove a cause from the Diagnosis, as the cause\'s "Remove" does: it is ARCHIVED, never deleted — with every cause beneath it — and its number is never reused. If it was the chosen root cause, the root cause is cleared. Undo brings it back. Asks the user to confirm first.',
+  schema: z.object({ number: z.number().int() }),
+  describe: ({ number }) => `Remove cause ${number}, and any causes beneath it. They are archived with their numbers, which are never reused, and can be brought back.`,
+  async run(ctx, { number }) {
+    const gate = await causesGate(ctx); if (gate) return gate
+    const c = await causeByNumber(ctx, number); if (!c) return noCause(number)
+    const n = await removeCause(ctx.ideaId, c.id)
+    if (!n) return noCause(number)
+    return { ok: true, data: { number, archived: n, say: n > 1 ? `Removed cause ${number} and the ${n - 1} beneath it; they are archived, with their numbers.` : `Removed cause ${number}; it is archived, with its number.` }, ui: [{ type: 'highlight_field', fieldKey: 'causes' }], undo: await undoToken(ctx, 'restore_cause', { number }, `Undo: bring cause ${number} back`) }
+  },
+}
+
+/** The undo for retire_cause. Not offered to the model (an inverse, like restore_source): it runs from the undo button. */
+const restoreCauseTool: ToolDefinition = {
+  name: 'restore_cause', category: 'change', tier: 'ask',
+  description: 'Bring a removed cause back, with the causes removed with it. Asks the user to confirm first.',
+  schema: z.object({ number: z.number().int() }),
+  describe: ({ number }) => `Bring cause ${number} back to the Diagnosis.`,
+  async run(ctx, { number }) {
+    const gate = await causesGate(ctx); if (gate) return gate
+    const c = await prisma.diagnosisCause.findFirst({ where: { ideaId: ctx.ideaId, number, archivedAt: { not: null } }, select: { id: true } })
+    if (!c) return fail(`cause ${number} is not a removed cause on this idea.`)
+    const n = await restoreCause(ctx.ideaId, c.id)
+    return { ok: true, data: { number, restored: n }, ui: [{ type: 'highlight_field', fieldKey: 'causes' }], undo: await undoToken(ctx, 'retire_cause', { number }, `Undo: remove cause ${number} again`) }
+  },
+}
+
+export const CAUSE_TOOLS: ToolDefinition[] = [addCauseTool, editCauseTool, retireCauseTool]
+
 /** 26-W-b — the inventory's remaining rows (lib/lex/field-guide.ts names each of these against its control). */
 export const INVENTORY_TOOLS: ToolDefinition[] = [
   explainFieldTool, listFieldsTool,
@@ -2641,6 +2736,8 @@ export const MODEL_TOOLS: ToolDefinition[] = [
   ...DOCUMENT_TOOLS, ...INVENTORY_TOOLS,
   // 26-Y — benefit lines, a cost line's appraisal, the cost–benefit analysis, the appraisal period
   ...CBA_TOOLS,
+  // 26-AA — the Diagnosis's causes
+  ...CAUSE_TOOLS,
   readField, listCandidates, listActionsTool, listSources, readSource, listChallenges, readReplyTool, searchConversationTool, listNotes,
   searchCorpus, searchWeb, searchMyDocuments, statuteEffects, statuteOnward, readSectionTool,
   fileUrl, fileText,
@@ -2658,7 +2755,7 @@ export const MODEL_TOOLS: ToolDefinition[] = [
   addResearchNoteTool, listNotebookTool, extractQuotesTool, suggestTagsTool, updateNoteTool, findSimilarTool, findDisagreementsTool, whatHaveIReadOnTool, summariseSourceTool,
 ]
 
-const INVERSES: ToolDefinition[] = [unmergeCandidates, undoSortCandidate, restoreProposal, restoreSource, unmergeActionsTool,
+const INVERSES: ToolDefinition[] = [unmergeCandidates, undoSortCandidate, restoreProposal, restoreSource, unmergeActionsTool, restoreCauseTool,
   // 26-W-b: a delete, so not offered to the model (see INVENTORY_TOOLS)
   removeCostLineTool]
 

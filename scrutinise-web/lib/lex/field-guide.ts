@@ -17,7 +17,7 @@ import {
   PROVISION_COLUMNS, PRECEDENT_COLUMNS, STATEMENT_LABEL, COMMENTARY_LABEL, FACET_WORD, WORKSPACE_UI, WORKSPACE_VIEW_WORD, NOTEBOOK_UI, shown,
   LIFECYCLE_STAGE_WORD, LIFECYCLE_UI, PROGRESS_WORD, CHECKLIST_WORD, PAGE_UI, DRAFTING_FILTER_WORD, DEEPENING_LOCK_UI,
   ORGANISING_TOOLBAR_UI, ADD_ACTION_UI, BRIEF_UI, BRIEF_FIELD_WORD, TONE_WORD, DEEPENING_UI, DRAFTS_UI, CBA_UI,
-  PANEL_WORD, PANEL_PLACE_WORD, WHERE_SENTENCES, WHERE_UI, DRAFT_RESTORE_UI, STAGEBAR_ROW_WORD,
+  PANEL_WORD, PANEL_PLACE_WORD, WHERE_SENTENCES, WHERE_UI, DRAFT_RESTORE_UI, STAGEBAR_ROW_WORD, CAUSE_UI,
 } from './screen-labels'
 import { EXTENTS } from './action-draft-pure'
 import { RECORD_SECTIONS, type RecordSection } from './record-layout-pure'
@@ -561,6 +561,16 @@ const BRIEF_FIELD_G: Record<keyof typeof BRIEF_FIELD_WORD, GuideText> = {
 }
 const TONE_G: Record<keyof typeof TONE_WORD, GuideText> = Object.fromEntries((Object.keys(TONE_WORD) as Array<keyof typeof TONE_WORD>).map((t) => [t, { purpose: `"Tone and form": the draft reads as ${TONE_WORD[t]}.`, fits: 'One of the five choices in the Brief.', tool: 'propose_brief' }])) as Record<keyof typeof TONE_WORD, GuideText>
 
+// 26-AA item 2 — the Diagnosis's cause buttons, and the Lex tools that do the same through the same functions
+const CAUSE_G: Record<keyof typeof CAUSE_UI, GuideText> = {
+  add: { purpose: 'Adds the cause typed above it to the Diagnosis, with why it has persisted if given.', fits: 'It gets the next cause number, which never changes or comes back.', limits: 'The cause up to 2,000 characters; why up to 4,000.', tool: 'add_cause (asks first)' },
+  addAnother: { purpose: 'The same as "Add cause", once the causes have been confirmed.', fits: 'A cause thought of later still has somewhere to go.', limits: 'As "Add cause".', tool: 'add_cause (asks first)' },
+  edit: { purpose: 'Opens a cause to rewrite its statement, why it has persisted, and its evidence.', fits: 'Save keeps the cause\'s number; nothing else moves.', limits: 'As "Add cause"; the evidence up to 4,000.', tool: 'edit_cause (asks first)' },
+  addBeneath: { purpose: 'Adds a cause beneath this one: a deeper cause that drives it.', fits: 'Builds the chain the map draws. Not offered on the deepest level (four).', tool: 'add_cause with beneath (asks first)' },
+  addBeneathSubmit: { purpose: 'Adds the deeper cause typed beside it.', fits: 'As "+ cause beneath".', tool: 'add_cause with beneath (asks first)' },
+  remove: { purpose: 'Removes a cause, and the causes beneath it, from the Diagnosis.', fits: 'They are archived, not deleted: the number is kept and never reused. If it was the root cause, the root cause is cleared.', tool: 'retire_cause (asks first; undo brings it back)' },
+}
+
 // ── assembled ──────────────────────────────────────────────────────────────────────────────────────────────────
 const fromTable = <K extends string>(area: GuideArea, prefix: string, labels: Record<K, Lbl>, texts: Record<K, GuideText>): GuideEntry[] =>
   (Object.keys(texts) as K[]).map((k) => ({ key: `${prefix}.${k}`, area, label: shown(labels[k]), ...texts[k] }))
@@ -626,6 +636,8 @@ export function guideEntries(): GuideEntry[] {
     ...fromTable('common', 'draftRestore', DRAFT_RESTORE_UI, DRAFT_RESTORE_G),
     // 26-Y
     ...fromTable('record', 'cba', CBA_UI, CBA_G),
+    // 26-AA
+    ...fromTable('workspace', 'cause', CAUSE_UI, CAUSE_G),
   ]
 }
 
