@@ -15,15 +15,17 @@ import { resolveRefs } from '../lib/lex/source-registry'
 import { scratchCopy, deleteScratch } from './lib/scratch-copy'
 
 const SOURCE = '452c5ade'
-const CAP_PENCE = 150
-const N = 3
+/** argv[5]: saved drafts wanted per kind (default 3); argv[6]: the spend cap in pence (default 150, BRIEF_26AA item 4). Item 8 (decision 355)
+ *  re-measured the background note with n = 7 under a 40p cap. */
+const N = Number(process.argv[5] ?? 3)
+const CAP_PENCE = Number(process.argv[6] ?? 150)
 const out = process.argv[2] ?? null
 const ALL_KINDS: TemplateKind[] = ['SPECIFICATION', 'OPERATING_TEXT', 'BACKGROUND_NOTE']
 /** argv[3]: narrow to these kinds; argv[4]: action numbers to skip (already measured), e.g. "24,25,31". */
 const KINDS: TemplateKind[] = process.argv[3] ? (process.argv[3].split(',') as TemplateKind[]) : ALL_KINDS
 const SKIP = new Set((process.argv[4] ?? '').split(',').filter(Boolean).map(Number))
 /** A kind is tried on further actions until N drafts are SAVED (a draft the product's own guard refuses still spends; it is counted). */
-const MAX_TRIES = 6
+const MAX_TRIES = Math.max(6, N + 3)
 
 async function pickRuns(srcId: string): Promise<Array<{ n: number; kind: TemplateKind; why: string }>> {
   const acts = await prisma.lexCoherentAction.findMany({ where: { ideaId: srcId, status: 'LIVE' }, orderBy: { number: 'asc' }, select: { number: true, avenue: true, commentary: true, headingId: true } })

@@ -173,6 +173,31 @@ const PROPOSING = [
 const STATES_A_DUTY = /^(?:if [^,]{1,120},\s*)?(?:you|the [a-z ]{2,40}?|each [a-z ]{2,30}?|every [a-z ]{2,30}?|an? [a-z ]{2,30}?)\s+(?:must|shall|may not)\b/i
 export const isProposing = (para: string) => !STATES_A_DUTY.test(para.trim()) && PROPOSING.some((r) => r.test(para.trim()))
 
+// ══ 26-AA item 8 (decision 355) — A BACKGROUND NOTE REPORTS ITS SOURCES ══════════════════════════════════════════════════════
+//
+// ⚠ Diagnosed on 20 Nov (scripts/diagnose-26aa-bgnote.ts): 5 of 6 background notes were refused, and of the 23 paragraphs counted as
+// proposing NONE proposed anything in the note's own voice — every one REPORTED its source ("The Blueprint says the module should be
+// built into SCS induction [Ref: 213]"), QUOTED it, or restated the question or the gaps ("It does not say how the training should divide
+// work"). A background note's job is to say what its sources say, and a source that is itself a set of proposals is mostly "X should": the
+// more faithful the note, the likelier the refusal. The other kinds stay as strict as they are — a specification or code states, it never
+// reports — so this applies to the background note ONLY.
+// The rule: a SENTENCE does not count when it reports a source (a [Ref: n] in it, or a source as the subject of a reporting verb), and a
+// proposing word inside quotation marks is the source's, not the note's. First-person proposing ("we recommend", "it is proposed", "this
+// note recommends") always counts, cited or not. A paragraph proposes when one of its own-voice sentences does.
+const NOTE_FIRST_PERSON = /\b(?:we (?:recommend|propose|suggest|would|should|urge)|it is (?:proposed|recommended|suggested)|this (?:note|document) (?:recommends|proposes|suggests|urges))\b/i
+const NOTE_REF = /\[Ref:\s*\d+\]/
+const NOTE_SUBJECT = String.raw`(?:(?:the|this|that|its|each|both|neither|one|another|their) (?:supplied |quoted |cited )?(?:sources?|blueprint(?:'s|’s)?|report|review|paper|document|guidance|action details|material|section|summary|table|text|consultation|evidence)|it|they|the authors?)`
+const NOTE_VERB = String.raw`(?:says?|said|states?|stated|proposes?|proposed|argues?|argued|recommends?|recommended|suggests?|suggested|describes?|described|asks?(?: for)?|calls? for|sets? out|envisages?|warns?|is quoted as|are quoted as|quotes?|refers? to|presents?|lists?|does not (?:say|state|give|set out|settle|cover|name|specify|address|divide)|do not (?:say|state|give|set out|settle|cover|name|specify|address))`
+const NOTE_REPORTS = new RegExp(String.raw`\b${NOTE_SUBJECT}\b[^.;]{0,80}?\b${NOTE_VERB}\b|\baccording to\b|\bthis note sets out what\b`, 'i')
+const NOTE_QUOTED = /"[^"]*"|“[^”]*”|‘[^’]*’/g
+const noteSentences = (para: string) => para.split(/(?<=[.!?])\s+(?=[A-Z“"‘(\[])/)
+/** A background note's paragraph that proposes in its OWN voice (not a source's, reported or quoted). Pure. */
+export function isProposingInNote(para: string): boolean {
+  const p = para.trim()
+  if (NOTE_FIRST_PERSON.test(p)) return true
+  return noteSentences(p).some((s) => !NOTE_REF.test(s) && !NOTE_REPORTS.test(s) && isProposing(s.replace(NOTE_QUOTED, ' ')))
+}
+
 export interface ProposalShape { refused: boolean; paragraphs: number; proposing: number; duties?: number; dutiesWithMust?: number; example?: string; why?: string }
 const SHAPE_MIN_PARAGRAPHS = 3
 const SHAPE_MAX_PROPOSING = 0.4
@@ -200,7 +225,8 @@ export function bodyParagraphs(body: string): string[] {
 export function proposalShape(kind: DocumentKind, body: string, opts: { wholeDocument?: boolean } = {}): ProposalShape {
   const whole = opts.wholeDocument ?? true
   const paras = bodyParagraphs(body)
-  const proposing = paras.filter(isProposing)
+  // 26-AA item 8 — a background note reports its sources: their "should" is its content (isProposingInNote, above)
+  const proposing = paras.filter(kind === 'BACKGROUND_NOTE' ? isProposingInNote : isProposing)
   const shape: ProposalShape = { refused: false, paragraphs: paras.length, proposing: proposing.length }
   const word = KIND_WORD[kind]
   if (paras.length >= SHAPE_MIN_PARAGRAPHS && proposing.length / paras.length > SHAPE_MAX_PROPOSING) {
@@ -317,14 +343,18 @@ export const KIND_RUNS: Record<TemplateKind, Array<{ pence: number; seconds: num
     { pence: 1.09, seconds: 8, on: 'scratch copy of 452c5ade, 2026-11-20 (#25, organisational, with an Explanation, 26-W template)' },
     { pence: 0.80, seconds: 5.7, on: 'scratch copy of 452c5ade, 2026-11-20 (#26, organisational, with an Explanation, 26-W template)' },
   ],
-  // 26-AA item 4 — RE-MEASURED, 26-W template (as above). V2b's two (1.12, 1.05p) replaced. Mean 1.08p → 1.57p (n = 4, the saved drafts).
-  // ⚠ 3 of 7 attempts (#24, #25, #36) were REFUSED by the product's own guard ("reads as a list of proposals, not a background note") and
-  // not saved; they spent 1.2p, 1.2p and 3.5p. These figures are the saved drafts only, as for every kind; the refusals are reported.
+  // 26-AA item 8 (decision 355) — RE-MEASURED AFTER THE GUARD WAS FIXED (isProposingInNote): 7 of 7 attempts saved, none refused, the three
+  // that had been refused (#24, #25, #36) among them. Before the fix, 8 of 13 attempts that day were refused (62%). Item 4's four (1.37, 1.15,
+  // 1.04, 2.72p; mean 1.57p) are replaced, not averaged in: the old guard refused the long drafts (#36, 3p+), so the saved ones were biased
+  // short. With no refusals, the price per saved draft is the price per attempt. Mean 1.74p.
   BACKGROUND_NOTE: [
-    { pence: 1.37, seconds: 8.6, on: 'scratch copy of 452c5ade, 2026-11-20 (#31, two cited sources, 26-W template)' },
-    { pence: 1.15, seconds: 8, on: 'scratch copy of 452c5ade, 2026-11-20 (#35, one cited source, 26-W template)' },
-    { pence: 1.04, seconds: 7.6, on: 'scratch copy of 452c5ade, 2026-11-20 (#37, one cited source, 26-W template)' },
-    { pence: 2.72, seconds: 13.6, on: 'scratch copy of 452c5ade, 2026-11-20 (#38, one cited source, 26-W template)' },
+    { pence: 1.22, seconds: 9, on: 'scratch copy of 452c5ade, 2026-11-20 (#24, one cited source, 26-W template, fixed guard)' },
+    { pence: 1.13, seconds: 7.2, on: 'scratch copy of 452c5ade, 2026-11-20 (#25, one cited source, 26-W template, fixed guard)' },
+    { pence: 1.37, seconds: 9.1, on: 'scratch copy of 452c5ade, 2026-11-20 (#31, two cited sources, 26-W template, fixed guard)' },
+    { pence: 1.11, seconds: 7.5, on: 'scratch copy of 452c5ade, 2026-11-20 (#35, one cited source, 26-W template, fixed guard)' },
+    { pence: 3.38, seconds: 16.2, on: 'scratch copy of 452c5ade, 2026-11-20 (#36, one cited source, 26-W template, fixed guard)' },
+    { pence: 1.04, seconds: 7.8, on: 'scratch copy of 452c5ade, 2026-11-20 (#37, one cited source, 26-W template, fixed guard)' },
+    { pence: 2.90, seconds: 16, on: 'scratch copy of 452c5ade, 2026-11-20 (#38, one cited source, 26-W template, fixed guard)' },
   ],
 }
 const mean = (xs: Array<{ pence: number }>) => Math.round((xs.reduce((s, r) => s + r.pence, 0) / xs.length) * 10) / 10

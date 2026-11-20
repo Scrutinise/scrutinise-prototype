@@ -1,5 +1,38 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-20 13:41 UTC - LEX 26-AA item 8 (decision 355): background notes were refused for reporting their sources; the guard is fixed, 62% refused → 0 of 7
+
+Charlie's decision 355 (20 Nov 13:21): find and fix the cause of the refusals, and raise the price only if they remain.
+- **Diagnosis** (`scripts/diagnose-26aa-bgnote.ts`, new; 11.1p):
+  - #24, #25 and #36 were drafted twice each on a scratch copy, the raw draft kept, and judged by the product's own `proposalShape`.
+  - 5 of 6 were refused. Of the 23 paragraphs counted as "proposing", **none proposed in the note's own voice**.
+  - Each reported its source ("The Blueprint says the module should be built into SCS induction [Ref: 213]"), quoted it, or
+    restated the question or the gaps.
+  - The guard counts "should / proposes / suggests" anywhere. That is right for a specification or code, wrong for a note whose job
+    is to say what its sources say, when the source is itself a set of proposals.
+  - The template was doing its job and is not changed.
+- **The fix** (`isProposingInNote`, document-drafting-pure.ts), for the background note only:
+  - A sentence that reports a source doesn't count: a `[Ref: n]`, or a source as the subject of a reporting verb.
+  - A proposing word inside quotation marks is the source's, not the note's.
+  - First-person proposing ("we recommend", "it is proposed") always counts.
+  - Specification, code and operating text keep the old rule.
+- **Re-measured** (n=7, 12.15p): **7 of 7 saved, none refused**, including #24, #25 and #36. Before the fix that day: 8 of 13
+  attempts refused (62%).
+  - The price per saved draft is now the price per attempt: **1.74p** (was 1.57p from four saved drafts, biased short because the
+    long ones were refused).
+  - Step 4 (pricing in refusals) is not needed: none remain.
+  - #36's longest draft was read by hand: every "should" sits inside "The Blueprint says / proposes … [Ref: 213]".
+- **`check:lex-26aa`**: 66 ran, 66 passed, 11 controls.
+  - The 23 real refused paragraphs (`scripts/fixtures/bgnote-refused-paragraphs-26aa.json`, new): the old rule counts all of them
+    (control); the note's rule counts none; the same text as a specification is still refused.
+  - A **planted list of proposals in the note's own voice is still refused** (4 of 5).
+  - First-person proposing counts even when cited; a quoted "should" doesn't, and the same words unquoted do (control).
+  - The price is from n ≥ 5 fixed-guard runs.
+  - **Four mutations, all red:** the old rule back; first person not counted; every sentence treated as reported; quotations not set
+    aside.
+- **Regression:** 26w 66/66, 26v2b 47/47, 26v2c 44/44, 26x2 75/75. tsc is clean.
+- **Item 8 spent 23.25p** (11.10p diagnosis, 12.15p re-measure), against caps of 20p and 40p.
+
 ## 2026-11-20 13:28 UTC - LEX 26-AA item 7: check:lex-25g restated for the seven-stage bar (red 25/27 on Main → 27/27)
 
 CCh's GO of 20 Nov 07:40, new item 7. Its two assertions described the three-stage bar that 26-X replaced. Both are restated, not

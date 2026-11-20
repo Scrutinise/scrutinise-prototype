@@ -25,7 +25,7 @@ import { CAUSE_UI, TREE_UI, SOURCES_UI, ADD_RESEARCH_UI } from '../lib/lex/scree
 import { FACET_LABEL, SORT_LABEL } from '../lib/lex/source-list'
 import { STANCE_LABEL } from '../lib/lex/research-notebook-schema'
 import { planFor } from '../lib/lex/document-drafting'
-import { KIND_RUNS, kindPrice } from '../lib/lex/document-drafting-pure'
+import { KIND_RUNS, kindPrice, isProposing, isProposingInNote, proposalShape } from '../lib/lex/document-drafting-pure'
 
 const ROOT = join(__dirname, '..')
 /** Comments are stripped before a source is scanned, so a comment naming a literal cannot satisfy or fail a check. */
@@ -414,11 +414,35 @@ async function part5() {
   }
 }
 
+// ── item 8 (decision 355) — a background note reports its sources; the guard no longer refuses it for that ─────────────────────────
+function part8() {
+  section('8 · the background-note guard: a source reported or quoted is not a proposal; a real list of proposals still is')
+  // the 23 paragraphs the guard counted as proposing in 5 refused drafts (20 Nov, scripts/diagnose-26aa-bgnote.ts on #24, #25, #36)
+  const real = JSON.parse(readFileSync(join(ROOT, 'scripts/fixtures/bgnote-refused-paragraphs-26aa.json'), 'utf8')) as string[]
+  control(`the fixture is the problem: the old rule counts all ${real.length} as proposing`, real.length === 23 && real.every(isProposing))
+  const still = real.filter(isProposingInNote)
+  ok('…the background note\'s rule counts none of them: each reports, quotes or restates its source', still.length === 0, still.map((s) => s.slice(0, 90)).join(' | '))
+  const asBody = real.map((p, i) => `## Section ${i + 1}\n\n${p}`).join('\n\n')
+  ok('a background note made of those paragraphs is saved, not refused', !proposalShape('BACKGROUND_NOTE', asBody).refused)
+  ok('…while the SAME text as a specification is still refused (the other kinds stay strict)', proposalShape('SPECIFICATION', asBody).refused)
+  // planted: a real list of proposals in the note's own voice
+  const list = ['## What should happen', 'Departments should introduce a named owner for every project.', 'The Cabinet Office should publish a register of owners by 2027.', 'Ministers ought to require annual training for every senior official.', 'Each department could set its own targets for the register.', '## What the sources do not settle', 'The source gives no date for the register [Ref: 213].'].join('\n\n')
+  const shape = proposalShape('BACKGROUND_NOTE', list)
+  ok(`a planted list of proposals in the note's own voice is still refused (${shape.proposing} of ${shape.paragraphs} proposing)`, shape.refused, shape.why)
+  ok('first-person proposing counts even when it cites: "We recommend … [Ref: 213]"', isProposingInNote('We recommend that departments adopt the register [Ref: 213].'))
+  ok('a proposing word inside a quotation is the source\'s: \'The aim is: "Departments should adopt it."\' is not counted', !isProposingInNote('The aim is: "Departments should adopt it within a year."'))
+  control('…but the same words outside the quotation are', isProposingInNote('The aim is that departments should adopt it within a year.'))
+  ok('"The Blueprint says … should …" is reported, not proposed; "The Cabinet Office should own …" with no source is proposed', !isProposingInNote('The Blueprint says the Cabinet Office should own the standards.') && isProposingInNote('The Cabinet Office should own the standards.'))
+  const bg = KIND_RUNS.BACKGROUND_NOTE
+  ok(`the background note is priced from n = ${bg.length} drafts measured with the fixed guard (n ≥ 5), the three once refused among them`, bg.length >= 5 && bg.every((r) => /fixed guard/.test(r.on)) && [24, 25, 36].every((n) => bg.some((r) => r.on.includes(`#${n},`))))
+}
+
 async function main() {
   part2Static()
   part3Static()
   part4()
   part5Static()
+  part8()
   if (process.argv.includes('--pure')) { notRun += 4; console.log('  (A3, items 2, 3 and 5 on the database not run: --pure)') }
   else { await partA3(); await part2(); await part3(); await part5() }
   console.log(`\n${ran} ran · ${pass} passed · ${fail} failed · ${controls} controls (${dead} dead) · ${notRun} not run`)
