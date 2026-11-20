@@ -39,6 +39,7 @@ const FILES = [
   'lib/lex/build-config.ts',
   'lib/lex/build-client.ts',
   'lib/lex/stage-context.ts',
+  'lib/lex/screen-labels.ts', // 26-AA item 7: the bar's "You are here" is LIFECYCLE_UI's
   'lib/lex/new-idea-door.ts',
   'app/api/ideas/[id]/build/route.ts',
   'app/ideas/build/page.tsx',
@@ -288,36 +289,39 @@ const CHECKS: Check[] = [
     name: '§2 (as §25-K §1) each screen NAMES ITSELF as well as offering the others',
     run: (src) => {
       const s = src['components/lex/StageBar.tsx']
-      // The words, not a highlight — docs/CLAUDE.md §21, Charlie is colour blind and a
-      // "which one am I on" signalled by hue answers the question for everyone except him.
-      if (!/You are here/.test(s)) return 'the current stage is not named in words'
-      if (!/Stage \{here\.n\} of 3/.test(s)) return 'the screen does not say which stage of how many'
-      if (!/\{here\.purpose\}/.test(s)) return 'the stage is named without saying what it is for'
-      if (!/s\.detail/.test(s)) return 'the other stages are offered without saying what is on them'
+      // ⚠ 26-AA item 7 — RESTATED FOR THE SEVEN-STAGE BAR (26-X §2–§3, decisions 316–317). The property is the same: the screen says in
+      // WORDS where you are, among how many, what it is for, and what is on the others. Its form changed: "Stage {here.n} of 3" was
+      // replaced (§3c) by the whole lifecycle row — every stage shown, the current one marked "You are here" (a word, a filled disc and
+      // aria-current: never colour, docs/CLAUDE.md §21) — and each other stage carries its own line of state where it used `s.detail`.
+      // The words now come from LIFECYCLE_UI (screen-labels.ts), so the label is checked there and its use here.
+      if (!/LIFECYCLE_UI\.youAreHere/.test(s) || !/youAreHere: 'You are here'/.test(src['lib/lex/screen-labels.ts'])) return 'the current stage is not named in words'
+      if (!/context\.lifecycle\.map/.test(s) || !/aria-current/.test(s) || !/current \? '●' : '○'/.test(s)) return 'the screen does not show every stage with this one marked (the "of how many")'
+      if (!/\{screen\.purpose\}/.test(s) || !/context\.checklist/.test(s)) return 'the stage is named without saying what it is for (the checklist, or the screen\'s purpose)'
+      if (!/\{s\.state\}/.test(s)) return 'the other stages are offered without saying what is on them'
       return null
     },
     break: (src) => ({
       ...src,
       'components/lex/StageBar.tsx': src['components/lex/StageBar.tsx']
-        .split('You are here').join('x'),
+        .split('LIFECYCLE_UI.youAreHere').join("'x'"),
     }),
   },
   {
     name: '§2 (as §25-K §1) the detail is COUNTED, not a label',
     run: (src) => {
-      // ⚠ THE COUNTS MOVED to `stage-context.ts` when the vocabulary had to be made
-      // client-safe (a prisma import beside it put `pg` in the browser bundle). Same
-      // property, same expressions, new file.
+      // ⚠ 26-AA item 7 — RESTATED FOR THE SEVEN-STAGE BAR. The property is the same: a stage's line of state is counted from the data,
+      // never a fixed label. What is counted changed with the bar: the old Strategy stage's "N fields · N decisions waiting" (forks AND
+      // issues — counting only forks once told a user 4 when there were 21) went with that stage in 26-X; decisions now live on the
+      // Development checklist's own lines. Today Creation counts its runs (ideaBuild.count) and Development counts the idea's actions,
+      // drafted and accepted (developmentState). Still in `stage-context.ts`, which is client-safe.
       const s = src['lib/lex/stage-context.ts']
-      if (!/plural\(strategy\.fields, 'field'\)/.test(s)) return 'the strategy stage does not count its fields'
-      if (!/plural\(strategy\.waiting, 'decision'\)/.test(s)) return 'it does not count the decisions waiting'
-      // ⚠ Forks AND issues. Counting only forks told the second build's user there were 4
-      // when there were 21.
-      return /forks\.length \+ issues/.test(s) ? null : 'open issues are not counted as decisions waiting'
+      if (!/prisma\.ideaBuild\.count/.test(s) || !/plural\(runs, 'run'\)/.test(s)) return 'Creation does not count its runs'
+      if (!/plural\(dev\.counts\.total, 'action'\)/.test(s)) return 'Development does not count its actions'
+      return /\$\{dev\.counts\.drafted\} drafted/.test(s) && /\$\{dev\.counts\.accepted\} accepted/.test(s) ? null : 'Development does not count what is drafted and accepted'
     },
     break: (src) => ({
       ...src,
-      'lib/lex/stage-context.ts': src['lib/lex/stage-context.ts'].replace('forks.length + issues', 'forks.length'),
+      'lib/lex/stage-context.ts': src['lib/lex/stage-context.ts'].replace('${dev.counts.drafted} drafted', 'some drafted'),
     }),
   },
   {

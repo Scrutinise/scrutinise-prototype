@@ -1,5 +1,21 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-20 13:28 UTC - LEX 26-AA item 7: check:lex-25g restated for the seven-stage bar (red 25/27 on Main → 27/27)
+
+CCh's GO of 20 Nov 07:40, new item 7. Its two assertions described the three-stage bar that 26-X replaced. Both are restated, not
+retired: the property is the same, and the reason is written above each.
+- **"Each screen names itself"** keeps the same four questions: where am I, among how many, what is it for, and what is on the others.
+  - Old form: "Stage {here.n} of 3".
+  - New form: the whole lifecycle row, with the current stage marked "You are here" (`LIFECYCLE_UI.youAreHere`, a filled disc and
+    `aria-current`, never colour); the checklist or the screen's purpose; each other stage's own state line.
+- **"The detail is counted"**:
+  - Old: the Strategy stage's fields and decisions waiting, which went with that stage.
+  - New: Creation counts its runs, and Development counts its actions, drafted and accepted (`stage-context.ts`).
+- **`--self-test`**: both restated controls reject their corrupted source.
+  - ⚠ One other control, §3 A6 ("Exit asks before discarding"), fails in self-test on Main too. It predates this change and is
+    reported, not changed.
+- No other stream's files are touched.
+
 ## 2026-11-20 13:26 UTC - LEX 26-AA item 5: field-guide coverage for the Sources list and Add research, proved in a real browser
 
 BRIEF_26AA item 5. 26-W-b left SourceBrowser and AddResearch unchecked.
