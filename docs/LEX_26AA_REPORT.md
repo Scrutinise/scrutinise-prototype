@@ -15,6 +15,34 @@ Brief: `docs/BRIEF_26AA.md`. Worktree `C:\lex26aa`, branch `wip/26aa`, from Main
 
 About 16 hours in all.
 
+## State at 20 Nov 2026 13:57 UTC (session closing for a laptop reboot)
+
+| # | Item | State | Commit |
+|---|---|---|---|
+| A3 | legislation-link DELETE scoped to the idea (security) | **live** on Main (health: d3c19f91). The cross-idea 404 is Charlie's screen check (no signed-in session here) | d3c19f91 |
+| 2 | add_cause / edit_cause / retire_cause (+ restore_cause undo) | done | ab786cb8 |
+| 3 | draft_heading_needs | done | 9255020c |
+| 4 | prices re-measured: specification 1.55p, operating text 1.01p (n=3) | done | 384a9798 |
+| 5 | guide coverage, Sources list and Add research (41 labels, real browser) | done | caf497b2 |
+| 6 | scripts typecheck errors | done (reported to Ingest) | — |
+| 7 | check:lex-25g restated for the seven-stage bar | done | c2c8761e |
+| 8 | decision 355: background-note refusals, cause found in the guard; 62% → 0 of 7; 1.74p | done | 0114ba92 |
+| 1 | hard deletes → archive with restore | **not started**. Approved (Q1 yes; Q2: Central's two routes go to Central, IdeaGroup ungroup is in). Starts with the schema: whichdb, the SQL on Neon, schema + SQL in one commit | — |
+| 352 | "Chapters" → "Elements" (address letter C → E) | not started; GO given | — |
+| Z2 | offline reading (BRIEF_26Z §6.3–6.4) | GO given for after 26AA | — |
+
+- Items 2–8 are on `wip/26aa` and pushed as a backup branch. They are **not on Main**: pushing them is Charlie's call, after review.
+- `check:lex-26aa` runs 66 assertions, all passing, with 11 controls.
+- Every item had mutations, all red in the end; the runner is in the session scratchpad.
+- **Spend:** about 43.4p in all.
+  - Item 4: 19.8p.
+  - Item 8: 23.25p.
+  - Item 5's first check version: 0.34p, now fixed.
+- **Open findings, reported and not changed:**
+  - 25g's §3 A6 self-test control fails, on Main too.
+  - The three Ingest typecheck errors.
+- Full detail: the CHANGE_LOG entries, 20 Nov 12:01–13:41.
+
 ### Item 1 — the inventory (before changing anything, as §1 says)
 
 How it was made: every `.delete(`, `.deleteMany(` and `DELETE FROM` under `app/` and `lib/`, every `export async function DELETE` under

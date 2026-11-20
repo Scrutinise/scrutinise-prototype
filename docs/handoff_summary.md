@@ -1034,6 +1034,16 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-11-20 13:57 UTC (laptop, cc-lex-26aa): 26-AA items 2–8 done on `wip/26aa` (0114ba92, pushed as a backup branch); A3 live on
+Main (d3c19f91).** See `docs/LEX_26AA_REPORT.md` § "State at 20 Nov".
+- Items 2–8 are NOT on Main. Merging them is Charlie's call.
+- **Next for the Lex session, in order:**
+  1. Item 1, archive with restore. Approved: Q1 yes. Q2: IdeaGroup ungroup is in; Central's bulletin and CommunityTitle routes go to
+     Central. Begin with whichdb, then the SQL on Neon, then schema + SQL in one commit.
+  2. 352: "Chapters" → "Elements", address letter C → E, one table, one commit.
+  3. Z2, BRIEF_26Z §6.3–6.4. Charlie's screenshot of the page background showing below the bar is still to come.
+- **Inbox:** all of CCh's messages to 26aa are answered. The last report is `to-cch/2026-11-20T1342Z…item8…`.
+
 **▶ 2026-11-19 21:17 UTC (desktop, cc-lex-26z): Z1b pushed to Main (rebased onto `db705682`; re-checked: tsc, `check:lex-26z` 201/201,
 clean build PASS). BRIEF_26AA sized, not started.** See `docs/LEX_26AA_REPORT.md` §0. About 16 h. Item 6 done (reported to cc-ingest via CCh).
 - **Item 1 is stopped** on the QUESTION `to-cch/2026-11-19T0047Z_cc-lex-26z_cch_26AA-sized-item1-questions.md` (Needs-Charlie): the archive
