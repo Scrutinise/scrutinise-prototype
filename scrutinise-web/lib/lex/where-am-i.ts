@@ -17,6 +17,9 @@ export const PANEL_PLACE: Record<PanelN, PanelPlace> = { 1: 'top', 2: 'left', 3:
 
 export const isPanel = (n: unknown): n is PanelN => typeof n === 'number' && Number.isInteger(n) && n >= 1 && n <= 7
 
+/** 352 — the letter of Development's parts in the address ("E5"). On screen they are elements; in the code, chapters. */
+export const ELEMENT_LETTER = 'E'
+
 /** The chapters of Development, in the checklist's order (lib/lex/development.ts `ChecklistKey`). */
 export const CHAPTER_KEYS = ['problem', 'causes', 'policy', 'organising', 'drafting', 'deepening', 'promotion'] as const
 export type ChapterKey = (typeof CHAPTER_KEYS)[number]
@@ -76,25 +79,25 @@ export function panelName(n: PanelN, u: UrlState): string {
   return c ? CHECKLIST_WORD[c] : PANEL_WORD[6]
 }
 
-/** §2d — "S2 · C5 · P6". The chapter is left out when none is open ("S2 · P2"). */
+/** §2d — "S2 · E5 · P6" (352: the element's letter is E; it was C). The element is left out when none is open ("S2 · P2"). */
 export function address(u: UrlState, panel: PanelN = panelOf(u)): string {
   const c = chapterOf(u)
-  return [`S${stageNumberOf(u)}`, c ? `C${chapterNumber(c)}` : null, `P${panel}`].filter(Boolean).join(' · ')
+  return [`S${stageNumberOf(u)}`, c ? `${ELEMENT_LETTER}${chapterNumber(c)}` : null, `P${panel}`].filter(Boolean).join(' · ')
 }
 
 /** Z1b item 3 — the address one line per level, as the address panel lists it:
- *    S2: Stage 2 Development · C4: Chapter 4 Organising the actions · P6: Organising the actions
+ *    S2: Stage 2 Development · E4: Element 4 Organising the actions · P6: Organising the actions
  *  The chapter line is left out when no chapter is open, as in the address itself. */
 export function addressLines(u: UrlState, panel: PanelN = panelOf(u)): Array<{ code: string; text: string }> {
   const s = stageNumberOf(u)
   const c = chapterOf(u)
   const out = [{ code: `S${s}`, text: `${WHERE_UI.stage} ${s} ${s === 1 ? LIFECYCLE_STAGE_WORD.creation : LIFECYCLE_STAGE_WORD.development}` }]
-  if (c) out.push({ code: `C${chapterNumber(c)}`, text: `${WHERE_UI.chapter} ${chapterNumber(c)} ${CHECKLIST_WORD[c]}` })
+  if (c) out.push({ code: `${ELEMENT_LETTER}${chapterNumber(c)}`, text: `${WHERE_UI.chapter} ${chapterNumber(c)} ${CHECKLIST_WORD[c]}` })
   out.push({ code: `P${panel}`, text: panelName(panel, u) })
   return out
 }
 
-/** 344 — the address spelled out on one line, for its spoken name and hover title: "Stage 2 Development · Chapter 5 Drafting · Panel 6 #38". */
+/** 344 — the address spelled out on one line, for its spoken name and hover title: "Stage 2 Development · Element 5 Drafting · Panel 6 #38". */
 export function addressSpelled(u: UrlState, panel: PanelN = panelOf(u)): string {
   const s = stageNumberOf(u)
   const c = chapterOf(u)

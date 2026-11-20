@@ -14,6 +14,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { ARCHIVE_UI } from '@/lib/lex/screen-labels'
 
 /** 25-L §2 — something we were given and could not read. */
 interface RejectedRow {
@@ -178,6 +179,8 @@ export default function YourMaterial({
 }) {
   const [rows, setRows] = useState<MaterialRow[]>([])
   const [rejected, setRejected] = useState<RejectedRow[]>([])
+  /** 26-AA item 1 — sources the user removed (archived with their findings), restorable here. */
+  const [removed, setRemoved] = useState<Array<{ id: string; label: string; archivedAt: string }>>([])
   const [remaining, setRemaining] = useState<number>(0)
   const [maxBytes, setMaxBytes] = useState<number>(0)
   const [busy, setBusy] = useState(false)
@@ -210,6 +213,7 @@ export default function YourMaterial({
     setRemaining(body.remaining ?? 0)
     setMaxBytes(body.maxBytes ?? 0)
     setRejected(body.rejected ?? [])
+    setRemoved(body.removed ?? [])
     countRef.current?.((body.material ?? []).length)
   }, [ideaId])
 
@@ -228,6 +232,7 @@ export default function YourMaterial({
     setRows(body.material ?? [])
     setRemaining(body.remaining ?? 0)
     setRejected(body.rejected ?? [])
+    setRemoved(body.removed ?? [])
     countRef.current?.((body.material ?? []).length)
     // Truncation and "nothing useful" are both reported, because both are things the user
     // would otherwise assume did not happen.
@@ -273,9 +278,31 @@ export default function YourMaterial({
         const body = await res.json()
         setRows(body.material ?? [])
         setRemaining(body.remaining ?? 0)
+        setRemoved(body.removed ?? [])
         countRef.current?.((body.material ?? []).length)
         onChanged?.()
       }
+    } finally { setBusy(false) }
+  }, [ideaId, onChanged])
+
+  /** 26-AA item 1 — bring a removed source back, with its findings. The answer says what came back, in words. */
+  const restore = useCallback(async (id: string) => {
+    setBusy(true); setError(null); setNote(null)
+    try {
+      const res = await fetch(`/api/ideas/${ideaId}/material`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ restore: id }),
+      })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) { setError(typeof body?.error === 'string' ? body.error : 'That source could not be restored.'); return }
+      setRows(body.material ?? [])
+      setRemaining(body.remaining ?? 0)
+      setRemoved(body.removed ?? [])
+      countRef.current?.((body.material ?? []).length)
+      const n = body.findingsRestored ?? 0
+      setNote(body.reread
+        ? 'Restored. Its findings were deleted when it was removed (before removals were kept), so Lex has read it again.'
+        : n > 0 ? `Restored, with its ${n} finding${n === 1 ? '' : 's'}.` : 'Restored.')
+      onChanged?.()
     } finally { setBusy(false) }
   }, [ideaId, onChanged])
 
@@ -316,13 +343,29 @@ export default function YourMaterial({
                   Open
                 </button>
               )}
-              <button onClick={() => void remove(r.id)} disabled={busy}
+              <button onClick={() => void remove(r.id)} disabled={busy} data-remove-source
                 className="text-[11px] text-zinc-400 hover:text-red-600 disabled:opacity-40 shrink-0">
-                Remove
+                {ARCHIVE_UI.remove}
               </button>
             </div>
           ))}
         </div>
+      )}
+
+      {/* 26-AA item 1 (183/196) — a removed source is kept with its findings, and comes back with Restore. */}
+      {removed.length > 0 && (
+        <details data-removed-sources>
+          <summary className="cursor-pointer text-[11px] text-zinc-600">{ARCHIVE_UI.removed} ({removed.length})</summary>
+          <ul className="mt-1 space-y-1">
+            {removed.map((r) => (
+              <li key={r.id} className="flex items-start gap-2 text-[11px] text-zinc-600">
+                <span className="flex-1 min-w-0 break-words">{r.label}</span>
+                <button type="button" onClick={() => void restore(r.id)} disabled={busy} data-restore-source
+                  className="shrink-0 underline disabled:opacity-40">{ARCHIVE_UI.restore}</button>
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
 
       {/* ══ 25-L §2 — WHAT WE COULD NOT READ ═══════════════════════════════════

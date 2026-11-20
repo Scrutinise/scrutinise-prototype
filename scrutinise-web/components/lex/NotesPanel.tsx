@@ -28,6 +28,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { ARCHIVE_UI } from '@/lib/lex/screen-labels'
 
 interface Note {
   id: string
@@ -41,11 +42,20 @@ interface Note {
   updatedAt: string
 }
 
+/** 26-AA item 1 — a note the user removed: archived, still private, restorable. */
+interface RemovedNote { id: string; title: string; body: string; archivedAt: string }
+
 /** How long after the last keystroke a note is written. */
 const SAVE_AFTER_MS = 700
 
 export default function NotesPanel({ ideaId }: { ideaId: string }) {
   const [notes, setNotes] = useState<Note[] | null>(null)
+  const [removed, setRemoved] = useState<RemovedNote[]>([])
+  /** Every list the server sends carries both halves: the notes, and the removed ones. */
+  const take = useCallback((body: { notes?: Note[]; removed?: RemovedNote[] }) => {
+    setNotes(body.notes ?? [])
+    setRemoved(body.removed ?? [])
+  }, [])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [dragId, setDragId] = useState<string | null>(null)
@@ -55,14 +65,13 @@ export default function NotesPanel({ ideaId }: { ideaId: string }) {
     try {
       const res = await fetch(`/api/ideas/${ideaId}/notes`)
       if (!res.ok) return
-      const body = await res.json()
-      setNotes(body.notes ?? [])
+      take(await res.json())
     } catch {
       // A notebook that cannot load says so rather than rendering as empty — an empty
       // notebook and an unreachable one look identical, and one of them is alarming.
       setError('Your notes could not be loaded just now. Nothing has been lost — try again.')
     }
-  }, [ideaId])
+  }, [ideaId, take])
 
   useEffect(() => { void load() }, [load])
 
@@ -84,11 +93,11 @@ export default function NotesPanel({ ideaId }: { ideaId: string }) {
       // keystroke-debounced body save would yank the cursor out of the textarea the user is
       // still typing in.
       const body = await res.json()
-      if (payload.order || payload.hidden !== undefined || payload.heading !== undefined) {
-        setNotes(body.notes ?? [])
+      if (payload.order || payload.hidden !== undefined || payload.heading !== undefined || payload.restore) {
+        take(body)
       }
     } catch { setError('That note could not be saved.') }
-  }, [ideaId])
+  }, [ideaId, take])
 
   /** Edit locally now, write in a moment. See the header. */
   const edit = useCallback((id: string, field: 'title' | 'body' | 'heading', value: string) => {
@@ -106,17 +115,24 @@ export default function NotesPanel({ ideaId }: { ideaId: string }) {
         body: JSON.stringify({ heading }),
       })
       if (!res.ok) { setError('That note could not be added.'); return }
-      setNotes((await res.json()).notes ?? [])
+      take(await res.json())
     } finally { setBusy(false) }
-  }, [ideaId])
+  }, [ideaId, take])
 
   const remove = useCallback(async (id: string) => {
     setBusy(true); setError(null)
     try {
+      // 26-AA item 1 — archived, not deleted: it moves to "Removed", below, and can be restored from there.
       const res = await fetch(`/api/ideas/${ideaId}/notes?noteId=${encodeURIComponent(id)}`, { method: 'DELETE' })
-      if (res.ok) setNotes((await res.json()).notes ?? [])
+      if (res.ok) take(await res.json())
+      else setError('That note could not be removed.')
     } finally { setBusy(false) }
-  }, [ideaId])
+  }, [ideaId, take])
+
+  const restore = useCallback(async (id: string) => {
+    setBusy(true)
+    try { await patch({ noteId: id, restore: true }) } finally { setBusy(false) }
+  }, [patch])
 
   /**
    * Move `id` to sit where `targetId` is — by drag, or by the ↑/↓ buttons.
@@ -263,18 +279,18 @@ export default function NotesPanel({ ideaId }: { ideaId: string }) {
                     <button onClick={() => nudge(n.id, 1)} aria-label="Move down"
                       className="text-[11px] text-zinc-400 hover:text-zinc-700 px-1">↓</button>
                     <span className="flex-1" />
-                    {/* ⚠ THE SEEDED NOTE CAN BE DELETED LIKE ANY OTHER, and it says what it is.
-                        It is a COPY of the idea's summary (see the route) — deleting it does not
+                    {/* ⚠ THE SEEDED NOTE CAN BE REMOVED LIKE ANY OTHER, and it says what it is.
+                        It is a COPY of the idea's summary (see the route) — removing it does not
                         touch the idea, and a user who has rewritten it should not be stuck with
-                        the original underneath. */}
+                        the original underneath. 26-AA item 1: removed is archived, and restorable. */}
                     {n.seeded && (
                       <span className="text-[10px] text-zinc-400">
                         copied from your idea — editing this note does not change the idea
                       </span>
                     )}
-                    <button onClick={() => void remove(n.id)} disabled={busy}
+                    <button onClick={() => void remove(n.id)} disabled={busy} data-remove-note
                       className="text-[11px] text-zinc-400 hover:text-red-600 disabled:opacity-40">
-                      Delete
+                      {ARCHIVE_UI.remove}
                     </button>
                   </div>
                 </>
@@ -283,6 +299,22 @@ export default function NotesPanel({ ideaId }: { ideaId: string }) {
           ))}
         </div>
       ))}
+
+      {/* 26-AA item 1 (183/196) — removed notes are kept, private as ever, and come back with Restore. */}
+      {removed.length > 0 && (
+        <details className="pt-1" data-removed-notes>
+          <summary className="cursor-pointer text-[11px] text-zinc-600">{ARCHIVE_UI.removed} ({removed.length})</summary>
+          <ul className="mt-1 space-y-1">
+            {removed.map((r) => (
+              <li key={r.id} className="flex items-start gap-2 text-[11px] text-zinc-600">
+                <span className="flex-1 min-w-0 break-words">{r.title || r.body || 'Untitled note'}</span>
+                <button type="button" onClick={() => void restore(r.id)} disabled={busy} data-restore-note
+                  className="shrink-0 underline disabled:opacity-40">{ARCHIVE_UI.restore}</button>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
     </div>
   )
 }

@@ -15,7 +15,7 @@
 // has exactly one implementation.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { prisma } from '@/lib/prisma'
+import { prisma, INCLUDING_ARCHIVED } from '@/lib/prisma'
 import { setLoopProposal, nextActionOrderIndex } from '@/lib/lex/field-machine'
 import {
   pairPolicies, nextNumber, universalCauses, nearDuplicatePairs,
@@ -220,8 +220,9 @@ async function syncCausesField(ideaId: string): Promise<void> {
 
 /** Assign stable numbers to any row that has none, oldest first. §1.1. */
 export async function ensureNumbered(ideaId: string): Promise<void> {
+  // ⚠ 26-AA item 1 — archived rows included, so numbering never hands out a removed policy's number.
   const rows = await prisma.policyOption.findMany({
-    where: { ideaId },
+    where: { ideaId, ...INCLUDING_ARCHIVED },
     orderBy: { createdAt: 'asc' },
     select: { id: true, number: true },
   })
@@ -803,7 +804,7 @@ export async function applyPolicyOp(input: {
     case 'add': {
       const approach = (text || '').trim()
       if (!approach) break
-      const all = await prisma.policyOption.findMany({ where: { ideaId: id }, select: { number: true } })
+      const all = await prisma.policyOption.findMany({ where: { ideaId: id, ...INCLUDING_ARCHIVED }, select: { number: true } })
       const number = nextNumber(all)
       compoundTest = testIsCompound(approach)
       // ⚠⚠ 26-L §3c/§6a — THE FLAG SURVIVES A RELOAD, ON THE CARD, AND IT NEVER BLOCKS.
@@ -931,7 +932,7 @@ export async function writeMerge(input: {
   const B = rows.find((r) => r.number === nb)
   if (!A || !B) return null
 
-  const all = await prisma.policyOption.findMany({ where: { ideaId: id }, select: { number: true } })
+  const all = await prisma.policyOption.findMany({ where: { ideaId: id, ...INCLUDING_ARCHIVED }, select: { number: true } })
   const createdNumber = nextNumber(all)
   const created = await prisma.policyOption.create({
     data: {

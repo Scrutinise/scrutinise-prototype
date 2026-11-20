@@ -49,9 +49,9 @@ import { webSearch } from '@/lib/lex/orientation/web-search'
 import { markPublicSources } from '@/lib/lex/public-sources'
 import { fileUrlsFromChat } from '@/lib/lex/chat-material'
 import {
-  MAX_MATERIALS_PER_IDEA, MAX_TEXT_CHARS, normalise, runMaterialFindings,
+  MAX_MATERIALS_PER_IDEA, MAX_TEXT_CHARS, normalise, runMaterialFindings, restoreSource as restoreMaterialSource,
 } from '@/lib/lex/user-material'
-import { USER_MATERIAL_PASS_PREFIX } from '@/lib/lex/heading-map'
+import { archiveSourceFindings } from '@/lib/lex/archive'
 import { DRAFTABLE_FIELDS, requestedDraftField } from '@/lib/lex/lex-draft'
 import { validateFieldValue } from '@/lib/lex/proposal-schema'
 import {
@@ -981,15 +981,15 @@ const reopenFieldTool: ToolDefinition = {
 
 const archiveSource: ToolDefinition = {
   name: 'archive_source', category: 'change', tier: 'ask',
-  description: 'Archive a filed source: it leaves the lists and its findings are withdrawn. It is kept and can be restored. Asks the user to confirm first.',
+  description: 'Archive a filed source: it leaves the lists and its findings go with it. Both are kept and come back together on restore. Asks the user to confirm first.',
   schema: z.object({ sourceId: z.string() }),
   describe: ({ sourceId }) => `Archive the filed source ${sourceId}. It is kept and can be restored.`,
   async run(ctx, { sourceId }) {
     const m = resolvePrefix(await materials(ctx), sourceId)
     if (!m) return fail(`no filed source on this idea matches "${sourceId}".`)
-    // Same transaction the material route's DELETE runs: findings go with it, the row is kept.
+    // Same transaction the material route's DELETE runs. ⚠ 26-AA item 1: the findings are ARCHIVED with it (they were deleted until then).
     await prisma.$transaction([
-      prisma.evidenceItem.deleteMany({ where: { ideaId: ctx.ideaId, passKey: `${USER_MATERIAL_PASS_PREFIX}${m.id}` } }),
+      archiveSourceFindings(ctx.ideaId, m.id, ctx.userId ?? null),
       prisma.ideaUserMaterial.update({ where: { id: m.id }, data: { archivedAt: new Date() } }),
     ])
     return { ok: true, data: { archived: short(m.id), label: m.label }, undo: await undoToken(ctx, 'restore_source', { sourceId: m.id }, `Undo: restore “${clip(m.label, 40)}”`) }
@@ -998,14 +998,13 @@ const archiveSource: ToolDefinition = {
 
 const restoreSource: ToolDefinition = {
   name: 'restore_source', category: 'change', tier: 'ask',
-  description: 'Restore an archived source and re-read it into findings.',
+  description: 'Restore an archived source, with the findings that went with it (each as it was). Only a source archived before 26-AA, whose findings were deleted then, is read again.',
   schema: z.object({ sourceId: z.string() }),
   async run(ctx, { sourceId }) {
-    const m = await prisma.ideaUserMaterial.findFirst({ where: { id: sourceId, ideaId: ctx.ideaId, archivedAt: { not: null } }, select: { id: true } })
-    if (!m) return fail('that source is not archived on this idea.')
-    await prisma.ideaUserMaterial.update({ where: { id: m.id }, data: { archivedAt: null } })
-    const f = await runMaterialFindings(m.id)
-    return { ok: true, data: { restored: short(m.id), findings: f.written } }
+    // ⚠ 26-AA item 1 — the screen's Restore and this tool are one function (user-material.ts restoreSource).
+    const r = await restoreMaterialSource(ctx.ideaId, sourceId)
+    if ('error' in r) return fail(r.status === 404 ? 'that source is not archived on this idea.' : r.error)
+    return { ok: true, data: { restored: short(sourceId), findingsRestored: r.findingsRestored, reread: r.reread, findings: r.reread ? r.reReadWritten : r.findingsRestored } }
   },
 }
 

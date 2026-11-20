@@ -6,7 +6,7 @@
 // canonical column (Idea/User) per the §3.4 write-ownership table.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { prisma } from '@/lib/prisma'
+import { prisma, INCLUDING_ARCHIVED } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { isDerivedPageOneField } from './page-one'
 import {
@@ -27,6 +27,7 @@ import { stripNullBytes } from './json-safe'
 import { nextNumber } from './guiding-policy'
 import { parseRecord } from './action-record'
 import { LIMITS } from './input-limits'
+import { ARCHIVE_CLEARED, ARCHIVE_REASON, ARCHIVED, archiveStamp } from './archive'
 
 // Prisma enum values mirror our string union.
 type DbStatus = 'EMPTY' | 'AWAITING_CONFIRMATION' | 'ACCEPTED' | 'SKIPPED'
@@ -948,8 +949,9 @@ export async function listPolicyOptions(ideaId: string) {
  * are numbered on first read. It is a backfill now rather than the only assignment.
  */
 async function nextNumberFor(ideaId: string): Promise<number> {
+  // ⚠ 26-AA item 1 — ARCHIVED ROWS INCLUDED: a removed policy keeps its number, so the next one is one past the highest EVER.
   const rows = await prisma.policyOption.findMany({
-    where: { ideaId }, select: { number: true },
+    where: { ideaId, ...INCLUDING_ARCHIVED }, select: { number: true },
   })
   return nextNumber(rows)
 }
@@ -1015,15 +1017,39 @@ export async function updatePolicyOption(
   })
 }
 
-export async function removePolicyOption(ideaId: string, optionId: string) {
+/** ⚠ 26-AA item 1 (183/196) — "Remove (can be restored)". ARCHIVED, not deleted: the row keeps its number (taken for ever) and its status.
+ *  Returns false when there is no live option of that id on this idea. */
+export async function removePolicyOption(ideaId: string, optionId: string, byId: string | null = null): Promise<boolean> {
   const row = await prisma.policyOption.findFirst({ where: { id: optionId, ideaId }, select: { id: true, status: true } })
-  if (!row) return
-  await prisma.policyOption.delete({ where: { id: optionId } })
+  if (!row) return false
+  await prisma.policyOption.update({ where: { id: optionId }, data: archiveStamp(byId, ARCHIVE_REASON.REMOVED) })
   // If the chosen option was removed, reopen the chosenApproach field.
   if (row.status === 'CHOSEN') {
     await setStatus(ideaId, 'chosenApproach', 'EMPTY', { value: null, proposal: null })
     await prisma.idea.update({ where: { id: ideaId }, data: { chosenApproach: null } })
   }
+  return true
+}
+
+/** 26-AA item 1 — bring a removed option back, with its own number. ⚠ A removed CHOSEN option returns as a CANDIDATE: removing it reopened
+ *  the chosen approach, and choosing it again is the owner's act, not a side effect of a restore. Returns false if it is not archived here. */
+export async function restorePolicyOption(ideaId: string, optionId: string): Promise<boolean> {
+  const row = await prisma.policyOption.findFirst({ where: { id: optionId, ideaId, ...ARCHIVED }, select: { id: true, status: true } })
+  if (!row) return false
+  await prisma.policyOption.update({
+    where: { id: optionId },
+    data: { ...ARCHIVE_CLEARED, ...(row.status === 'CHOSEN' ? { status: 'CANDIDATE' as never } : {}) },
+  })
+  return true
+}
+
+/** 26-AA item 1 — the removed options, for the screen's "Removed" list. Number first: it is what the user reads and types. */
+export async function listRemovedPolicyOptions(ideaId: string) {
+  const rows = await prisma.policyOption.findMany({
+    where: { ideaId, archiveReason: ARCHIVE_REASON.REMOVED, ...ARCHIVED }, orderBy: { number: 'asc' },
+    select: { id: true, number: true, approach: true, archivedAt: true },
+  })
+  return rows.map((r) => ({ id: r.id, number: r.number, approach: r.approach, archivedAt: r.archivedAt!.toISOString() }))
 }
 
 /** Mark one option RULED_OUT with a reason (without committing to a chosen one). */

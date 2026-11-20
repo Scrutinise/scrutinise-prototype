@@ -2031,6 +2031,24 @@ Uniques: `(ideaId, n)`, `(ideaId, replyNo)`, `(ideaId, turnId, role)` — the la
 |---|---|---|---|---|
 | **Idea** | `deepenOverride` | JSON nullable | Decision 317: the owner's OVERRIDES of the Deepening's lock ("Deepen now" before every action is ready). `[{ reason, by, at, toGo }]`, appended, never edited. The last entry is the one in force. `toGo` = how many actions were still to go when it was made. `reason` is required, 3–600 characters (`LIMITS.deepenOverrideReason`). NULL = never overridden. Read and written by `lib/lex/development.ts` (`deepenOverridesOf`), set through `POST /api/ideas/[id]/development` `{ op: 'override', reason }` | `lex_26x_deepen_override.sql` |
 
+### 26-AA addition (20 Nov 2026) — the last hard deletes of user content become archive with restore. Written at Charlie's approval of item 1 (CCh-Lex, 20 Nov (3))
+
+*Additive: nullable columns, and one defaulted array. Applied by `prisma/lex_26aa_archive.sql` to Neon ep-old-dust-aboxi69a after `whichdb`, read back, and committed with `schema.prisma` in `937c4bd0`. Not indexed (the CLAUDE.md §21 register is unchanged). Decisions 183/196; cost lines stay deletable (decision 320).*
+
+On each of **PolicyOption**, **IdeaNote**, **CoherentActionSection**, **EvidenceItem** and **IdeaGroup**:
+
+| Field | Type | Notes |
+|---|---|---|
+| `archivedAt` | DateTime nullable | When it was removed. NULL = live. `lib/prisma.ts` hides archived rows from every direct read (`findMany`, `findFirst`, `count`, `aggregate`, `groupBy`, and `updateMany`, so a bulk write cannot change an archived row) unless the query names `archivedAt`; `INCLUDING_ARCHIVED` asks for every row. Nested reads carry `archivedAt: null` themselves |
+| `archivedById` | String nullable | The User.id who removed it. No foreign key, on purpose: the record outlives a deleted account |
+| `archiveReason` | String nullable | `REMOVED` (the owner, or Lex at the owner's word) · `SOURCE_ARCHIVED` (EvidenceItem only: archived with its filed source, and restored with it) · `UNGROUPED` (IdeaGroup only) |
+
+| Entity | Field | Type | Notes |
+|---|---|---|---|
+| **IdeaGroup** | `archivedIdeaIds` | String[], default `{}` | The ideas the group held when it was ungrouped, so a restore can put them back (one filed in another group since stays where it is) |
+
+A restore clears all three stamps. A row's own status is never changed by archiving, so an ACCEPTED finding comes back ACCEPTED. **PolicyOption.number is never reused**: every number writer reads archived rows. A removed CHOSEN policy comes back as a CANDIDATE (removing it reopened the chosen approach). The functions are in `lib/lex/archive.ts` and `lib/lex/field-machine.ts`.
+
 ***
 
 *entity_list_v5.md — Scrutinise — 13 April 2026* *v5.0 — V2 field additions: GuidingPolicy Rumelt fields (linkToDiagnosis, whatThisPolicyRulesOut, whyThisApproachNotOthers, conditionsForSuccess); CoherentAction benefit mirrors (benefitFinancial, benefitSocial, benefitOngoing, netCostOngoing, netCostOneOff); ResourcesCommitted human capital (humanCapitalCommitted, humanCapitalAnnualRequirement); TargetOrganisation type changed from String to TargetOrganisationType enum; Section 23 field labels added; Contents page added.* *CCh-only: never edited directly by CC without explicit Charlie instruction.*

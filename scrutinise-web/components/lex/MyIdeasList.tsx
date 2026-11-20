@@ -103,6 +103,7 @@ export function hrefFor(i: MyIdea): string {
 
 import { useCallback, useRef, useState } from 'react'
 import DeleteIdeaDialog from './DeleteIdeaDialog'
+import { ARCHIVE_UI } from '@/lib/lex/screen-labels'
 import { IDEA_SORT_LABEL, sortIdeasByMode, useIdeaSortMode, type IdeaSortMode } from '@/lib/idea-sort'
 
 /**
@@ -513,7 +514,7 @@ function GroupSection({
             ) : (
               <button onClick={onHide} disabled={busy} className="text-zinc-500 hover:text-zinc-800 underline">Hide</button>
             )}
-            {!group.hidden && <button onClick={onUngroup} disabled={busy} className="text-zinc-500 hover:text-zinc-800 underline">Ungroup</button>}
+            {!group.hidden && <button onClick={onUngroup} disabled={busy} data-ungroup className="text-zinc-500 hover:text-zinc-800 underline">{ARCHIVE_UI.ungroup}</button>}
           </div>
         )}
       </div>
@@ -526,10 +527,15 @@ function GroupSection({
   )
 }
 
+/** 26-AA item 1 — a group the owner ungrouped: archived, with how many ideas it held, restorable. */
+export type UngroupedGroup = { id: string; name: string; archivedAt: string; ideaCount: number }
+
 export default function MyIdeasList(
-  { ideas, deletedIdeas = [], hiddenEmpty }: { ideas: MyIdea[]; deletedIdeas?: MyIdea[]; hiddenEmpty: number },
+  { ideas, deletedIdeas = [], hiddenEmpty, ungroupedGroups = [] }: { ideas: MyIdea[]; deletedIdeas?: MyIdea[]; hiddenEmpty: number; ungroupedGroups?: UngroupedGroup[] },
 ) {
   const [rows, setRows] = useState(ideas)
+  const [ungrouped, setUngrouped] = useState(ungroupedGroups)
+  const [groupNote, setGroupNote] = useState<string | null>(null)
   // 26-C addendum §20 — a separate list, never mixed with `rows`: deleted ideas come
   // from their own query (page.tsx) and only ever move OUT of this list (on Restore).
   const [trash, setTrash] = useState(deletedIdeas)
@@ -742,7 +748,30 @@ export default function MyIdeasList(
       const res = await fetch(`/api/ideas/groups/${groupId}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ungroup: true }),
       })
-      if (res.ok) setRows((rs) => rs.map((r) => (r.group?.id === groupId ? { ...r, group: null } : r)))
+      if (res.ok) {
+        // 26-AA item 1 — the group is archived, not deleted: it joins the "Ungrouped" list below, restorable.
+        const body = await res.json().catch(() => ({}))
+        setRows((rs) => rs.map((r) => (r.group?.id === groupId ? { ...r, group: null } : r)))
+        if (body?.group) setUngrouped((u) => [{ id: body.group.id, name: body.group.name, ideaCount: body.group.ideaCount ?? 0, archivedAt: new Date().toISOString() }, ...u])
+      }
+    } finally { setGroupBusy(null) }
+  }, [])
+
+  /** 26-AA item 1 — put an ungrouped group back, with the ideas it held that are still undeleted and ungrouped. Says what came back. */
+  const restoreUngrouped = useCallback(async (groupId: string) => {
+    setGroupBusy(groupId); setGroupNote(null)
+    try {
+      const res = await fetch(`/api/ideas/groups/${groupId}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ restore: true }),
+      })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok || !body?.group) { setGroupNote(typeof body?.error === 'string' ? body.error : 'That group could not be restored.'); return }
+      const back = new Set<string>(body.returnedIdeaIds ?? [])
+      setRows((rs) => rs.map((r) => (back.has(r.ideaId) ? { ...r, group: body.group } : r)))
+      setUngrouped((u) => u.filter((g) => g.id !== groupId))
+      const left = body.leftWhereTheyAre ?? 0
+      setGroupNote(`“${body.group.name}” restored with ${back.size} idea${back.size === 1 ? '' : 's'}.`
+        + (left > 0 ? ` ${left} ${left === 1 ? 'was' : 'were'} filed elsewhere or deleted since, and ${left === 1 ? 'was' : 'were'} left where ${left === 1 ? 'it is' : 'they are'}.` : ''))
     } finally { setGroupBusy(null) }
   }, [])
 
@@ -923,6 +952,23 @@ export default function MyIdeasList(
           {shown.map((i) => renderRow(i))}
         </ul>
       )}
+
+      {/* 26-AA item 1 (183/196) — an ungrouped group is archived, not deleted, and comes back with Restore. */}
+      {view === 'active' && ungrouped.length > 0 && (
+        <details className="mt-2" data-ungrouped-groups>
+          <summary className="cursor-pointer text-[11px] text-zinc-600">{ARCHIVE_UI.ungrouped} ({ungrouped.length})</summary>
+          <ul className="mt-1 space-y-1">
+            {ungrouped.map((g) => (
+              <li key={g.id} className="flex items-start gap-2 text-[11px] text-zinc-600">
+                <span className="flex-1 min-w-0 break-words">{g.name} <span className="text-zinc-400">({g.ideaCount} idea{g.ideaCount === 1 ? '' : 's'})</span></span>
+                <button type="button" onClick={() => void restoreUngrouped(g.id)} disabled={groupBusy === g.id} data-restore-group
+                  className="shrink-0 underline disabled:opacity-40">{ARCHIVE_UI.restore}</button>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+      {groupNote && <p className="mt-1 text-[11px] text-zinc-600" data-group-note>{groupNote}</p>}
 
       {hiddenEmpty > 0 && (
         <p className="mt-2 text-[11px] text-zinc-500">

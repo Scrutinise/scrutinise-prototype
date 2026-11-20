@@ -20,6 +20,19 @@ const liveOnly = <A extends { where?: unknown }>(args: A): A => {
   return { ...args, where: { ...(where ?? {}), archivedAt: null } }
 }
 
+/** ⚠ Spread into a where that must see EVERY row, archived included: `{ ideaId, ...INCLUDING_ARCHIVED }`. It works because the key is
+ *  present (so `liveOnly` steps aside) and its value is undefined (so Prisma ignores it). Every number writer uses it, which is how a
+ *  removed policy's number stays taken. */
+export const INCLUDING_ARCHIVED = { archivedAt: undefined } as const
+
+/** 26-AA item 1 — the five models whose removal became an archive: PolicyOption, IdeaNote, CoherentActionSection, EvidenceItem, IdeaGroup.
+ *  ⚠ Writes by id (`update`, `delete`) and `findUnique` are not filtered: an id names exactly one row, and archiving is itself an `update`. */
+type LiveQuery = { args: { where?: unknown }; query: (args: never) => unknown }
+const live = ({ args, query }: LiveQuery) => query(liveOnly(args) as never) as never
+const HIDE_ARCHIVED = {
+  findMany: live, findFirst: live, findFirstOrThrow: live, count: live, aggregate: live, groupBy: live, updateMany: live,
+}
+
 function createPrismaClient() {
   const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
   const base = new PrismaClient({ adapter })
@@ -41,6 +54,14 @@ function createPrismaClient() {
         findFirst: ({ args, query }) => query(liveOnly(args)),
         count: ({ args, query }) => query(liveOnly(args)),
       },
+      // 26-AA item 1 (183/196) - the last hard deletes of user content are ARCHIVES. Same rule as causes, and `updateMany` too: a bulk write
+      // ("rule out every other policy", "supersede this source's proposed findings") must not reach an archived row, or a restore would not
+      // return it as it was. Restore names `archivedAt` in its own where, so it gets through.
+      policyOption: HIDE_ARCHIVED,
+      ideaNote: HIDE_ARCHIVED,
+      coherentActionSection: HIDE_ARCHIVED,
+      evidenceItem: HIDE_ARCHIVED,
+      ideaGroup: HIDE_ARCHIVED,
     },
   }) as unknown as PrismaClient
 }

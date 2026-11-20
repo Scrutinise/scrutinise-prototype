@@ -519,6 +519,9 @@ export interface CanonicalBenchmark {
   confidence: string | null
 }
 
+/** 26-AA item 1 — a candidate approach the user removed: archived, with its number, restorable. */
+export type RemovedPolicyOption = { id: string; number: number | null; approach: string; archivedAt: string }
+
 export interface CanonicalState {
   ideaId: string
   /** The current Lex page the user is on (ORIENTATION | DIAGNOSIS | …). */
@@ -549,6 +552,8 @@ export interface CanonicalState {
   resortUndoable: number
   /** 26-S2 §11a — causes the user removed. They are archived, not deleted: kept, with their numbers, out of every list. */
   archivedCauses: number
+  /** 26-AA item 1 — candidate approaches the user removed: archived with their numbers, listed under "Removed" with a Restore. */
+  removedPolicyOptions: RemovedPolicyOption[]
   /** §19-C Task 6 — cost lines across all of this idea's actions. */
   costLines: CanonicalCostLine[]
   /** Costing benchmarks available to the estimator (§18.3). */

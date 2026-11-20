@@ -35,19 +35,19 @@ const stripComments = (s: string) => s.replace(/\/\/.*$/gm, '').replace(/\/\*[\s
 function partA() {
   section('A · the pure rules')
   const d = W.parseUrlState('/ideas/create', '?ideaId=x&view=drafting&panel=6', '#38')
-  ok('the address of Drafting, panel 6, #38 is "S2 · C5 · P6"', W.address(d) === 'S2 · C5 · P6', W.address(d))
-  ok('…spelled out on one line (its spoken name): "Stage 2 Development · Chapter 5 Drafting · Panel 6 #38"', W.addressSpelled(d) === 'Stage 2 Development · Chapter 5 Drafting · Panel 6 #38', W.addressSpelled(d))
+  ok('the address of Drafting, panel 6, #38 is "S2 · E5 · P6"', W.address(d) === 'S2 · E5 · P6', W.address(d))
+  ok('…spelled out on one line (its spoken name): "Stage 2 Development · Element 5 Drafting · Panel 6 #38"', W.addressSpelled(d) === 'Stage 2 Development · Element 5 Drafting · Panel 6 #38', W.addressSpelled(d))
   const org = W.parseUrlState('/ideas/create', '?ideaId=x&view=organising&panel=6', '')
   const ls = W.addressLines(org).map((l) => `${l.code}: ${l.text}`)
-  ok('Z1b — the address panel\'s lines are CCh\'s: "S2: Stage 2 Development" / "C4: Chapter 4 Organising the actions" / "P6: Organising the actions"',
-    ls.join(' | ') === 'S2: Stage 2 Development | C4: Chapter 4 Organising the actions | P6: Organising the actions', ls.join(' | '))
+  ok('Z1b — the address panel\'s lines are CCh\'s: "S2: Stage 2 Development" / "E4: Element 4 Organising the actions" / "P6: Organising the actions"',
+    ls.join(' | ') === 'S2: Stage 2 Development | E4: Element 4 Organising the actions | P6: Organising the actions', ls.join(' | '))
   ok('Z1b — "Working on" is gone from every panel name and every line', ![W.addressSpelled(d), ...W.addressLines(d).map((l) => l.text), ...W.PANEL_NUMBERS.map((n) => W.panelName(n, d))].some((s) => /Working on/i.test(s)))
   ok('…with no chapter open the chapter line is left out, as in the address ("S2", "P2")', W.addressLines(W.parseUrlState('/ideas/create', '?ideaId=x', '')).map((l) => l.code).join() === 'S2,P2')
   const bare = W.parseUrlState('/ideas/create', '?ideaId=x', '')
   ok('a bare link opens panel 2 (To-do), and its address leaves the chapter out: "S2 · P2"', W.panelOf(bare) === 2 && W.address(bare) === 'S2 · P2', W.address(bare))
-  control('a bare link\'s address naming a chapter (must be FALSE)', /C\d/.test(W.address(bare)))
+  control('a bare link\'s address naming an element (must be FALSE)', /E\d/.test(W.address(bare)))
   ok('a named chapter with no panel opens panel 6', W.panelOf(W.parseUrlState('/ideas/create', '?ideaId=x&section=causes', '')) === 6)
-  ok('the Deepening is chapter 6: "S2 · C6 · P6"', W.address(W.parseUrlState('/ideas/create', '?ideaId=x&stage=deepening', '')) === 'S2 · C6 · P6')
+  ok('the Deepening is chapter 6: "S2 · E6 · P6"', W.address(W.parseUrlState('/ideas/create', '?ideaId=x&stage=deepening', '')) === 'S2 · E6 · P6')
   ok('a section on the Deepening screen is ignored (the URL names one chapter)', W.chapterOf(W.parseUrlState('/ideas/create', '?ideaId=x&stage=deepening&section=problem', '')) === 'deepening')
   ok('panel=9 is not a panel (falls back by the rule)', W.parseUrlState('/ideas/create', '?ideaId=x&panel=9', '').panel === null)
   ok('Creation is stage 1', W.stageNumberOf(W.parseUrlState('/ideas/build', '?ideaId=x', '')) === 1)
@@ -319,8 +319,8 @@ async function partC() {
       const { context, page, cdp } = await open(360, 740, `${IDEA_URL}&view=organising&panel=6`, { firstSight: true })
       ok('the first time, the address panel opens by itself (the address "spelled out the first time")', await page.locator('[data-address-panel]').count() === 1)
       const lines = await page.locator('[data-address-panel] ul > li').allInnerTexts()
-      ok('it lists the place one line per level, exactly: S2: Stage 2 Development / C4: Chapter 4 Organising the actions / P6: Organising the actions',
-        lines.map((l) => l.trim()).join(' | ') === 'S2: Stage 2 Development | C4: Chapter 4 Organising the actions | P6: Organising the actions', lines.join(' | '))
+      ok('it lists the place one line per level, exactly: S2: Stage 2 Development / E4: Element 4 Organising the actions / P6: Organising the actions',
+        lines.map((l) => l.trim()).join(' | ') === 'S2: Stage 2 Development | E4: Element 4 Organising the actions | P6: Organising the actions', lines.join(' | '))
       const tops = await page.locator('[data-address-panel] li').evaluateAll((ls) => ls.map((l) => Math.round(l.getBoundingClientRect().top)))
       ok('…as a bulleted list, one line under another (real line breaks, not a run-on string)', await page.locator('[data-address-panel] ul').evaluate((u) => getComputedStyle(u).listStyleType) === 'disc' && tops.length === 3 && tops[0] < tops[1] && tops[1] < tops[2], tops.join(','))
       ok('…with no "Working on"', !/Working on/i.test(await page.locator('[data-address-panel]').innerText()))
@@ -490,7 +490,7 @@ async function partC() {
       await touch(cdp, 'touchEnd')
       ok('drag: lifting on "5. Drafting" goes to Drafting, in panel 6', await nav && /panel=6/.test(page.url()), page.url())
       await page.waitForSelector('[data-focus-shell]')
-      ok('…where the address reads "S2 · C5 · P6"', (await page.locator('[data-address]').innerText()).trim() === 'S2 · C5 · P6')
+      ok('…where the address reads "S2 · E5 · P6"', (await page.locator('[data-address]').innerText()).trim() === 'S2 · E5 · P6')
 
       // tap-tap
       await openMenu(page)
@@ -553,7 +553,7 @@ async function partC() {
       await page.waitForFunction(() => document.querySelector('[data-focus-shell]')?.getAttribute('data-panel') === '6')
       await page.waitForFunction(() => document.querySelector('[data-open-record]')?.textContent === 'open: #38', undefined, { timeout: 2000 }).catch(() => {}) // hashchange is async
       ok('panel 5 → 6: choosing #38 opens it in panel 6, with no page load', await page.locator('[data-open-record]').innerText() === 'open: #38' && await page.evaluate(() => (window as unknown as { __marker?: number }).__marker === 1))
-      ok('…and the address reads "S2 · C5 · P6"', (await page.locator('[data-address]').innerText()).trim() === 'S2 · C5 · P6')
+      ok('…and the address reads "S2 · E5 · P6"', (await page.locator('[data-address]').innerText()).trim() === 'S2 · E5 · P6')
       await swipeLeft(cdp, 360, 300)
       ok('…and swipe left goes back to panel 5', await panelOf(page) === '5')
       await context.close()
@@ -563,7 +563,7 @@ async function partC() {
       ok('a deep link opens the right panel at 360 px (Drafting, panel 6, #38)', await panelOf(page) === '6' && await page.locator('[data-open-record]').innerText() === 'open: #38')
       await page.tap('[data-address]')
       const lines = (await page.locator('[data-address-panel] li').allInnerTexts()).map((l) => l.trim())
-      ok('…and its address panel reads "S2: Stage 2 Development" / "C5: Chapter 5 Drafting" / "P6: #38"', lines.join(' | ') === 'S2: Stage 2 Development | C5: Chapter 5 Drafting | P6: #38', lines.join(' | '))
+      ok('…and its address panel reads "S2: Stage 2 Development" / "E5: Element 5 Drafting" / "P6: #38"', lines.join(' | ') === 'S2: Stage 2 Development | E5: Element 5 Drafting | P6: #38', lines.join(' | '))
       await context.close()
     }
 

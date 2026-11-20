@@ -5,7 +5,7 @@ import { useDeviceDraft, DraftOffer } from './DeviceDraft'
 import {
   fieldDef,
   type CanonicalState, type CanonicalField, type CanonicalCause, type CauseClassification,
-  type CanonicalPolicyOption, type CanonicalAction, type CanonicalActionHeading, type CanonicalBenchmark, type CanonicalCostLine, type CostRange,
+  type CanonicalPolicyOption, type RemovedPolicyOption, type CanonicalAction, type CanonicalActionHeading, type CanonicalBenchmark, type CanonicalCostLine, type CostRange,
 } from '@/lib/lex/page1-config'
 import { accentFor } from '@/lib/lex/stage-accents'
 import CausesCommentaryPanel from './CausesCommentary'
@@ -30,7 +30,7 @@ import { COST_CATEGORIES } from '@/lib/lex/page4-config'
 import PriorVersions from './PriorVersions'
 import { collapsedByDefault as pageCollapsedByDefault } from '@/lib/lex/panel-collapse'
 import CauseMap from './CauseMap'
-import { COMMON_UI, RECORD_UI, STATEMENT_LABEL, COMMENTARY_LABEL, CAUSE_UI } from '@/lib/lex/screen-labels'
+import { COMMON_UI, RECORD_UI, STATEMENT_LABEL, COMMENTARY_LABEL, CAUSE_UI, ARCHIVE_UI } from '@/lib/lex/screen-labels'
 
 // Grouped causes-loop + root-cause handlers (Page 2). Kept as one object so the panel
 // signature stays readable.
@@ -64,6 +64,8 @@ export interface PolicyApi {
   add: (input: { approach: string; caseFor?: string; caseAgainst?: string; mechanismTypes?: string[] }) => void
   update: (optionId: string, patch: { approach?: string; caseFor?: string; caseAgainst?: string; mechanismTypes?: string[] }) => void
   remove: (optionId: string) => void
+  /** 26-AA item 1 — bring back a removed (archived) candidate, with its number. */
+  restore: (optionId: string) => void
   ruleOut: (optionId: string, reason: string) => void
   confirm: () => void
   skip: () => void
@@ -1231,7 +1233,7 @@ function OptionCard({ option, busy, api }: { option: CanonicalPolicyOption; busy
             {option.source === 'LEX' && <span className="text-[9px] font-semibold uppercase tracking-wide text-blue-600 bg-blue-50 rounded px-1 py-0.5">from Lex</span>}
             <button disabled={busy} onClick={() => setEditing(true)} className="text-[11px] text-zinc-400 hover:text-zinc-700">Edit</button>
             <button disabled={busy} onClick={() => setRuling((r) => !r)} className="text-[11px] text-zinc-400 hover:text-zinc-700">Rule out</button>
-            <button disabled={busy} onClick={() => api.remove(option.id)} className="text-[11px] text-zinc-400 hover:text-red-600">Delete</button>
+            <button disabled={busy} onClick={() => api.remove(option.id)} data-remove-option className="text-[11px] text-zinc-400 hover:text-red-600">{ARCHIVE_UI.remove}</button>
           </div>
           {ruling && (
             <div className="px-2 pb-2 flex gap-1.5">
@@ -1248,7 +1250,7 @@ function OptionCard({ option, busy, api }: { option: CanonicalPolicyOption; busy
 }
 
 // The policy-options loop (§17 field 1).
-function PolicyOptionsField({ field, options: allOptions, busy, api, ideaId }: { field: CanonicalField; options: CanonicalPolicyOption[]; busy: boolean; api: PolicyApi; ideaId?: string | null }) {
+function PolicyOptionsField({ field, options: allOptions, busy, api, ideaId, removed = [] }: { field: CanonicalField; options: CanonicalPolicyOption[]; busy: boolean; api: PolicyApi; ideaId?: string | null; removed?: RemovedPolicyOption[] }) {
   const [approach, setApproach] = useState('')
   const [caseFor, setCaseFor] = useState('')
   const [caseAgainst, setCaseAgainst] = useState('')
@@ -1301,6 +1303,20 @@ function PolicyOptionsField({ field, options: allOptions, busy, api, ideaId }: {
           <button disabled={busy} onClick={api.skip}
             className="text-xs font-medium px-2.5 py-1 rounded-lg border border-zinc-300 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40">Skip</button>
         </div>
+      )}
+      {/* 26-AA item 1 (183/196) — a removed approach is ARCHIVED: kept, with its number (never used twice), and restorable here. */}
+      {removed.length > 0 && (
+        <details className="mt-2" data-removed-options>
+          <summary className="cursor-pointer text-[11px] text-zinc-600">{ARCHIVE_UI.removed} ({removed.length})</summary>
+          <ul className="mt-1 space-y-1">
+            {removed.map((r) => (
+              <li key={r.id} className="flex items-start gap-2 text-[11px] text-zinc-600">
+                <span className="flex-1">{r.number != null && <span className="font-semibold mr-1">{r.number}.</span>}{r.approach}</span>
+                <button type="button" disabled={busy} onClick={() => api.restore(r.id)} data-restore-option className="shrink-0 underline disabled:opacity-40">{ARCHIVE_UI.restore}</button>
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
     </div>
   )
@@ -1897,12 +1913,14 @@ export default function FieldsPanel({
   onSubmitBox, onAcceptStructured, onAcceptOutput, onSkip, onReopen, onGoToPage,
   onUseLexVersion, onKeepMine, onEditRedraft,
   causesApi, policyApi, actionsApi, costLinesApi, deepening, ideaId, onSuggestionChanged,
-  setAsideActions, actionHeadings, actionsPage = null, kernelSection = null, archivedCauses = 0, actionsStructure,
+  setAsideActions, actionHeadings, actionsPage = null, kernelSection = null, archivedCauses = 0, removedPolicyOptions = [], actionsStructure,
 }: {
   /** 26-S2 188 + 190 - the conditions, the instrument-heading plan, the retired headings and the re-sort's Undo count, from the canonical state. */
   actionsStructure?: React.ComponentProps<typeof ActionsWorkspace>['structure']
   /** 26-S2 §11a — how many causes the user removed (archived, with their numbers). */
   archivedCauses?: number
+  /** 26-AA item 1 — candidate approaches the user removed (archived, restorable). */
+  removedPolicyOptions?: RemovedPolicyOption[]
   /** 26-Q — ruled-out / merged-away actions, and the user's headings (both from the canonical state). */
   setAsideActions?: CanonicalAction[]
   actionHeadings?: CanonicalActionHeading[]
@@ -2041,7 +2059,7 @@ export default function FieldsPanel({
       if (f.key === 'policyOptions') {
         return (
           <>
-            <PolicyOptionsField field={f} options={policyOptions} busy={busy} api={policyApi} ideaId={ideaId} />
+            <PolicyOptionsField field={f} options={policyOptions} busy={busy} api={policyApi} ideaId={ideaId} removed={removedPolicyOptions} />
             {/* ══ 25-P §1 — THE GUIDING POLICY BECOMES A DECISION ═══════════════════
                 ⚠ BELOW THE LIST, NOT INSTEAD OF IT. The list is where the user reads and edits
                 the candidates; this is where they act on them. Replacing the list would take

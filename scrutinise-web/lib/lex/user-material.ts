@@ -43,6 +43,7 @@ import { USER_MATERIAL_PASS_PREFIX } from './heading-map'
 import { sourceDateFields } from './evidence-date'
 import { fetchedContentIsData } from './fetched-content-guard'
 import { registerNewMaterial } from './source-registry'
+import { restoreSourceFindings } from './archive'
 
 // ── caps ─────────────────────────────────────────────────────────────────────
 //
@@ -447,6 +448,37 @@ const SYSTEM = [
   'yields three sharp findings has been read well; one that yields fifteen has been skimmed.',
   'Never manufacture a finding to fill a heading.',
 ].join('\n')
+
+/**
+ * 26-AA item 1 (183/196) — RESTORE A REMOVED SOURCE, AND ITS FINDINGS WITH IT. One implementation for the screen (material PATCH) and
+ * Lex (`restore_source`), so the two cannot drift.
+ *
+ * Since 26-AA a source's findings are archived with it (SOURCE_ARCHIVED) and come back here, each with its own status — an ACCEPTED
+ * finding returns ACCEPTED, and nothing is spent. ⚠ A source archived BEFORE 26-AA had its findings hard-deleted; for that one alone the
+ * document is read again (one model call, as `restore_source` always did). The test is "it had findings and none came back", so a
+ * source that genuinely yielded none is not re-read on every restore.
+ * ⚠ The per-idea limit still holds: a restore that would take the idea over it is refused, in words.
+ */
+export async function restoreSource(ideaId: string, materialId: string): Promise<
+  | { ok: true; findingsRestored: number; reread: boolean; reReadWritten: number; note: string | null }
+  | { ok: false; status: number; error: string }
+> {
+  const m = await prisma.ideaUserMaterial.findFirst({
+    where: { id: materialId, ideaId, archivedAt: { not: null } }, select: { id: true, findingCount: true },
+  })
+  if (!m) return { ok: false, status: 404, error: 'That source is not among the removed ones on this idea.' }
+  const live = await prisma.ideaUserMaterial.count({ where: { ideaId, archivedAt: null } })
+  if (live >= MAX_MATERIALS_PER_IDEA) {
+    return { ok: false, status: 409, error: `This idea already holds ${live} sources, the most it can. Remove one before restoring this.` }
+  }
+  await prisma.ideaUserMaterial.update({ where: { id: m.id }, data: { archivedAt: null } })
+  const findingsRestored = await restoreSourceFindings(ideaId, m.id)
+  if (findingsRestored > 0 || !(m.findingCount && m.findingCount > 0)) {
+    return { ok: true, findingsRestored, reread: false, reReadWritten: 0, note: null }
+  }
+  const f = await runMaterialFindings(m.id)
+  return { ok: true, findingsRestored: 0, reread: true, reReadWritten: f.written, note: f.note }
+}
 
 /**
  * Read a stored document into findings, and write them to the evidence layer.

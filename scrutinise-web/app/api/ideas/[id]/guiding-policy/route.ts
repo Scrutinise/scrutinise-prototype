@@ -25,7 +25,7 @@
 
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { prisma } from '@/lib/prisma'
+import { prisma, INCLUDING_ARCHIVED } from '@/lib/prisma'
 import { authorizeIdea } from '@/lib/lex/authz'
 import { enterSpendFor } from '@/lib/lex/build-context'
 import { modelForPass } from '@/lib/lex/build-config'
@@ -171,7 +171,7 @@ export async function POST(req: Request, { params }: Params) {
   // ⚠ AND THE NUMBER SHOWN ON THE CARD IS A PREDICTION, NAMED AS ONE. `nextNumber` is pure and
   // is read here without writing, so the card can say which number the merged policy WOULD take
   // — the same function the write will call, rather than a second guess at it.
-  const all = await prisma.policyOption.findMany({ where: { ideaId: id }, select: { number: true } })
+  const all = await prisma.policyOption.findMany({ where: { ideaId: id, ...INCLUDING_ARCHIVED }, select: { number: true } })
   const wouldBeNumber = answer.verdict === 'MERGE' && answer.merged ? nextNumber(all) : null
   // ⚠⚠ 26-L §2 — THE NUMBER "ONE CONTAINS THE OTHER" NEEDS TO WRITE ANYTHING AT ALL.
   // `subordinateNumber` is the one the model names; the containing one is simply the other of

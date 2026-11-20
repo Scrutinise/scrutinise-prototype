@@ -9,7 +9,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { prisma } from '@/lib/prisma'
-import { initializeFieldStates } from './field-machine'
+import { initializeFieldStates, listRemovedPolicyOptions } from './field-machine'
 import { projectElicitationOntoPageOne } from './page-one'
 import { readStageSearches, displayStageFor, groupLandscape } from './stage-search'
 import { clampStep } from './action-steps'
@@ -362,6 +362,7 @@ export async function computeCanonicalState(ideaId: string): Promise<CanonicalSt
     archivedHeadings: (await prisma.actionHeading.findMany({ where: { ideaId, archivedAt: { not: null } }, select: { id: true, name: true }, orderBy: { name: 'asc' } })),
     resortUndoable: actionRows.filter((a) => a.headingWasId != null && a.status === 'LIVE').length,
     archivedCauses: await prisma.diagnosisCause.count({ where: { ideaId, archivedAt: { not: null } } }),
+    removedPolicyOptions: await listRemovedPolicyOptions(ideaId),
     costLines,
     benchmarks,
     userProfile: {

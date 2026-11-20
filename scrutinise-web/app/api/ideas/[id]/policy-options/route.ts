@@ -7,6 +7,7 @@ import {
   addPolicyOption,
   updatePolicyOption,
   removePolicyOption,
+  restorePolicyOption,
   choosePolicyApproach,
   unchoosePolicyApproach,
   listPolicyOptions,
@@ -41,6 +42,7 @@ const BodySchema = z.discriminatedUnion('action', [
     mechanismTypes: z.array(z.string().trim().min(1).max(40)).max(8).optional(),
   }),
   z.object({ action: z.literal('remove'), optionId: z.string().min(1) }),
+  z.object({ action: z.literal('restore'), optionId: z.string().min(1) }), // 26-AA item 1 — a removed option comes back with its number
   z.object({ action: z.literal('ruleOut'), optionId: z.string().min(1), reason: z.string().trim().max(4000) }),
   z.object({ action: z.literal('confirm') }), // done curating — accept the policyOptions field
   z.object({ action: z.literal('skip') }),
@@ -82,9 +84,17 @@ export async function POST(req: Request, { params }: Params) {
           approach: body.approach, caseFor: body.caseFor, caseAgainst: body.caseAgainst, mechanismTypes: body.mechanismTypes,
         })
         break
-      case 'remove':
-        await removePolicyOption(id, body.optionId)
+      case 'remove': {
+        // ⚠ 26-AA item 1 — ARCHIVED, not deleted ("Remove (can be restored)"). Its number stays taken.
+        const ok = await removePolicyOption(id, body.optionId, authz.user.id)
+        if (!ok) return NextResponse.json({ error: 'That candidate approach was not found on this idea.' }, { status: 422 })
         break
+      }
+      case 'restore': {
+        const ok = await restorePolicyOption(id, body.optionId)
+        if (!ok) return NextResponse.json({ error: 'That candidate approach is not among the removed ones on this idea.' }, { status: 422 })
+        break
+      }
       case 'ruleOut': {
         const ok = await rejectPolicyOption(id, body.optionId, body.reason)
         if (!ok) return NextResponse.json({ error: 'That policy was not found.' }, { status: 422 })

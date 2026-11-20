@@ -4,9 +4,9 @@
 // used to live in the right-hand column of the "mixed page" (`/ideas/build`).
 
 import PublicNav from '@/components/PublicNav'
-import MyIdeasList, { type MyIdea } from '@/components/lex/MyIdeasList'
+import MyIdeasList, { type MyIdea, type UngroupedGroup } from '@/components/lex/MyIdeasList'
 
-export default function YourIdeasClient({ recent, deleted }: { recent: MyIdea[]; deleted: MyIdea[] }) {
+export default function YourIdeasClient({ recent, deleted, ungroupedGroups = [] }: { recent: MyIdea[]; deleted: MyIdea[]; ungroupedGroups?: UngroupedGroup[] }) {
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <PublicNav />
@@ -28,7 +28,7 @@ export default function YourIdeasClient({ recent, deleted }: { recent: MyIdea[];
             New idea
           </a>
         </div>
-        <MyIdeasList ideas={recent} deletedIdeas={deleted} hiddenEmpty={0} />
+        <MyIdeasList ideas={recent} deletedIdeas={deleted} hiddenEmpty={0} ungroupedGroups={ungroupedGroups} />
       </div>
     </div>
   )

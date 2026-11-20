@@ -23,11 +23,11 @@ import {
   extractFile, extractUrl, runMaterialFindings, MaterialRejected, createLinkMaterial,
   MAX_MATERIALS_PER_IDEA, MAX_UPLOAD_BYTES,
 } from '@/lib/lex/user-material'
-import { USER_MATERIAL_PASS_PREFIX } from '@/lib/lex/heading-map'
 import { countDocuments } from '@/lib/lex/source-registry'
 // 25-L §2 — every refusal is counted, with its type. See `material-rejection.ts`.
 import { logRejection, readRejections } from '@/lib/lex/material-rejection'
-import { MAX_TEXT_CHARS } from '@/lib/lex/user-material'
+import { MAX_TEXT_CHARS, restoreSource } from '@/lib/lex/user-material'
+import { archiveSourceFindings } from '@/lib/lex/archive'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -43,6 +43,10 @@ async function listMaterial(ideaId: string) {
     // 26-J §2b — archived, not destroyed: hidden from this list, row kept.
     where: { ideaId, archivedAt: null }, orderBy: { createdAt: 'desc' }, select: LIST_SELECT,
   })
+  // 26-AA item 1 — and listed, so it can be restored from the screen (it could only be restored through Lex before).
+  const removed = await prisma.ideaUserMaterial.findMany({
+    where: { ideaId, archivedAt: { not: null } }, orderBy: { archivedAt: 'desc' }, select: { id: true, label: true, archivedAt: true },
+  })
   return {
     material: rows.map((r) => ({
       ...r,
@@ -52,6 +56,7 @@ async function listMaterial(ideaId: string) {
     limit: MAX_MATERIALS_PER_IDEA,
     maxBytes: MAX_UPLOAD_BYTES,
     remaining: Math.max(0, MAX_MATERIALS_PER_IDEA - rows.length),
+    removed: removed.map((r) => ({ id: r.id, label: r.label, archivedAt: r.archivedAt!.toISOString() })),
     // ⚠ 25-L §2 — WHAT WE COULD NOT READ TRAVELS WITH WHAT WE COULD. §2: "never silently
     // drop it, always say why at the time, always record it." A refusal that only ever
     // existed as a toast is a gap the user cannot see five minutes later, and a document
@@ -272,15 +277,33 @@ export async function DELETE(req: Request, { params }: Params) {
   // kept — only `listMaterial` (and everything that reads it) stops showing it.
   //
   // ⚠ THE FINDINGS STILL GO WITH IT. A finding quoting a document the user has withdrawn is
-  // a quotation with no source in the build's own context — and unlike the material row
-  // itself, a finding is a derived artefact, not "the document", so removing it is not the
-  // destruction the brief is about.
+  // a quotation with no source in the build's own context.
+  // ⚠⚠ 26-AA item 1 (183/196) — BUT ARCHIVED WITH IT, NOT DELETED. They were hard-deleted until 26-AA, ACCEPTED ones included, so a
+  // restored source came back with none of the findings the owner had accepted. Now they leave every list with the source (reason
+  // SOURCE_ARCHIVED) and come back with it, each with its own status.
   await prisma.$transaction([
-    prisma.evidenceItem.deleteMany({
-      where: { ideaId: id, passKey: `${USER_MATERIAL_PASS_PREFIX}${materialId}` },
-    }),
+    archiveSourceFindings(id, materialId, authz.user.id),
     prisma.ideaUserMaterial.update({ where: { id: materialId }, data: { archivedAt: new Date() } }),
   ])
 
   return NextResponse.json(await listMaterial(id))
+}
+
+/** 26-AA item 1 — PATCH { restore: materialId }: a removed source comes back, and so do its findings. */
+export async function PATCH(req: Request, { params }: Params) {
+  const { id } = await params
+  const authz = await authorizeIdea(id)
+  if (authz.error) return authz.error
+  enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
+
+  const body = await req.json().catch(() => null) as { restore?: unknown } | null
+  const materialId = typeof body?.restore === 'string' ? body.restore.trim() : ''
+  if (!materialId) return NextResponse.json({ error: 'Send { restore: <the source id> }.' }, { status: 422 })
+
+  const result = await restoreSource(id, materialId)
+  // `in`, not `!result.ok`: this package compiles with strict off, where the boolean discriminant does not narrow.
+  if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status })
+  return NextResponse.json({
+    ...(await listMaterial(id)), restored: materialId, findingsRestored: result.findingsRestored, reread: result.reread, note: result.note,
+  })
 }

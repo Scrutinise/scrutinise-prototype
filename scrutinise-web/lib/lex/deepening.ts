@@ -780,7 +780,7 @@ async function loadIdeaContext(ideaId: string): Promise<IdeaContext> {
       challenge: true, diagnosis: true, pivotalObstacle: true, summaryDiagnosis: true,
       guidingPolicy: true, legalLandscape: true, whoAffectedImpactCost: true,
       lexActions: { where: { status: 'LIVE' }, select: { practicalStep: true, costLines: { select: { label: true, low: true, high: true, unit: true, basis: true } } } },
-      policyOptions: { select: { approach: true, status: true } },
+      policyOptions: { where: { archivedAt: null }, select: { approach: true, status: true } }, // 26-AA item 1: a nested read is not filtered for us
     },
   })
   if (!idea) throw new Error('Idea not found')

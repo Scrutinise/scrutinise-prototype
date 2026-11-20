@@ -319,14 +319,15 @@ export const PAGE_UI = {
 
 // ══ 26-Z (decisions 344–348) — Where am I?, the panels, Focus view, never losing your place ══════════════════════════════════════════
 
-/** 344 / §2c — the seven panels, in order. Panel 6's name is the open chapter, or the open record ("#38"), when something is open. */
+/** 344 / §2c — the seven panels, in order. Panel 6's name is the open element, or the open record ("#38"), when something is open.
+ *  352 (20 Nov): Development's parts are "elements" on screen (they were "chapters"); the code keeps the word chapter for them. */
 export const PANEL_WORD = {
   1: 'Where am I?',
   2: 'To-do',
   3: 'Lex',
   4: 'Notes',
-  5: 'Chapters',
-  6: 'The open chapter',
+  5: 'Elements',
+  6: 'The open element',
   7: 'Research and sources',
 } as const
 /** §2c — where each panel sits on the desktop, for the visual blocks and their text labels. */
@@ -334,19 +335,19 @@ export const PANEL_PLACE_WORD = { top: 'across the top on desktop', left: 'left 
 /** §2a–§2c — the three sentences, verbatim, shown once at the top of the menu. */
 export const WHERE_SENTENCES = {
   stages: 'Your idea passes through 7 stages from creation to enactment.',
-  chapters: 'Within the Development stage you have 7 chapters to develop a mature proposal.',
+  chapters: 'Within the Development stage you have 7 elements to develop a mature proposal.',
   panels: 'Tap a panel to work in it.',
 } as const
 /** The bars, the menu and the toggle. */
 export const WHERE_UI = {
   button: 'Where am I?',
   stage: 'Stage',
-  chapter: 'Chapter',
+  chapter: 'Element',
   panel: 'Panel',
   youAreHere: 'You are here',
   gotIt: 'Got it',
   explain: '?',
-  explainLabel: 'What are stages, chapters and panels?',
+  explainLabel: 'What are stages, elements and panels?',
   close: 'Close',
   /** Z1b (CCh, 18 Nov 23:40, item 3) — the panel the address opens: one line per level, until dismissed. "Working on" is dropped. */
   addressPanelTitle: 'Your place',
@@ -355,9 +356,9 @@ export const WHERE_UI = {
   fullView: 'Full view',
   focusToggleLabel: 'Show one panel at a time (Focus view) or all three columns (Full view)',
   /** "Private Scrutiny: not yet open" — given "<stage>: <state>" already joined (a label takes one argument). */
-  noChaptersOutside: (stageAndState: string) => `Chapters of ${stageAndState}`,
+  noChaptersOutside: (stageAndState: string) => `Elements of ${stageAndState}`,
   chaptersOfActions: 'The actions on this page',
-  addressLabel: 'Your place: stage, chapter and panel',
+  addressLabel: 'Your place: stage, element and panel',
 } as const
 /** 26-AA item 5 — the Sources list's controls (SourceBrowser: the research panel's list and Add research's picker). The kind, sort and
  *  stance words are their own tables (FACET_LABEL, SORT_LABEL in source-list.ts; STANCE_LABEL in research-notebook-schema.ts). */
@@ -411,11 +412,20 @@ export const CAUSE_UI = {
   addBeneathSubmit: 'Add',
   remove: 'Remove',
 } as const
+/** 26-AA item 1 (183/196) — what used to say "Delete" on user content. Nothing is destroyed: the row is archived and listed under `removed`
+ *  with a Restore. One set of words for every screen that does it (candidate approaches, notes, filed sources, My Ideas groups). */
+export const ARCHIVE_UI = {
+  remove: 'Remove (can be restored)',
+  removed: 'Removed',
+  restore: 'Restore',
+  ungroup: 'Ungroup (can be restored)',
+  ungrouped: 'Ungrouped',
+} as const
 /** Z1b (CCh, 18 Nov 23:40, item 4) — the label at the left of each row of the stage bar on a desktop.
- *  ⚠ The word may change: decision 352 is open with Charlie. It lives here so a rename is one line. */
+ *  352 (20 Nov): "Elements", was "Chapters". */
 export const STAGEBAR_ROW_WORD = {
   stages: 'Stages',
-  chapters: 'Chapters',
+  chapters: 'Elements',
 } as const
 /** §6.2 — the offer to restore unsent text. Never sent by itself. */
 export const DRAFT_RESTORE_UI = {

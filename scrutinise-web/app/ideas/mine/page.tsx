@@ -14,6 +14,7 @@ import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import YourIdeasClient from './YourIdeasClient'
+import { listArchivedGroups } from '@/lib/lex/archive'
 import type { MyIdea } from '@/components/lex/MyIdeasList'
 import { doorPath, newIdeaDoor } from '@/lib/lex/new-idea-door'
 import { LIVE_IDEA } from '@/lib/lex/idea-visibility'
@@ -92,6 +93,8 @@ export default async function YourIdeasPage() {
   ])
   const recent = activeRows.map((r) => toMyIdea(r, false))
   const deleted = deletedRows.map((r) => toMyIdea(r, true))
+  // 26-AA item 1 — groups the owner ungrouped: archived with the ideas they held, restorable from the list.
+  const ungroupedGroups = await listArchivedGroups(dbUser.id)
 
-  return <YourIdeasClient recent={recent} deleted={deleted} />
+  return <YourIdeasClient recent={recent} deleted={deleted} ungroupedGroups={ungroupedGroups} />
 }

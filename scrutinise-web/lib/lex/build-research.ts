@@ -138,7 +138,7 @@ export async function draftFactsFor(ideaId: string, carry: {
       legalLandscape: true, whoAffectedImpactCost: true,
       diagnosisCauses: { where: { archivedAt: null }, select: { cause: true } },
       lexActions: { where: { status: 'LIVE' }, select: { practicalStep: true } },
-      policyOptions: { select: { approach: true, status: true } },
+      policyOptions: { where: { archivedAt: null }, select: { approach: true, status: true } }, // 26-AA item 1: a nested read is not filtered for us
     },
   })
 

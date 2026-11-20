@@ -3,7 +3,7 @@
 // GET    → this user's notes on this idea, in their order, seeding "My original idea" once.
 // POST   → add one.
 // PATCH  → edit, retitle, re-group, reorder or hide one.
-// DELETE → remove one.
+// DELETE → remove one. ⚠ 26-AA item 1: ARCHIVED, not deleted; PATCH { noteId, restore: true } brings it back.
 //
 // ⚠⚠ EVERY QUERY IS KEYED ON `(ideaId, userId)` AND THERE IS NO OTHER WAY IN. §3c: notes are
 // *"private to the user, saved with the idea, never shared"*. There is no visibility column
@@ -25,6 +25,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { authorizeIdea } from '@/lib/lex/authz'
 import { enterSpendFor } from '@/lib/lex/build-context'
+import { archiveNote, restoreNote, listArchivedNotes } from '@/lib/lex/archive'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -87,6 +88,8 @@ async function listNotes(ideaId: string, userId: string) {
       seeded: n.source !== 'USER',
       updatedAt: n.updatedAt.toISOString(),
     })),
+    // 26-AA item 1 — the user's removed notes, newest first, on the same private key. Listed under "Removed", each with a Restore.
+    removed: await listArchivedNotes(ideaId, userId),
   }
 }
 
@@ -150,6 +153,8 @@ const PatchSchema = z.object({
    * not, the first time two tabs are open. The list the user is looking at IS the order.
    */
   order: z.array(z.string().uuid()).max(500).optional(),
+  /** 26-AA item 1 — bring a removed note back. Nothing else in the body is applied with it. */
+  restore: z.literal(true).optional(),
 })
 
 export async function PATCH(req: Request, { params }: Params) {
@@ -162,7 +167,13 @@ export async function PATCH(req: Request, { params }: Params) {
   const parsed = PatchSchema.safeParse(body ?? {})
   if (!parsed.success) return NextResponse.json({ error: z.treeifyError(parsed.error) }, { status: 422 })
 
-  const { noteId, order, ...fields } = parsed.data
+  const { noteId, order, restore, ...fields } = parsed.data
+
+  if (restore) {
+    const ok = await restoreNote(id, authz.user.id, noteId)
+    if (!ok) return NextResponse.json({ error: 'That note is not among your removed notes on this idea.' }, { status: 404 })
+    return NextResponse.json(await listNotes(id, authz.user.id))
+  }
 
   // ⚠ SCOPED TO (ideaId, userId) ON THE WRITE ITSELF, never checked first and written after.
   // A read-then-write would be one authorisation with a gap in the middle of it.
@@ -196,6 +207,8 @@ export async function DELETE(req: Request, { params }: Params) {
   const noteId = new URL(req.url).searchParams.get('noteId')
   if (!noteId) return NextResponse.json({ error: 'Which note?' }, { status: 422 })
 
-  await prisma.ideaNote.deleteMany({ where: { id: noteId, ideaId: id, userId: authz.user.id } })
+  // ⚠ 26-AA item 1 (183/196) — ARCHIVED, not deleted, on the same (ideaId, userId) key: a collaborator cannot remove the owner's note.
+  const ok = await archiveNote(id, authz.user.id, noteId)
+  if (!ok) return NextResponse.json({ error: 'That note is not yours, or is not on this idea.' }, { status: 404 })
   return NextResponse.json(await listNotes(id, authz.user.id))
 }

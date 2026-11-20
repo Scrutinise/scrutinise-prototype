@@ -11,7 +11,7 @@
 
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { prisma } from '@/lib/prisma'
+import { prisma, INCLUDING_ARCHIVED } from '@/lib/prisma'
 import { authorizeIdea } from '@/lib/lex/authz'
 import { enterSpendFor } from '@/lib/lex/build-context'
 import { extractActionIdeas } from '@/lib/lex/action-ideas'
@@ -316,7 +316,8 @@ export async function PATCH(req: Request, { params }: Params) {
     }
   }
 
-  const number = await prisma.policyOption.findMany({ where: { ideaId: id }, select: { number: true } })
+  // ⚠ 26-AA item 1 — archived rows included: a removed policy's number is never handed out again.
+  const number = await prisma.policyOption.findMany({ where: { ideaId: id, ...INCLUDING_ARCHIVED }, select: { number: true } })
     .then((rows) => Math.max(0, ...rows.map((r) => r.number ?? 0)) + 1)
 
   const created = await prisma.policyOption.create({

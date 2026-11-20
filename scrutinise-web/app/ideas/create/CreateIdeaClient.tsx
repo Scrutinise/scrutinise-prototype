@@ -678,6 +678,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
     add: (input) => post('/policy-options', { action: 'add', ...input }),
     update: (optionId, patch) => post('/policy-options', { action: 'update', optionId, ...patch }),
     remove: (optionId) => post('/policy-options', { action: 'remove', optionId }),
+    restore: (optionId) => post('/policy-options', { action: 'restore', optionId }),
     ruleOut: (optionId, reason) => post('/policy-options', { action: 'ruleOut', optionId, reason }),
     confirm: () => post('/policy-options', { action: 'confirm' }),
     skip: () => post('/policy-options', { action: 'skip' }),
@@ -975,6 +976,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
                 actionsPage={actionsPage}
                 kernelSection={kernelSection}
                 archivedCauses={state.archivedCauses}
+                removedPolicyOptions={state.removedPolicyOptions}
                 costLines={state.costLines}
                 benchmarks={state.benchmarks}
                 busy={busy}
