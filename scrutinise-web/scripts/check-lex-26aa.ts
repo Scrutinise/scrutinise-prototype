@@ -21,7 +21,9 @@ import { scratchCopy, deleteScratch } from './lib/scratch-copy'
 import { execute, toolByName, isModelTool } from '../lib/lex/agent/tools'
 import type { ToolCtx } from '../lib/lex/agent/types'
 import { guideEntries, toolsNamed } from '../lib/lex/field-guide'
-import { CAUSE_UI, TREE_UI } from '../lib/lex/screen-labels'
+import { CAUSE_UI, TREE_UI, SOURCES_UI, ADD_RESEARCH_UI } from '../lib/lex/screen-labels'
+import { FACET_LABEL, SORT_LABEL } from '../lib/lex/source-list'
+import { STANCE_LABEL } from '../lib/lex/research-notebook-schema'
 import { planFor } from '../lib/lex/document-drafting'
 import { KIND_RUNS, kindPrice } from '../lib/lex/document-drafting-pure'
 
@@ -273,12 +275,152 @@ function part4() {
   control('two new runs, or three with one from 24 Oct, fail that test', !measuredSince([{ on: '2026-11-20' }, { on: '2026-11-20' }], '2026-11-20') && !measuredSince([{ on: '2026-11-20' }, { on: '2026-11-20' }, { on: 'x, 2026-10-24 (#7)' }], '2026-11-20'))
 }
 
+// ── item 5 — every label SourceBrowser and AddResearch render is in the field guide (a real browser) ─────────────────────────────────
+function part5Static() {
+  section('5 · Sources and Add research — static: the controls read the tables')
+  const sb = stripComments(readFileSync(join(ROOT, 'components/lex/SourceBrowser.tsx'), 'utf8'))
+  const ar = stripComments(readFileSync(join(ROOT, 'components/lex/AddResearch.tsx'), 'utf8'))
+  const sbLit = ['>Choose<', "'+ All filters'", "'− Fewer filters'", '>Clear<', '>Kind<'].filter((s) => sb.includes(s))
+  const arLit = ['>+ Add a quote<', '>+ More details<', "'Fetch a readable view'", '>Start again<', '>Permission<', "'Save'"].filter((s) => ar.includes(s))
+  ok('SourceBrowser renders its controls from SOURCES_UI, not literals', sbLit.length === 0 && /SOURCES_UI\.choose/.test(sb), sbLit.join(', '))
+  ok('AddResearch renders its controls from ADD_RESEARCH_UI, not literals', arLit.length === 0 && /AR\.startAgain/.test(ar), arLit.join(', '))
+  // ⚠ Each key has ITS OWN entry: a label covered only by another entry with the same word ("Clear" is also common.clear) would pass the
+  // browser's word-for-word coverage while saying nothing about this control (found by mutation M5a).
+  const keys = guideEntries().map((e) => e.key)
+  const tables: Array<[string, Record<string, unknown>]> = [['sources', SOURCES_UI], ['addResearch', ADD_RESEARCH_UI], ['sourceKind', FACET_LABEL], ['sourceSort', SORT_LABEL], ['stance', STANCE_LABEL]]
+  const noEntry = tables.flatMap(([p, t]) => Object.keys(t).filter((k) => !keys.includes(`${p}.${k}`)).map((k) => `${p}.${k}`))
+  ok(`every key of SOURCES_UI, ADD_RESEARCH_UI and the kind, sort and stance words has its own guide entry (${tables.reduce((n, [, t]) => n + Object.keys(t).length, 0)} keys)`, noEntry.length === 0, noEntry.join(', '))
+}
+
+async function part5() {
+  section('5 · Sources and Add research — in a real browser, every label rendered is in the field guide')
+  let chromium: typeof import('playwright').chromium
+  try { chromium = (await import('playwright')).chromium } catch (e) { notRun++; console.log(`  NOT RUN — playwright is not loadable: ${(e as Error).message}`); return }
+  const { build } = await import('esbuild')
+  const bundle = (await build({ entryPoints: [join(ROOT, 'scripts/fixtures/research-guide-harness-entry.tsx')], bundle: true, write: false, format: 'iife', jsx: 'automatic', platform: 'browser', define: { 'process.env.NODE_ENV': '"production"' }, logLevel: 'silent', tsconfig: join(ROOT, 'tsconfig.json') })).outputFiles[0].text
+  const copy = await scratchCopy(SOURCE, '26aa-research-guide')
+  const browser = await chromium.launch()
+  try {
+    setUser(await prisma.user.findUniqueOrThrow({ where: { id: copy.userId } }))
+    const registry = await import('../app/api/ideas/[id]/source-registry/route')
+    const notebook = await import('../app/api/ideas/[id]/research-notebook/route')
+    const params = { params: Promise.resolve({ id: copy.id }) }
+    // fixtures on the copy, through the real route: a web page and pasted text, so the list has rows, "Choose" buttons and a duplicate to offer
+    const add = async (body: unknown) => (await notebook.POST(new Request('http://internal.invalid/', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }), params)).status
+    const s1 = await add({ op: 'addNote', newSource: { kind: 'URL', title: 'ZZ fixture web page', url: 'https://example.org/zz-26aa-fixture', sourceType: 'web page' }, comment: 'fixture', stance: 'CONTEXT', bearsOn: [], tags: [] })
+    // ⚠ NO fullText: a source with text is read into findings by a model call (runMaterialFindings), and this check spends nothing
+    const s2 = await add({ op: 'addNote', newSource: { kind: 'DOCUMENT', title: 'ZZ fixture pasted text', sourceType: 'pasted text' }, comment: 'fixture', stance: 'SUPPORTS', bearsOn: [], tags: [] })
+    ok('the fixtures are on the copy (two sources, through the notebook route)', s1 === 200 && s2 === 200, `${s1} ${s2}`)
+
+    const page = await browser.newPage({ viewport: { width: 1200, height: 3000 } })
+    await page.addInitScript('window.__name = (f) => f')
+    const errors: string[] = []
+    page.on('pageerror', (e) => errors.push(e.message))
+    await page.route('http://harness.test/', (r) => r.fulfill({ contentType: 'text/html', body: '<!doctype html><html><body><div id="root"></div></body></html>' }))
+    for (const [glob, h] of [['**/api/ideas/*/source-registry**', registry], ['**/api/ideas/*/research-notebook**', notebook]] as const) {
+      await page.route(glob, async (r) => {
+        const u = new URL(r.request().url())
+        if (/research-notebook\/(fetch|extract)/.test(u.pathname)) return r.fulfill({ status: 404, contentType: 'application/json', body: '{"error":"not in this check"}' })
+        const hh = h as { GET?: (req: Request, p: typeof params) => Promise<Response>; POST?: (req: Request, p: typeof params) => Promise<Response> }
+        const res = r.request().method() === 'GET' ? await hh.GET!(new Request(`http://internal.invalid/${u.search}`), params)
+          : await hh.POST!(new Request('http://internal.invalid/', { method: 'POST', headers: { 'content-type': 'application/json' }, body: r.request().postData() ?? '' }), params)
+        await r.fulfill({ status: res.status, contentType: 'application/json', body: await res.text() })
+      })
+    }
+    const mount = async (mode: string, before?: string) => {
+      await page.goto('http://harness.test/')
+      await page.evaluate((x) => { (window as unknown as { __rh: unknown }).__rh = x }, { mode, ideaId: copy.id })
+      await page.addScriptTag({ content: bundle })
+      if (before) await page.evaluate(before)
+      await page.evaluate(() => (window as unknown as { __mount: () => void }).__mount())
+    }
+    // The same reading of a label as check:lex-26w-b's part D: a control's own words, with data (counts, values) and decoration dropped.
+    const collect = () => page.evaluate(() => {
+      const SKIP = '[data-host-cards], option, [data-dup-groups] li, [data-source-count], [data-saved-ref]'
+      const DATA = '[data-shown-value], [data-limit-counter], [data-filter-help]'
+      const own = (el: Element): string[] => {
+        if (el.tagName === 'LABEL' || el.tagName === 'LEGEND') {
+          return [Array.from(el.childNodes).filter((c) => c.nodeType === 3 || (c.nodeType === 1 && (c as Element).tagName === 'SPAN' && !(c as Element).getAttribute('aria-hidden') && !(c as Element).matches(DATA) && !(c as Element).querySelector(DATA))).map((c) => c.textContent ?? '').join(' ')]
+        }
+        if (!el.querySelector(DATA)) return [(el as HTMLElement).innerText]
+        const c = el.cloneNode(true) as Element
+        c.querySelectorAll(DATA).forEach((d) => d.remove())
+        return [c.textContent ?? '']
+      }
+      const out: string[] = []
+      const take = (raw: string) => {
+        let t = raw.replace(/[●○▸▾◇■◆✓✗⚑▲△▼▽]/g, ' ').replace(/\s+/g, ' ').trim()
+        t = t.split(' · ')[0].split(' — ')[0].replace(/:\s.*$/, '').replace(/\s*\([^)]*\)/g, '').replace(/[.:]$/, '').trim()
+        if (t && !/^(#\d|\d)/.test(t)) out.push(t)
+      }
+      for (const el of Array.from(document.querySelectorAll('button, summary, label, legend, th, caption, [role=tab], [role=radio], p.uppercase'))) {
+        if (el.closest(SKIP)) continue
+        for (const raw of own(el)) take(raw)
+      }
+      // the sort choices are words on the screen too (an <option> is skipped above, so these are read on their own, the same way)
+      for (const o of Array.from(document.querySelectorAll('[data-source-sort] option'))) take(o.textContent ?? '')
+      return [...new Set(out)]
+    })
+    const uncovered = async (): Promise<string[]> => page.evaluate((seen) => {
+      const g = (window as unknown as { __guide: { guideEntries: () => Array<{ label: string }>; normLabel: (s: string) => string } }).__guide
+      const held = new Set(g.guideEntries().map((e) => g.normLabel(e.label.split(' · ')[0].split(' — ')[0].replace(/:\s.*$/, '').replace(/\s*\([^)]*\)/g, '').replace(/[.:]$/, '').trim())))
+      return seen.filter((s) => !held.has(g.normLabel(s)))
+    }, await collect())
+    const press = async (sel: string) => { const b = page.locator(sel).first(); if (await b.count()) { await b.click().catch(() => undefined); await page.waitForTimeout(150) } }
+
+    const all = new Set<string>(), missing = new Set<string>()
+    const read = async (where: string) => { for (const l of await collect()) all.add(l); for (const l of await uncovered()) missing.add(`${where}: ${l}`) }
+    for (const mode of ['sources', 'pick'] as const) {
+      await mount(mode)
+      await page.waitForSelector(`[data-source-browser="${mode === 'sources' ? 'list' : 'pick'}"]`, { timeout: 60_000 })
+      await read(mode)
+      await press('[data-all-filters]'); await press('[data-dups-only]'); await press('[data-quick-facet="web"]')
+      await read(`${mode}, every filter open`)
+    }
+    for (const mode of ['dialog', 'bare'] as const) {
+      await mount(mode)
+      await page.waitForSelector('[data-choose-file]', { timeout: 60_000 })
+      await read(mode)
+      await press('[data-add-quote]'); await press('[data-add-comment]'); await press('[data-more-details]')
+      await page.locator('textarea').first().fill('Pasted text for the check, long enough to show the quote button and the permission box.')
+      await page.waitForTimeout(150)
+      await read(`${mode}, every part open`)
+      await page.locator('input[aria-label="Web address"]').fill('https://example.org/zz-26aa-fixture')
+      await page.waitForSelector('[data-already-added]', { timeout: 10_000 }).catch(() => undefined)
+      await read(`${mode}, a duplicate found`)
+      await press('[data-dup-yes]')
+      await read(`${mode}, a further note on it`)
+      await press('button:has-text("Change")')
+      await press('[data-further-note-link]')
+      await page.waitForSelector('[data-further-note-picker] [data-source-browser="pick"]', { timeout: 30_000 }).catch(() => undefined)
+      await read(`${mode}, the picker open`)
+    }
+    ok(`every label rendered by SourceBrowser and AddResearch is in the guide (${all.size} distinct labels read)`, missing.size === 0 && all.size >= 30, [...missing].join(' | ') || `only ${all.size} read`)
+    ok('…the duplicate offer, the further-note picker and its "Choose" were among them', ['Yes', 'No', 'Choose', 'Possible duplicates', 'Use the selected passage as the quote'].every((l) => all.has(l)), [...all].join(', ').slice(0, 400))
+    ok('no page error while rendering', errors.length === 0, errors.join(' | ').slice(0, 300))
+    await page.evaluate(() => { const b = document.createElement('button'); b.textContent = 'Zq unguided control'; document.body.appendChild(b) })
+    control('a planted button the guide does not hold is caught', (await uncovered()).includes('Zq unguided control'))
+    // rename in the bundle's own table BEFORE mounting: the screen and the guide move together
+    await mount('pick', `window.__labels.SOURCES_UI.choose = 'Pick this one'`)
+    await page.waitForSelector('[data-pick-source]', { timeout: 60_000 })
+    const shownNew = (await collect()).includes('Pick this one')
+    const explained = await page.evaluate(() => (window as unknown as { __guide: { explainField: (s: string) => { exact: { key: string } | null } } }).__guide.explainField('Pick this one').exact?.key ?? null)
+    ok('a label renamed in SOURCES_UI appears on the screen under its new word, and the guide explains it as the same entry', shownNew && explained === 'sources.choose', `${shownNew} ${explained}`)
+    ok('…and the coverage still holds with the renamed label', !(await uncovered()).length, (await uncovered()).join(' | '))
+  } finally {
+    await browser.close()
+    setUser(undefined)
+    console.log(`  (scratch copy deleted: ${await deleteScratch(copy.id)})`)
+  }
+}
+
 async function main() {
   part2Static()
   part3Static()
   part4()
-  if (process.argv.includes('--pure')) { notRun += 3; console.log('  (A3, items 2 and 3 on the database not run: --pure)') }
-  else { await partA3(); await part2(); await part3() }
+  part5Static()
+  if (process.argv.includes('--pure')) { notRun += 4; console.log('  (A3, items 2, 3 and 5 on the database not run: --pure)') }
+  else { await partA3(); await part2(); await part3(); await part5() }
   console.log(`\n${ran} ran · ${pass} passed · ${fail} failed · ${controls} controls (${dead} dead) · ${notRun} not run`)
   process.exit(fail || dead ? 1 : 0)
 }

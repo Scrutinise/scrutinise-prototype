@@ -41,12 +41,13 @@ import { alreadyAdded, PASTED_SOURCE_TYPE, type ListedSource } from '@/lib/lex/s
 import { explainFailure } from '@/lib/api-rejection'
 import FocusDialog from './FocusDialog'
 import SourceBrowser from './SourceBrowser'
+import { ADD_RESEARCH_UI as AR } from '@/lib/lex/screen-labels'
 
 interface Initial { url?: string; title?: string; text?: string }
 const looksLikeUrl = (u: string) => /^https?:\/\/\S+\.\S+/i.test(u.trim())
 
 export default function AddResearch({
-  ideaId, onSaved, initial, defaultOpen = false, label = 'Add research', compact = false, bare = false,
+  ideaId, onSaved, initial, defaultOpen = false, label = AR.addResearch, compact = false, bare = false,
 }: {
   ideaId: string
   /** Called after a save, with the new source's number so the Sources list can show and highlight its card (26-S2 sec 9d). */
@@ -230,8 +231,8 @@ export default function AddResearch({
         open && bare ? 'bg-zinc-900 border-zinc-900 text-white' : 'bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-50'
       }`}
     >
-      <span aria-hidden className="text-sm leading-none">{open && bare ? '−' : '+'}</span>
-      <span>{open && bare ? 'Close' : label}</span>
+      <span aria-hidden data-shown-value className="text-sm leading-none">{open && bare ? '−' : '+'}</span>
+      <span>{open && bare ? AR.close : label}</span>
     </button>
   )
 
@@ -245,12 +246,12 @@ export default function AddResearch({
       {error && <p role="alert" className="text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">⚠ {error}</p>}
 
       <fieldset className="space-y-2">
-        <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">1 · A file, a web address or text (any one — or nothing but a thought)</legend>
+        <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">{AR.what}</legend>
         <div className="flex flex-wrap gap-2 items-center">
           {/* "Choose a file" is a BUTTON (a link-looking file control was missed) */}
           <button type="button" onClick={() => fileRef.current?.click()} disabled={fetching}
             className="text-xs font-medium px-3 py-1.5 rounded-lg border-2 border-zinc-400 bg-white text-zinc-800 hover:bg-zinc-50 disabled:opacity-40" data-choose-file>
-            Choose a file
+            {AR.chooseFile}
           </button>
           <input ref={fileRef} type="file" hidden aria-label="File" onChange={(e) => { void readFile(e.target.files?.[0] ?? null); e.target.value = '' }} />
           {fileName ? <span className="text-xs text-zinc-700">· {fileName}</span> : <span className="text-xs text-zinc-500">no file chosen</span>}
@@ -259,18 +260,18 @@ export default function AddResearch({
           <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="…or a web address" aria-label="Web address"
             className="flex-1 min-w-[12rem] border border-zinc-300 rounded px-2 py-1 text-xs" />
           <button type="button" onClick={() => void fetchPage()} disabled={!url.trim() || fetching} className="text-xs font-medium px-2.5 py-1 rounded border border-zinc-300 disabled:opacity-40">
-            {fetching ? 'Fetching…' : 'Fetch a readable view'}
+            {fetching ? AR.fetching : AR.fetchPage}
           </button>
         </div>
         {fetchNote && <p className={`text-xs rounded px-2 py-1 border ${fetchNote.ok ? 'bg-zinc-50 border-zinc-200 text-zinc-700' : 'bg-amber-50 border-amber-200 text-amber-900 font-medium'}`}>{fetchNote.ok ? '✓ ' : '✗ '}{fetchNote.text}</p>}
-        <label className="block text-[11px] text-zinc-500">…or paste the text here, of any length{textLocked ? ' (this is the text we read — select a passage from it)' : ''}</label>
+        <label className="block text-[11px] text-zinc-500">{AR.pasteText}{textLocked ? ' (this is the text we read — select a passage from it)' : ''}</label>
         <textarea ref={textRef} value={sourceText} onChange={(e) => !textLocked && setSourceText(e.target.value)} readOnly={textLocked} rows={sourceText ? 7 : 3}
           placeholder="Paste an article, a report, a passage — or leave this empty and just write a thought below."
           className={`w-full border border-zinc-300 rounded px-2 py-1.5 text-xs ${textLocked ? 'bg-zinc-50' : ''}`} />
         {sourceText.trim() && (
           <div className="flex flex-wrap gap-2 items-center">
-            <button type="button" onClick={useSelection} className="text-xs font-medium px-2.5 py-1 rounded bg-zinc-900 text-white">Use the selected passage as the quote</button>
-            {textLocked && <button type="button" onClick={() => { setSourceText(''); setTextLocked(false); setFileName(null); setFetchNote(null) }} className="text-xs underline text-zinc-500">Clear the text</button>}
+            <button type="button" onClick={useSelection} className="text-xs font-medium px-2.5 py-1 rounded bg-zinc-900 text-white">{AR.useSelection}</button>
+            {textLocked && <button type="button" onClick={() => { setSourceText(''); setTextLocked(false); setFileName(null); setFetchNote(null) }} className="text-xs underline text-zinc-500">{AR.clearText}</button>}
           </div>
         )}
       </fieldset>
@@ -281,10 +282,10 @@ export default function AddResearch({
           <p className="text-zinc-900"><span aria-hidden>⧉ </span><strong>Already added as [Ref: {dup.source.number}]</strong> {dup.source.title} <span className="text-zinc-600">(the same {dup.by})</span> — add this as a further note to it?</p>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => { setPick(dup.source.id); setPicking(false) }} className="text-xs font-medium px-2.5 py-1 rounded bg-zinc-900 text-white" data-dup-yes>
-              Yes — a further note on [Ref: {dup.source.number}]
+              {AR.dupYes(String(dup.source.number))}
             </button>
             <button type="button" onClick={() => setDupDismissed(dup.source.id)} className="text-xs font-medium px-2.5 py-1 rounded border border-zinc-400 bg-white" data-dup-no>
-              No — add it as a new source
+              {AR.dupNo}
             </button>
           </div>
         </div>
@@ -293,11 +294,11 @@ export default function AddResearch({
       {/* 298 §2 + §4 — the title of a NEW source (prefilled from the file's name or the page's title, editable); or the source this note is
           a further note on, chosen from the Sources list's own picker. */}
       <fieldset className="space-y-1.5">
-        <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">2 · {picked ? 'The source' : 'Title'}</legend>
+        <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">{picked ? AR.sourceStep : AR.titleStep}</legend>
         {picked ? (
           <p className="text-xs text-zinc-900 rounded border-2 border-zinc-800 px-2 py-1.5" data-further-note-on={picked.number}>
             A further note on <strong>[Ref: {picked.number}]</strong> {picked.title}{' '}
-            <button type="button" onClick={() => { setPick(''); setPicking(false) }} className="underline text-zinc-600 ml-1">Change</button>
+            <button type="button" onClick={() => { setPick(''); setPicking(false) }} className="underline text-zinc-600 ml-1">{AR.change}</button>
           </p>
         ) : (
           <>
@@ -307,7 +308,7 @@ export default function AddResearch({
               <p className="text-[11px] text-zinc-500">Nothing to file? A thought on its own is kept as <strong>My own observation</strong> — write it under “+ Add your comment”.</p>
             )}
             <button type="button" onClick={() => setPicking((p) => !p)} aria-expanded={picking} className="text-xs underline text-zinc-800" data-further-note-link>
-              This is a further note on a source I’ve already added
+              {AR.furtherNote}
             </button>
             {picking && (
               <div className="rounded-lg border border-zinc-300 p-2" data-further-note-picker>
@@ -321,14 +322,14 @@ export default function AddResearch({
 
       {/* 298 §5 — Quote, Comment and More, each behind its own "+". Open by itself when it already holds something. */}
       <div className="flex flex-wrap gap-2" role="group" aria-label="Optional parts">
-        {!showQuote && <button type="button" onClick={() => setShowQuote(true)} className="text-xs font-medium px-2.5 py-1 rounded-full border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50" data-add-quote>+ Add a quote</button>}
-        {!showComment && <button type="button" onClick={() => setShowComment(true)} className="text-xs font-medium px-2.5 py-1 rounded-full border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50" data-add-comment>+ Add your comment</button>}
-        {!showMore && <button type="button" onClick={() => setShowMore(true)} className="text-xs font-medium px-2.5 py-1 rounded-full border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50" data-more-details>+ More details</button>}
+        {!showQuote && <button type="button" onClick={() => setShowQuote(true)} className="text-xs font-medium px-2.5 py-1 rounded-full border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50" data-add-quote>{AR.addQuote}</button>}
+        {!showComment && <button type="button" onClick={() => setShowComment(true)} className="text-xs font-medium px-2.5 py-1 rounded-full border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50" data-add-comment>{AR.addComment}</button>}
+        {!showMore && <button type="button" onClick={() => setShowMore(true)} className="text-xs font-medium px-2.5 py-1 rounded-full border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50" data-more-details>{AR.moreDetails}</button>}
       </div>
 
       {(showQuote || quote.trim()) && (
         <fieldset className="space-y-1.5">
-          <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">The quote</legend>
+          <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">{AR.quote}</legend>
           <textarea value={quote} onChange={(e) => setQuote(e.target.value)} rows={3} maxLength={8000} placeholder="The quote — word for word, from the source" aria-label="Quote"
             className="w-full border border-zinc-300 rounded px-2 py-1.5 text-xs" />
           <input value={location} onChange={(e) => setLocation(e.target.value)} maxLength={200} placeholder="Where in the source (page, paragraph, section, timestamp)" aria-label="Where the quote is from"
@@ -338,7 +339,7 @@ export default function AddResearch({
 
       {(showComment || comment.trim()) && (
         <fieldset className="space-y-1.5">
-          <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">Your comment</legend>
+          <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">{AR.comment}</legend>
           <textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={3} maxLength={8000} autoFocus={showComment && !comment} placeholder="Your comment — in your own words" aria-label="Comment"
             className="w-full border border-zinc-300 rounded px-2 py-1.5 text-xs" />
         </fieldset>
@@ -346,10 +347,10 @@ export default function AddResearch({
 
       {!pick && sourceText.trim() && (
         <fieldset>
-          <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">Permission</legend>
+          <legend className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">{AR.permission}</legend>
           <label className="mt-1 flex items-start gap-1.5 text-xs text-zinc-700">
             <input type="checkbox" checked={rights} onChange={(e) => setRights(e.target.checked)} className="mt-0.5 accent-zinc-900" />
-            <span>I may share this. <span className="text-zinc-500">(Keeping a document’s text is your assertion that you are allowed to. It is never ticked for you.)</span></span>
+            <span>{AR.mayShare} <span className="text-zinc-500">(Keeping a document’s text is your assertion that you are allowed to. It is never ticked for you.)</span></span>
           </label>
         </fieldset>
       )}
@@ -368,7 +369,7 @@ export default function AddResearch({
             {STANCES.map((st) => (
               <button key={st} type="button" role="radio" aria-checked={stance === st} onClick={() => setStance(st)}
                 className={`text-xs px-2.5 py-1 rounded-full border-2 ${stance === st ? 'bg-zinc-900 border-zinc-900 text-white font-semibold' : 'bg-white border-zinc-300 text-zinc-700'}`}>
-                <span aria-hidden>{STANCE_GLYPH[st]}</span> {STANCE_LABEL[st]}
+                <span aria-hidden data-shown-value>{STANCE_GLYPH[st]}</span> {STANCE_LABEL[st]}
               </button>
             ))}
           </div>
@@ -383,14 +384,14 @@ export default function AddResearch({
               <ul className="flex flex-wrap gap-1">
                 {bears.map((b) => (
                   <li key={b.id} className="text-[11px] border border-zinc-300 rounded-full px-2 py-0.5 bg-zinc-50">
-                    {BEARS_ON_LABEL[b.kind]}: {(b.label ?? b.id).slice(0, 40)} <button type="button" onClick={() => setBears(bears.filter((x) => x.id !== b.id))} aria-label="Remove" className="ml-1 text-zinc-500">×</button>
+                    {BEARS_ON_LABEL[b.kind]}: {(b.label ?? b.id).slice(0, 40)} <button type="button" onClick={() => setBears(bears.filter((x) => x.id !== b.id))} aria-label="Remove" className="ml-1 text-zinc-500">{AR.removeBearsOn}</button>
                   </li>
                 ))}
               </ul>
             )}
           </div>
           <label className="flex items-center gap-1.5 text-xs text-zinc-700">
-            <input type="checkbox" checked={mineOnly} onChange={(e) => setMineOnly(e.target.checked)} className="accent-zinc-900" /> Mine only until I share it
+            <input type="checkbox" checked={mineOnly} onChange={(e) => setMineOnly(e.target.checked)} className="accent-zinc-900" /> {AR.mineOnly}
           </label>
         </div>
       </div>
@@ -405,12 +406,12 @@ export default function AddResearch({
     <>
       <button type="button" onClick={() => void save()} disabled={saveDisabled} data-save
         className="text-sm font-medium px-4 py-1.5 rounded-lg bg-zinc-900 text-white disabled:opacity-40">
-        {saving ? 'Saving…' : 'Save'}
+        {saving ? AR.saving : AR.save}
       </button>
       <span className="text-[11px] text-zinc-500" data-save-hint>{quoteWithoutSource
         ? 'A quote needs its source: give the file, address, text or a title — or choose a source you’ve already added.'
         : !quote.trim() && !comment.trim() && !wantsNewSource ? 'Add a file, link or text, a quote, or a comment to save.' : ''}</span>
-      <button type="button" onClick={() => { reset(); setSaved(null) }} className="text-xs underline text-zinc-500 ml-auto">Start again</button>
+      <button type="button" onClick={() => { reset(); setSaved(null) }} className="text-xs underline text-zinc-500 ml-auto">{AR.startAgain}</button>
     </>
   )
 
@@ -429,7 +430,7 @@ export default function AddResearch({
   return (
     <div className="mb-2">
       {trigger}
-      <FocusDialog title="Add research" onClose={() => setOpen(false)} footer={footer}>{form}</FocusDialog>
+      <FocusDialog title={AR.addResearch} onClose={() => setOpen(false)} footer={footer}>{form}</FocusDialog>
     </div>
   )
 }

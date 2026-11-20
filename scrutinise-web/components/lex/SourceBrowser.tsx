@@ -18,6 +18,7 @@ import {
   FACET_LABEL, QUICK_FACETS, SOURCE_FACETS, SORT_LABEL, applySourceFilter, duplicateGroups, facetCounts,
   type ListedSource, type SourceFacet, type SourceSort,
 } from '@/lib/lex/source-list'
+import { SOURCES_UI } from '@/lib/lex/screen-labels'
 
 export interface BrowserContext {
   all: ListedSource[]
@@ -123,7 +124,7 @@ export default function SourceBrowser({
     return (
       <button key={f} type="button" onClick={() => toggleFacet(f)} aria-pressed={on} data-quick-facet={f}
         className={`text-[11px] px-2 py-0.5 rounded-full ${on ? 'border-2 border-zinc-900 bg-zinc-900 text-white font-semibold' : 'border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50'}`}>
-        <span aria-hidden>{on ? '●' : '○'}</span> {FACET_LABEL[f]} <span className={on ? 'text-zinc-200' : 'text-zinc-500'}>{counts[f]}</span>
+        <span aria-hidden>{on ? '●' : '○'}</span> {FACET_LABEL[f]} <span className={on ? 'text-zinc-200' : 'text-zinc-500'} data-shown-value>{counts[f]}</span>
       </button>
     )
   }
@@ -136,7 +137,7 @@ export default function SourceBrowser({
         <input value={q} onChange={(e) => setQ(e.target.value)} autoFocus={autoFocus} maxLength={200} type="search"
           placeholder={mode === 'pick' ? 'Type to find a source — its title or its text' : 'Search titles and held text'} aria-label="Search the sources"
           className="flex-1 min-w-[10rem] border border-zinc-300 rounded px-2 py-1 text-xs" data-source-search />
-        <label className="text-[11px] text-zinc-600 inline-flex items-center gap-1">Sort
+        <label className="text-[11px] text-zinc-600 inline-flex items-center gap-1">{SOURCES_UI.sort}
           <select value={sort} onChange={(e) => setSort(e.target.value as SourceSort)} aria-label="Sort the sources" className="border border-zinc-300 rounded px-1 py-0.5 text-[11px]" data-source-sort>
             {(Object.keys(SORT_LABEL) as SourceSort[]).map((k) => <option key={k} value={k}>{SORT_LABEL[k]}</option>)}
           </select>
@@ -147,25 +148,25 @@ export default function SourceBrowser({
         {QUICK_FACETS.map(pill)}
         <button type="button" onClick={() => setMoreOpen((o) => !o)} aria-expanded={moreOpen} data-all-filters
           className="text-[11px] px-2 py-0.5 rounded-full border border-dashed border-zinc-400 text-zinc-700 hover:bg-zinc-50">
-          {moreOpen ? '− Fewer filters' : '+ All filters'}{(bearsOn != null || dupsOnly || facets.some((f) => !QUICK_FACETS.includes(f))) && !moreOpen ? ' (on)' : ''}
+          {moreOpen ? SOURCES_UI.fewerFilters : SOURCES_UI.allFilters}{(bearsOn != null || dupsOnly || facets.some((f) => !QUICK_FACETS.includes(f))) && !moreOpen ? ' (on)' : ''}
         </button>
       </div>
 
       {moreOpen && (
         <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2 space-y-2" data-filter-panel>
           <fieldset>
-            <legend className="text-[11px] font-semibold text-zinc-600">Kind</legend>
+            <legend className="text-[11px] font-semibold text-zinc-600">{SOURCES_UI.kind}</legend>
             <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
               {SOURCE_FACETS.map((f) => (
                 <label key={f} className="text-[11px] text-zinc-800 inline-flex items-center gap-1">
                   <input type="checkbox" checked={facets.includes(f)} onChange={() => toggleFacet(f)} className="accent-zinc-900" data-facet={f} />
-                  {FACET_LABEL[f]} <span className="text-zinc-500">({counts[f]})</span>
+                  {FACET_LABEL[f]} <span className="text-zinc-500" data-shown-value>({counts[f]})</span>
                 </label>
               ))}
             </div>
           </fieldset>
           <div className="flex flex-wrap items-center gap-3">
-            <label className="text-[11px] text-zinc-800 inline-flex items-center gap-1">Bears on
+            <label className="text-[11px] text-zinc-800 inline-flex items-center gap-1">{SOURCES_UI.bearsOn}
               <select value={bearsOn ?? ''} onChange={(e) => setBearsOn(e.target.value ? Number(e.target.value) : null)} aria-label="Bears on action" className="border border-zinc-300 rounded px-1 py-0.5 text-[11px]" data-bears-on>
                 <option value="">any action</option>
                 {actionNumbers.map(([n, c]) => <option key={n} value={n}>#{n} ({c})</option>)}
@@ -174,7 +175,7 @@ export default function SourceBrowser({
             {!actionNumbers.length && <span className="text-[11px] text-zinc-500">No source is tied to an action yet (by a note, or by an action citing its [Ref: n]).</span>}
             <label className="text-[11px] text-zinc-800 inline-flex items-center gap-1">
               <input type="checkbox" checked={dupsOnly} onChange={(e) => setDupsOnly(e.target.checked)} className="accent-zinc-900" data-dups-only />
-              Possible duplicates <span className="text-zinc-500">({dupNumbers.size} in {groups.length} group{groups.length === 1 ? '' : 's'})</span>
+              {SOURCES_UI.possibleDuplicates} <span className="text-zinc-500" data-shown-value>({dupNumbers.size} in {groups.length} group{groups.length === 1 ? '' : 's'})</span>
             </label>
           </div>
           {dupsOnly && (
@@ -190,7 +191,7 @@ export default function SourceBrowser({
         {searching ? 'Searching titles and held text… ' : ''}
         Showing {shown.length} of {pool.length}
         {search && !searching ? ` · “${search.q}” found in ${search.ids.size} (held text of ${search.searchedText} searched${search.notHeld ? `; ${search.notHeld} have no held text, so only their titles were searched` : ''})` : ''}
-        {anyFilter && <> · <button type="button" onClick={clearAll} className="underline text-zinc-700">Clear</button></>}
+        {anyFilter && <> · <button type="button" onClick={clearAll} className="underline text-zinc-700">{SOURCES_UI.clear}</button></>}
       </p>
       {error && <p role="alert" className="text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1">⚠ {error}</p>}
 
@@ -200,7 +201,7 @@ export default function SourceBrowser({
             <li key={s.id} className="flex items-start gap-2 rounded border border-zinc-200 bg-white px-2 py-1 text-xs">
               <span className="font-semibold shrink-0">[Ref: {s.number}]</span>
               <span className="flex-1 min-w-0 break-words">{s.title}<span className="block text-[10px] text-zinc-500">{FACET_LABEL[s.facet]}{ctx.matchedWhere.get(s.id) ? ` · matched in ${ctx.matchedWhere.get(s.id)!.join(', ')}` : ''}</span></span>
-              <button type="button" onClick={() => onPick?.(s)} className="shrink-0 text-[11px] font-medium px-2 py-0.5 rounded border-2 border-zinc-800 bg-white hover:bg-zinc-50" data-pick-source={s.number}>Choose</button>
+              <button type="button" onClick={() => onPick?.(s)} className="shrink-0 text-[11px] font-medium px-2 py-0.5 rounded border-2 border-zinc-800 bg-white hover:bg-zinc-50" data-pick-source={s.number}>{SOURCES_UI.choose}</button>
             </li>
           ))}
           {shown.length > 60 && <li className="text-[11px] text-zinc-500">…and {shown.length - 60} more — type to narrow it down.</li>}

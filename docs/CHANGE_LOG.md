@@ -1,5 +1,29 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-20 13:26 UTC - LEX 26-AA item 5: field-guide coverage for the Sources list and Add research, proved in a real browser
+
+BRIEF_26AA item 5. 26-W-b left SourceBrowser and AddResearch unchecked.
+- **The labels moved into tables:** `SOURCES_UI` (8) and `ADD_RESEARCH_UI` (27) in screen-labels.ts. The components read them.
+  - Counts and glyphs inside a control are marked `data-shown-value`, as 26-W-b's components are, so a count is not read as part of
+    the label.
+- **Guide entries** for every key, area "research":
+  - the kind, sort and stance words (`FACET_LABEL`, `SORT_LABEL`, `STANCE_LABEL`), each from its own table;
+  - FocusDialog's "✕", which every focused dialog shows.
+  - Each entry names the tool that does the same, or "none — why".
+- **`check:lex-26aa`**: 56 ran, 56 passed, 9 controls, 0 dead.
+  - Static: the components carry no literal labels, and every key has its own entry.
+  - In a real browser (`scripts/fixtures/research-guide-harness-entry.tsx`, new), against the real source-registry and
+    research-notebook routes on a scratch copy with two fixture sources: the Sources list (list and pick modes, every filter open) and
+    Add research (as a dialog and bare, every part open, a duplicate found, a further note, the picker).
+  - Every one of the 41 distinct labels read is in the guide.
+  - Controls: a planted button is caught; a label renamed in the table appears on screen and the guide explains it as the same entry.
+  - **Four mutations, all red:** an entry dropped (this one first stayed green, because "Clear" is also `common.clear`, so the
+    own-entry assertion was added); a literal put back; a count read as part of a label; an unguided button.
+- ⚠ **A first version of the check spent about 0.34p** (11 small `gemini-2.5-flash` calls, from the ledger): its pasted-text fixture
+  was read into findings by a model. The fixture no longer carries text, and the check now spends nothing (re-run: no findings pass).
+- **Regression:** 298-299 50/50, 26s2-browser 33/33, add-research-md-browser 13/13, 26w-b 60/60 (it caught a tool line written
+  "mine_only", which read as a tool name; reworded), 26x 110/110, 26z 201/201. tsc is clean.
+
 ## 2026-11-20 12:48 UTC - LEX 26-AA item 4: three document kinds re-measured with the 26-W template (19.8p spent of the £1.50 cap)
 
 BRIEF_26AA item 4. Run with `scripts/measure-26aa-kinds.ts` (new) on a scratch copy of 452c5ade, deleted afterwards. The cost lines

@@ -17,8 +17,10 @@ import {
   PROVISION_COLUMNS, PRECEDENT_COLUMNS, STATEMENT_LABEL, COMMENTARY_LABEL, FACET_WORD, WORKSPACE_UI, WORKSPACE_VIEW_WORD, NOTEBOOK_UI, shown,
   LIFECYCLE_STAGE_WORD, LIFECYCLE_UI, PROGRESS_WORD, CHECKLIST_WORD, PAGE_UI, DRAFTING_FILTER_WORD, DEEPENING_LOCK_UI,
   ORGANISING_TOOLBAR_UI, ADD_ACTION_UI, BRIEF_UI, BRIEF_FIELD_WORD, TONE_WORD, DEEPENING_UI, DRAFTS_UI, CBA_UI,
-  PANEL_WORD, PANEL_PLACE_WORD, WHERE_SENTENCES, WHERE_UI, DRAFT_RESTORE_UI, STAGEBAR_ROW_WORD, CAUSE_UI,
+  PANEL_WORD, PANEL_PLACE_WORD, WHERE_SENTENCES, WHERE_UI, DRAFT_RESTORE_UI, STAGEBAR_ROW_WORD, CAUSE_UI, SOURCES_UI, ADD_RESEARCH_UI,
 } from './screen-labels'
+import { FACET_LABEL, SORT_LABEL } from './source-list'
+import { STANCE_LABEL } from './research-notebook-schema'
 import { EXTENTS } from './action-draft-pure'
 import { RECORD_SECTIONS, type RecordSection } from './record-layout-pure'
 import { SLOT_UI, DIRECTION_UI, type AnySlot, type Direction } from './action-record'
@@ -561,6 +563,50 @@ const BRIEF_FIELD_G: Record<keyof typeof BRIEF_FIELD_WORD, GuideText> = {
 }
 const TONE_G: Record<keyof typeof TONE_WORD, GuideText> = Object.fromEntries((Object.keys(TONE_WORD) as Array<keyof typeof TONE_WORD>).map((t) => [t, { purpose: `"Tone and form": the draft reads as ${TONE_WORD[t]}.`, fits: 'One of the five choices in the Brief.', tool: 'propose_brief' }])) as Record<keyof typeof TONE_WORD, GuideText>
 
+// 26-AA item 5 — the Sources list (SourceBrowser) and Add research (AddResearch): 26-W-b left these two unchecked
+const SOURCES_G: Record<keyof typeof SOURCES_UI, GuideText> = {
+  sort: { purpose: 'Orders the sources: newest first, A–Z, or by Ref number.', fits: 'A view only; a source\'s number never changes.', tool: 'list_sources' },
+  allFilters: { purpose: 'Opens every filter: each kind with its count, "Bears on", and possible duplicates.', fits: 'The three quick pills stay beside it.', tool: none('a view of the list; list_sources and list_research_notebook read the same sources') },
+  fewerFilters: { purpose: 'Closes the full filters again.', fits: 'Filters already on stay on, and the button says "(on)".', tool: none('a view of the list') },
+  kind: { purpose: 'Heads the kinds of source to show: documents, web pages, pasted text, your own notes, found by Lex.', fits: 'Ticking none shows every kind.', tool: 'list_sources' },
+  bearsOn: { purpose: 'Shows only the sources tied to one action: by a note on it, or by the action citing the source\'s [Ref: n].', fits: 'Lists only the actions that have a source tied to them.', tool: 'what_have_i_read_on' },
+  possibleDuplicates: { purpose: 'Shows only sources that may be the same one twice: the same document, address or text.', fits: 'They are shown together, never merged; a number is never reused.', tool: none('a view; nothing merges sources') },
+  clear: { purpose: 'Turns every filter and the search off.', fits: 'Shown only while something is filtering the list.', tool: none('a view of the list') },
+  choose: { purpose: 'Picks this source for a further note in Add research.', fits: 'In "This is a further note on a source I\'ve already added".', tool: 'add_research_note (with the source)' },
+}
+const FACET_G: Record<keyof typeof FACET_LABEL, GuideText> = Object.fromEntries((Object.keys(FACET_LABEL) as Array<keyof typeof FACET_LABEL>).map((k) => [k, { purpose: `A kind of source: ${FACET_LABEL[k].toLowerCase()}. As a filter, shows only those (the number is how many).`, fits: 'A quick pill or a box under "Kind"; several can be on at once.', tool: 'list_sources' }])) as Record<keyof typeof FACET_LABEL, GuideText>
+const SORT_G: Record<keyof typeof SORT_LABEL, GuideText> = Object.fromEntries((Object.keys(SORT_LABEL) as Array<keyof typeof SORT_LABEL>).map((k) => [k, { purpose: `Sorts the sources: ${SORT_LABEL[k]}.`, fits: 'One of the choices under "Sort".', tool: 'list_sources' }])) as Record<keyof typeof SORT_LABEL, GuideText>
+const STANCE_G: Record<keyof typeof STANCE_LABEL, GuideText> = Object.fromEntries((Object.keys(STANCE_LABEL) as Array<keyof typeof STANCE_LABEL>).map((k) => [k, { purpose: `The note's stance: it ${k === 'UNDECIDED' ? 'is not yet decided' : k === 'CONTEXT' ? 'gives context' : STANCE_LABEL[k].toLowerCase()} on what it bears on.`, fits: 'A word and a shape (✓ ✗ ○ ?), under "+ More details".', tool: 'add_research_note, update_research_note' }])) as Record<keyof typeof STANCE_LABEL, GuideText>
+const ADD_RESEARCH_G: Record<keyof typeof ADD_RESEARCH_UI, GuideText> = {
+  addResearch: { purpose: 'Opens the one form for adding research: a file, a link, pasted text, a quote, or just a thought.', fits: 'Every note cites a source on the Sources list: a new one, one already added, or "My own observation".', tool: 'add_research_note' },
+  close: { purpose: 'Closes the Add research form.', fits: 'What was typed is kept on this device until it is saved.', tool: none('the form itself') },
+  what: { purpose: 'Step 1: what is being added — a file, a web address or text, or nothing but a thought.', fits: 'Any one of them; a thought alone is filed as "My own observation".', tool: 'add_research_note' },
+  chooseFile: { purpose: 'Picks a file; its text is read so a passage can be chosen as the quote.', fits: 'The title is filled from the file\'s name, editable.', tool: 'file_text, add_research_note' },
+  fetchPage: { purpose: 'Fetches a readable view of the web address, to quote from.', fits: 'A page that refuses (some answer 403) says so; then paste its text.', tool: 'file_url, add_research_note' },
+  fetching: { purpose: 'Says the page or file is being read.', fits: 'As "Fetch a readable view".', tool: none('a state, not a control') },
+  pasteText: { purpose: 'Takes pasted text of any length as the source\'s text.', fits: 'A passage of it can be chosen as the quote; the rest is kept and read into findings.', tool: 'add_research_note' },
+  useSelection: { purpose: 'Makes the passage selected in the text above the quote.', fits: 'Select by dragging across the text first.', limits: 'The quote is up to 8,000 characters.', tool: 'extract_quotes, add_research_note' },
+  clearText: { purpose: 'Empties the text that was read from a file or page.', fits: 'Then another can be chosen or pasted.', tool: none('the form itself') },
+  dupYes: { purpose: 'Files this as a further note on the source already added, rather than a second copy.', fits: 'Offered when the text\'s fingerprint or the address matches a source on the list.', tool: 'add_research_note (with the source)' },
+  dupNo: { purpose: 'Adds it as a new source even though it looks like one already added.', fits: 'Both then show under "Possible duplicates".', tool: 'add_research_note' },
+  titleStep: { purpose: 'Step 2: the new source\'s title.', fits: 'Filled from the file\'s name or the page\'s title; editable.', limits: '300 characters.', tool: 'add_research_note' },
+  sourceStep: { purpose: 'Step 2, for a further note: the source it is on.', fits: '"Change" picks another.', tool: 'add_research_note (with the source)' },
+  change: { purpose: 'Picks a different source for this further note.', fits: 'As "This is a further note on a source I\'ve already added".', tool: none('the form itself') },
+  furtherNote: { purpose: 'Opens a search of the Sources list to choose the source this note is on.', fits: 'The same search and filters as the Sources list.', tool: 'add_research_note (with the source)' },
+  addQuote: { purpose: 'Opens the box for a quote — words from the source — and where in it they are.', fits: 'A quote needs a source.', limits: 'The quote up to 8,000 characters; where, 200.', tool: 'add_research_note' },
+  addComment: { purpose: 'Opens the box for your own comment.', fits: 'A comment alone, with nothing filed, is kept as "My own observation".', limits: '8,000 characters.', tool: 'add_research_note' },
+  moreDetails: { purpose: 'Opens the optional details: author, date, stance, tags, what it bears on, and "mine only".', fits: 'All can be added later.', tool: 'add_research_note, update_research_note' },
+  quote: { purpose: 'Heads the quote and where in the source it is.', fits: 'As "+ Add a quote".', tool: 'add_research_note' },
+  comment: { purpose: 'Heads your comment.', fits: 'As "+ Add your comment".', tool: 'add_research_note' },
+  permission: { purpose: 'Heads the "I may share this" box, shown when a document\'s text is being kept.', fits: 'It is never ticked for you.', tool: none('the owner\'s own assertion') },
+  mayShare: { purpose: 'Your assertion that you are allowed to keep and share this document\'s text.', fits: 'Never ticked for you.', tool: none('the owner\'s own assertion; Lex never makes it') },
+  mineOnly: { purpose: 'Keeps the note visible only to you until you share it.', fits: 'Under "+ More details".', tool: 'answer_notes (op: mine_only, or op: share)' },
+  removeBearsOn: { purpose: 'Takes one "bears on" link off the note being written.', fits: 'Beside each link chosen under "Bears on…".', tool: none('the form itself') },
+  save: { purpose: 'Saves the research: the source on the list and the note, if there is one.', fits: 'It confirms with the source\'s number ([Ref: n]).', tool: 'add_research_note' },
+  saving: { purpose: 'Says the research is being saved.', fits: 'As Save.', tool: none('a state, not a control') },
+  startAgain: { purpose: 'Empties the whole form.', fits: 'Nothing is saved.', tool: none('the form itself') },
+}
+
 // 26-AA item 2 — the Diagnosis's cause buttons, and the Lex tools that do the same through the same functions
 const CAUSE_G: Record<keyof typeof CAUSE_UI, GuideText> = {
   add: { purpose: 'Adds the cause typed above it to the Diagnosis, with why it has persisted if given.', fits: 'It gets the next cause number, which never changes or comes back.', limits: 'The cause up to 2,000 characters; why up to 4,000.', tool: 'add_cause (asks first)' },
@@ -638,6 +684,13 @@ export function guideEntries(): GuideEntry[] {
     ...fromTable('record', 'cba', CBA_UI, CBA_G),
     // 26-AA
     ...fromTable('workspace', 'cause', CAUSE_UI, CAUSE_G),
+    ...fromTable('research', 'sources', SOURCES_UI, SOURCES_G),
+    ...fromTable('research', 'sourceKind', FACET_LABEL, FACET_G),
+    ...fromTable('research', 'sourceSort', SORT_LABEL, SORT_G),
+    ...fromTable('research', 'stance', STANCE_LABEL, STANCE_G),
+    ...fromTable('research', 'addResearch', ADD_RESEARCH_UI, ADD_RESEARCH_G),
+    // FocusDialog's own close mark: every focused dialog (Add research among them) shows it in its title bar
+    { key: 'common.dialogClose', area: 'common', label: '✕', purpose: 'Closes the dialog.', fits: 'In the title bar of every focused dialog; Esc does the same. Anything typed in Add research is kept on this device.', tool: none('the dialog itself') },
   ]
 }
 

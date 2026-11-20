@@ -359,6 +359,48 @@ export const WHERE_UI = {
   chaptersOfActions: 'The actions on this page',
   addressLabel: 'Your place: stage, chapter and panel',
 } as const
+/** 26-AA item 5 — the Sources list's controls (SourceBrowser: the research panel's list and Add research's picker). The kind, sort and
+ *  stance words are their own tables (FACET_LABEL, SORT_LABEL in source-list.ts; STANCE_LABEL in research-notebook-schema.ts). */
+export const SOURCES_UI = {
+  sort: 'Sort',
+  allFilters: '+ All filters',
+  fewerFilters: '− Fewer filters',
+  kind: 'Kind',
+  bearsOn: 'Bears on',
+  possibleDuplicates: 'Possible duplicates',
+  clear: 'Clear',
+  choose: 'Choose',
+} as const
+/** 26-AA item 5 — Add research's controls (AddResearch). */
+export const ADD_RESEARCH_UI = {
+  addResearch: 'Add research',
+  close: 'Close',
+  what: '1 · A file, a web address or text (any one — or nothing but a thought)',
+  chooseFile: 'Choose a file',
+  fetchPage: 'Fetch a readable view',
+  fetching: 'Fetching…',
+  pasteText: '…or paste the text here, of any length',
+  useSelection: 'Use the selected passage as the quote',
+  clearText: 'Clear the text',
+  dupYes: (n: string) => `Yes — a further note on [Ref: ${n}]`,
+  dupNo: 'No — add it as a new source',
+  titleStep: '2 · Title',
+  sourceStep: '2 · The source',
+  change: 'Change',
+  furtherNote: 'This is a further note on a source I’ve already added',
+  addQuote: '+ Add a quote',
+  addComment: '+ Add your comment',
+  moreDetails: '+ More details',
+  quote: 'The quote',
+  comment: 'Your comment',
+  permission: 'Permission',
+  mayShare: 'I may share this.',
+  mineOnly: 'Mine only until I share it',
+  removeBearsOn: '×',
+  save: 'Save',
+  saving: 'Saving…',
+  startAgain: 'Start again',
+} as const
 /** 26-AA item 2 — the Diagnosis's cause buttons (FieldsPanel's CauseCard and CausesField). Each has a field-guide entry naming the Lex tool
  *  that does the same (add_cause, edit_cause, retire_cause). */
 export const CAUSE_UI = {
