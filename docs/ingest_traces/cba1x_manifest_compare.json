@@ -1,0 +1,38 @@
+{
+ "at": "2026-11-20T17:28:39.992Z",
+ "fileKeys": 464,
+ "lexKeys": 463,
+ "diffs": [
+  {
+   "key": "green-book:table-A.1",
+   "why": "only in the file manifest"
+  }
+ ],
+ "byDoc": {
+  "green-book": 403,
+  "gb-discounting": 32,
+  "gb-optimism-bias": 29
+ },
+ "notKeyed": [
+  {
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:1",
+   "ref": "front",
+   "why": "not a numbered paragraph or table (front matter, appendix, worked example)"
+  },
+  {
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:1",
+   "ref": "front",
+   "why": "not a numbered paragraph or table (front matter, appendix, worked example)"
+  },
+  {
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:30",
+   "ref": "example-1-part-1-capital-expenditure",
+   "why": "not a numbered paragraph or table (front matter, appendix, worked example)"
+  },
+  {
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:31",
+   "ref": "appendix",
+   "why": "not a numbered paragraph or table (front matter, appendix, worked example)"
+  }
+ ]
+}

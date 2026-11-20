@@ -1,5 +1,44 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-20 17:31 UTC - INGEST CBA-1 EXECUTE COMPLETE (decisions 326–331, 350): §3 stats tables, §4/§5 register, §6 manifest, §8 Table 1, three-layer check; scripts typecheck fixed
+
+**From:** CCh GO-350b (20 Nov 07:57; Charlie "350 yes"). **Report:** `docs/INGEST_CBA_1_EXECUTE_REPORT.md`. Every prediction below hit.
+- **§3 (329), stats DB.** The migration adds a per-row `releaseDate` and `priceBasis`, plus a new `stat_suppressed_cell` table holding
+  `[c]` and `[n]` as states. It is not a nullable `value`, because every reader does `Number(value)` and would turn NULL into 0.
+  - `css-2026` (tables 7, 20, 21, 25): 2,812 values + 408 suppressed.
+  - `hmt-gdp-deflators` (June and October 2026 releases): 586. The June FY index equals `DeflatorSeries` on 71/71 years.
+  - `pesa-ch5-function`: re-run with its release date and basis, 0 values changed.
+  - `check-cba-stats.ts`: 10/10, 6 controls, 0 dead.
+- **§8 Table 1:** `gb-optimism-bias-table-1`, both bounds, outsourcing as opex, N/A as `[n]`, PDF page 2. It matches the page-2 text layer
+  and Lex's `OPTIMISM_BIAS_TABLE_1`. 15/15.
+- **§6 manifest:** `docs/manifests/cba-citation-manifest.json`, 464 keys, key → id → hash, built from the reviewed split rather than from
+  `sectionTitle`. It agrees with 26-Y's derived manifest on every key and id, except `green-book:table-A.1`, which Lex's grammar cannot
+  spell.
+- **Three-layer:** green-book 404/404/408/408, gb-discounting 33/33/33/33, gb-optimism-bias 31/31/36/36. All 10 engine keys are live on
+  both serves. `govuk-core-docs` reads OK.
+- **§4/§5:** four rows added to `LICENCE_REGISTER.md`.
+  - GMCA's CC BY attribution string is recorded, ⚠ **marked unsatisfied**: no reader shows `notes` or `sourceUrl`.
+  - The NAO reading (330) is recorded for Charlie to confirm; 3,983/3,983 rows carry `nao-nc`.
+  - The repo's `m4-gmca.ts` still wrote "© GMCA 2026". It is now aligned with the correct production rows.
+- **Scripts typecheck (26AA item 6):** `verify-statutory-graph-parity.ts`'s dynamic import pulled `scripts/ingest/*` into the web scripts
+  program. It is now excluded by name; 0 ingest files remain in the program, and the result no longer depends on which `node_modules`
+  exist.
+- **Seen, not mine:** six `pwdata-*` collections are FTS-SHORT in the census (`pwdata-wrans` −23,071 the largest), probably new since 20 Oct.
+
+## 2026-11-20 17:15 UTC - INGEST CBA-1 EXECUTE resumed (GO-350b, decision 350 = option 3): PREDICTIONS before the writes (all six scored "hit" above)
+
+**Stats DB (separate Neon project; whichdb passed 17:05, 5 migrations, last `20260804180100`):**
+- P1 migration `20261120160000_cba_release_basis_suppression` applies cleanly; `migrate diff` afterwards is empty.
+- P2 `css-2026`: 2,812 observations, 408 suppressed cells (263 `[c]`, 145 `[n]`), 3,220 series; 0 rows missing release date or basis;
+  0 cells in both tables. Readback AGREE.
+- P3 `hmt-gdp-deflators`: 586 observations over 8 series (2 releases × FY/CY × index/% change), 0 suppressed. The June 2026 FY index equals
+  main-DB `DeflatorSeries` on all 71 years (1955–2025), once both are put on the same base.
+- P4 `pesa-ch5-function` re-run through its own handler: 437 observations and 189 series as held; **0 values change**; 437/437 carry the
+  release date (2025-07-17) and basis afterwards.
+- P5 Nothing in `corpus_sections`, R2 or either index changes; the three-layer verdict for `govuk-core-docs` is unchanged.
+- P6 (added later in the session, before its write; time not recorded) `gb-optimism-bias-table-1`: 22 values (5 rows × 4, outsourcing opex × 2) and 2 `[n]` cells (outsourcing
+  works duration), 24 series; read back equal to the transcription.
+
 ## 2026-11-20 13:41 UTC - LEX 26-AA item 8 (decision 355): background notes were refused for reporting their sources; the guard is fixed, 62% refused → 0 of 7
 
 Charlie's decision 355 (20 Nov 13:21): find and fix the cause of the refusals, and raise the price only if they remain.

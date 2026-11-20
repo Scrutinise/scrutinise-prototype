@@ -3,7 +3,7 @@
 //
 // LICENCE (STEP 1 finding, from the workbook's own Introduction sheet):
 //   "This work is licensed under the Creative Commons Attribution 4.0
-//    International License" — © Greater Manchester Combined Authority 2026.
+//    International License" — no © line in the sheet; edition "Updated autumn 2025".
 //   CC BY 4.0 permits reuse incl. commercial WITH ATTRIBUTION. Attribution is
 //   satisfied structurally: every row carries source (edition + entry code),
 //   sourceUrl, and a CC BY note. NOT Crown copyright — do not relicense as OGL.
@@ -26,8 +26,13 @@ import { neonPrisma, download, CACHE_DIR, APPLY } from './util'
 
 const SOURCE_URL = 'https://www.greatermanchester-ca.gov.uk/media/sbdg15pr/gmca-unit-cost-database-v3-0-final.xlsx'
 const PUB_URL = 'https://www.greatermanchester-ca.gov.uk/what-we-do/research/research-cost-benefit-analysis/'
-const EDITION = 'GMCA Unit Cost Database v3.0 (2026)'
-const CC_NOTE = '© GMCA 2026, licensed CC BY 4.0 (attribution in this row). Original price year; uprated via GDP deflator.'
+// ⚠ CC-Ingest, 20 Nov 2026 (CBA-1 EXECUTE §4): aligned with the 30 rows ALREADY ON PRODUCTION (written 14 Nov by the laptop
+// session, whose copy of this file was never pushed). This file still said "© GMCA 2026" / year 2026, which the workbook does not
+// support: its Introduction sheet reads "Updated autumn 2025", gives the CC BY 4.0 notice, and carries no © line. Re-running the old
+// version would have overwritten correct attribution with wrong. The string below is the production rows' `notes`, verbatim, and
+// is the attribution recorded in docs/LICENCE_REGISTER.md.
+const EDITION = 'GMCA Unit Cost Database v3.0 (updated autumn 2025)'
+const CC_NOTE = "licence=cc-by-4.0; attribution required, in this form: Unit Cost Database v3.0, Greater Manchester Combined Authority (updated autumn 2025), https://www.greatermanchester-ca.gov.uk/what-we-do/research/research-cost-benefit-analysis/ — licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Figure held at its original price year; any uprating is Scrutinise's (GDP deflator), not GMCA's."
 
 // The ~30 selected entries (manifest STEP 2): top-level, most reusable, avoiding
 // overlap with the Home Office 2019/20 crime unit costs already loaded (v2-*).
@@ -99,7 +104,7 @@ async function main() {
         low: round2, high: round2,
         source: `${EDITION}, entry ${e.code}`,
         sourceUrl: PUB_URL,
-        year: 2026,
+        year: 2025, // the edition's own date ("Updated autumn 2025"), as the production rows hold
         method: `Fiscal unit cost; borne by ${e.agency || 'multiple agencies'}. Quality-assured compilation (Green Book supplementary guidance since 2014).`,
         notes: CC_NOTE,
         priceYear: e.priceYear,
