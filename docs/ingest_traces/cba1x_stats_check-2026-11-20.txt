@@ -1,0 +1,17 @@
+PASS  pesa-ch5-function: every observation has a release date and a price basis — 437 rows, 0 missing
+PASS  css-2026: every observation has a release date and a price basis — 2812 rows, 0 missing
+PASS  hmt-gdp-deflators: every observation has a release date and a price basis — 586 rows, 0 missing
+PASS  gb-optimism-bias-table-1: every observation has a release date and a price basis — 22 rows, 0 missing
+CTRL fired  the same count finds rows WITHOUT them in an older dataset (hmrc-receipts) — 693 of 693 missing
+PASS  suppressed cells exist and every one carries its table's own definition — [{"marker":"c","n":263,"badtext":0},{"marker":"n","n":147,"badtext":0}]
+PASS  no cell is both a value and a suppressed state — 0 overlapping
+PASS  no Civil Service median salary is stored as £0 (a suppressed cell read as zero) — 0 zero salaries
+CTRL fired  the zero query does find zeroes where the publisher printed 0 (headcount) — 142 zero headcounts
+CTRL fired  the marker CHECK refuses a marker other than c|n — stat_suppressed_cell_marker_check
+PASS  no deflator index is stored for a forecast year — [{"measure":"gdp_deflator_index","status":"outturn","n":284},{"measure":"gdp_deflator_pct_change","status":"forecast","n":22},{"measure":"gdp_deflator_pct_change","status":"outturn","n":280}]
+CTRL fired  forecast rows are visible to this query (the % change series) — forecast pct rows
+PASS  June 2026 FY index = main-DB DeflatorSeries on every held year (rebased 2019-20, tolerance 1e-6) — 71/71 years compared, max relative difference 0.00e+0
+CTRL fired  the same comparison detects a different release (October 2026 vs DeflatorSeries) — max relative difference 0.674%
+PASS  pesa re-run changed no value, added and removed no observation — 437 before, 437 after: 0 changed, 0 added, 0 removed
+CTRL fired  the comparison detects a single changed value — mutated 874d4bc453295751…
+10 ran, 10 passed, 0 failed; 6 controls, 0 dead

@@ -24,6 +24,11 @@ export interface ObservationInput {
   periodLabel: string
   value: number
   status: string | null
+  /** CBA-1 EXECUTE §3 (329): the publisher's release date and the stated price basis, per row.
+   *  Omit for datasets loaded without them (NULL). On a re-load BOTH are overwritten with what the
+   *  caller supplies, deliberately: a refresh that changes the value must not keep the old release date. */
+  releaseDate?: Date | null
+  priceBasis?: string | null
 }
 
 /**
@@ -224,21 +229,24 @@ export async function upsertObservationsBatch(
       params.push(
         r.seriesId, r.obs.periodType, r.obs.periodStart, r.obs.periodLabel, r.obs.value,
         r.obs.status, r.geography, r.cofogFunctionCode, r.unit,
+        r.obs.releaseDate ?? null, r.obs.priceBasis ?? null,
       )
       values.push(
         `($${i + 1}, $${i + 2}::"stat_period_type", $${i + 3}::timestamp, $${i + 4}, ` +
-        `$${i + 5}::numeric, $${i + 6}, $${i + 7}, $${i + 8}, $${i + 9}, now())`,
+        `$${i + 5}::numeric, $${i + 6}, $${i + 7}, $${i + 8}, $${i + 9}, now(), $${i + 10}::date, $${i + 11})`,
       )
     }
     written += await prisma.$executeRawUnsafe(
       `INSERT INTO "stat_observation"
          ("seriesId","periodType","periodStart","periodLabel","value","status",
-          "geography","cofogFunctionCode","unit","createdAt")
+          "geography","cofogFunctionCode","unit","createdAt","releaseDate","priceBasis")
        VALUES ${values.join(',')}
        ON CONFLICT ("seriesId","periodType","periodStart") DO UPDATE SET
          "value" = EXCLUDED."value",
          "status" = EXCLUDED."status",
-         "periodLabel" = EXCLUDED."periodLabel"`,
+         "periodLabel" = EXCLUDED."periodLabel",
+         "releaseDate" = EXCLUDED."releaseDate",
+         "priceBasis" = EXCLUDED."priceBasis"`,
       ...params,
     )
   }
