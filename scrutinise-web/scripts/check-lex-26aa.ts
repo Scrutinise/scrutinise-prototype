@@ -21,7 +21,8 @@ import { scratchCopy, deleteScratch } from './lib/scratch-copy'
 import { execute, toolByName, isModelTool } from '../lib/lex/agent/tools'
 import type { ToolCtx } from '../lib/lex/agent/types'
 import { guideEntries, toolsNamed } from '../lib/lex/field-guide'
-import { CAUSE_UI } from '../lib/lex/screen-labels'
+import { CAUSE_UI, TREE_UI } from '../lib/lex/screen-labels'
+import { planFor } from '../lib/lex/document-drafting'
 
 const ROOT = join(__dirname, '..')
 /** Comments are stripped before a source is scanned, so a comment naming a literal cannot satisfy or fail a check. */
@@ -191,10 +192,76 @@ async function part2() {
   }
 }
 
+// ── item 3 — draft_heading_needs against "Draft what this heading needs" ───────────────────────────────────────────────────────────
+function part3Static() {
+  section('3 · draft_heading_needs — static')
+  const t = toolByName('draft_heading_needs')
+  ok('draft_heading_needs exists, is offered to the model, and asks first (a run tool, tier "ask")', !!t && isModelTool('draft_heading_needs') && t.tier === 'ask' && t.category === 'run')
+  const g = guideEntries().find((e) => e.label === TREE_UI.draftWhatHeadingNeeds)
+  ok('the guide\'s "Draft what this heading needs" names draft_heading_needs (it said "none — not yet")', !!g && /draft_heading_needs/.test(g.tool), g?.tool)
+}
+
+async function part3() {
+  section('3 · draft_heading_needs — the same plan, price and queue as the button, on TWIN scratch copies')
+  // ⚠ The live worker never claims a scratch idea's jobs (runNextDraftJob: `NOT i."isScratch"`), so queueing here spends nothing.
+  const A = await scratchCopy(SOURCE, '26aa-heading-tool')
+  const B = await scratchCopy(SOURCE, '26aa-heading-button')
+  try {
+    const owner = await prisma.user.findUniqueOrThrow({ where: { id: A.userId } })
+    setUser(owner)
+    const { POST } = await import('../app/api/ideas/[id]/action-documents/route')
+    const press = async (ideaId: string, body: unknown) => {
+      const r = await POST(new Request('http://x', { method: 'POST', body: JSON.stringify(body) }), { params: Promise.resolve({ id: ideaId }) })
+      return { status: r.status, json: await r.json().catch(() => null) as { ok?: boolean; data?: Record<string, unknown>; error?: string } | null }
+    }
+    const ctx = (confirmed: boolean, agreedPence: number | null): ToolCtx => ({ ...ctxFor(A.id, A.userId, confirmed), agreedPence })
+    // a heading on the copy with something to draft
+    const heads = await prisma.actionHeading.findMany({ where: { ideaId: A.id }, orderBy: { orderIndex: 'asc' }, select: { id: true, name: true } })
+    let pick: { name: string; pence: number; items: number } | null = null
+    for (const h of heads) {
+      const p = await planFor(A.id, { headingId: h.id })
+      if (p.ok && p.data.items.length) { pick = { name: h.name, pence: p.data.pence, items: p.data.items.length }; break }
+    }
+    if (!pick) { notRun++; console.log('  NOT RUN — no heading on the copy has anything left to draft'); return }
+    const hB = (await prisma.actionHeading.findFirstOrThrow({ where: { ideaId: B.id, name: pick.name }, select: { id: true } })).id
+    console.log(`  (heading “${pick.name}”: ${pick.items} item(s), plan total ${pick.pence.toFixed(2)}p)`)
+    const jobs = async (ideaId: string) => {
+      const rows = await prisma.documentDraftJob.findMany({ where: { ideaId }, orderBy: { seq: 'asc' }, select: { actionId: true, kind: true, seq: true, pricePence: true, status: true, userId: true } })
+      const num = new Map((await prisma.lexCoherentAction.findMany({ where: { ideaId }, select: { id: true, number: true } })).map((a) => [a.id, a.number]))
+      return JSON.stringify(rows.map((r) => ({ ...r, actionId: num.get(r.actionId) })))
+    }
+
+    const asked = await execute(toolByName('draft_heading_needs')!, ctx(false, null), { heading: pick.name })
+    ok('asks first: a confirm card carrying the plan\'s total, nothing queued', !asked.ok && !!asked.pending && Math.abs((asked.pending.pence ?? -1) - pick.pence) < 0.001 && /^measured/.test(asked.pending.priceSource ?? '') && (await prisma.documentDraftJob.count({ where: { ideaId: A.id } })) === 0, JSON.stringify(asked.pending))
+
+    const low = Math.max(0, pick.pence - 1)
+    const lowT = await execute(toolByName('draft_heading_needs')!, ctx(true, low), { heading: pick.name })
+    const lowB = await press(B.id, { op: 'draftQueue', headingId: hB, agreedPence: low })
+    ok('pressed at a price below the plan, both the tool and the button refuse and queue nothing', !lowT.ok && /you agreed/.test(lowT.error ?? '') && lowB.status === 422 && (await prisma.documentDraftJob.count({ where: { ideaId: { in: [A.id, B.id] } } })) === 0, `${lowT.error} / ${lowB.status}`)
+
+    const t = await execute(toolByName('draft_heading_needs')!, ctx(true, pick.pence), { heading: pick.name })
+    const b = await press(B.id, { op: 'draftQueue', headingId: hB, agreedPence: pick.pence })
+    const ja = await jobs(A.id), jb = await jobs(B.id)
+    ok('at the agreed price, the tool and the button queue the same jobs (action, kind, order, price, status, who)', t.ok && b.status === 200 && ja === jb && ja !== '[]', !t.ok ? t.error : `\n    tool   ${ja.slice(0, 300)}\n    button ${jb.slice(0, 300)}`)
+    ok(`…${pick.items} job(s) each, priced as the plan`, (t as { data?: { queued?: number; pence?: number } }).data?.queued === pick.items && Math.abs(((t as { data?: { pence?: number } }).data?.pence ?? -1) - pick.pence) < 0.001)
+    const unknown = await execute(toolByName('draft_heading_needs')!, ctx(true, 999), { heading: 'No such heading 26aa' })
+    control('an unknown heading is refused in words', !unknown.ok && /no heading/.test(unknown.error ?? ''))
+    // a stray job on one twin must break the match
+    await prisma.documentDraftJob.updateMany({ where: { ideaId: A.id, seq: 0 }, data: { pricePence: 0.01 } })
+    control('a changed job on one twin is seen as a difference', (await jobs(A.id)) !== (await jobs(B.id)))
+  } finally {
+    setUser(undefined)
+    // the scratch ideas' queued jobs go first (scratch only: the ideas were made above)
+    await prisma.documentDraftJob.deleteMany({ where: { ideaId: { in: [A.id, B.id] } } })
+    console.log(`  (scratch copies deleted: ${await deleteScratch(A.id)}, ${await deleteScratch(B.id)})`)
+  }
+}
+
 async function main() {
   part2Static()
-  if (process.argv.includes('--pure')) { notRun += 2; console.log('  (A3 and item 2 on the database not run: --pure)') }
-  else { await partA3(); await part2() }
+  part3Static()
+  if (process.argv.includes('--pure')) { notRun += 3; console.log('  (A3, items 2 and 3 on the database not run: --pure)') }
+  else { await partA3(); await part2(); await part3() }
   console.log(`\n${ran} ran · ${pass} passed · ${fail} failed · ${controls} controls (${dead} dead) · ${notRun} not run`)
   process.exit(fail || dead ? 1 : 0)
 }

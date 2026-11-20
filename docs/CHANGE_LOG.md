@@ -1,5 +1,23 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-20 12:39 UTC - LEX 26-AA item 3: draft_heading_needs, "Draft what this heading needs" from the chat
+
+BRIEF_26AA item 3. It uses the button's own plan (`planFor`) and queue (`queueDrafting`), so it runs on the same worker and the same
+price plan.
+- It asks first: the confirm card carries the plan's measured total, which is re-reckoned when the owner presses it and refused if it
+  has gone up.
+- `heading` is the heading's name, or "Not under a heading".
+- The guide's "Draft what this heading needs" now names the tool (it said "none — not yet").
+- **`check:lex-26aa`**: 37 ran, 37 passed, 7 controls, 0 dead. It runs on twin scratch copies; the live worker never claims a
+  scratch idea's jobs, so nothing was spent.
+  - The test heading was "Primary legislation" on the copy: 5 items, 43.20p.
+  - The confirm card carries the plan's total, and nothing is queued before it is pressed.
+  - Below the plan's price, both the tool and the button refuse.
+  - At the agreed price, both queue the same jobs (action, kind, order, price, status, who).
+  - Controls: an unknown heading is refused; a changed job on one twin is caught.
+  - **Three mutations, all red:** the agreed price ignored; the tool not asking first; the card priced at zero.
+- **Regression:** 26v2b 47/47, 26w-b 60/60, 26p 126/126. tsc is clean (web; the scripts program has only the three known Ingest errors).
+
 ## 2026-11-20 12:27 UTC - LEX 26-AA item 2: Lex can add, edit and remove the Diagnosis's causes (add_cause, edit_cause, retire_cause)
 
 BRIEF_26AA item 2, on CCh's GO of 20 Nov 07:40 (Q4: items 2–5 while item 1 waited). This closes the one gap 26-W-b's inventory left.

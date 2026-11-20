@@ -191,7 +191,7 @@ const BLOCKS: Record<keyof typeof TOUCH_BLOCK, GuideText> = {
   near: { purpose: 'Neighbouring provisions, each with the question it raises.', fits: 'Block 5.', tool: 'read_section' },
 }
 const TREE: Record<keyof typeof TREE_UI, GuideText> = {
-  draftWhatHeadingNeeds: { purpose: 'Drafts everything the actions under a heading still need.', fits: 'Asks first at the measured price; each draft is saved as a proposal.', tool: none('not yet: draft_document covers one action') },
+  draftWhatHeadingNeeds: { purpose: 'Drafts everything the actions under a heading still need.', fits: 'Asks first at the measured price; each draft is saved as a proposal.', tool: 'draft_heading_needs' },
   changeWhatThisNeeds: { purpose: 'Sets which drafts an action needs by hand, with a reason.', fits: 'Overrides the rule that works it out from the avenue and the heading\'s kind.', tool: 'set_document_needs' },
   generateItFree: { purpose: 'Generates the collision report.', fits: 'Free.', tool: 'generate_collision_report' },
   writeIt: { purpose: 'Opens a form for the owner to write a missing draft.', fits: 'As "Add a draft".', tool: 'propose_document_text' },

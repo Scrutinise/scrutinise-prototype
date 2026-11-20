@@ -1926,6 +1926,34 @@ const draftDocumentTool: ToolDefinition = {
   },
 }
 
+// 26-AA item 3 — "Draft what this heading needs" from the chat: the SAME plan (planFor) and the SAME queue (queueDrafting) as the drafts
+// tree's button, so the price on the confirm card is the plan's total, re-reckoned when the owner presses it and refused if it has gone up.
+const NO_HEADING_WORDS = ['not under a heading', 'no heading', 'none']
+async function headingScope(ctx: ToolCtx, heading: string): Promise<{ headingId: string | null } | null> {
+  if (NO_HEADING_WORDS.includes(heading.trim().toLowerCase())) return { headingId: null }
+  const h = await headingByName(ctx, heading)
+  return h ? { headingId: h.id } : null
+}
+const draftHeadingNeedsTool: ToolDefinition = {
+  name: 'draft_heading_needs', category: 'run', tier: 'ask',
+  description: 'The same as the owner\'s "Draft what this heading needs" in the drafts tree: drafts everything the actions under one heading still need (each a proposal of yours, saved as it finishes, in the background, on the same queue). `heading` is the heading\'s name, or "Not under a heading". Asks first, at the plan\'s measured total.',
+  schema: z.object({ heading: z.string().min(1).max(200) }),
+  describe: (i) => `Draft what “${clip((i as { heading?: string })?.heading ?? '?', 80)}” needs`,
+  async price(ctx, { heading }) {
+    const scope = await headingScope(ctx, heading)
+    if (!scope) return null
+    const p = await DD.planFor(ctx.ideaId, scope)
+    return p.ok ? { pence: p.data.pence, source: `measured: ${p.data.line}` } : null
+  },
+  async run(ctx, { heading }) {
+    const scope = await headingScope(ctx, heading)
+    if (!scope) return fail(`there is no heading “${heading}” on this idea's live list.`)
+    const r = await DD.queueDrafting(ctx.ideaId, scope, ctx.userId, ctx.agreedPence ?? 0)
+    if (!r.ok) return fail((r as { error: string }).error)
+    return { ok: true, data: { queued: r.data.queued, alreadyWaiting: r.data.alreadyWaiting, pence: r.data.pence, say: `Drafting ${r.data.queued} document${r.data.queued === 1 ? '' : 's'} under “${heading}”; each is saved as a proposal as it finishes.` }, ui: [{ type: 'open_panel', panel: 'actions' }] }
+  },
+}
+
 const redraftDocumentTool: ToolDefinition = {
   name: 'redraft_document', category: 'run', tier: 'ask',
   description: 'The same as "Ask Lex to redraft" on a draft: a fresh draft of it, as a proposal beside its versions (an older waiting proposal is set aside, kept). For a code, specification, costing, operating text or background note you may pass the owner\'s instruction ("model it on [Ref: 218]", "shorter") and a model source. Asks first, at the measured price.',
@@ -2730,7 +2758,7 @@ const setAppraisalPeriodTool: ToolDefinition = {
 }
 export const CBA_TOOLS: ToolDefinition[] = [addBenefitLineTool, setBenefitLineTool, answerBenefitLineTool, setCostLineAppraisalTool, readCbaSummaryTool, explainCbaFigureTool, generateCbaReportTool, setAppraisalPeriodTool]
 
-export const DOCUMENT_TOOLS: ToolDefinition[] = [listDocumentsTool, readDocumentTool, proposeDocumentText, draftDocumentTool, redraftDocumentTool, useProposalTool, acceptDocumentTool, setAsideProposalTool, reviewDocumentTool, generateDocumentTool, readBriefTool, proposeBriefTool]
+export const DOCUMENT_TOOLS: ToolDefinition[] = [listDocumentsTool, readDocumentTool, proposeDocumentText, draftDocumentTool, draftHeadingNeedsTool, redraftDocumentTool, useProposalTool, acceptDocumentTool, setAsideProposalTool, reviewDocumentTool, generateDocumentTool, readBriefTool, proposeBriefTool]
 
 export const MODEL_TOOLS: ToolDefinition[] = [
   ...DOCUMENT_TOOLS, ...INVENTORY_TOOLS,
