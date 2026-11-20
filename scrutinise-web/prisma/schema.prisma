@@ -2911,6 +2911,12 @@ model PolicyOption {
   /// guiding-policy-state.ts); null on an ordinary un-consolidated candidate.
   rulesOut          String?
   likelihood        String?
+  /// 26-AA item 1 (183/196) — REMOVED IS ARCHIVED, NOT DELETED. The row, its `number` and its `status` stay; `lib/prisma.ts` hides archived
+  /// rows from direct reads unless the query names `archivedAt`. `nextNumberFor` reads archived rows too, so a number is never reused.
+  /// archiveReason: REMOVED. archivedById: a User.id, no FK. DDL: prisma/lex_26aa_archive.sql.
+  archivedAt        DateTime?
+  archivedById      String?
+  archiveReason     String?
 
   feedback       PolicyFeedback[]
   /// The consolidation(s) this candidate's accepted draft became. Almost always
@@ -3931,6 +3937,11 @@ model CoherentActionSection {
   legislationSectionId String
   proposedWording      String?
   changeType           String   @default("AMEND")
+  /// 26-AA item 1 (183/196) — a removed law link is ARCHIVED with the owner's proposed wording, not deleted. lib/prisma.ts hides archived
+  /// rows from direct reads. archiveReason: REMOVED. DDL: prisma/lex_26aa_archive.sql.
+  archivedAt           DateTime?
+  archivedById         String?
+  archiveReason        String?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
@@ -4420,6 +4431,12 @@ model EvidenceItem {
   /// ⚠ NEVER `MODEL`. §2b: populated at write time from the corpus row, not from the model —
   /// a date a model produced is a claim about a document, not a property of it.
   sourceDateBasis String?
+
+  /// 26-AA item 1 (183/196) — a filed source's findings are ARCHIVED with it (archiveReason SOURCE_ARCHIVED), not deleted, and come back
+  /// with their own status when the source is restored. lib/prisma.ts hides archived rows from direct reads. DDL: prisma/lex_26aa_archive.sql.
+  archivedAt    DateTime?
+  archivedById  String?
+  archiveReason String?
 
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
@@ -5274,6 +5291,12 @@ model IdeaNote {
   /// `USER` for anything typed here; `ORIGINAL_IDEA` for the seeded one. See the header.
   source    String   @default("USER")
 
+  /// 26-AA item 1 (183/196) — a removed note is ARCHIVED, not deleted, and can be restored. Still private: the archive is read on the same
+  /// (ideaId, userId) key. lib/prisma.ts hides archived rows from direct reads. archiveReason: REMOVED. DDL: prisma/lex_26aa_archive.sql.
+  archivedAt    DateTime?
+  archivedById  String?
+  archiveReason String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -5431,6 +5454,13 @@ model IdeaGroup {
   name      String
   /// §6a — "Hiding a group is what archiving used to be for... named, visible and reversible."
   hidden    Boolean  @default(false)
+  /// 26-AA item 1 (183/196) — "Ungroup" ARCHIVES the group (archiveReason UNGROUPED): its ideas still return to the ungrouped list, and
+  /// `archivedIdeaIds` keeps which ideas it held, so a restore can put them back. lib/prisma.ts hides archived groups from direct reads.
+  /// DDL: prisma/lex_26aa_archive.sql.
+  archivedAt      DateTime?
+  archivedById    String?
+  archiveReason   String?
+  archivedIdeaIds String[] @default([])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   ideas     Idea[]
