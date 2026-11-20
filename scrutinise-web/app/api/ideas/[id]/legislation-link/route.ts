@@ -64,7 +64,15 @@ export async function DELETE(req: Request, { params }: Params) {
   const parsed = DeleteSchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
 
-  await prisma.coherentActionSection.delete({ where: { id: parsed.data.coherentActionSectionId } })
+  // ⚠ 26-AA A3 — SCOPED TO THE IDEA IN THE URL. Owning *an* idea used to be enough: the row was deleted by its id alone, so any idea
+  // owner who knew another idea's link id could delete it. The row must hang off an action on THIS idea, or nothing is deleted.
+  const row = await prisma.coherentActionSection.findFirst({
+    where: { id: parsed.data.coherentActionSectionId, coherentAction: { ideaId } },
+    select: { id: true },
+  })
+  if (!row) return NextResponse.json({ error: 'That law link is not on this idea.' }, { status: 404 })
+
+  await prisma.coherentActionSection.delete({ where: { id: row.id } })
 
   return NextResponse.json({ ok: true })
 }

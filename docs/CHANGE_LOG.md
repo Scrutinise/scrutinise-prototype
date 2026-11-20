@@ -1,5 +1,19 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-20 12:01 UTC - LEX 26-AA A3: the legislation-link DELETE is scoped to the idea (a security fix, shipped on its own)
+
+CCh's GO of 20 Nov 07:40, Q3: ship it first, on its own. No schema.
+- **The bug.** `DELETE /api/ideas/[id]/legislation-link` checked that the caller owns the idea in the URL, then deleted the
+  `CoherentActionSection` by its id alone. So any idea owner who knew another idea's link id could delete it. No screen calls the
+  route, so the exposure was the API only.
+- **The fix.** The row must hang off an action on the idea in the URL. If it doesn't, nothing is deleted and the answer is a 404,
+  "That law link is not on this idea." Item 1 later turns this delete into an archive.
+- **`check:lex-26aa`** (new) runs on two scratch copies of 452c5ade, made and deleted in the run: 6 ran, 6 passed, 3 controls, 0 dead.
+  - Another idea's link sent through the caller's own idea gets a 404, the worded refusal, and the link is still there with its wording.
+  - Controls: a stranger is refused; the owner deletes their own link through each idea.
+  - **Proved able to fail:** with the old route back in place, 4 assertions went red (the attack returned 200 and deleted the link).
+- tsc is clean. No other stream's files are touched.
+
 ## 2026-11-20 07:52 UTC - SEARCH-32 closed: temperature 0 gold run 2 = 41/65; the four losses repeat; recommend rolling back to 0.2/0.3 (Charlie's Vercel change, not made); laptop hand-over to Dropbox
 
 - **Run 2.** On the Railway measure-job at 4a374215, under production's flag string, with temperature 0 as the code
