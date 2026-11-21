@@ -1051,6 +1051,29 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-11-21 00:30 UTC (laptop, cc-lex): 26-AA done. Item 1, 352, 25g A6, 26-AB and item 9 are on `wip/26aa`, local, a fast-forward of
+Main `51223b68`. The push is Charlie's:** `& "C:\Program Files\Git\cmd\git.exe" -C C:/lex26aa push origin 6ba2191c:Main`
+- **Commits:**
+  - 937c4bd0 item 1 schema (SQL already on Neon);
+  - 870d70ab item 1 and 352;
+  - e126542d 25g A6;
+  - a7a31f7d item 1/352 checks (12/12 mutants; 26z's chapters sentence restated);
+  - 22a27e06 26-AB (ⓘ labels, 3 phone faults);
+  - de4af6bb merge of Main (Ingest's CBA-1);
+  - 6ba2191c item 9 (GMCA attribution, table-A.1, the stats reader, the manifest at runtime).
+- **Read-back:** §20 for 356 passed (health 51223b68 ⊇ 9e5db9c3; item 5's label object in live chunks). After the push: health =
+  6ba2191c, then the ⓘ in a live chunk, then tell cc-ingest the GMCA attribution is live.
+- **Waiting on Charlie** (inbox `to-cch`, 21 Nov 00:30):
+  1. the staffing level → Civil Service grade mapping (options A/B/C; recommend C);
+  2. Z2's four calls (data left on a device, spend on reconnect, scope and head change, icon art). Z2 is not started.
+  3. a read of 26-AB's five texts that I wrote (Users, Records, Measures, Basis, Price year).
+- **Checks that are new or changed:**
+  - check:lex-26ab 60/60;
+  - check:lex-26aa9 36/36;
+  - 25g strict controls;
+  - 26s-browser and 26y, one stale assertion each, restated.
+- **Run one at a time; free memory was ~2.9 GB with the other streams idle.**
+
 **▶ 2026-11-20 13:57 UTC (laptop, cc-lex-26aa): 26-AA items 2–8 done on `wip/26aa` (0114ba92, pushed as a backup branch); A3 live on
 Main (d3c19f91).** See `docs/LEX_26AA_REPORT.md` § "State at 20 Nov".
 - Items 2–8 are NOT on Main. Merging them is Charlie's call.

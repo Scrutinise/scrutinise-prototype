@@ -27,7 +27,7 @@ CCh's GO of 20 Nov 17:50, point 5. This follows cc-ingest's CBA-1 EXECUTE (51223
   - The deflator series held is matched year by year to a dated release: June 2026 QNA, 71 of 71 years. Assumptions now name it:
     "… June 2026 (Quarterly National Accounts), released 30 Jun 2026 (index, 2025-26 = 100)".
   - "Not yet held" is gone for all three: Civil Service Statistics, the deflator release, and the manifest file.
-  - ⚠ **Still open (QUESTION to Charlie, inbox 00:55):** a staffing line says only junior, mid or senior, and which responsibility
+  - ⚠ **Still open (QUESTION to Charlie, inbox `2026-11-21T0030Z_cc-lex_cch_QUESTION-staff-level-to-CSS-grade.md`):** a staffing line says only junior, mid or senior, and which responsibility
     level each means is not decided. So a staffing line's floor is held and not applied, and its Gap says exactly that.
   - Lex's `query_stats` returns and prints suppressed periods. A stats-stream finding, reported and not changed: findSeries cannot reach
     a fully suppressed series, and all Table 25 series share one label.
