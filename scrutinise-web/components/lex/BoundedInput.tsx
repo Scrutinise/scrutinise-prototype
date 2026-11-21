@@ -24,9 +24,11 @@ interface Props {
   wrapperClassName?: string
   /** Hide the "N left" until the user has typed this fraction of the limit. 0 = always show. */
   showFrom?: number
+  /** The box's id, for a <label htmlFor> beside it (26-AB: a field heading that also holds an ⓘ). */
+  id?: string
 }
 
-export default function BoundedInput({ value, onChange, max, placeholder, className, multiline, rows, onBlur, onEnter, disabled, autoFocus, wrapperClassName, showFrom = 0, ...rest }: Props) {
+export default function BoundedInput({ value, onChange, max, placeholder, className, multiline, rows, onBlur, onEnter, disabled, autoFocus, wrapperClassName, showFrom = 0, id, ...rest }: Props) {
   const [cutNote, setCutNote] = useState('')
   // ⚠⚠ 26-U §2 (decision 227) — EDITING NEVER TRUNCATES. Clamping every change cut an over-limit statement (#38, 3,196 characters) to its
   // first 1,000 the moment one word was deleted: 90% gone, no undo but Cancel. Text already in the box is never removed by the box; a box
@@ -46,7 +48,7 @@ export default function BoundedInput({ value, onChange, max, placeholder, classN
   const over = value.length > max
   const show = over || value.length >= Math.floor(max * showFrom)
   const common = {
-    value, placeholder, disabled, onBlur, autoFocus, 'aria-label': rest['aria-label'],
+    value, placeholder, disabled, onBlur, autoFocus, id, 'aria-label': rest['aria-label'],
     onChange: (e: React.ChangeEvent<HTMLInputElement & HTMLTextAreaElement>) => set(e.target.value),
     className,
   }

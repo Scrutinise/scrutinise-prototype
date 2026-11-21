@@ -18,7 +18,9 @@ import {
   LIFECYCLE_STAGE_WORD, LIFECYCLE_UI, PROGRESS_WORD, CHECKLIST_WORD, PAGE_UI, DRAFTING_FILTER_WORD, DEEPENING_LOCK_UI,
   ORGANISING_TOOLBAR_UI, ADD_ACTION_UI, BRIEF_UI, BRIEF_FIELD_WORD, TONE_WORD, DEEPENING_UI, DRAFTS_UI, CBA_UI,
   PANEL_WORD, PANEL_PLACE_WORD, WHERE_SENTENCES, WHERE_UI, DRAFT_RESTORE_UI, STAGEBAR_ROW_WORD, CAUSE_UI, SOURCES_UI, ADD_RESEARCH_UI,
+  INFO_UI,
 } from './screen-labels'
+import { BRIEF_FIELD_INFO, BRIEF_HEADING_INFO, type InfoText } from './brief-info'
 import { FACET_LABEL, SORT_LABEL } from './source-list'
 import { STANCE_LABEL } from './research-notebook-schema'
 import { EXTENTS } from './action-draft-pure'
@@ -38,6 +40,9 @@ export interface GuideText {
   limits?: string
   /** The Lex tool that does the same, or "none — <why>". */
   tool: string
+  /** 26-AB (354) — the ⓘ text the screen shows beside the field: its three parts, or (a heading) one sentence. The same object the screen
+   *  reads (lib/lex/brief-info.ts), so explain_field and the ⓘ cannot say different things. */
+  info?: InfoText | string
 }
 export interface GuideEntry extends GuideText { key: string; area: GuideArea; label: string }
 
@@ -617,6 +622,13 @@ const CAUSE_G: Record<keyof typeof CAUSE_UI, GuideText> = {
   remove: { purpose: 'Removes a cause, and the causes beneath it, from the Diagnosis.', fits: 'They are archived, not deleted: the number is kept and never reused. If it was the root cause, the root cause is cleared.', tool: 'retire_cause (asks first; undo brings it back)' },
 }
 
+// 26-AB (354) — the ⓘ beside a Brief field or heading
+const INFO_G: Record<keyof typeof INFO_UI, GuideText> = {
+  open: { purpose: 'Opens a short note on the field beside it: what it is, what Lex does with it, and an example.', fits: 'The note stays until it is closed: by Close, by Esc, or by tapping outside it.', tool: 'explain_field' },
+  close: { purpose: 'Closes the ⓘ note.', fits: 'Esc, or a tap outside the note, does the same.', tool: none('the note itself') },
+  about: { purpose: 'The name a screen reader gives the ⓘ: "About" and the field.', fits: 'Beside every Brief field and the Brief heading.', tool: 'explain_field' },
+}
+
 // ── assembled ──────────────────────────────────────────────────────────────────────────────────────────────────
 const fromTable = <K extends string>(area: GuideArea, prefix: string, labels: Record<K, Lbl>, texts: Record<K, GuideText>): GuideEntry[] =>
   (Object.keys(texts) as K[]).map((k) => ({ key: `${prefix}.${k}`, area, label: shown(labels[k]), ...texts[k] }))
@@ -668,8 +680,10 @@ export function guideEntries(): GuideEntry[] {
     ...fromTable('workspace', 'toolbar', ORGANISING_TOOLBAR_UI, TOOLBAR_G),
     ...fromTable('workspace', 'addAction', ADD_ACTION_UI, ADD_ACTION_G),
     // 26-X X2
-    ...fromTable('record', 'brief', BRIEF_UI, BRIEF_G),
-    ...fromTable('record', 'briefField', BRIEF_FIELD_WORD, BRIEF_FIELD_G),
+    // 26-AB (354): the Brief heading and every Brief field carry their ⓘ text — the SAME objects BriefSection's ⓘ panels read
+    ...fromTable('record', 'brief', BRIEF_UI, { ...BRIEF_G, section: { ...BRIEF_G.section, info: BRIEF_HEADING_INFO } }),
+    ...fromTable('record', 'briefField', BRIEF_FIELD_WORD, Object.fromEntries((Object.keys(BRIEF_FIELD_G) as Array<keyof typeof BRIEF_FIELD_G>).map((k) => [k, { ...BRIEF_FIELD_G[k], info: BRIEF_FIELD_INFO[k] }])) as Record<keyof typeof BRIEF_FIELD_WORD, GuideText>),
+    ...fromTable('common', 'info', INFO_UI, INFO_G),
     ...fromTable('record', 'tone', TONE_WORD, TONE_G),
     // 26-X X3
     ...fromTable('workspace', 'deepening', DEEPENING_UI, DEEPENING_G),

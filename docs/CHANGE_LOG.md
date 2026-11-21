@@ -1,5 +1,53 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-21 00:06 UTC - LEX 26-AB (decision 354): an ⓘ on every Brief field and the Brief heading; three phone layout faults fixed
+
+BRIEF_26AB (docs/BRIEF_26AB.md, from CCh's inbox note of 20 Nov 17:50).
+- **The ⓘ** (`components/lex/InfoLabel.tsx`, new):
+  - beside the Brief heading and every field of every kind's form: 45 on the six kinds;
+  - a button named "About <field>" that opens a panel in the flow, under its heading, with three parts: what it is, what Lex does with
+    it, and an example;
+  - the panel stays open until it is closed by its Close button, by Esc (focus returns to the ⓘ), by a tap outside, or by the ⓘ;
+  - the keyboard reaches it with Tab, and Enter opens it.
+- **One source.** The text is in `lib/lex/brief-info.ts`:
+  - §2's Code text fields and common fields are verbatim, and so is the heading's sentence;
+  - the specification fields (Users, Records, Measures) and costing fields (Basis, Price year) are written to the same pattern, with
+    generic examples. **These five are mine, for Charlie to read.**
+  - The field guide attaches the same objects to `briefField.*` and `brief.section`;
+  - Lex's `explain_field` now returns `whatItIs`, `whatLexDoes` and `example` (or `about` for the heading);
+  - the ⓘ and its Close have their own guide entries (`INFO_UI`).
+- **§3 faults:**
+  1. Modelled on is a label above a full-width box below 768 px, with the placeholder "Source number or corpus section".
+  2. The stray "none" is gone. What Modelled on resolves to shows under its own box ("Resolves to: [Ref: 218]"), and nothing shows
+     while it is empty.
+  3. Counter: a limit of 50,000 or more shows "N characters" until the last 10%, then what is left. Smaller limits are unchanged. This
+     is in `remainingWords`, so the two document-text boxes (also 200,000) follow the same rule.
+- **check:lex-26ab** (new):
+  - 60 ran, 60 passed, 13 controls, 0 dead, 0 not run;
+  - §2 is compared against the brief's own table, read from the .md;
+  - real Chromium at 360 and 390 px, with the app's Tailwind compiled;
+  - nothing spent; no database.
+- **11 mutants, all RED**:
+  - A1 no ⓘ on the fields;
+  - A2 Esc does not close;
+  - A3 a tap outside does not close;
+  - A4 `w-80` back;
+  - A5 stray "none" back;
+  - A6 counter rule gone;
+  - A7 an empty part;
+  - A8 the guide drops the heading text;
+  - A9 explain_field drops the words;
+  - A10 a §2 cell paraphrased;
+  - A11 the panel closes on any tap.
+  - ⚠ A4 first went GREEN: a 320 px box fits a 360 px harness by luck. The check now asserts that the box fills its field's width,
+    which is what §3.1 asks, and A4 is RED.
+- **Regression** (one at a time):
+  - 26x2 75/75, 25p 72/72, 26u 67/67, 26w-b 60/60, 26z 202/202, 26aa 118/118, 25g 27/27;
+  - 26s-browser 90/90 after one restatement. Its "record opens with only the Drafts open" was stale since 26-X X2 (309), which opens the
+    Brief with them. It failed the same way with HEAD's BriefSection put back, so it is not this change. It is restated as Brief and
+    Drafts open, the same as 26x2 part D.
+- tsc (app and scripts): clean, apart from item 6's three Ingest errors, which are fixed on Main.
+
 ## 2026-11-20 23:46 UTC - LEX 26-AA item 1 and 352: checks complete (870d70ab was WIP); 26z's chapters sentence restated for 352
 
 870d70ab (item 1: hard deletes become archives with restore; 352: "Chapters" becomes "Elements", address letter E) was committed as WIP,

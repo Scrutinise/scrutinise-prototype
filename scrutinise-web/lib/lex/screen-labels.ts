@@ -542,6 +542,12 @@ export const BRIEF_FIELD_WORD = {
   basis: 'Basis',
   priceYear: 'Price year',
 } as const
+/** 26-AB (354) — the ⓘ info label beside a Brief field or heading, and its panel. */
+export const INFO_UI = {
+  open: 'ⓘ',
+  close: 'Close',
+  about: (field: string) => `About ${field}`,
+} as const
 /** 309 §5d — "Tone and form", the short list. */
 export const TONE_WORD = {
   statutory: 'statutory',

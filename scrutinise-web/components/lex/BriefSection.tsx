@@ -13,7 +13,9 @@
 // ⚠ Imports only pure modules, types and client components (§28).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useContext, useEffect, useId, useState, type ReactNode } from 'react'
+import InfoLabel from './InfoLabel'
+import { BRIEF_FIELD_INFO, BRIEF_HEADING_INFO } from '@/lib/lex/brief-info'
 import { IdeaIdContext } from './RefTextarea'
 import { useDeviceDraft, DraftOffer } from './DeviceDraft'
 import type { BriefView, BriefKindView } from '@/lib/lex/action-brief'
@@ -100,7 +102,7 @@ function KindBrief({ k, view, a, busy, disabled, post }: { k: BriefKindView; vie
     <section className="rounded border border-zinc-300 bg-white p-2 space-y-1.5" data-brief-kind={k.kind}>
       {!editing && <DraftOffer offer={kept.offer} onRestore={restoreBrief} onDiscard={kept.discard} preview={(o) => { try { return briefBody(k.kind, JSON.parse(o) as Brief).split('\n').filter(Boolean)[0] ?? '' } catch { return '' } }} />}
       <p className="font-semibold">
-        <span aria-hidden>{k.current ? '●' : '○'}</span> {BRIEF_UI.section} — {kindWord}{k.d ? ` (${k.d})` : ''} ·{' '}
+        <span aria-hidden>{k.current ? '●' : '○'}</span> {BRIEF_UI.section}<InfoLabel about={BRIEF_UI.section} info={BRIEF_HEADING_INFO} /> — {kindWord}{k.d ? ` (${k.d})` : ''} ·{' '}
         <span data-brief-state>{k.current ? `version ${k.current.v}, by ${AUTHOR_WORD[k.current.author] ?? k.current.author}, ${day(k.current.at)}${k.versions.length > 1 ? ` · ${k.versions.length} versions kept` : ''}` : k.kind === 'DRAFT_CLAUSE' && k.instruction ? `its drafting instruction, version ${k.instruction.v}` : BRIEF_UI.noBriefYet}</span>
       </p>
       {k.current && !editing && <pre className="whitespace-pre-wrap font-sans text-[11px] text-zinc-800 bg-zinc-50 border border-zinc-200 rounded p-1.5 max-h-72 overflow-y-auto" data-brief-body>{k.current.body}</pre>}
@@ -184,25 +186,33 @@ function BriefForm({ kind, start, busy, onSave, onCancel, onTyped }: { kind: Bri
   const final = { ...b, modelledOn: modelledOn(ref) }
   // 26-Z §6.2 — only what the user has changed counts as unsent typing: an opened, untouched form reports nothing
   useEffect(() => { if (b !== start || ref !== (start.modelledOn && 'ref' in start.modelledOn ? String(start.modelledOn.ref) : start.modelledOn && 'corpusId' in start.modelledOn ? start.modelledOn.corpusId : '')) onTyped?.(final) }, [b, ref]) // eslint-disable-line react-hooks/exhaustive-deps
+  const uid = useId()
+  const idOf = (f: string) => `${uid}-${f}`
   return (
     <div className="rounded border border-zinc-900 p-2 space-y-2" data-brief-form={kind}>
-      <label className="block"><span className="font-semibold">{BRIEF_FIELD_WORD.must}</span>
-        <BoundedInput multiline rows={4} value={b.must} onChange={(v) => set({ must: v })} max={LIMITS.briefMust} aria-label={BRIEF_FIELD_WORD.must} className={box} wrapperClassName="w-full" /></label>
-      <div className="flex flex-wrap gap-2">
-        <label className="flex items-center gap-1"><span className="font-semibold">{BRIEF_FIELD_WORD.modelledOn}</span>
-          <BoundedInput value={ref} onChange={setRef} max={LIMITS.briefCorpusId} placeholder="a source number, as in 12, or a corpus section — or leave empty for none" aria-label={BRIEF_FIELD_WORD.modelledOn} className="w-80 text-xs border border-zinc-300 rounded px-1.5 py-0.5" /></label>
-        <span className="text-zinc-600 self-center" data-brief-modelled-words>{modelledOnWords(final.modelledOn)}</span>
-        <label className="flex items-center gap-1"><span className="font-semibold">{BRIEF_FIELD_WORD.tone}</span>
-          <select value={b.tone ?? ''} onChange={(e) => set({ tone: (e.target.value || null) as Brief['tone'] })} aria-label={BRIEF_FIELD_WORD.tone} className="border border-zinc-300 rounded px-1 py-0.5">
+      <Field f="must" id={idOf('must')}>
+        <BoundedInput id={idOf('must')} multiline rows={4} value={b.must} onChange={(v) => set({ must: v })} max={LIMITS.briefMust} aria-label={BRIEF_FIELD_WORD.must} className={box} wrapperClassName="w-full" />
+      </Field>
+      {/* 26-AB §3.1–3.2: below 768 px each field is its label above a full-width box; what Modelled on resolves to sits UNDER its own box,
+          and is not shown at all while it is empty (it once printed a stray "none" beside "Tone and form") */}
+      <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-start">
+        <Field f="modelledOn" id={idOf('modelledOn')} className="w-full md:w-auto">
+          <BoundedInput id={idOf('modelledOn')} value={ref} onChange={setRef} max={LIMITS.briefCorpusId} placeholder="Source number or corpus section" aria-label={BRIEF_FIELD_WORD.modelledOn} className="w-full md:w-80 text-xs border border-zinc-300 rounded px-1.5 py-0.5" wrapperClassName="w-full md:w-auto" />
+          {final.modelledOn && <span className="block text-zinc-600" data-brief-modelled-words>Resolves to: {modelledOnWords(final.modelledOn)}</span>}
+        </Field>
+        <Field f="tone" id={idOf('tone')} className="w-full md:w-auto">
+          <select id={idOf('tone')} value={b.tone ?? ''} onChange={(e) => set({ tone: (e.target.value || null) as Brief['tone'] })} aria-label={BRIEF_FIELD_WORD.tone} className="border border-zinc-300 rounded px-1 py-0.5 max-w-full">
             <option value="">not said</option>{TONES.map((t) => <option key={t} value={t}>{TONE_WORD[t]}</option>)}
-          </select></label>
+          </select>
+        </Field>
       </div>
       {KIND_FIELDS[kind].map((f) => (
-        <label key={f} className="block"><span className="font-semibold">{BRIEF_FIELD_WORD[f]}</span>
-          <BoundedInput value={b.kind[f] ?? ''} onChange={(v) => set({ kind: { ...b.kind, [f]: v } })} max={LIMITS.briefField} aria-label={BRIEF_FIELD_WORD[f]} className={box} wrapperClassName="w-full" /></label>
+        <Field key={f} f={f} id={idOf(f)}>
+          <BoundedInput id={idOf(f)} value={b.kind[f] ?? ''} onChange={(v) => set({ kind: { ...b.kind, [f]: v } })} max={LIMITS.briefField} aria-label={BRIEF_FIELD_WORD[f]} className={box} wrapperClassName="w-full" />
+        </Field>
       ))}
-      <Points label={BRIEF_FIELD_WORD.mustInclude} items={b.mustInclude} onChange={(xs) => set({ mustInclude: xs })} />
-      <Points label={BRIEF_FIELD_WORD.mustNot} items={b.mustNot} onChange={(xs) => set({ mustNot: xs })} />
+      <Points f="mustInclude" items={b.mustInclude} onChange={(xs) => set({ mustInclude: xs })} />
+      <Points f="mustNot" items={b.mustNot} onChange={(xs) => set({ mustNot: xs })} />
       <p className="text-zinc-600">Saved as a new version; the earlier ones are kept. It reads: {briefBody(kind, final).split('\n')[0] || '(empty)'}…</p>
       <p className="flex gap-2">
         <button type="button" disabled={busy} onClick={() => onSave(final)} className="px-2 py-0.5 rounded bg-zinc-900 text-white font-medium disabled:opacity-40" data-brief-save>{BRIEF_UI.saveBrief}</button>
@@ -212,10 +222,26 @@ function BriefForm({ kind, start, busy, onSave, onCancel, onTyped }: { kind: Bri
   )
 }
 
-function Points({ label, items, onChange }: { label: string; items: string[]; onChange: (xs: string[]) => void }) {
+/** 26-AB (354) — a Brief field: its heading (the label, and its ⓘ, whose panel opens under the heading), then the box. */
+function Field({ f, id, className, children }: { f: keyof typeof BRIEF_FIELD_WORD; id: string; className?: string; children: ReactNode }) {
   return (
-    <fieldset className="space-y-1" data-brief-points={label}>
+    <div className={`block min-w-0 ${className ?? ''}`} data-brief-field={f}>
+      <div className="flex flex-wrap items-center" data-field-heading>
+        <label htmlFor={id} className="font-semibold">{BRIEF_FIELD_WORD[f]}</label>
+        <InfoLabel about={BRIEF_FIELD_WORD[f]} info={BRIEF_FIELD_INFO[f]} />
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function Points({ f, items, onChange }: { f: 'mustInclude' | 'mustNot'; items: string[]; onChange: (xs: string[]) => void }) {
+  const label = BRIEF_FIELD_WORD[f]
+  return (
+    <fieldset className="space-y-1 min-w-0" data-brief-points={label} data-brief-field={f}>
       <legend className="font-semibold">{label} <span className="font-normal text-zinc-600">({items.length} of up to {LIMITS.briefPoints} points)</span></legend>
+      {/* the ⓘ sits just under the legend (a legend reads its own words; the panel must not become part of the field's name) */}
+      <div className="flex flex-wrap items-center" data-field-heading><InfoLabel about={label} info={BRIEF_FIELD_INFO[f]} /></div>
       {items.map((p, i) => (
         <div key={i} className="flex items-start gap-1">
           <span className="tabular-nums pt-1">{i + 1}.</span>

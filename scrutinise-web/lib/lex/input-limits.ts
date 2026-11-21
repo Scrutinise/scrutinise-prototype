@@ -68,9 +68,15 @@ export const LIMITS = {
 
 export type LimitKey = keyof typeof LIMITS
 
+/** 26-AB §3.3 — from this limit up, a box shows the count typed until the last 10%. */
+export const UNLIMITED_FROM = 50_000
+
 /** The characters left, and the sentence for it. At zero it says so in words, not only by a number. */
 export function remainingWords(length: number, max: number): string {
   const left = max - length
+  // 26-AB §3.3 — a limit of 50,000 or more is effectively unlimited, and "200000 left" under an empty box is noise: such a box says how
+  // much is typed ("N characters") and counts down only within the last 10% of its limit.
+  if (max >= UNLIMITED_FROM && left > max * 0.1) return `${length.toLocaleString('en-GB')} characters`
   if (left > 0) return `${left} left`
   if (left === 0) return `limit reached (${max})`
   return `${(-left).toLocaleString('en-GB')} over the limit of ${max.toLocaleString('en-GB')} — shorten it to save`

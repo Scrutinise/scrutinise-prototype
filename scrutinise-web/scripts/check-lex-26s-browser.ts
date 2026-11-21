@@ -145,7 +145,10 @@ async function partB() {
     await li2.locator('button:has-text("Cancel")').first().click()
     // 265 (24 Oct): every record section opens CLOSED; open the policy test and the step-1 tools by their lines, as a user does
     // ⚠ MOVED BY 26-X 318: on Drafting the record opens with its Drafts at the top, OPEN; every other section closed. Was: every section closed.
-    ok('265 / 318: the record opened with its Drafts open and every other section closed', (await li2.locator('details[data-record-section][open]').count()) === 1 && (await li2.locator('details[data-record-section="documents"][open]').count()) === 1)
+    // ⚠ MOVED AGAIN BY 26-X X2 (309, 7 Nov): the Brief sits above the Drafts and opens with them (check:lex-26x2 part D asserts the same).
+    //   Restated 21 Nov (26-AB regression found it stale since X2; it failed with or without 26-AB's change).
+    const openSections = await li2.locator('details[data-record-section][open]').evaluateAll((els) => els.map((e) => e.getAttribute('data-record-section')).sort().join(','))
+    ok('265 / 318 / 309: the record opened with its Brief and Drafts open and every other section closed', openSections === 'brief,documents', openSections)
     for (const key of ['policy', 'prune']) await li2.locator(`details[data-record-section="${key}"] > summary`).click()
     const verdictBox = await li2.locator('text=Policy test').first().locator('xpath=..').innerText()
     ok('the verdict box carries the reason only — no "From:"', /It matches the policy/.test(verdictBox) && !/From:/.test(verdictBox), verdictBox)

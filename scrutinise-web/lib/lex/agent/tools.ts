@@ -2093,7 +2093,10 @@ const explainFieldTool: ToolDefinition = {
   schema: z.object({ name: z.string().min(1).max(120) }),
   async run(_ctx, { name }) {
     const r = explainField(name)
-    if (r.exact) return { ok: true, data: { label: r.exact.label, area: r.exact.area, purpose: r.exact.purpose, howItFits: r.exact.fits, ...(r.exact.limits ? { limits: r.exact.limits } : {}), tool: r.exact.tool } }
+    // 26-AB (354): where the screen shows an ⓘ, its words come back too, so Lex and the screen explain a Brief field alike
+    const info = r.exact?.info
+    const infoData = info == null ? {} : typeof info === 'string' ? { about: info } : { whatItIs: info.what, whatLexDoes: info.lexDoes, example: info.example }
+    if (r.exact) return { ok: true, data: { label: r.exact.label, area: r.exact.area, purpose: r.exact.purpose, howItFits: r.exact.fits, ...(r.exact.limits ? { limits: r.exact.limits } : {}), tool: r.exact.tool, ...infoData } }
     if (r.near.length) return { ok: true, data: { noExactMatch: name, closest: r.near.map((e) => ({ label: e.label, area: e.area, purpose: e.purpose, tool: e.tool })), note: 'Say which of these the user means; if none, say the guide has no entry for it.' } }
     return fail(`the field guide has no entry for “${clip(name, 80)}”. Use list_fields to see what it covers, and say so rather than guess.`)
   },
