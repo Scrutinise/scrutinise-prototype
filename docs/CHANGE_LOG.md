@@ -1,5 +1,35 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-21 01:51 UTC - LEX 360 (C, part A): a staffing line is set against the Civil Service salary floor for the grade assumed from junior/mid/senior
+
+CCh's GO of 21 Nov 01:40, point 2; Charlie's decision 360 (C) at 01:39. Part B (the owner's grade choice, a nullable CostLine column)
+is queued after Z2 and is NOT started.
+- **The mapping** (`STAFF_GRADE_ASSUMED`, engine-pure): JUNIOR = EO, MID = HEO/SEO, SENIOR = G6/G7. The Senior Civil Service is never assumed.
+- **The floor.** For each STAFF line, the engine reads the gross median salary for that grade from Table 7 (all departments, at 31 March 2026,
+  released 29 Jul 2026), from the stats database: EO £32,140, HEO/SEO £43,930, G6/G7 £65,830.
+  - The floor is uprated to the price year by the deflator: FY 2025-26 is the engine's year 2025.
+  - It is multiplied by the line's FTE count, and for a one-off line by its duration (months / 12).
+  - The line's step then says the grade, "the grade assumed from “mid”", the figure with its release, "before employer costs", and
+    whether the line is at or above the floor or below it.
+- **Shown, never substituted.** Every line's own figure is unchanged.
+- **Gaps:**
+  - `below-salary-floor` names the lines whose low end is under their floor.
+  - `staff-unchecked` names the lines that could not be checked, and why:
+    - no staff level;
+    - no FTE count;
+    - a one-off line with no duration;
+    - the grade's cell is suppressed (shown with the publisher's [c] words) or not read.
+  - The item 9 "not yet matched to a responsibility level" gap is gone.
+- **The assumption** is printed in the Assumptions table, so it appears on the report and the costing: "Grade assumed from
+  junior/mid/senior: junior = Executive Officer (EO); mid = …; senior = Grade 6 or 7 (G6/G7). The Senior Civil Service is not assumed."
+  Its source is Table 7 and decision 360.
+- **Staleness.** The fingerprint for STAFF lines now includes the staff level and FTE count, so changing either marks a report stale.
+  Other lines' fingerprints are unchanged.
+- **check:lex-26aa9:** 47/47 passed, 13 controls, 0 dead. The new assertions test planted staffing lines against the REAL held cells,
+  using an answer key from the CBA-1 read-back. 13 of 13 mutants went RED (mapping ×2, FTE, duration, deflator, low/high end, substitution,
+  each gap, the assumption, the floor shown when the statistics are not held, a suppressed cell, the server not reading the grade cells).
+- Regression: check:lex-26y 129/129. tsc is clean for the app and for the scripts.
+
 ## 2026-11-21 00:29 UTC - LEX 26-AA item 9: GMCA attribution shown wherever its figures are; annex-table citations; the stats reader (release, basis, suppression); Ingest's manifest at runtime
 
 CCh's GO of 20 Nov 17:50, point 5. This follows cc-ingest's CBA-1 EXECUTE (51223b68 / 292deefe), merged into wip/26aa in de4af6bb.

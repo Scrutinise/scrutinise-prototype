@@ -30,7 +30,19 @@ import { discountFactor, stprRateForYear, OPTIMISM_BIAS_TABLE_1, HEALTH_VALUE_UP
 import { type AppraisalPeriod, discountYearOf, fyWords } from './period'
 import { type LineAppraisal, type PartyKind, PARTY_WORD, partyWords, pct, OB_TYPE_WORD } from './line-appraisal'
 import { ENGINE_CITATIONS } from './citation-manifest-pure'
-import { releaseWords } from '../../stats/cell-pure'
+import { releaseWords, cellWords, type CssLevel, type StatCell } from '../../stats/cell-pure'
+
+/** Decision 360 (C, part A) — which Civil Service grade a staffing line's junior / mid / senior is ASSUMED to be, until the owner can choose
+ *  one (part B). The Senior Civil Service is never assumed. Printed as an assumption wherever the floor is shown. */
+export const STAFF_GRADE_ASSUMED = { JUNIOR: 'EO', MID: 'HEO_SEO', SENIOR: 'G6_G7' } as const satisfies Record<'JUNIOR' | 'MID' | 'SENIOR', CssLevel>
+export type StaffLevel = keyof typeof STAFF_GRADE_ASSUMED
+export const STAFF_LEVEL_WORD: Record<StaffLevel, string> = { JUNIOR: 'junior', MID: 'mid', SENIOR: 'senior' }
+export const CSS_GRADE_WORD: Record<CssLevel, string> = {
+  AA_AO: 'Administrative Assistant or Officer (AA/AO)', EO: 'Executive Officer (EO)', HEO_SEO: 'Higher or Senior Executive Officer (HEO/SEO)',
+  G6_G7: 'Grade 6 or 7 (G6/G7)', SCS: 'Senior Civil Service (SCS)', ALL: 'all responsibility levels',
+}
+/** Civil Service Statistics 2026 are cash at 31 March 2026: financial year 2025-26, the engine's year 2025. */
+export const CSS_PRICE_YEAR = 2025
 
 export interface Money { low: number; high: number }
 const Z = (): Money => ({ low: 0, high: 0 })
@@ -47,6 +59,9 @@ export interface EngineCostLine {
   appraisal: LineAppraisal
   /** 26-AA item 9(a) — the licence attribution of the held unit-cost row the figure came from (GMCA's CC BY 4.0), or null. */
   attribution?: string | null
+  /** 360 — a STAFF line's level and full-time-equivalent count, for its salary floor. */
+  staffLevel?: StaffLevel | null
+  fteCount?: number | null
 }
 export interface EngineBenefitLine {
   id: string; actionId: string; actionNumber: number | null; actionTitle: string; headingId: string | null
@@ -73,7 +88,9 @@ export interface EngineInput {
     deflatorRelease?: { vintage: string; releaseDate: string | null; priceBasis: string | null } | null
     deflatorWhy?: string | null
     /** 26-AA item 9(c) — Civil Service Statistics 2026 as held: its release and price basis. */
-    css?: { releaseDate: string | null; priceBasis: string | null } | null
+    css?: { releaseDate: string | null; priceBasis: string | null
+      /** 360 — Table 7's gross median salary cell (all departments) for each grade a staffing level is assumed to be. */
+      floors?: Partial<Record<CssLevel, StatCell>> } | null
   }
   /** Live actions with neither a cost line nor a "no cost" answer. */
   uncostedActions: number
@@ -81,6 +98,7 @@ export interface EngineInput {
 
 export type GapKind = 'not-valued' | 'no-benefit-valued' | 'no-figure' | 'undated' | 'no-duration' | 'beyond-period' | 'no-price-year'
   | 'not-converted' | 'floor' | 'excludes-employer-costs' | 'on-cost-waiting' | 'payer' | 'ob-type' | 'owners' | 'not-held' | 'uncosted'
+  | 'below-salary-floor' | 'staff-unchecked'
 export interface Gap { kind: GapKind; text: string; lineIds: string[] }
 export interface Assumption { text: string; source: string; owners: boolean }
 export interface Trace {
@@ -220,6 +238,29 @@ export function computeCba(input: EngineInput): CbaResult {
   const noPriceYear: string[] = [], notConverted: Array<{ id: string; year: number }> = [], noFigure: string[] = [], oneSided: string[] = []
   const undatedIds: string[] = [], noDuration: string[] = [], beyond: string[] = [], payerless: string[] = [], employer: string[] = []
   const onCostWaiting: string[] = [], obUntyped: string[] = [], owners: Array<{ id: string; text: string }> = []
+  const staffUnchecked: Array<{ id: string; why: string }> = [], belowFloor: string[] = [], gradesUsed = new Set<StaffLevel>()
+
+  /** 360 (A): one staffing line against its floor. Returns why it could not be checked, or null when it was (the step says how). */
+  const staffFloor = (l: EngineCostLine, v: Money, st: string[]): string | null => {
+    if (!l.staffLevel) return 'no staff level (junior, mid or senior) is set'
+    const grade = STAFF_GRADE_ASSUMED[l.staffLevel]
+    gradesUsed.add(l.staffLevel)
+    const cell = input.held.css?.floors?.[grade]
+    if (!cell || cell.kind !== 'value') return `the ${CSS_GRADE_WORD[grade]} figure is ${cell ? cellWords(cell) : 'not read'}`
+    const from = idx.get(CSS_PRICE_YEAR) ?? null
+    const k = from != null && toIdx != null ? toIdx / from : null
+    const perPost = cell.value * (k ?? 1)
+    const head = `salary floor: ${CSS_GRADE_WORD[grade]}, the grade assumed from “${STAFF_LEVEL_WORD[l.staffLevel]}”, gross median ${gbp(cell.value)} a year (Civil Service Statistics 2026, Table 7, all departments, at 31 March 2026${cell.releaseDate ? `, ${releaseWords(cell.releaseDate)}` : ''})${k == null ? `, not converted (the deflator holds no index for ${fyWords(from == null ? CSS_PRICE_YEAR : P.priceYear)})` : P.priceYear === CSS_PRICE_YEAR ? '' : `, ${gbp(perPost)} in ${fyWords(P.priceYear)} prices`}, before employer costs`
+    if (l.fteCount == null || !(l.fteCount > 0)) { st.push(`${head}; not compared: no full-time-equivalent count`); return 'no full-time-equivalent count is set' }
+    const years = l.recurrence === 'PER_YEAR' ? 1 : l.recurrence === 'ONE_OFF' && l.durationMonths != null && l.durationMonths > 0 ? l.durationMonths / 12 : null
+    if (years == null) { st.push(`${head}; not compared: ${l.recurrence === 'ONE_OFF' ? 'a one-off line with no duration' : 'the line says neither one-off nor per year'}`); return l.recurrence === 'ONE_OFF' ? 'a one-off staffing line with no duration' : 'the line says neither one-off nor per year' }
+    const floor = perPost * l.fteCount * years
+    const span = l.recurrence === 'PER_YEAR' ? 'a year' : `over ${to2(l.durationMonths!)} months`
+    const below = v.low < floor - 0.5
+    if (below) belowFloor.push(l.id)
+    st.push(`${head}; × ${to2(l.fteCount)} full-time equivalent${l.fteCount === 1 ? '' : 's'} = ${gbp(floor)} ${span}: the line’s ${below ? (v.high < floor - 0.5 ? 'figure is BELOW it' : 'low end is BELOW it') : 'figure is at or above it'}`)
+    return null
+  }
 
   // ── cost lines ──
   for (const l of input.costs) {
@@ -241,6 +282,12 @@ export function computeCba(input: EngineInput): CbaResult {
     let v = convert(b.m, l.priceYear, l.id, steps, dy)
     if (l.priceYear == null) noPriceYear.push(l.id)
     else if (l.priceYear !== P.priceYear && (idx.get(l.priceYear) == null || toIdx == null)) notConverted.push({ id: l.id, year: l.priceYear })
+    // 340 + 360 (A) — staffing: the salary floor for the grade ASSUMED from junior / mid / senior, uprated to the price year, set beside the
+    // line's own figure (before any on-cost: the statistics exclude employer costs). Shown, never substituted.
+    if (l.costType === 'STAFF' && input.held.civilServiceStatistics) {
+      const why = staffFloor(l, v, steps)
+      if (why) staffUnchecked.push({ id: l.id, why })
+    }
     // 340 — staffing: the on-cost only when accepted
     if (l.costType === 'STAFF') {
       const oc = l.appraisal.onCost
@@ -429,12 +476,9 @@ export function computeCba(input: EngineInput): CbaResult {
     ...(input.held.manifest === 'file' ? [] : [input.held.manifest === 'none' ? 'the citation manifest (no Green Book paragraph can be cited)' : 'Ingest’s citation manifest file (citations are checked against the paragraphs held instead)']),
   ]
   if (notHeld.length) gap('not-held', `Not yet held by the platform: ${notHeld.join('; ')}.`)
-  // 26-AA item 9(c): the statistics ARE held now; what is not decided is which responsibility level a staffing line's junior / mid / senior
-  // is, so the floor is held and NOT applied, and the gap says exactly that — never "not available"
-  const staffLines = input.costs.filter((l) => l.costType === 'STAFF').map((l) => l.id)
-  if (input.held.civilServiceStatistics && staffLines.length) {
-    gap('not-held', `Civil Service Statistics 2026 are held (gross median salary by responsibility level, as at 31 March 2026${input.held.css?.releaseDate ? `, ${releaseWords(input.held.css.releaseDate)}` : ''}), but a staffing line says junior, mid or senior, which is not yet matched to a responsibility level, so ${plural(staffLines.length, 'staffing line is', 'staffing lines are')} not checked against them: ${names(staffLines)}.`, staffLines)
-  }
+  // 360 (A): each staffing line is set against the floor for its ASSUMED grade; what is below it, and what could not be checked and why
+  if (belowFloor.length) gap('below-salary-floor', `${plural(belowFloor.length, 'staffing line is', 'staffing lines are')} below the Civil Service salary floor for the grade assumed from junior, mid or senior (the gross median salary, before employer costs, for the full-time equivalents given): ${names(belowFloor)}.`, belowFloor)
+  if (staffUnchecked.length) gap('staff-unchecked', `${plural(staffUnchecked.length, 'staffing line is', 'staffing lines are')} not checked against Civil Service Statistics 2026: ${staffUnchecked.map((u) => `${name(u.id)} (${u.why})`).join('; ')}.`, staffUnchecked.map((u) => u.id))
 
   // ── Assumptions — the standing ones first, with their sources ──
   assumptions.unshift(
@@ -444,6 +488,8 @@ export function computeCba(input: EngineInput): CbaResult {
     { text: 'Optimism bias never adjusts the headline figures: it is shown as a band beside them, at Table 1’s lower and upper bounds (a capital line by its project type; a running cost by the outsourcing row, the nearest analogue, not a rule). ' + OB_INDICATIVE, source: `${ENGINE_CITATIONS.obIndicative}; ${ENGINE_CITATIONS.obUpperBound}; Table 1, PDF p.2`, owners: false },
     // 26-AA item 9(c): the deflator's release, named, once the series held is matched to it year by year
     ...(input.held.deflatorRelease ? [{ text: `Prices are converted to ${fyWords(P.priceYear)} with HM Treasury’s GDP deflator at market prices, ${input.held.deflatorRelease.vintage}${input.held.deflatorRelease.releaseDate ? `, ${releaseWords(input.held.deflatorRelease.releaseDate)}` : ''}${input.held.deflatorRelease.priceBasis ? ` (${input.held.deflatorRelease.priceBasis})` : ''}.`, source: 'HM Treasury GDP deflators (the series held, matched to this release year by year)', owners: false }] : []),
+    // 360 (A): the grade is ASSUMED, so it is said wherever the floor is shown
+    ...(gradesUsed.size ? [{ text: `Grade assumed from junior/mid/senior: ${(Object.keys(STAFF_GRADE_ASSUMED) as StaffLevel[]).map((k) => `${STAFF_LEVEL_WORD[k]} = ${CSS_GRADE_WORD[STAFF_GRADE_ASSUMED[k]]}`).join('; ')}. The Senior Civil Service is not assumed. A staffing line’s salary floor is that grade’s gross median salary across all departments, before employer costs.`, source: `Civil Service Statistics 2026, Table 7 (at 31 March 2026${input.held.css?.releaseDate ? `, ${releaseWords(input.held.css.releaseDate)}` : ''}); the grade is assumed, not chosen (decision 360)`, owners: false }] : []),
     ...(input.benefits.some((b) => b.isHealth && b.valuation === 'VALUED') ? [{ text: `Health effects are discounted at the same rate; their real value is uprated by ${pct(HEALTH_VALUE_UPRATE.value)} a year first.`, source: ENGINE_CITATIONS.healthUprate, owners: false }] : []),
   )
 

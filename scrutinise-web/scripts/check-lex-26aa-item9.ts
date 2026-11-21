@@ -128,18 +128,52 @@ async function partC(ideaId: string) {
   ok('the engine reads what is held from the statistics database: Civil Service Statistics, the deflator\'s release, and Ingest\'s manifest file', held.civilServiceStatistics && held.deflatorReleaseDates && held.manifest === 'file', JSON.stringify(held).slice(0, 300))
   const gaps = (run.result as { gaps: Array<{ text: string }> }).gaps.map((g) => g.text)
   ok('the Gaps no longer say any of the three is "not yet held"', !gaps.some((g) => /Not yet held by the platform/.test(g)), gaps.find((g) => /Not yet held/.test(g)))
-  const staff = run.inputs.input.costs.filter((l) => l.costType === 'STAFF').length
-  ok(`…and with ${staff} staffing line(s), the Gap says the statistics are held but NOT applied, and why (the level is not matched)`, staff === 0 ? !gaps.some((g) => /Civil Service Statistics 2026 are held/.test(g)) : gaps.some((g) => /Civil Service Statistics 2026 are held .* released 29 Jul 2026.*not yet matched to a responsibility level/.test(g)), gaps.find((g) => /Civil Service/.test(g)))
+  ok('…and no Gap still says a staffing level is "not yet matched" (decision 360 matched it)', !gaps.some((g) => /not yet matched/.test(g)), gaps.find((g) => /not yet matched/.test(g)))
   const assumptions = (run.result as { assumptions: Array<{ text: string }> }).assumptions.map((a) => a.text)
   ok('the Assumptions name the deflator\'s release: "… June 2026 (Quarterly National Accounts), released 30 Jun 2026 (index, 2025-26 = 100)"', assumptions.some((a) => /GDP deflator at market prices, June 2026 \(Quarterly National Accounts\), released 30 Jun 2026 \(index, 2025-26 = 100\)/.test(a)), assumptions.find((a) => /deflator/.test(a)))
 
-  // the "held but not applied" wording, on a staffing line planted IN MEMORY (452c5ade has none today)
-  const { computeCba } = await import('../lib/lex/cba/engine-pure')
+  // ── decision 360 (C, part A): staffing lines planted IN MEMORY (452c5ade has none today) against the REAL held Table 7 cells ──
+  // Answer key: Table 7, all departments, gross median at 31 March 2026 (CBA-1 EXECUTE read-back): EO £32,140 · HEO/SEO £43,930 · G6/G7 £65,830.
+  const { computeCba, STAFF_GRADE_ASSUMED } = await import('../lib/lex/cba/engine-pure')
+  const { costingCompanionBody } = await import('../lib/lex/cba/costing-companion')
+  const KEY = { EO: 32140, HEO_SEO: 43930, G6_G7: 65830 }
+  ok('360: the grade cells the engine reads are Table 7\'s, value for value (EO £32,140, HEO/SEO £43,930, G6/G7 £65,830)', (Object.keys(KEY) as Array<keyof typeof KEY>).every((g) => { const c = held.css?.floors?.[g]; return c?.kind === 'value' && c.value === KEY[g] }), JSON.stringify(held.css?.floors).slice(0, 300))
+  ok('360: the mapping is JUNIOR = EO, MID = HEO/SEO, SENIOR = G6/G7; the Senior Civil Service is never assumed', STAFF_GRADE_ASSUMED.JUNIOR === 'EO' && STAFF_GRADE_ASSUMED.MID === 'HEO_SEO' && STAFF_GRADE_ASSUMED.SENIOR === 'G6_G7' && !Object.values(STAFF_GRADE_ASSUMED).includes('SCS' as never))
   const base = run.inputs.input.costs[0]
-  const withStaff = computeCba({ ...run.inputs.input, costs: [...run.inputs.input.costs, { ...(base ?? {}), id: 'zz-staff', label: 'ZZ planted staffing line', costType: 'STAFF', low: 40000, high: 50000, priceYear: 2025, recurrence: 'PER_YEAR' as const, durationMonths: 12, basis: null, citationKey: null, benchmarkId: null, appraisal: base?.appraisal ?? { payer: null, onCost: null, ob: null } } as never] })
-  const staffGap = withStaff.ok ? withStaff.gaps.map((g) => g.text).find((g) => /Civil Service Statistics 2026 are held/.test(g)) : undefined
-  ok('with a staffing line, the Gap says the statistics are held (released 29 Jul 2026) but NOT applied, and why: its level is not matched', !!staffGap && /released 29 Jul 2026/.test(staffGap) && /not yet matched to a responsibility level/.test(staffGap) && /ZZ planted staffing line/.test(staffGap), staffGap)
-  control('…and with the statistics not held, the same line gets the old "not yet held" gap instead, never both', (() => { const r2 = computeCba({ ...run.inputs.input, held: { ...held, civilServiceStatistics: false }, costs: [...run.inputs.input.costs, { ...(base ?? {}), id: 'zz-staff', label: 'ZZ', costType: 'STAFF', low: 1, high: 2, priceYear: 2025, recurrence: 'ONE_OFF' as const, durationMonths: null, basis: null, citationKey: null, benchmarkId: null, appraisal: base?.appraisal ?? { payer: null, onCost: null, ob: null } } as never] }); const t = r2.ok ? r2.gaps.map((g) => g.text) : []; return t.some((g) => /Not yet held by the platform: Civil Service Statistics/.test(g)) && !t.some((g) => /2026 are held/.test(g)) })())
+  const staffLine = (id: string, o: Record<string, unknown>) => ({ ...(base ?? {}), id, actionNumber: 1, label: id, costType: 'STAFF', low: 40000, high: 50000, priceYear: 2025, recurrence: 'PER_YEAR' as const, durationMonths: 12, basis: null, citationKey: null, benchmarkId: null, appraisal: { payer: null, onCost: null, ob: null }, staffLevel: null, fteCount: null, ...o }) as never
+  const planted = [
+    staffLine('ZZ mid one post', { staffLevel: 'MID', fteCount: 1 }),            // 40,000–50,000 against 43,930: the low end is below
+    staffLine('ZZ junior two posts', { staffLevel: 'JUNIOR', fteCount: 2, low: 70000, high: 70000 }), // 70,000 against 2 × 32,140 = 64,280: above
+    staffLine('ZZ senior no fte', { staffLevel: 'SENIOR' }),                       // not compared: no FTE count
+    staffLine('ZZ no level', {}),                                                  // not checked: no level
+    staffLine('ZZ senior half year', { staffLevel: 'SENIOR', fteCount: 1, recurrence: 'ONE_OFF', durationMonths: 6, low: 30000, high: 30000 }), // 30,000 against 65,830 × ½ = 32,915: below
+  ]
+  const P25 = { ...run.inputs.input.period, priceYear: 2025 }
+  const r360 = computeCba({ ...run.inputs.input, period: P25, costs: [...run.inputs.input.costs, ...planted] })
+  if (!r360.ok) { ok('360: the engine runs with planted staffing lines', false); return }
+  const stepOf = (id: string) => r360.lines.find((l) => l.id === id)?.steps.find((s) => /^salary floor:/.test(s)) ?? ''
+  const gapOf = (k: string) => r360.gaps.find((g) => g.kind === k)
+  ok('360: a MID line shows HEO/SEO, "the grade assumed from “mid”", £43,930 (released 29 Jul 2026), before employer costs — and its low end is BELOW it', /Higher or Senior Executive Officer \(HEO\/SEO\), the grade assumed from “mid”, gross median £43,930 a year \(Civil Service Statistics 2026, Table 7, all departments, at 31 March 2026, released 29 Jul 2026\), before employer costs; × 1 full-time equivalent = £43,930 a year: the line’s low end is BELOW it/.test(stepOf('ZZ mid one post')), stepOf('ZZ mid one post'))
+  ok('360: a JUNIOR line × 2 FTE is set against 2 × £32,140 = £64,280 and is at or above it', /Executive Officer \(EO\), the grade assumed from “junior”, gross median £32,140.*× 2 full-time equivalents = £64,280 a year: the line’s figure is at or above it/.test(stepOf('ZZ junior two posts')), stepOf('ZZ junior two posts'))
+  ok('360: a one-off SENIOR line of 6 months is set against half a year of G6/G7 (£32,915) and is BELOW it', /Grade 6 or 7 \(G6\/G7\).*£65,830.*= £32,915 over 6 months: the line’s figure is BELOW it/.test(stepOf('ZZ senior half year')), stepOf('ZZ senior half year'))
+  ok('360: Gaps name the lines below the floor — the MID and the half-year SENIOR — and not the JUNIOR one', !!gapOf('below-salary-floor') && /ZZ mid one post/.test(gapOf('below-salary-floor')!.text) && /ZZ senior half year/.test(gapOf('below-salary-floor')!.text) && !/ZZ junior two posts/.test(gapOf('below-salary-floor')!.text), gapOf('below-salary-floor')?.text)
+  ok('360: Gaps say which lines are NOT checked, and why: no FTE count; no staff level', /ZZ senior no fte” \(no full-time-equivalent count is set\)/.test(gapOf('staff-unchecked')?.text ?? '') && /ZZ no level” \(no staff level \(junior, mid or senior\) is set\)/.test(gapOf('staff-unchecked')?.text ?? ''), gapOf('staff-unchecked')?.text)
+  const gradeA = r360.assumptions.find((a) => /^Grade assumed from junior\/mid\/senior/.test(a.text))
+  ok('360: the assumption is stated: "Grade assumed from junior/mid/senior: junior = EO; mid = HEO/SEO; senior = G6/G7. The Senior Civil Service is not assumed", sourced to Table 7 and decision 360', !!gradeA && /junior = Executive Officer \(EO\); mid = Higher or Senior Executive Officer \(HEO\/SEO\); senior = Grade 6 or 7 \(G6\/G7\)\. The Senior Civil Service is not assumed/.test(gradeA.text) && /Table 7.*released 29 Jul 2026.*decision 360/.test(gradeA.source) && !gradeA.owners, JSON.stringify(gradeA))
+  const companion = costingCompanionBody(r360 as never, null, '2026-11-21', null)
+  ok('360: the costing companion prints the assumption and each line\'s floor', /Grade assumed from junior\/mid\/senior/.test(companion) && /ZZ mid one post[^\n]*salary floor: Higher or Senior Executive Officer/.test(companion), companion.slice(0, 200))
+  const bare = computeCba({ ...run.inputs.input, period: P25, held: { ...held, css: held.css ? { ...held.css, floors: {} } : null }, costs: [...run.inputs.input.costs, ...planted] })
+  ok('360: the floor is shown, never substituted: every line\'s figure is the same with and without it', bare.ok && planted.every((p) => { const id = (p as { id: string }).id; const a = r360.lines.find((l) => l.id === id)!, b = bare.lines.find((l) => l.id === id)!; return a.nominal.low === b.nominal.low && a.nominal.high === b.nominal.high && a.pv.low === b.pv.low }))
+  // uprated to the price year by the deflators (340): price year 2024 → £43,930 × index[2024] / index[2025]
+  const i24 = run.inputs.input.deflator.find((d) => d.year === 2024)?.index, i25 = run.inputs.input.deflator.find((d) => d.year === 2025)?.index
+  if (i24 && i25) {
+    const r24 = computeCba({ ...run.inputs.input, period: { ...P25, priceYear: 2024 }, costs: [planted[0]] })
+    const want = `£${Math.round(43930 * i24 / i25).toLocaleString('en-GB')} in 2024-25 prices`
+    const s24 = r24.ok ? r24.lines[0].steps.find((s) => /^salary floor:/.test(s)) ?? '' : ''
+    ok(`360: in a 2024-25 price year the floor is uprated by the deflator: ${want}`, s24.includes(want), s24)
+  } else ok('360: the floor uprated by the deflator', false, 'the deflator holds no 2024 or 2025 index')
+  control('…a staffing line whose grade cell is suppressed is not compared: its Gap carries the publisher\'s marker, and it is never "below"', (() => { const r = computeCba({ ...run.inputs.input, period: P25, held: { ...held, css: { ...held.css!, floors: { ...held.css!.floors, HEO_SEO: sup } } }, costs: [planted[0]] }); if (!r.ok) return false; const t = r.gaps.find((g) => g.kind === 'staff-unchecked')?.text ?? ''; return /ZZ mid one post” \(the Higher or Senior Executive Officer \(HEO\/SEO\) figure is \[c\] confidential/.test(t) && !r.gaps.some((g) => g.kind === 'below-salary-floor') })())
+  control('…and with the statistics not held, the line gets the "not yet held" gap and no floor at all', (() => { const r2 = computeCba({ ...run.inputs.input, period: P25, held: { ...held, civilServiceStatistics: false }, costs: [planted[0]] }); if (!r2.ok) return false; return r2.gaps.some((g) => /Not yet held by the platform: Civil Service Statistics/.test(g.text)) && !r2.lines[0].steps.some((s) => /^salary floor:/.test(s)) && !r2.gaps.some((g) => g.kind === 'staff-unchecked' || g.kind === 'below-salary-floor') })())
 
   // Lex's query_stats grounding: a suppressed cell is printed as itself, never left out (rendered from a REAL suppressed cell)
   const { getSuppressedCells } = await import('../lib/stats/cba-cells')

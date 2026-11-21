@@ -13,7 +13,9 @@ import { parseLineAppraisal, PARTY_KINDS, type PartyKind } from './line-appraisa
 import { loadManifest } from './citation-manifest'
 import { attributionOf, attributionWords } from './attribution'
 import { statsConfigured } from '@/lib/stats/stats-db'
-import { cssHeld, deflatorRelease } from '@/lib/stats/cba-cells'
+import { cssHeld, deflatorRelease, readCell, CSS_DATASET } from '@/lib/stats/cba-cells'
+import { css7Key } from '@/lib/stats/cell-pure'
+import { STAFF_GRADE_ASSUMED } from './engine-pure'
 
 export interface CbaInputs { input: EngineInput; fingerprint: Record<string, string>; heldOn: string }
 
@@ -36,9 +38,11 @@ export function benefitSourceWords(b: { sourceKind: string | null; sourceRef: nu
 async function heldFlags(deflator: ReadonlyArray<{ year: number; index: number }>): Promise<Omit<EngineInput['held'], 'manifest'>> {
   if (!statsConfigured()) return { civilServiceStatistics: false, deflatorReleaseDates: false, deflatorRelease: null, deflatorWhy: 'the statistics database is not configured here', css: null }
   try {
-    const [css, rel] = await Promise.all([cssHeld(), deflatorRelease(deflator)])
+    const grades = [...new Set(Object.values(STAFF_GRADE_ASSUMED))]
+    const [css, rel, cells] = await Promise.all([cssHeld(), deflatorRelease(deflator), Promise.all(grades.map((g) => readCell(CSS_DATASET, css7Key(g))))])
     return {
-      civilServiceStatistics: css.held, css: css.held ? { releaseDate: css.releaseDate, priceBasis: css.priceBasis } : null,
+      civilServiceStatistics: css.held,
+      css: css.held ? { releaseDate: css.releaseDate, priceBasis: css.priceBasis, floors: Object.fromEntries(grades.map((g, i) => [g, cells[i]])) } : null,
       deflatorReleaseDates: rel.held, deflatorRelease: rel.held && rel.vintage ? { vintage: rel.vintage, releaseDate: rel.releaseDate, priceBasis: rel.priceBasis } : null, deflatorWhy: rel.why,
     }
   } catch (e) {
@@ -79,6 +83,7 @@ export async function cbaInputs(ideaId: string, opts: { actionId?: string; now?:
       label: l.label, costType: l.costType, category: l.category, low: l.low, high: l.high, priceYear: l.priceYear,
       recurrence: rec(l.recurrence), durationMonths: l.durationMonths, basis: l.basis, citationKey: l.citationKey, benchmarkId: l.benchmarkId,
       appraisal: parseLineAppraisal(l.appraisal), attribution: attributionFor(l.benchmarkId),
+      staffLevel: l.staffLevel ?? null, fteCount: l.fteCount ?? null,
     }
   })
   const benefits: EngineBenefitLine[] = benefitRows.map((b) => {
@@ -101,7 +106,7 @@ export async function cbaInputs(ideaId: string, opts: { actionId?: string; now?:
   }
   const fingerprint: Record<string, string> = {
     period: `${period.years}:${period.startYear}:${period.priceYear}`,
-    ...Object.fromEntries(costRows.map((l) => [`c:${l.id}`, JSON.stringify([l.label, l.costType, l.low, l.high, l.priceYear, l.recurrence, l.durationMonths, l.basis, l.citationKey, l.appraisal, h(l.actionId)])])),
+    ...Object.fromEntries(costRows.map((l) => [`c:${l.id}`, JSON.stringify([l.label, l.costType, l.low, l.high, l.priceYear, l.recurrence, l.durationMonths, l.basis, l.citationKey, l.appraisal, h(l.actionId), ...(l.costType === 'STAFF' ? [l.staffLevel, l.fteCount] : [])])])),
     ...Object.fromEntries(benefitRows.map((b) => [`b:${b.id}`, JSON.stringify([b.label, b.beneficiary, b.beneficiaryName, b.low, b.high, b.priceYear, b.recurrence, b.durationMonths, b.isHealth, b.valuation, b.sourceKind, b.sourceRef, b.benchmarkId, b.citationKey, b.ownerReason, h(b.actionId)])])),
   }
   function h(actionId: string) { const x = home(actionId); return [x?.number ?? null, x?.headingId ?? null] }
