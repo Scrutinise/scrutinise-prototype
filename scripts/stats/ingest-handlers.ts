@@ -43,6 +43,12 @@ function derivedSourceId(...parts: Array<string | null | undefined>): string {
 }
 
 const PESA_CH5_URL = 'https://assets.publishing.service.gov.uk/media/6874fe4582370235232f9343/PESA_2025_CP_Chapter_5_tables.xlsx'
+// ⚠ CBA-1 EXECUTE §3 (329): UPDATE THESE TWO WITH THE URL, TOGETHER. The release date is the gov.uk
+// publication's first_published_at for PESA 2025 (17 Jul 2025, 00:00 BST; its 18 Dec 2025 "December
+// Update" added other files and did not replace this Chapter 5 workbook). The basis is the sheets' own
+// heading: "£ million", outturn, no real-terms label anywhere in the workbook.
+const PESA_CH5_RELEASE_DATE = new Date('2025-07-17T00:00:00Z')
+const PESA_CH5_PRICE_BASIS = 'cash (nominal), £ million, outturn in each financial year (PESA 2025 Chapter 5 heading "£ million")'
 const HMRC_RECEIPTS_URL = 'https://assets.publishing.service.gov.uk/media/6a571e539e63154454413697/NS_Table.ods'
 const HMRC_TAXGAP_URL = 'https://assets.publishing.service.gov.uk/media/6a314f53141f0690ad5fa41e/Measuring_tax_gap_online_tables_2026.xlsx'
 
@@ -216,6 +222,8 @@ async function refreshPesaCh5(): Promise<RefreshResult> {
       periodLabel: row.periodLabel,
       value: row.value,
       status: 'outturn',
+      releaseDate: PESA_CH5_RELEASE_DATE,
+      priceBasis: PESA_CH5_PRICE_BASIS,
     },
   }))
   return ingestRows(rows)

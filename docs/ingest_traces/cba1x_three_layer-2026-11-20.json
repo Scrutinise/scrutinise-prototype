@@ -1,0 +1,221 @@
+{
+ "at": "2026-11-20T17:24:37.953Z",
+ "tolerance": "FTS: exactly one row per section. Vector: every section has ≥1 vector row and ≥1 chunk; chunks may exceed sections (long sections split).",
+ "collections": [
+  {
+   "collection": "green-book",
+   "parentDocId": "government/publications/the-green-book-2026-paragraphs",
+   "corpus_sections": 404,
+   "corpus_fts": {
+    "total": 404,
+    "missing": 0,
+    "dupes": 0
+   },
+   "corpus_vec": {
+    "total": 408,
+    "missing": 0,
+    "dupes": 3
+   },
+   "corpus_chunks": {
+    "total": 408,
+    "missing": 0,
+    "dupes": 3
+   },
+   "quotedFormControl": 0
+  },
+  {
+   "collection": "gb-discounting",
+   "parentDocId": "government/publications/green-book-supplementary-guidance-discounting-paragraphs",
+   "corpus_sections": 33,
+   "corpus_fts": {
+    "total": 33,
+    "missing": 0,
+    "dupes": 0
+   },
+   "corpus_vec": {
+    "total": 33,
+    "missing": 0,
+    "dupes": 0
+   },
+   "corpus_chunks": {
+    "total": 33,
+    "missing": 0,
+    "dupes": 0
+   },
+   "quotedFormControl": 0
+  },
+  {
+   "collection": "gb-optimism-bias",
+   "parentDocId": "government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs",
+   "corpus_sections": 31,
+   "corpus_fts": {
+    "total": 31,
+    "missing": 0,
+    "dupes": 0
+   },
+   "corpus_vec": {
+    "total": 36,
+    "missing": 0,
+    "dupes": 1
+   },
+   "corpus_chunks": {
+    "total": 36,
+    "missing": 0,
+    "dupes": 1
+   },
+   "quotedFormControl": 0
+  }
+ ],
+ "serves": [
+  {
+   "key": "gb-discounting:2.1",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:5",
+   "query": "Green supplementary guidance discounting discount Green known formally",
+   "fts": {
+    "status": 200,
+    "hit": true,
+    "retired": false
+   },
+   "vec": {
+    "status": 200,
+    "hit": true,
+    "retired": false
+   }
+  },
+  {
+   "key": "gb-discounting:3.8",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:28",
+   "query": "Green supplementary guidance discounting conducting appraisal practitioners should",
+   "fts": {
+    "status": 200,
+    "hit": true,
+    "retired": false
+   },
+   "vec": {
+    "status": 200,
+    "hit": true,
+    "retired": false
+   }
+  },
+  {
+   "key": "gb-discounting:3.9",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:29",
+   "query": "Green supplementary guidance discounting Green discount profile expressed",
+   "fts": {
+    "status": 200,
+    "hit": true,
+    "retired": false
+   },
+   "vec": {
+    "status": 200,
+    "hit": true,
+    "retired": false
+   }
+  },
+  {
+   "key": "gb-discounting:3.10",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:30",
+   "query": "Green supplementary guidance discounting proposals social costs social",
+   "fts": {
+    "status": 200,
+    "hit": true,
+    "retired": false
+   },
+   "vec": {
+    "status": 200,
+    "hit": true,
+    "retired": false
+   }
+  },
+  {
+   "key": "green-book:6.58",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:186",
+   "query": "Green Discounting should applied retrospectively costs benefits already",
+   "fts": {
+    "status": 200,
+    "hit": true,
+    "retired": false
+   },
+   "vec": {
+    "status": 200,
+    "hit": true,
+    "retired": false
+   }
+  },
+  {
+   "key": "green-book:8.58",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:314",
+   "query": "Green social welfare additional years quality adjusted years",
+   "fts": {
+    "status": 200,
+    "hit": true,
+    "retired": false
+   },
+   "vec": {
+    "status": 200,
+    "hit": true,
+    "retired": false
+   }
+  },
+  {
+   "key": "green-book:6.77",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:205",
+   "query": "Green Optimism demonstrated systematic tendency practitioners optimistic about",
+   "fts": {
+    "status": 200,
+    "hit": true,
+    "retired": false
+   },
+   "vec": {
+    "status": 200,
+    "hit": true,
+    "retired": false
+   }
+  },
+  {
+   "key": "gb-optimism-bias:3.11",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:15",
+   "query": "Green supplementary guidance optimism appropriate upper bound value",
+   "fts": {
+    "status": 200,
+    "hit": true,
+    "retired": false
+   },
+   "vec": {
+    "status": 200,
+    "hit": true,
+    "retired": false
+   }
+  },
+  {
+   "key": "gb-optimism-bias:3.12",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:16",
+   "query": "Green supplementary guidance optimism Reduce upper bound optimism",
+   "fts": {
+    "status": 200,
+    "hit": true,
+    "retired": false
+   },
+   "vec": {
+    "status": 200,
+    "hit": true,
+    "retired": false
+   }
+  },
+  {
+   "key": "gb-optimism-bias:3.6",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:10",
+   "query": "Green supplementary guidance optimism determining project building civil",
+   "fts": {
+    "status": 200,
+    "hit": true,
+    "retired": false
+   },
+   "vec": {
+    "status": 200,
+    "hit": true,
+    "retired": false
+   }
+  }
+ ]
+}

@@ -37,6 +37,10 @@ enum StatSource {
   OECD
   IMF
   EUROSTAT
+  // CBA-1 EXECUTE §3 (decision 329, 20 Nov 2026): Civil Service Statistics (Cabinet Office) and the
+  // HMT GDP deflator releases. PESA keeps HMT_PESA.
+  CABINET_OFFICE
+  HMT
 
   @@map("stat_source")
 }
@@ -181,6 +185,7 @@ model StatSeries {
   commercialUseExcluded Boolean?
 
   observations StatObservation[]
+  suppressed   StatSuppressedCell[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -210,6 +215,14 @@ model StatObservation {
   value  Decimal @db.Decimal(20, 4)
   status String? // 'outturn' | 'forecast' | 'provisional' | 'revised' | null
 
+  // CBA-1 EXECUTE §3 (decision 329). Per ROW, because a re-release revises figures under the same
+  // period: the publisher's release date, and the price basis the number is expressed in, stated
+  // ("cash, as at 31 March 2026" / "index, 2025-26 = 100" / "cash, £ million, financial year").
+  // NULL on rows loaded before 20 Nov 2026 by other datasets; the three CBA datasets carry both on
+  // every row, and check-cba-stats.ts asserts it.
+  releaseDate DateTime? @db.Date
+  priceBasis  String?
+
   // denormalised for rollup queries (see model doc comment)
   geography         String
   cofogFunctionCode String?
@@ -233,6 +246,33 @@ model StatObservation {
 
 /// One row per refresh attempt. Mirrors the existing Ops scheduler pattern
 /// (scripts/operational) but scoped to this DB.
+// CBA-1 EXECUTE §3 (decision 329): A SUPPRESSED CELL IS A STATE, NEVER AN AMOUNT.
+// `[c]` (confidential: fewer than N staff — N is the TABLE's own threshold, 30 / 10 / 1–4) and `[n]`
+// (not applicable) are different facts, and neither is zero or a missing value.
+// ⚠ Deliberately NOT a nullable `stat_observation.value`: every existing reader does
+// `Number(r.value)`, which turns NULL into 0 — the exact failure this table exists to prevent.
+// A cell is in stat_observation XOR here (check-cba-stats.ts asserts no overlap).
+model StatSuppressedCell {
+  id       BigInt     @id @default(autoincrement())
+  seriesId String
+  series   StatSeries @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  periodType  StatPeriodType
+  periodStart DateTime
+  periodLabel String
+
+  marker     String // the publisher's shorthand exactly: 'c' | 'n'
+  markerText String // the publisher's own definition, from the sheet, e.g. "[c] = confidential and suppressed due to small numbers of less than 30"
+
+  releaseDate DateTime @db.Date
+  priceBasis  String
+
+  createdAt DateTime @default(now())
+
+  @@unique([seriesId, periodType, periodStart])
+  @@map("stat_suppressed_cell")
+}
+
 model StatRefreshLog {
   id        String      @id @default(cuid())
   datasetId String

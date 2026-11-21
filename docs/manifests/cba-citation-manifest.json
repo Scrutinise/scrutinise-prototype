@@ -1,0 +1,3299 @@
+{
+ "about": "Valid citation keys for the CBA guidance held in govuk-core-docs. key → section id → text hash. A key whose id or hash no longer matches the held row has been re-pointed or re-cut, and must fail (BRIEF_INGEST_CBA_1_EXECUTE §6).",
+ "builtAt": "2026-11-20T17:28:39.992Z",
+ "builtBy": "scripts/ingest/cba/build-manifest.ts (CC-Ingest)",
+ "source": "docs/ingest_traces/cba1x_existing_map.json (reviewed split ↔ stored rows, 18 Nov 2026); text read from R2",
+ "hash": "sha256 of the R2 text as read (UTF-8); `hash` = first 16 hex, the same as Lex citation-manifest.ts textHashOf; `sha256` = full",
+ "documents": [
+  {
+   "prefix": "green-book",
+   "parentDocId": "government/publications/the-green-book-2026-paragraphs",
+   "title": "The Green Book (October 2026)",
+   "keys": 403
+  },
+  {
+   "prefix": "gb-discounting",
+   "parentDocId": "government/publications/green-book-supplementary-guidance-discounting-paragraphs",
+   "title": "Green Book supplementary guidance: discounting (October 2026)",
+   "keys": 32
+  },
+  {
+   "prefix": "gb-optimism-bias",
+   "parentDocId": "government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs",
+   "title": "Green Book supplementary guidance: optimism bias (2013)",
+   "keys": 29
+  }
+ ],
+ "notKeyed": [
+  {
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:1",
+   "ref": "front",
+   "why": "not a numbered paragraph or table (front matter, appendix, worked example)"
+  },
+  {
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:1",
+   "ref": "front",
+   "why": "not a numbered paragraph or table (front matter, appendix, worked example)"
+  },
+  {
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:30",
+   "ref": "example-1-part-1-capital-expenditure",
+   "why": "not a numbered paragraph or table (front matter, appendix, worked example)"
+  },
+  {
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:31",
+   "ref": "appendix",
+   "why": "not a numbered paragraph or table (front matter, appendix, worked example)"
+  }
+ ],
+ "keys": [
+  {
+   "key": "green-book:1.1",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:2",
+   "hash": "5755406bfe4b8be1",
+   "sha256": "5755406bfe4b8be1c0c570efd96c9cf7f42ad5e40ab20e1fed48a58c7bd2fc49",
+   "label": "The Green Book (October 2026), para 1.1"
+  },
+  {
+   "key": "green-book:1.2",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:3",
+   "hash": "f6f45ad8fd2d508b",
+   "sha256": "f6f45ad8fd2d508b10689279d7ca7e282842697aae08c600a3b7770623c8b5dc",
+   "label": "The Green Book (October 2026), para 1.2"
+  },
+  {
+   "key": "green-book:1.3",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:4",
+   "hash": "4a0140071e152a1b",
+   "sha256": "4a0140071e152a1b8537ee5cf0220b817ad6b757bac73baeb1e2c2fb8470a790",
+   "label": "The Green Book (October 2026), para 1.3"
+  },
+  {
+   "key": "green-book:1.4",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:5",
+   "hash": "29be9e67040a2d61",
+   "sha256": "29be9e67040a2d61ac36e3c0db56dacdee23c9e46aea128f34bce42463035ead",
+   "label": "The Green Book (October 2026), para 1.4"
+  },
+  {
+   "key": "green-book:1.5",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:6",
+   "hash": "e6c7eaab68bcf048",
+   "sha256": "e6c7eaab68bcf04858a4eee86f996d6a48e6c57cf78f521a1b54a0af166fa5c7",
+   "label": "The Green Book (October 2026), para 1.5"
+  },
+  {
+   "key": "green-book:1.6",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:7",
+   "hash": "3fc2236b729affd9",
+   "sha256": "3fc2236b729affd93ca64bf8d1f4b8c62739543ed1bb2ebddfece0848a4c2890",
+   "label": "The Green Book (October 2026), para 1.6"
+  },
+  {
+   "key": "green-book:1.7",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:8",
+   "hash": "96a652f79ba773c8",
+   "sha256": "96a652f79ba773c8cff5858467a6eecf80ce21a5e24d03199fe6ecfd2ec42bd9",
+   "label": "The Green Book (October 2026), para 1.7"
+  },
+  {
+   "key": "green-book:1.8",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:9",
+   "hash": "addc3d7bdc6fbc38",
+   "sha256": "addc3d7bdc6fbc38967652e77bf720e6e5096585313d19a4288f90b604509763",
+   "label": "The Green Book (October 2026), para 1.8"
+  },
+  {
+   "key": "green-book:1.9",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:10",
+   "hash": "c8dd329a578027e8",
+   "sha256": "c8dd329a578027e8097753153ef585d8c728105dfa094f8c5cea9d7eeac0f1d1",
+   "label": "The Green Book (October 2026), para 1.9"
+  },
+  {
+   "key": "green-book:1.10",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:11",
+   "hash": "16d13a1aeafc98b9",
+   "sha256": "16d13a1aeafc98b9e9dbc30a69abcb8564f8084b4ffb366b6cc017a51d22369e",
+   "label": "The Green Book (October 2026), para 1.10"
+  },
+  {
+   "key": "green-book:2.1",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:12",
+   "hash": "f0055abfb3c55029",
+   "sha256": "f0055abfb3c550298b19d845d65a5fe4873a735f37182ef0f12c2ad003ac3876",
+   "label": "The Green Book (October 2026), para 2.1"
+  },
+  {
+   "key": "green-book:2.2",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:13",
+   "hash": "aabda15b342a2155",
+   "sha256": "aabda15b342a2155a4aaaabf5d7d11336bb43ddceb16d5defa9da574266c10a2",
+   "label": "The Green Book (October 2026), para 2.2"
+  },
+  {
+   "key": "green-book:2.3",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:14",
+   "hash": "0ee3f950b6094fb4",
+   "sha256": "0ee3f950b6094fb483d114e632f04320b4b0cec46a9cce2cabdd0021ff6faa52",
+   "label": "The Green Book (October 2026), para 2.3"
+  },
+  {
+   "key": "green-book:2.4",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:15",
+   "hash": "a60a950e493c6724",
+   "sha256": "a60a950e493c6724de278a8a6f78e7e41b9c4fb34006134d6ef62b082b3b3c1b",
+   "label": "The Green Book (October 2026), para 2.4"
+  },
+  {
+   "key": "green-book:2.5",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:16",
+   "hash": "7e4ade95394ff3f7",
+   "sha256": "7e4ade95394ff3f798a8e04da76cfe81fe218c28b229804ca39471c6cd87a0c6",
+   "label": "The Green Book (October 2026), para 2.5"
+  },
+  {
+   "key": "green-book:2.6",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:17",
+   "hash": "e62d13922486a452",
+   "sha256": "e62d13922486a452ffd34c855add1ac9b39bbbc70e43ca615df890331e80a2ac",
+   "label": "The Green Book (October 2026), para 2.6"
+  },
+  {
+   "key": "green-book:2.7",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:18",
+   "hash": "b3fd46031c75647c",
+   "sha256": "b3fd46031c75647cfbb15ca7bc860ea1bd37a159e809cf88ab705de71931dbb3",
+   "label": "The Green Book (October 2026), para 2.7"
+  },
+  {
+   "key": "green-book:2.8",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:19",
+   "hash": "2c2dfe97e8752021",
+   "sha256": "2c2dfe97e87520216846d2b9be2f353c3463cb3cb412736c845247fc8ea328e4",
+   "label": "The Green Book (October 2026), para 2.8"
+  },
+  {
+   "key": "green-book:2.9",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:20",
+   "hash": "9f6b21471b0f078e",
+   "sha256": "9f6b21471b0f078ef59641c1e0a30152daa1faeaacdc600144878002141b7620",
+   "label": "The Green Book (October 2026), para 2.9"
+  },
+  {
+   "key": "green-book:2.10",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:21",
+   "hash": "10c24fe659a7b29b",
+   "sha256": "10c24fe659a7b29b34542deee2cc93818feec6f21e0393655230dae880e53892",
+   "label": "The Green Book (October 2026), para 2.10"
+  },
+  {
+   "key": "green-book:2.11",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:22",
+   "hash": "d7d9e11eab7d004c",
+   "sha256": "d7d9e11eab7d004cc5724604a381b7f68597da5d0733411fb0c8539d3f50d80f",
+   "label": "The Green Book (October 2026), para 2.11"
+  },
+  {
+   "key": "green-book:2.12",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:23",
+   "hash": "6b6ab36351c862cf",
+   "sha256": "6b6ab36351c862cf2982efd7cd9e2bb2b7529e95a4dc1a63bd243d17ce866091",
+   "label": "The Green Book (October 2026), para 2.12"
+  },
+  {
+   "key": "green-book:2.13",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:24",
+   "hash": "dec4bff7f9cd2bc4",
+   "sha256": "dec4bff7f9cd2bc40b2a6c7f61b08f6ece222798fdafde5b423a7b3f62460c5a",
+   "label": "The Green Book (October 2026), para 2.13"
+  },
+  {
+   "key": "green-book:2.14",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:25",
+   "hash": "d1e5081dad6279b2",
+   "sha256": "d1e5081dad6279b22346cc25202a780b1ad3ec83ebb5353e7f13ae2e11ef4e4b",
+   "label": "The Green Book (October 2026), para 2.14"
+  },
+  {
+   "key": "green-book:2.15",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:26",
+   "hash": "9bf81d084b8da0b1",
+   "sha256": "9bf81d084b8da0b1b37999a9a4a7177433a40e75b570b70ee1ff5a45d8540a71",
+   "label": "The Green Book (October 2026), para 2.15"
+  },
+  {
+   "key": "green-book:2.16",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:27",
+   "hash": "12cc054202f82536",
+   "sha256": "12cc054202f82536019171a9ca58b0da1d8e96c04ab68a9fa97a96c9b7423e1f",
+   "label": "The Green Book (October 2026), para 2.16"
+  },
+  {
+   "key": "green-book:2.17",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:28",
+   "hash": "38b0bbb0821455aa",
+   "sha256": "38b0bbb0821455aa17f381fdf5f2428f41e4cebccfd53a22238c8a4c821004d3",
+   "label": "The Green Book (October 2026), para 2.17"
+  },
+  {
+   "key": "green-book:2.18",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:29",
+   "hash": "bdd0fbee471b0be7",
+   "sha256": "bdd0fbee471b0be755621b65727ed8d77ee3cf9ee795c398015c88dc61e13d55",
+   "label": "The Green Book (October 2026), para 2.18"
+  },
+  {
+   "key": "green-book:2.19",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:30",
+   "hash": "4658c3f92b6eb45a",
+   "sha256": "4658c3f92b6eb45a2c55e005d29eacb905a8b959bf5f3cb950e013fbfe9e1cc3",
+   "label": "The Green Book (October 2026), para 2.19"
+  },
+  {
+   "key": "green-book:2.20",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:31",
+   "hash": "8fce9aec4807852c",
+   "sha256": "8fce9aec4807852c96cb6e85beb10f76d5d55eb3a5539f6370cdba0538fcad58",
+   "label": "The Green Book (October 2026), para 2.20"
+  },
+  {
+   "key": "green-book:2.21",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:32",
+   "hash": "c2f91909cc3a6c99",
+   "sha256": "c2f91909cc3a6c9950024e20d3e8a97cd34a297635df9f0a159b9970610ffc76",
+   "label": "The Green Book (October 2026), para 2.21"
+  },
+  {
+   "key": "green-book:2.22",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:33",
+   "hash": "12a5c9e9ac4de48c",
+   "sha256": "12a5c9e9ac4de48c97ba818b0cf8ea25777d66ee6844c2310aa74b7132898e29",
+   "label": "The Green Book (October 2026), para 2.22"
+  },
+  {
+   "key": "green-book:2.23",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:34",
+   "hash": "b3ccc6d3aa1045f7",
+   "sha256": "b3ccc6d3aa1045f7038fcb07a16ea907c7d77129b874b6dac057d4ac400b311f",
+   "label": "The Green Book (October 2026), para 2.23"
+  },
+  {
+   "key": "green-book:2.24",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:35",
+   "hash": "c95c10f227f2b09d",
+   "sha256": "c95c10f227f2b09d495a3b395a5ee7f73e21c922b11e6370b2d0ec7e7af93784",
+   "label": "The Green Book (October 2026), para 2.24"
+  },
+  {
+   "key": "green-book:2.25",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:36",
+   "hash": "f058d58e3a741ad5",
+   "sha256": "f058d58e3a741ad5a91bc5e4bf2c27475ed466ec4beacc6160b4eeb8c5e1b2e5",
+   "label": "The Green Book (October 2026), para 2.25"
+  },
+  {
+   "key": "green-book:2.26",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:37",
+   "hash": "4b3226889182fae6",
+   "sha256": "4b3226889182fae650c3e54907cd83c228d5f34b65bcdb4b3cc355739e0790d5",
+   "label": "The Green Book (October 2026), para 2.26"
+  },
+  {
+   "key": "green-book:2.27",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:38",
+   "hash": "9197e4580d417aa5",
+   "sha256": "9197e4580d417aa5157fdc8065112ac1ba63a3d92e5a9e63eb91ad2065e68b22",
+   "label": "The Green Book (October 2026), para 2.27"
+  },
+  {
+   "key": "green-book:2.28",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:39",
+   "hash": "02b5ad2cc095971b",
+   "sha256": "02b5ad2cc095971bdc912d59843a8c18e85dfe7d0bf51e9c3f8abe8f56136525",
+   "label": "The Green Book (October 2026), para 2.28"
+  },
+  {
+   "key": "green-book:2.29",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:40",
+   "hash": "190f826874894deb",
+   "sha256": "190f826874894debf715819a81b7d8f6f4f0c805844f141824219027898a8299",
+   "label": "The Green Book (October 2026), para 2.29"
+  },
+  {
+   "key": "green-book:2.30",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:41",
+   "hash": "c88a20121d8a0f1c",
+   "sha256": "c88a20121d8a0f1c005caf8da2fb6572c8555e8bed8387da2f5e1b23fb930a1e",
+   "label": "The Green Book (October 2026), para 2.30"
+  },
+  {
+   "key": "green-book:2.31",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:42",
+   "hash": "70521a99472119e3",
+   "sha256": "70521a99472119e37a64e81fe8dc641b53b3b3c0ac21eb5ea654d669fb75727d",
+   "label": "The Green Book (October 2026), para 2.31"
+  },
+  {
+   "key": "green-book:2.32",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:43",
+   "hash": "a1d8bdbe0515a6f6",
+   "sha256": "a1d8bdbe0515a6f66230789ef63da3d147da43c55c654cb683a8582abca0bd8d",
+   "label": "The Green Book (October 2026), para 2.32"
+  },
+  {
+   "key": "green-book:2.33",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:44",
+   "hash": "c2b160272a1f7d81",
+   "sha256": "c2b160272a1f7d8137efef0617792ee1b1d619269881c993554457c08facae38",
+   "label": "The Green Book (October 2026), para 2.33"
+  },
+  {
+   "key": "green-book:3.1",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:45",
+   "hash": "3feb19a013fcc63f",
+   "sha256": "3feb19a013fcc63f71a89d1b5f4ac47bdbe01aac41c573a88cf9c31c40437f3d",
+   "label": "The Green Book (October 2026), para 3.1"
+  },
+  {
+   "key": "green-book:3.2",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:46",
+   "hash": "4ff82e04eff6c239",
+   "sha256": "4ff82e04eff6c239eb508b1e11d8cbbff0aa519c5835e5b5b9d9a23484dc0902",
+   "label": "The Green Book (October 2026), para 3.2"
+  },
+  {
+   "key": "green-book:3.3",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:47",
+   "hash": "2a0c305da0e5b41c",
+   "sha256": "2a0c305da0e5b41c0d0eba4abff51bcb79abc5a87e5d7303934e8db7eafa9303",
+   "label": "The Green Book (October 2026), para 3.3"
+  },
+  {
+   "key": "green-book:3.4",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:48",
+   "hash": "fb4713b5b3cc35b5",
+   "sha256": "fb4713b5b3cc35b5426fbcde92de150f5cec02260b7419be4d8b92b0fab586de",
+   "label": "The Green Book (October 2026), para 3.4"
+  },
+  {
+   "key": "green-book:3.5",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:49",
+   "hash": "9651afd08d0f15d0",
+   "sha256": "9651afd08d0f15d0753eab3d6f1699f4c07f89717c7cf20e697888dbc309a36f",
+   "label": "The Green Book (October 2026), para 3.5"
+  },
+  {
+   "key": "green-book:3.6",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:50",
+   "hash": "a4fdda793aa4eb34",
+   "sha256": "a4fdda793aa4eb343e0ef2c638eb162adbe2b06fb210160425413dbbd80168f9",
+   "label": "The Green Book (October 2026), para 3.6"
+  },
+  {
+   "key": "green-book:3.7",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:51",
+   "hash": "c7372b0114ccf68e",
+   "sha256": "c7372b0114ccf68e938d485ab94c3143594dda58e9da4497348b263c0466fd97",
+   "label": "The Green Book (October 2026), para 3.7"
+  },
+  {
+   "key": "green-book:3.8",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:52",
+   "hash": "4bcb287eb6c15525",
+   "sha256": "4bcb287eb6c1552501b74d33ca7e68689aad27aced3e4ccc0a772bcef1c0adf6",
+   "label": "The Green Book (October 2026), para 3.8"
+  },
+  {
+   "key": "green-book:3.9",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:53",
+   "hash": "16babe6e37a8c532",
+   "sha256": "16babe6e37a8c532f7dabfdcd71f5413db0268a80b03bbb1ebd8ba9db156e2f3",
+   "label": "The Green Book (October 2026), para 3.9"
+  },
+  {
+   "key": "green-book:3.10",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:54",
+   "hash": "6d3d53295190c316",
+   "sha256": "6d3d53295190c31692cf5b14f7cf17ac93e4ea3e92e31be5167a9ffa0a54732d",
+   "label": "The Green Book (October 2026), para 3.10"
+  },
+  {
+   "key": "green-book:3.11",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:55",
+   "hash": "7bfd178afa09bfb8",
+   "sha256": "7bfd178afa09bfb8d46fd2d6326c0ebc38f922a5e2a67505a15c779c78b9a1fa",
+   "label": "The Green Book (October 2026), para 3.11"
+  },
+  {
+   "key": "green-book:3.12",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:56",
+   "hash": "b4506df2b560037f",
+   "sha256": "b4506df2b560037fef591174a59d1f2d316e5904cb046b72adc0d8a1c1fa4d34",
+   "label": "The Green Book (October 2026), para 3.12"
+  },
+  {
+   "key": "green-book:3.13",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:57",
+   "hash": "53b6b7da6d4b61d1",
+   "sha256": "53b6b7da6d4b61d110addc77158aab18de8cebc60d9f0b81c208571123f9c889",
+   "label": "The Green Book (October 2026), para 3.13"
+  },
+  {
+   "key": "green-book:3.14",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:58",
+   "hash": "eeaafe5a79505ab3",
+   "sha256": "eeaafe5a79505ab3916def0cf0650493ed8faeca2952901198fa9c60952453db",
+   "label": "The Green Book (October 2026), para 3.14"
+  },
+  {
+   "key": "green-book:3.15",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:59",
+   "hash": "8d2af107581f2bc0",
+   "sha256": "8d2af107581f2bc0fa76441c982ed3e999573a7b34a07fd9ddc4a1fe313ba23a",
+   "label": "The Green Book (October 2026), para 3.15"
+  },
+  {
+   "key": "green-book:3.16",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:60",
+   "hash": "ec10344ce62ca5ae",
+   "sha256": "ec10344ce62ca5aef7785aa965bfafc2f84021b1fda8ead2477934fdb1b3a469",
+   "label": "The Green Book (October 2026), para 3.16"
+  },
+  {
+   "key": "green-book:3.17",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:61",
+   "hash": "5de7680ea084f67a",
+   "sha256": "5de7680ea084f67a4111746a86766c6aa24ecc5d12938feedb2299c2820db835",
+   "label": "The Green Book (October 2026), para 3.17"
+  },
+  {
+   "key": "green-book:3.18",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:62",
+   "hash": "837a500726506ddd",
+   "sha256": "837a500726506dddf455c6499693510d8c42331e3efdaebb442cd2a76482875c",
+   "label": "The Green Book (October 2026), para 3.18"
+  },
+  {
+   "key": "green-book:3.19",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:63",
+   "hash": "14b0b5e99b150929",
+   "sha256": "14b0b5e99b15092963cb5b61865e80f270a1a14d2e62996e9e731209d1463762",
+   "label": "The Green Book (October 2026), para 3.19"
+  },
+  {
+   "key": "green-book:4.1",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:64",
+   "hash": "846946227eb52ba5",
+   "sha256": "846946227eb52ba56c1d394b7a54843ba535abc8ed163bdc88ea7624494e44e0",
+   "label": "The Green Book (October 2026), para 4.1"
+  },
+  {
+   "key": "green-book:4.2",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:65",
+   "hash": "1f2f7f2a6e865ec1",
+   "sha256": "1f2f7f2a6e865ec126b11ad71799d8ceab18e263e415d3ff89301b2ff4aefbe4",
+   "label": "The Green Book (October 2026), para 4.2"
+  },
+  {
+   "key": "green-book:4.3",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:66",
+   "hash": "8045c08456e4b8ea",
+   "sha256": "8045c08456e4b8ead4968288f0ba3d3c3c1f634cd71cf736849aca1c3815a0ec",
+   "label": "The Green Book (October 2026), para 4.3"
+  },
+  {
+   "key": "green-book:4.4",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:67",
+   "hash": "7215571b717bea8e",
+   "sha256": "7215571b717bea8ed2124d99cb9b23da2b6dda70366b04cf6b087aeb302b2532",
+   "label": "The Green Book (October 2026), para 4.4"
+  },
+  {
+   "key": "green-book:4.5",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:68",
+   "hash": "f098aebc3fc7f264",
+   "sha256": "f098aebc3fc7f264e51babe74810eb145e66b8ef0f5c118dce516671607d0e10",
+   "label": "The Green Book (October 2026), para 4.5"
+  },
+  {
+   "key": "green-book:4.6",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:69",
+   "hash": "8f9696247345767a",
+   "sha256": "8f9696247345767adeeb02c21fc352ba3f9cdb163fda590be0383c6d7006d92f",
+   "label": "The Green Book (October 2026), para 4.6"
+  },
+  {
+   "key": "green-book:4.7",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:70",
+   "hash": "b16b180916c59ee1",
+   "sha256": "b16b180916c59ee13e1c413de8fc1d59bc910e47cb7f33d81999366266a3a03f",
+   "label": "The Green Book (October 2026), para 4.7"
+  },
+  {
+   "key": "green-book:4.8",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:71",
+   "hash": "e7cdc63f6b7a9633",
+   "sha256": "e7cdc63f6b7a9633d9bcf5b103b86b01bb171d2169b5a4aa9db5e84feb163c80",
+   "label": "The Green Book (October 2026), para 4.8"
+  },
+  {
+   "key": "green-book:4.9",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:72",
+   "hash": "f5da759b5b2b3d3b",
+   "sha256": "f5da759b5b2b3d3b3f9a49665e2a930185d3ad23f72381ee3fee10efcb4aec50",
+   "label": "The Green Book (October 2026), para 4.9"
+  },
+  {
+   "key": "green-book:4.10",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:73",
+   "hash": "3c4dbada315a3ff7",
+   "sha256": "3c4dbada315a3ff7ffd329f73ae23a2fc008e157930717056430c8460242eac0",
+   "label": "The Green Book (October 2026), para 4.10"
+  },
+  {
+   "key": "green-book:4.11",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:74",
+   "hash": "7cbe9be9296278d9",
+   "sha256": "7cbe9be9296278d926e9247731888e29968558b2f3e1187adc49de6b98f0a2a3",
+   "label": "The Green Book (October 2026), para 4.11"
+  },
+  {
+   "key": "green-book:4.12",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:75",
+   "hash": "d9ac1b050aab04a1",
+   "sha256": "d9ac1b050aab04a1888cbb75d9b331b8e04adbad5f24c396b4538e4ba76e29f5",
+   "label": "The Green Book (October 2026), para 4.12"
+  },
+  {
+   "key": "green-book:4.13",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:76",
+   "hash": "aec602a139a133d8",
+   "sha256": "aec602a139a133d83cb50b82a8673439978777ac54eff15c6dcca4c36170b640",
+   "label": "The Green Book (October 2026), para 4.13"
+  },
+  {
+   "key": "green-book:4.14",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:77",
+   "hash": "6204083e751dd386",
+   "sha256": "6204083e751dd3867081e83eff5a4aabc0ebc0c7f6326a61af2852da546d8868",
+   "label": "The Green Book (October 2026), para 4.14"
+  },
+  {
+   "key": "green-book:4.15",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:78",
+   "hash": "d1a3fec97ac35ce4",
+   "sha256": "d1a3fec97ac35ce4d1dc1d008e550c48c781ded53eea7c442ec18b791e2caa11",
+   "label": "The Green Book (October 2026), para 4.15"
+  },
+  {
+   "key": "green-book:4.16",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:79",
+   "hash": "d167bbec1416a29a",
+   "sha256": "d167bbec1416a29ae03cb69fb3050d2f55dc20d84b307eb5e3a2c77b7d461232",
+   "label": "The Green Book (October 2026), para 4.16"
+  },
+  {
+   "key": "green-book:4.17",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:80",
+   "hash": "7b6651b736c68947",
+   "sha256": "7b6651b736c68947f8e99fb036f4bb3d0837de574884189fc3951e3e0bf71d79",
+   "label": "The Green Book (October 2026), para 4.17"
+  },
+  {
+   "key": "green-book:4.18",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:81",
+   "hash": "400518c9bed2714b",
+   "sha256": "400518c9bed2714bf70c74fcdab74b4f04933cf676e853fc9e1397856ce8babc",
+   "label": "The Green Book (October 2026), para 4.18"
+  },
+  {
+   "key": "green-book:4.19",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:82",
+   "hash": "87a754423ec4a851",
+   "sha256": "87a754423ec4a851271d566b78056ce9dfb1bd0a7bc0103d876593fa77b7ccae",
+   "label": "The Green Book (October 2026), para 4.19"
+  },
+  {
+   "key": "green-book:4.20",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:83",
+   "hash": "2865ccea4b539de5",
+   "sha256": "2865ccea4b539de5a20641185c3d7661a9beee75d090eaee0e9f3236663ed722",
+   "label": "The Green Book (October 2026), para 4.20"
+  },
+  {
+   "key": "green-book:4.21",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:84",
+   "hash": "c943ecefe404b62a",
+   "sha256": "c943ecefe404b62ad1ac51db7c3b8947689217219d93a570817e74a624b35f19",
+   "label": "The Green Book (October 2026), para 4.21"
+  },
+  {
+   "key": "green-book:4.22",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:85",
+   "hash": "1c47082671dede6f",
+   "sha256": "1c47082671dede6f9f0c4cca3cef17d613381adb03eb15d17aa0fb5f7ada9209",
+   "label": "The Green Book (October 2026), para 4.22"
+  },
+  {
+   "key": "green-book:4.23",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:86",
+   "hash": "54a41789448aad42",
+   "sha256": "54a41789448aad4228795c3f62d4503c755c1ebe3c4e849b8b0a6ed069d98686",
+   "label": "The Green Book (October 2026), para 4.23"
+  },
+  {
+   "key": "green-book:4.24",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:87",
+   "hash": "3e514fd9bf70b577",
+   "sha256": "3e514fd9bf70b5776568b4b0af3a0a6412435f7d9e5e494048ab09b2f02b9e1b",
+   "label": "The Green Book (October 2026), para 4.24"
+  },
+  {
+   "key": "green-book:4.25",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:88",
+   "hash": "b8879b71199d4e2c",
+   "sha256": "b8879b71199d4e2cb7006d60797b503b97b4a355c29f394208f5c8b321582d6b",
+   "label": "The Green Book (October 2026), para 4.25"
+  },
+  {
+   "key": "green-book:4.26",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:89",
+   "hash": "70d118b373d8a729",
+   "sha256": "70d118b373d8a7291a6780d7662469ae42f7e4c4d88bea70c449f1dc56d18f34",
+   "label": "The Green Book (October 2026), para 4.26"
+  },
+  {
+   "key": "green-book:4.27",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:90",
+   "hash": "ff3d229a15de70cf",
+   "sha256": "ff3d229a15de70cf2b21f30dd57d70c9f9a935d7366bdb993a72f7fff10658ef",
+   "label": "The Green Book (October 2026), para 4.27"
+  },
+  {
+   "key": "green-book:4.28",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:91",
+   "hash": "d86fc55486c73442",
+   "sha256": "d86fc55486c734424295c7b73e1c6cab08c4004678759035ef496deea2932bbb",
+   "label": "The Green Book (October 2026), para 4.28"
+  },
+  {
+   "key": "green-book:4.29",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:92",
+   "hash": "204ad960d49b2a16",
+   "sha256": "204ad960d49b2a166a261248aa3ca483184be94b141907b8ae237cf600ed1333",
+   "label": "The Green Book (October 2026), para 4.29"
+  },
+  {
+   "key": "green-book:4.30",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:93",
+   "hash": "9510d9fcce94dee5",
+   "sha256": "9510d9fcce94dee5daa706682c5cb68a22ffd52c0fff999b3a146a5b37e92228",
+   "label": "The Green Book (October 2026), para 4.30"
+  },
+  {
+   "key": "green-book:5.1",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:94",
+   "hash": "b10ab079a2e27405",
+   "sha256": "b10ab079a2e27405e31a74114c3d22a960d7a7bde2f8593cbdeca931ac0a9133",
+   "label": "The Green Book (October 2026), para 5.1"
+  },
+  {
+   "key": "green-book:5.2",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:95",
+   "hash": "99ccf092e59b3c3a",
+   "sha256": "99ccf092e59b3c3a39e44e880b2a3c5cfb850b8290c367088423d6c647e2d985",
+   "label": "The Green Book (October 2026), para 5.2"
+  },
+  {
+   "key": "green-book:5.3",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:96",
+   "hash": "48a144c77d4ff322",
+   "sha256": "48a144c77d4ff3221c7f51583894a38a026bca4a3e6ca5fdeaec62689030cf21",
+   "label": "The Green Book (October 2026), para 5.3"
+  },
+  {
+   "key": "green-book:5.4",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:97",
+   "hash": "7bf816d39fab4f8f",
+   "sha256": "7bf816d39fab4f8f4d4f7873ad871059c239636b4633903618ccc6512f0a8fc5",
+   "label": "The Green Book (October 2026), para 5.4"
+  },
+  {
+   "key": "green-book:5.5",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:98",
+   "hash": "231c88706b5e26ac",
+   "sha256": "231c88706b5e26acf3aadd24d72c9d3819d6fe59da6231528d24f407fe8b8951",
+   "label": "The Green Book (October 2026), para 5.5"
+  },
+  {
+   "key": "green-book:5.6",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:99",
+   "hash": "3cee453b866a5388",
+   "sha256": "3cee453b866a5388e20b3e31d88af1da3dd40a8e3370fef0d3dceeace25893e5",
+   "label": "The Green Book (October 2026), para 5.6"
+  },
+  {
+   "key": "green-book:5.7",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:100",
+   "hash": "e7e2441eb21b5678",
+   "sha256": "e7e2441eb21b56784e1ec75c2b9172467ca8d32c6a77729b91d3c6352a76f0f4",
+   "label": "The Green Book (October 2026), para 5.7"
+  },
+  {
+   "key": "green-book:5.8",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:101",
+   "hash": "6dbb9f52f7b72446",
+   "sha256": "6dbb9f52f7b7244625b579a415699875e89215c6a489efd11a6a8b7116c10855",
+   "label": "The Green Book (October 2026), para 5.8"
+  },
+  {
+   "key": "green-book:5.9",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:102",
+   "hash": "9a837e66ddafa117",
+   "sha256": "9a837e66ddafa117fc38b26c21b3c6ec01730321827eaf11b0059f3e82ca337e",
+   "label": "The Green Book (October 2026), para 5.9"
+  },
+  {
+   "key": "green-book:5.10",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:103",
+   "hash": "b5d1a6dce98aa13e",
+   "sha256": "b5d1a6dce98aa13e52e045b943298e0b92851b0c79621707c1513f4b9e9f5d6a",
+   "label": "The Green Book (October 2026), para 5.10"
+  },
+  {
+   "key": "green-book:5.11",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:104",
+   "hash": "b8d925566f1cf2d3",
+   "sha256": "b8d925566f1cf2d3d84e812e7ac1ea2d49d53ab5f658a20a6701844e8b9d9c74",
+   "label": "The Green Book (October 2026), para 5.11"
+  },
+  {
+   "key": "green-book:5.12",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:105",
+   "hash": "dacfea8e91ca4914",
+   "sha256": "dacfea8e91ca491424426d3f5efa6102ced200b805f73bbeebe63cebafe0beb2",
+   "label": "The Green Book (October 2026), para 5.12"
+  },
+  {
+   "key": "green-book:5.13",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:106",
+   "hash": "52f29fb88e75a4f2",
+   "sha256": "52f29fb88e75a4f22f1a976d41a88d39ef933d4c949e50441431046dace9efc2",
+   "label": "The Green Book (October 2026), para 5.13"
+  },
+  {
+   "key": "green-book:5.14",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:107",
+   "hash": "ff44d1cb3193573f",
+   "sha256": "ff44d1cb3193573f0ff2409c55f76a423cd633b6f04afd3651da732170b6044b",
+   "label": "The Green Book (October 2026), para 5.14"
+  },
+  {
+   "key": "green-book:5.15",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:108",
+   "hash": "c7b89f989c4c632b",
+   "sha256": "c7b89f989c4c632b3e2fff9cc86095d2afcb85142894f962943220c59be69690",
+   "label": "The Green Book (October 2026), para 5.15"
+  },
+  {
+   "key": "green-book:5.16",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:109",
+   "hash": "e211a5db862489f6",
+   "sha256": "e211a5db862489f6a9dc79026be941b07d62c62f52f65670bf360ad187223cf1",
+   "label": "The Green Book (October 2026), para 5.16"
+  },
+  {
+   "key": "green-book:5.17",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:110",
+   "hash": "b8280160cf5717e3",
+   "sha256": "b8280160cf5717e371604672afa021d3055670d82540f3f20828db2bf67a7b43",
+   "label": "The Green Book (October 2026), para 5.17"
+  },
+  {
+   "key": "green-book:5.18",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:111",
+   "hash": "01e7db844f78f063",
+   "sha256": "01e7db844f78f063a7934d7ad93636d9577dde9d1a48aa00b7affbb7032bcdb3",
+   "label": "The Green Book (October 2026), para 5.18"
+  },
+  {
+   "key": "green-book:5.19",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:112",
+   "hash": "c2bf26afd39f634b",
+   "sha256": "c2bf26afd39f634b1b77a5b9933dfc89fcb2b4be026c3a92b1e0940c5aab7a81",
+   "label": "The Green Book (October 2026), para 5.19"
+  },
+  {
+   "key": "green-book:5.20",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:113",
+   "hash": "d60403d190e1c61f",
+   "sha256": "d60403d190e1c61f8655054d0420dbe2ccaa21a8ac06be16d6405be1ecef5faa",
+   "label": "The Green Book (October 2026), para 5.20"
+  },
+  {
+   "key": "green-book:5.21",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:114",
+   "hash": "32eb7e11411dce68",
+   "sha256": "32eb7e11411dce68f51325774609544a6bbfc238e55af84397f9eec664c9957c",
+   "label": "The Green Book (October 2026), para 5.21"
+  },
+  {
+   "key": "green-book:5.22",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:115",
+   "hash": "1b01f5e365480c9f",
+   "sha256": "1b01f5e365480c9f781ea22a7304ae3e9ae49c190d944ecd80e3c09a4ad77ac1",
+   "label": "The Green Book (October 2026), para 5.22"
+  },
+  {
+   "key": "green-book:5.23",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:116",
+   "hash": "7c8f4ea837703889",
+   "sha256": "7c8f4ea83770388989c334a160a35a35d3e9dce63f947b94085a7a4c52296570",
+   "label": "The Green Book (October 2026), para 5.23"
+  },
+  {
+   "key": "green-book:5.24",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:117",
+   "hash": "6e1fff034a51c68e",
+   "sha256": "6e1fff034a51c68e2b1430d9d058bc5d57f63e58812e8da58ce168380e8a6be8",
+   "label": "The Green Book (October 2026), para 5.24"
+  },
+  {
+   "key": "green-book:5.25",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:118",
+   "hash": "db5342461382730c",
+   "sha256": "db5342461382730cdaf3a24ed1ec63a6c588b319fe54bb0263142d2b9b648ff9",
+   "label": "The Green Book (October 2026), para 5.25"
+  },
+  {
+   "key": "green-book:5.26",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:119",
+   "hash": "6db419627c6a9623",
+   "sha256": "6db419627c6a9623614277834d3117d1b61a77f3313f72087701bf28cecdc382",
+   "label": "The Green Book (October 2026), para 5.26"
+  },
+  {
+   "key": "green-book:5.27",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:120",
+   "hash": "2cacaa88956ffb02",
+   "sha256": "2cacaa88956ffb02a48caf33d7a8e9356448c91b826925fa95ba9da7b924e9bb",
+   "label": "The Green Book (October 2026), para 5.27"
+  },
+  {
+   "key": "green-book:5.28",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:121",
+   "hash": "ec6ffd003cdced11",
+   "sha256": "ec6ffd003cdced11d8513355b0138b5a022ed398f0d32860cda9b97806fc24da",
+   "label": "The Green Book (October 2026), para 5.28"
+  },
+  {
+   "key": "green-book:5.29",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:122",
+   "hash": "9fe1b93480341cb4",
+   "sha256": "9fe1b93480341cb4dcf0815dfd0256c80b53673a84fb0d3277d8efe006e44b16",
+   "label": "The Green Book (October 2026), para 5.29"
+  },
+  {
+   "key": "green-book:5.30",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:123",
+   "hash": "9ad58773e1df1d9c",
+   "sha256": "9ad58773e1df1d9ca081990dad0e5866c9214674816512672cd4f45dec334bcb",
+   "label": "The Green Book (October 2026), para 5.30"
+  },
+  {
+   "key": "green-book:5.31",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:124",
+   "hash": "63cfb17ca9fd64ad",
+   "sha256": "63cfb17ca9fd64add2e9d5ec2988f189a810c13542d375228e7676a115c9b9b4",
+   "label": "The Green Book (October 2026), para 5.31"
+  },
+  {
+   "key": "green-book:5.32",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:125",
+   "hash": "be278bfca64213b1",
+   "sha256": "be278bfca64213b1543fab92a0c0ef3d850bf230dca3b21a91ffd1fa0138a019",
+   "label": "The Green Book (October 2026), para 5.32"
+  },
+  {
+   "key": "green-book:5.33",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:126",
+   "hash": "08346bb27478155e",
+   "sha256": "08346bb27478155e50c8b2a555abcc92a753764c561d0a20b926cdcc7139071d",
+   "label": "The Green Book (October 2026), para 5.33"
+  },
+  {
+   "key": "green-book:5.34",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:127",
+   "hash": "8e31ee5e631c1fe3",
+   "sha256": "8e31ee5e631c1fe36baab93c361340215d756f6de3825f2437909fa1ea4e17b4",
+   "label": "The Green Book (October 2026), para 5.34"
+  },
+  {
+   "key": "green-book:5.35",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:128",
+   "hash": "5afc723194e08d79",
+   "sha256": "5afc723194e08d799a72ff47d883451159b5781981a2e1888e54d1fdcf516354",
+   "label": "The Green Book (October 2026), para 5.35"
+  },
+  {
+   "key": "green-book:6.1",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:129",
+   "hash": "b88ff519f3432e81",
+   "sha256": "b88ff519f3432e813088b9c08b62799f6d83b99b40e194bf69f3d75136f852b2",
+   "label": "The Green Book (October 2026), para 6.1"
+  },
+  {
+   "key": "green-book:6.2",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:130",
+   "hash": "983eba980005c23b",
+   "sha256": "983eba980005c23b6a150abd05c495e839d76038b2ff62cc82e42a0f868fa5f2",
+   "label": "The Green Book (October 2026), para 6.2"
+  },
+  {
+   "key": "green-book:6.3",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:131",
+   "hash": "28ff50fbffe2a64d",
+   "sha256": "28ff50fbffe2a64dd15e1953e8a8b761064d084693c7043bce3014459bc7cfc3",
+   "label": "The Green Book (October 2026), para 6.3"
+  },
+  {
+   "key": "green-book:6.4",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:132",
+   "hash": "3271ce6dc33a8220",
+   "sha256": "3271ce6dc33a8220ee4cf7268a5a165766e09ce832f0e326f5a90b83157073d2",
+   "label": "The Green Book (October 2026), para 6.4"
+  },
+  {
+   "key": "green-book:6.5",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:133",
+   "hash": "cf7849f8af5d09b8",
+   "sha256": "cf7849f8af5d09b8a6bca705af97adcc281f52fb6fe2eb0351f4e51cf7cf31e2",
+   "label": "The Green Book (October 2026), para 6.5"
+  },
+  {
+   "key": "green-book:6.6",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:134",
+   "hash": "5dc3db1641f2c619",
+   "sha256": "5dc3db1641f2c619d9f0a6f90e0560f04cddd42b608bee8bd5cd8b252533e37f",
+   "label": "The Green Book (October 2026), para 6.6"
+  },
+  {
+   "key": "green-book:6.7",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:135",
+   "hash": "14d6e448f045d61b",
+   "sha256": "14d6e448f045d61b5c0ceae3746d66a3129d3dad3dc1543ccf1ffe9f0a8c3fe0",
+   "label": "The Green Book (October 2026), para 6.7"
+  },
+  {
+   "key": "green-book:6.8",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:136",
+   "hash": "03bcf24f2df94530",
+   "sha256": "03bcf24f2df94530308083fe6aa8b6b84fa7b94f408cfe25adc8b27819dd804b",
+   "label": "The Green Book (October 2026), para 6.8"
+  },
+  {
+   "key": "green-book:6.9",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:137",
+   "hash": "cda273f16ca5c48f",
+   "sha256": "cda273f16ca5c48fd693579ced1399dc7bc0ecd399b94bffdd6fb7187b208919",
+   "label": "The Green Book (October 2026), para 6.9"
+  },
+  {
+   "key": "green-book:6.10",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:138",
+   "hash": "a7762d3e79d7c536",
+   "sha256": "a7762d3e79d7c536d6ecd851932513b2c9d14bd7f62cfe039f2babf82ce67737",
+   "label": "The Green Book (October 2026), para 6.10"
+  },
+  {
+   "key": "green-book:6.11",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:139",
+   "hash": "e5b0e45a2673d840",
+   "sha256": "e5b0e45a2673d840ae12ab52ccf5f0937b9e3417c73556b8863488a43a9dbda8",
+   "label": "The Green Book (October 2026), para 6.11"
+  },
+  {
+   "key": "green-book:6.12",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:140",
+   "hash": "d2022ba3a5429a3d",
+   "sha256": "d2022ba3a5429a3da74dbe133c6b9beb62f6a8b1fde9b1bb6be873795250c008",
+   "label": "The Green Book (October 2026), para 6.12"
+  },
+  {
+   "key": "green-book:6.13",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:141",
+   "hash": "1c51bb3ca5e7131d",
+   "sha256": "1c51bb3ca5e7131d3b862b537715d43119dab4e6b54f628f5ea770f5c203f01f",
+   "label": "The Green Book (October 2026), para 6.13"
+  },
+  {
+   "key": "green-book:6.14",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:142",
+   "hash": "ac0cd63b2ef1b744",
+   "sha256": "ac0cd63b2ef1b744c09b7def8c8269adc59d187d9081b9ac46c9fb91cbc85d42",
+   "label": "The Green Book (October 2026), para 6.14"
+  },
+  {
+   "key": "green-book:6.15",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:143",
+   "hash": "598902d8751f8f78",
+   "sha256": "598902d8751f8f78c137cfc6bf9a9a423c3db556581e2f9222aaefa53622f7b9",
+   "label": "The Green Book (October 2026), para 6.15"
+  },
+  {
+   "key": "green-book:6.16",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:144",
+   "hash": "a8aeea97b5bc2783",
+   "sha256": "a8aeea97b5bc27831b19e903ba583921a2b56323761a153ee2cd7440ffeab163",
+   "label": "The Green Book (October 2026), para 6.16"
+  },
+  {
+   "key": "green-book:6.17",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:145",
+   "hash": "57a910defa7106b3",
+   "sha256": "57a910defa7106b3a4384e11012fcbe58736d32add38fe5947f1c755f7702c8a",
+   "label": "The Green Book (October 2026), para 6.17"
+  },
+  {
+   "key": "green-book:6.18",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:146",
+   "hash": "145803f1d61f4dee",
+   "sha256": "145803f1d61f4dee4c82063fcb8ec55560e33004d995beec5b4cb411db53ac70",
+   "label": "The Green Book (October 2026), para 6.18"
+  },
+  {
+   "key": "green-book:6.19",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:147",
+   "hash": "1449368e11842a5d",
+   "sha256": "1449368e11842a5d6ba49d8d244a31b571070f26079997fd44ffb4631d8cb79c",
+   "label": "The Green Book (October 2026), para 6.19"
+  },
+  {
+   "key": "green-book:6.20",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:148",
+   "hash": "cbc5f10690f343bc",
+   "sha256": "cbc5f10690f343bc14536949d88bd4bbf300c1cd3832c04209ecba74802ad2a3",
+   "label": "The Green Book (October 2026), para 6.20"
+  },
+  {
+   "key": "green-book:6.21",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:149",
+   "hash": "3e9449cacc00787c",
+   "sha256": "3e9449cacc00787cef87a868806f79bf0eac5667930bf9c0f3cf9eb1f4e31efa",
+   "label": "The Green Book (October 2026), para 6.21"
+  },
+  {
+   "key": "green-book:6.22",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:150",
+   "hash": "a7721dece02b20f0",
+   "sha256": "a7721dece02b20f0bf88548430995e83c48b818166d77b73b219228a8e972f2f",
+   "label": "The Green Book (October 2026), para 6.22"
+  },
+  {
+   "key": "green-book:6.23",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:151",
+   "hash": "cf20e3f622b0e099",
+   "sha256": "cf20e3f622b0e099c472781df98be20387cf3e992475fa3a0353b8e8c684e375",
+   "label": "The Green Book (October 2026), para 6.23"
+  },
+  {
+   "key": "green-book:6.24",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:152",
+   "hash": "1e1ddd1638f49496",
+   "sha256": "1e1ddd1638f49496fdc8a726cb948a9f23dad9f06e0a36943cd490f3a2cd87df",
+   "label": "The Green Book (October 2026), para 6.24"
+  },
+  {
+   "key": "green-book:6.25",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:153",
+   "hash": "a864611e41a0a7bd",
+   "sha256": "a864611e41a0a7bd3e6848b06886fe1ffdb059ed5fa11bc57bd7513c6ea0acb9",
+   "label": "The Green Book (October 2026), para 6.25"
+  },
+  {
+   "key": "green-book:6.26",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:154",
+   "hash": "a25737a695910f59",
+   "sha256": "a25737a695910f5987cb6f2d5cbf33d77809da229b375eed593343bcb65b46f1",
+   "label": "The Green Book (October 2026), para 6.26"
+  },
+  {
+   "key": "green-book:6.27",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:155",
+   "hash": "ce2a676fe5c1521a",
+   "sha256": "ce2a676fe5c1521af3b9a27d8dc5fc52969347cf5a6ae80d8656925a0fdf3206",
+   "label": "The Green Book (October 2026), para 6.27"
+  },
+  {
+   "key": "green-book:6.28",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:156",
+   "hash": "4861ee57e877d954",
+   "sha256": "4861ee57e877d954fd5fd9f48909f1505d86f4929cd78876aa95ba9d4f2ed0af",
+   "label": "The Green Book (October 2026), para 6.28"
+  },
+  {
+   "key": "green-book:6.29",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:157",
+   "hash": "2b968cc9e64111da",
+   "sha256": "2b968cc9e64111daa69fbb39b798d54cc103bb53b95a02d103430db3bad116b5",
+   "label": "The Green Book (October 2026), para 6.29"
+  },
+  {
+   "key": "green-book:6.30",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:158",
+   "hash": "852451904f6dae3e",
+   "sha256": "852451904f6dae3eabdf9ff64f0c7cc2535f0074e279e1db59addde673c7628f",
+   "label": "The Green Book (October 2026), para 6.30"
+  },
+  {
+   "key": "green-book:6.31",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:159",
+   "hash": "9d714aac67361eb1",
+   "sha256": "9d714aac67361eb11178035aa7c04aef1ce384ad7672db412368d43279804d18",
+   "label": "The Green Book (October 2026), para 6.31"
+  },
+  {
+   "key": "green-book:6.32",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:160",
+   "hash": "04e9c169af4ea6d2",
+   "sha256": "04e9c169af4ea6d281423a20b8baabac03727991d4de0df2eefe79a09698d305",
+   "label": "The Green Book (October 2026), para 6.32"
+  },
+  {
+   "key": "green-book:6.33",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:161",
+   "hash": "adbb1d6616c3ab96",
+   "sha256": "adbb1d6616c3ab96518ad868176b2621e6d3f7580ef25121e5c747394b9036a6",
+   "label": "The Green Book (October 2026), para 6.33"
+  },
+  {
+   "key": "green-book:6.34",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:162",
+   "hash": "b9792acc02590a48",
+   "sha256": "b9792acc02590a487a951dabed975e113d254402fa67efd13d57aabbe28667fc",
+   "label": "The Green Book (October 2026), para 6.34"
+  },
+  {
+   "key": "green-book:6.35",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:163",
+   "hash": "3c9d1ca3096ace27",
+   "sha256": "3c9d1ca3096ace276f2d91e0475af27ff3d960f8fb76327428b15b9f2339c77d",
+   "label": "The Green Book (October 2026), para 6.35"
+  },
+  {
+   "key": "green-book:6.36",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:164",
+   "hash": "fab117e93931d919",
+   "sha256": "fab117e93931d9197524fd5afe309a28055d6cd7829c2410806f6ec6841eafc5",
+   "label": "The Green Book (October 2026), para 6.36"
+  },
+  {
+   "key": "green-book:6.37",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:165",
+   "hash": "fcf97d3ae4ccff06",
+   "sha256": "fcf97d3ae4ccff06e60adcf5aa1da079e9b650a8afdd93fc1c68d17bec4a527c",
+   "label": "The Green Book (October 2026), para 6.37"
+  },
+  {
+   "key": "green-book:6.38",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:166",
+   "hash": "d0bc58c791e27bb1",
+   "sha256": "d0bc58c791e27bb121d06db5d1dd9a1dd8f1c56900ebe2bcab50a18d3dc22d5c",
+   "label": "The Green Book (October 2026), para 6.38"
+  },
+  {
+   "key": "green-book:6.39",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:167",
+   "hash": "931a1190ee646a4d",
+   "sha256": "931a1190ee646a4d2276b78ca6069d19b38d4986154e089708476c18cd9ef501",
+   "label": "The Green Book (October 2026), para 6.39"
+  },
+  {
+   "key": "green-book:6.40",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:168",
+   "hash": "a18b8eadcac2d384",
+   "sha256": "a18b8eadcac2d384ffc6a9f539d55fa01c72e39a69f3b65c7381bfc21dfc95f8",
+   "label": "The Green Book (October 2026), para 6.40"
+  },
+  {
+   "key": "green-book:6.41",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:169",
+   "hash": "0a68aa7f62a86e18",
+   "sha256": "0a68aa7f62a86e18c540b7e27924f84f9d1896036434da51fdc73e5851390fbd",
+   "label": "The Green Book (October 2026), para 6.41"
+  },
+  {
+   "key": "green-book:6.42",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:170",
+   "hash": "95a64b3cbb3c4a26",
+   "sha256": "95a64b3cbb3c4a26afbb02e5d8ae0cbf8465bc45511249004c5450441430492b",
+   "label": "The Green Book (October 2026), para 6.42"
+  },
+  {
+   "key": "green-book:6.43",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:171",
+   "hash": "f990699185bf7a0b",
+   "sha256": "f990699185bf7a0b154a3b389a0132c2248c9604864018cb1166c26b46adc4d3",
+   "label": "The Green Book (October 2026), para 6.43"
+  },
+  {
+   "key": "green-book:6.44",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:172",
+   "hash": "91f5ef0f2fd2ede8",
+   "sha256": "91f5ef0f2fd2ede8a7514824d40c00f4732a1869c8b35f50ab00fc11d3552ba6",
+   "label": "The Green Book (October 2026), para 6.44"
+  },
+  {
+   "key": "green-book:6.45",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:173",
+   "hash": "5f18087cd6e1fe55",
+   "sha256": "5f18087cd6e1fe554fa2899ff3c82c400b91f9e20387a49e34fdc2b9c26fa84d",
+   "label": "The Green Book (October 2026), para 6.45"
+  },
+  {
+   "key": "green-book:6.46",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:174",
+   "hash": "a4b8ee24c04416c3",
+   "sha256": "a4b8ee24c04416c32e41fefffa93db0360404ebf053a81297e5563930773bd5b",
+   "label": "The Green Book (October 2026), para 6.46"
+  },
+  {
+   "key": "green-book:6.47",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:175",
+   "hash": "55af092453f01ba3",
+   "sha256": "55af092453f01ba33009a14fb326be072123906ff5f093f059e77fb43d3f4436",
+   "label": "The Green Book (October 2026), para 6.47"
+  },
+  {
+   "key": "green-book:6.48",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:176",
+   "hash": "c439402d2e0ff238",
+   "sha256": "c439402d2e0ff23856f96bf3eb50a8c812984a667d66414207aa2b1bee7f844b",
+   "label": "The Green Book (October 2026), para 6.48"
+  },
+  {
+   "key": "green-book:6.49",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:177",
+   "hash": "27ebc9fc94d12d9c",
+   "sha256": "27ebc9fc94d12d9cb8335850f942e8f53ae931f4c807682b8548f88933829f81",
+   "label": "The Green Book (October 2026), para 6.49"
+  },
+  {
+   "key": "green-book:6.50",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:178",
+   "hash": "87e19c0b66de5570",
+   "sha256": "87e19c0b66de55705ff8d13a3b8f19fc642ebee81593128aa94ce5c36a477fa0",
+   "label": "The Green Book (October 2026), para 6.50"
+  },
+  {
+   "key": "green-book:6.51",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:179",
+   "hash": "185508f25bb79e66",
+   "sha256": "185508f25bb79e6653822c5d7f5e665e437930651066a611d94638b78870aae5",
+   "label": "The Green Book (October 2026), para 6.51"
+  },
+  {
+   "key": "green-book:6.52",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:180",
+   "hash": "31ff344d5575672a",
+   "sha256": "31ff344d5575672ada650b6c1e04a77d0928203c6ce650d54676801432657c30",
+   "label": "The Green Book (October 2026), para 6.52"
+  },
+  {
+   "key": "green-book:6.53",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:181",
+   "hash": "cfec78ab5e775cb9",
+   "sha256": "cfec78ab5e775cb9188ab1ef604b78bdf6905e8c2cc97a4a433e835b9cd37a72",
+   "label": "The Green Book (October 2026), para 6.53"
+  },
+  {
+   "key": "green-book:6.54",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:182",
+   "hash": "ab8e49d811c08dc6",
+   "sha256": "ab8e49d811c08dc6feae72673d1587a9b4f621782a8d513bdba8f4a87bb886a7",
+   "label": "The Green Book (October 2026), para 6.54"
+  },
+  {
+   "key": "green-book:6.55",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:183",
+   "hash": "a816c6de5a6dd4d1",
+   "sha256": "a816c6de5a6dd4d1a186f5e52ef65626dd45712d61a49a9d67b479e93506256b",
+   "label": "The Green Book (October 2026), para 6.55"
+  },
+  {
+   "key": "green-book:6.56",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:184",
+   "hash": "6aa82c6360880f3d",
+   "sha256": "6aa82c6360880f3db2ba46662f57bfc48edfa9068554e13d91328646a7b11a84",
+   "label": "The Green Book (October 2026), para 6.56"
+  },
+  {
+   "key": "green-book:6.57",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:185",
+   "hash": "49c1b2a11fe2d299",
+   "sha256": "49c1b2a11fe2d299d3b820733b8e96dfd4e3b05be0230c9703f7b392ec6cfa4a",
+   "label": "The Green Book (October 2026), para 6.57"
+  },
+  {
+   "key": "green-book:6.58",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:186",
+   "hash": "31c0a1e92304fb69",
+   "sha256": "31c0a1e92304fb694db235967685abb082b3d1acc45b58af9b85be7a3f13f0e6",
+   "label": "The Green Book (October 2026), para 6.58"
+  },
+  {
+   "key": "green-book:6.59",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:187",
+   "hash": "9d7fc283a225e341",
+   "sha256": "9d7fc283a225e3419e0891e8d498c825d5f0e66006331510f4e7469d99dc5e90",
+   "label": "The Green Book (October 2026), para 6.59"
+  },
+  {
+   "key": "green-book:6.60",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:188",
+   "hash": "beb8296b8f4dc3f3",
+   "sha256": "beb8296b8f4dc3f3e94ebcae388c4c25f6ca5e143fbd5dbaadf3cc97bd772c89",
+   "label": "The Green Book (October 2026), para 6.60"
+  },
+  {
+   "key": "green-book:6.61",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:189",
+   "hash": "7360d95a622c323f",
+   "sha256": "7360d95a622c323f9f2ecad327e6d83f65a9d1b4cd5514d3c1eceacd35f4ac95",
+   "label": "The Green Book (October 2026), para 6.61"
+  },
+  {
+   "key": "green-book:6.62",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:190",
+   "hash": "6167d476b967e671",
+   "sha256": "6167d476b967e6713ac8429956b84b16ac8c0e9a3ff52af10ab03f6540058fb7",
+   "label": "The Green Book (October 2026), para 6.62"
+  },
+  {
+   "key": "green-book:6.63",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:191",
+   "hash": "c313ff3c3690bdb0",
+   "sha256": "c313ff3c3690bdb027c309ab587b9de3b1d5819cb1ee6b2d55b1d9287321d80c",
+   "label": "The Green Book (October 2026), para 6.63"
+  },
+  {
+   "key": "green-book:6.64",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:192",
+   "hash": "ada5ba832ab35031",
+   "sha256": "ada5ba832ab35031dc54db2f8c84fc535f34dfe12ed129e1c0b07b74699d4334",
+   "label": "The Green Book (October 2026), para 6.64"
+  },
+  {
+   "key": "green-book:6.65",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:193",
+   "hash": "21c36e34059df8ed",
+   "sha256": "21c36e34059df8edc497061cc55f17acbce327d2dff999add985e243a52feb58",
+   "label": "The Green Book (October 2026), para 6.65"
+  },
+  {
+   "key": "green-book:6.66",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:194",
+   "hash": "7a71e74a90d39617",
+   "sha256": "7a71e74a90d39617236e161a92abe1e9b1ef746eab86e7e4eb6c244716c73541",
+   "label": "The Green Book (October 2026), para 6.66"
+  },
+  {
+   "key": "green-book:6.67",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:195",
+   "hash": "8f8be5e981f90e70",
+   "sha256": "8f8be5e981f90e7087158d66f8961760b79428b87cc1fe5d821c470e6e20c43f",
+   "label": "The Green Book (October 2026), para 6.67"
+  },
+  {
+   "key": "green-book:6.68",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:196",
+   "hash": "0fa786565013d01f",
+   "sha256": "0fa786565013d01f910b755cb5c15c65f16382d1a95ea497f19f690a35c6d7af",
+   "label": "The Green Book (October 2026), para 6.68"
+  },
+  {
+   "key": "green-book:6.69",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:197",
+   "hash": "fdfa19ddca176870",
+   "sha256": "fdfa19ddca176870542735140f4bb49fb0c0589644d990b7f87bd2ac1498ca29",
+   "label": "The Green Book (October 2026), para 6.69"
+  },
+  {
+   "key": "green-book:6.70",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:198",
+   "hash": "21ba8779a2908b4c",
+   "sha256": "21ba8779a2908b4c8e6ba2dab083c890d5540618b8a134d194f8839cc35f9634",
+   "label": "The Green Book (October 2026), para 6.70"
+  },
+  {
+   "key": "green-book:6.71",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:199",
+   "hash": "15fa08e24aaab72e",
+   "sha256": "15fa08e24aaab72ea06f305aaa1e314ba3f0acd1ba874ef4de79cc8511b7eb1f",
+   "label": "The Green Book (October 2026), para 6.71"
+  },
+  {
+   "key": "green-book:6.72",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:200",
+   "hash": "55edc57ec39475f8",
+   "sha256": "55edc57ec39475f877e372c740a66354b46226bd9a93a9151a2af57f113ff424",
+   "label": "The Green Book (October 2026), para 6.72"
+  },
+  {
+   "key": "green-book:6.73",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:201",
+   "hash": "c8e35a8ae164dd68",
+   "sha256": "c8e35a8ae164dd6890e9202265b0b902108cf8398def9b847b2a8b35846c74a3",
+   "label": "The Green Book (October 2026), para 6.73"
+  },
+  {
+   "key": "green-book:6.74",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:202",
+   "hash": "9911d2d71dbc85cb",
+   "sha256": "9911d2d71dbc85cb6eac39ebc3b83cca366fa40fa944aa7488da71f32da2eb1d",
+   "label": "The Green Book (October 2026), para 6.74"
+  },
+  {
+   "key": "green-book:6.75",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:203",
+   "hash": "4ee42c5036de2fc6",
+   "sha256": "4ee42c5036de2fc60ef5a4ada09d2b0ca323fdc3cbcf429c3deb56cedbc74e87",
+   "label": "The Green Book (October 2026), para 6.75"
+  },
+  {
+   "key": "green-book:6.76",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:204",
+   "hash": "bfcc8eebbc8fbe2e",
+   "sha256": "bfcc8eebbc8fbe2e26987564077cac7b938371d7e398b2e8deb88b382adefb66",
+   "label": "The Green Book (October 2026), para 6.76"
+  },
+  {
+   "key": "green-book:6.77",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:205",
+   "hash": "c0352a0823d51533",
+   "sha256": "c0352a0823d5153391f7ddb0064311ab88808d097350cef46aa17fee388feafa",
+   "label": "The Green Book (October 2026), para 6.77"
+  },
+  {
+   "key": "green-book:6.78",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:206",
+   "hash": "376c78006dbb52e6",
+   "sha256": "376c78006dbb52e60c7897ed1b6ff9a29ae3218ba5e730c4eaf1f3fb79e30e41",
+   "label": "The Green Book (October 2026), para 6.78"
+  },
+  {
+   "key": "green-book:6.79",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:207",
+   "hash": "5b5b62cc689789bd",
+   "sha256": "5b5b62cc689789bdb5f51e4c49ebb44f0d5522f12bc92a35c0b2ab387a6e919f",
+   "label": "The Green Book (October 2026), para 6.79"
+  },
+  {
+   "key": "green-book:6.80",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:208",
+   "hash": "3dac6de61d88bb8a",
+   "sha256": "3dac6de61d88bb8af3bfed6fbb9fce2d11dc21e0259c3626d6d2aa08c6fbae65",
+   "label": "The Green Book (October 2026), para 6.80"
+  },
+  {
+   "key": "green-book:6.81",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:209",
+   "hash": "84adf1ed46f6f65f",
+   "sha256": "84adf1ed46f6f65f0fa8e2a5a14adbfd00e51fb740ff1309151f2de62cae9135",
+   "label": "The Green Book (October 2026), para 6.81"
+  },
+  {
+   "key": "green-book:6.82",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:210",
+   "hash": "fe36be449412ab4e",
+   "sha256": "fe36be449412ab4e4cfbcdd0fdd78ee78b263d7747577b0968383003776d74a5",
+   "label": "The Green Book (October 2026), para 6.82"
+  },
+  {
+   "key": "green-book:6.83",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:211",
+   "hash": "f462f3de0d8ae643",
+   "sha256": "f462f3de0d8ae643e9d9a136ff789cf3e150f64209a9feca0fd9cebdd98cc488",
+   "label": "The Green Book (October 2026), para 6.83"
+  },
+  {
+   "key": "green-book:6.84",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:212",
+   "hash": "9e59643dae4d30e4",
+   "sha256": "9e59643dae4d30e4cd7f700bddd92d4efb3577c1543e72d660233e6d498630fa",
+   "label": "The Green Book (October 2026), para 6.84"
+  },
+  {
+   "key": "green-book:6.85",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:213",
+   "hash": "82dc6c1d7379c566",
+   "sha256": "82dc6c1d7379c56691050f439102bf0ebedd43b76f04827b0484e8ff737a7571",
+   "label": "The Green Book (October 2026), para 6.85"
+  },
+  {
+   "key": "green-book:6.86",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:214",
+   "hash": "cfe5f4bb91d7e122",
+   "sha256": "cfe5f4bb91d7e1227b57d66f27af82e90d17dac07f8e30485e479da865b50bca",
+   "label": "The Green Book (October 2026), para 6.86"
+  },
+  {
+   "key": "green-book:6.87",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:215",
+   "hash": "5c4fbf9372f4e551",
+   "sha256": "5c4fbf9372f4e551c3891b11d6d4461fc513895f835547969317725c057f6a55",
+   "label": "The Green Book (October 2026), para 6.87"
+  },
+  {
+   "key": "green-book:6.88",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:216",
+   "hash": "8b8b7210a0c4fd89",
+   "sha256": "8b8b7210a0c4fd893c5eb9a8d4040616a5377acc3b6af56e7beffdd93e3810bd",
+   "label": "The Green Book (October 2026), para 6.88"
+  },
+  {
+   "key": "green-book:6.89",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:217",
+   "hash": "62b23b9f079f8581",
+   "sha256": "62b23b9f079f8581af73f02d695d9bcffed47786ebc47557d896158148ad57aa",
+   "label": "The Green Book (October 2026), para 6.89"
+  },
+  {
+   "key": "green-book:6.90",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:218",
+   "hash": "836bcc71a57456e2",
+   "sha256": "836bcc71a57456e2e4688e1aebefe2d22a01209c8ffbaa2622285511bf7262b1",
+   "label": "The Green Book (October 2026), para 6.90"
+  },
+  {
+   "key": "green-book:6.91",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:219",
+   "hash": "1d3f69d3075e7388",
+   "sha256": "1d3f69d3075e73888f961f8f26c63d9cc485e2ce0b3900eb05b48d86d45225e2",
+   "label": "The Green Book (October 2026), para 6.91"
+  },
+  {
+   "key": "green-book:6.92",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:220",
+   "hash": "c0b12c64aaefd92c",
+   "sha256": "c0b12c64aaefd92c2dd51521e8807d11a11321cd1af6f0b3c44d0be5c523f384",
+   "label": "The Green Book (October 2026), para 6.92"
+  },
+  {
+   "key": "green-book:6.93",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:221",
+   "hash": "303eba15b6ee9148",
+   "sha256": "303eba15b6ee9148f6b31729fd884be7e81c083ab8f0e0ad6dfce8804f1c2ecf",
+   "label": "The Green Book (October 2026), para 6.93"
+  },
+  {
+   "key": "green-book:6.94",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:222",
+   "hash": "daa0154e515d87b9",
+   "sha256": "daa0154e515d87b9d62dfa7b3b04cff561607968b24553b145e7d716afd94b02",
+   "label": "The Green Book (October 2026), para 6.94"
+  },
+  {
+   "key": "green-book:6.95",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:223",
+   "hash": "dce539c9eae81cae",
+   "sha256": "dce539c9eae81caedff499fc48b3e59ede63f2efddca67986be436a0551a4d32",
+   "label": "The Green Book (October 2026), para 6.95"
+  },
+  {
+   "key": "green-book:6.96",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:224",
+   "hash": "16bcdbda051c065e",
+   "sha256": "16bcdbda051c065e4def1529694891d36b761842342104ef30fe0ed4e072f6ff",
+   "label": "The Green Book (October 2026), para 6.96"
+  },
+  {
+   "key": "green-book:6.97",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:225",
+   "hash": "1cdda1c79454d62a",
+   "sha256": "1cdda1c79454d62ac95f71cc13e49872acf2f56de6af8778b9adde13b0568afd",
+   "label": "The Green Book (October 2026), para 6.97"
+  },
+  {
+   "key": "green-book:6.98",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:226",
+   "hash": "0cc28922dbc6aa40",
+   "sha256": "0cc28922dbc6aa40588f49c34a70d37df92c4e3e66784c6cfee28a4d3ca52f5a",
+   "label": "The Green Book (October 2026), para 6.98"
+  },
+  {
+   "key": "green-book:6.99",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:227",
+   "hash": "bacde93d1fa1587a",
+   "sha256": "bacde93d1fa1587aa1e4b3c1c204729a65d05ad917cd1196d95a86d9dd374216",
+   "label": "The Green Book (October 2026), para 6.99"
+  },
+  {
+   "key": "green-book:6.100",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:228",
+   "hash": "9347a85646fff0be",
+   "sha256": "9347a85646fff0be1532bc1528971610019c0db13ce32b43a5dd22555373a154",
+   "label": "The Green Book (October 2026), para 6.100"
+  },
+  {
+   "key": "green-book:6.101",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:229",
+   "hash": "5ef1c7b68f49bc74",
+   "sha256": "5ef1c7b68f49bc745ac249dc92c8160624f790f56e805e475924814a8516bcce",
+   "label": "The Green Book (October 2026), para 6.101"
+  },
+  {
+   "key": "green-book:6.102",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:230",
+   "hash": "cac01c379b927cac",
+   "sha256": "cac01c379b927cac7c251476a95c494f3900a1e273c6ac21facda6b9451ce3b3",
+   "label": "The Green Book (October 2026), para 6.102"
+  },
+  {
+   "key": "green-book:6.103",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:231",
+   "hash": "fd894edea74f44fc",
+   "sha256": "fd894edea74f44fc44cc8c7db425842c37f9631371331742add5352c0fd95767",
+   "label": "The Green Book (October 2026), para 6.103"
+  },
+  {
+   "key": "green-book:6.104",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:232",
+   "hash": "ee9a7fe5c29bf6b7",
+   "sha256": "ee9a7fe5c29bf6b7befadba161d25eb2f2eab59bff75131402fce38dcd23113a",
+   "label": "The Green Book (October 2026), para 6.104"
+  },
+  {
+   "key": "green-book:7.1",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:233",
+   "hash": "660b2c57b0938445",
+   "sha256": "660b2c57b0938445034cd89d77913855b9a8e5e0ff74a299baf918c4594a4070",
+   "label": "The Green Book (October 2026), para 7.1"
+  },
+  {
+   "key": "green-book:7.2",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:234",
+   "hash": "28a8fd99d4629216",
+   "sha256": "28a8fd99d46292166462a8ac23cbc7ebdb7925f5d9f1c648173edaebb1ff7cca",
+   "label": "The Green Book (October 2026), para 7.2"
+  },
+  {
+   "key": "green-book:7.3",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:235",
+   "hash": "b992abbb4eac2e25",
+   "sha256": "b992abbb4eac2e252f1437108ea33560ba62019ea21e0f0be6f771e4595a6441",
+   "label": "The Green Book (October 2026), para 7.3"
+  },
+  {
+   "key": "green-book:7.4",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:236",
+   "hash": "574a2a158a0cb94d",
+   "sha256": "574a2a158a0cb94d8855d0cc061b4d5906f03077d1068e9920142f05a7024194",
+   "label": "The Green Book (October 2026), para 7.4"
+  },
+  {
+   "key": "green-book:7.5",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:237",
+   "hash": "557ad668217aa303",
+   "sha256": "557ad668217aa30389accde4c84319a154ca8a85de3b761197038085bc6f3ad5",
+   "label": "The Green Book (October 2026), para 7.5"
+  },
+  {
+   "key": "green-book:7.6",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:238",
+   "hash": "50e386798bdb7ba1",
+   "sha256": "50e386798bdb7ba177944cab99fdc3029a026e105e514116990733233317e83b",
+   "label": "The Green Book (October 2026), para 7.6"
+  },
+  {
+   "key": "green-book:7.7",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:239",
+   "hash": "c9480d58a466be8f",
+   "sha256": "c9480d58a466be8f8122814d6b715faff9c404624fdbef5a41334d69000b1133",
+   "label": "The Green Book (October 2026), para 7.7"
+  },
+  {
+   "key": "green-book:7.8",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:240",
+   "hash": "125995dc0836527c",
+   "sha256": "125995dc0836527c0f8bf1185f5cced52746e246c847bf30d72c8b632bd8e7b8",
+   "label": "The Green Book (October 2026), para 7.8"
+  },
+  {
+   "key": "green-book:7.9",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:241",
+   "hash": "be61f2ad3a9a53bd",
+   "sha256": "be61f2ad3a9a53bd2c569263444c66e12a18a11f9cd187e4cc68ab3f172d25c5",
+   "label": "The Green Book (October 2026), para 7.9"
+  },
+  {
+   "key": "green-book:7.10",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:242",
+   "hash": "9f533499dc505cb1",
+   "sha256": "9f533499dc505cb129412d130b4000a03c7aeabb264880bea141e1284be56375",
+   "label": "The Green Book (October 2026), para 7.10"
+  },
+  {
+   "key": "green-book:7.11",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:243",
+   "hash": "fead8e8fe8f5533e",
+   "sha256": "fead8e8fe8f5533e3fa38805731493aec636d33d44a75896180adecfe3fa8be6",
+   "label": "The Green Book (October 2026), para 7.11"
+  },
+  {
+   "key": "green-book:7.12",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:244",
+   "hash": "9651157a9922ae01",
+   "sha256": "9651157a9922ae0150e43392189016ecfd590e947b907383307964a19c2ba12f",
+   "label": "The Green Book (October 2026), para 7.12"
+  },
+  {
+   "key": "green-book:7.13",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:245",
+   "hash": "c3d072f8550c04ee",
+   "sha256": "c3d072f8550c04ee6bcef402fc401a9403635aecbb33cfe0446abb28b9f68bd6",
+   "label": "The Green Book (October 2026), para 7.13"
+  },
+  {
+   "key": "green-book:7.14",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:246",
+   "hash": "11cda60d1f0dec5f",
+   "sha256": "11cda60d1f0dec5f64b4a97b108f8b3a7b402fb08bca1c82fac2daa222be6990",
+   "label": "The Green Book (October 2026), para 7.14"
+  },
+  {
+   "key": "green-book:7.15",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:247",
+   "hash": "8fdb8795b06d9287",
+   "sha256": "8fdb8795b06d92879bed3cfa0a8396dfd4f567d109c0d480f7c59f1b82cc62e4",
+   "label": "The Green Book (October 2026), para 7.15"
+  },
+  {
+   "key": "green-book:7.16",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:248",
+   "hash": "99153f35b91e08a1",
+   "sha256": "99153f35b91e08a1ec5936edf42ecd0722b3bbb598927d8e23a7befabd108d9f",
+   "label": "The Green Book (October 2026), para 7.16"
+  },
+  {
+   "key": "green-book:7.17",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:249",
+   "hash": "e61fa95b500d173f",
+   "sha256": "e61fa95b500d173ffb571aa52c320afe9817af8dc0a428f5e581ca63f77e315f",
+   "label": "The Green Book (October 2026), para 7.17"
+  },
+  {
+   "key": "green-book:7.18",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:250",
+   "hash": "02d6ab6e81010411",
+   "sha256": "02d6ab6e81010411567d9976439de9a46a22a308dd6aadf07705c9918dbf37fc",
+   "label": "The Green Book (October 2026), para 7.18"
+  },
+  {
+   "key": "green-book:7.19",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:251",
+   "hash": "dbbef31018ad32cc",
+   "sha256": "dbbef31018ad32cced9da7e51b35b6d76426d0f413b1bad11b4534d866baa643",
+   "label": "The Green Book (October 2026), para 7.19"
+  },
+  {
+   "key": "green-book:7.20",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:252",
+   "hash": "e539689e5f12bf9a",
+   "sha256": "e539689e5f12bf9ad645e9307f38c1151d6e3bb2c21677a1b4fbd075fe7783f7",
+   "label": "The Green Book (October 2026), para 7.20"
+  },
+  {
+   "key": "green-book:7.21",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:253",
+   "hash": "2d3522552d1c82dd",
+   "sha256": "2d3522552d1c82ddd3bcd00e05d39484699e66bd580782d370f81f08fbeef58d",
+   "label": "The Green Book (October 2026), para 7.21"
+  },
+  {
+   "key": "green-book:7.22",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:254",
+   "hash": "a61a597859b4e791",
+   "sha256": "a61a597859b4e7914826d8c4351688165543fa67fdabdfef7ca65691e663bb44",
+   "label": "The Green Book (October 2026), para 7.22"
+  },
+  {
+   "key": "green-book:7.23",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:255",
+   "hash": "f5a2f3dcf27437f4",
+   "sha256": "f5a2f3dcf27437f48946533bd095de6eb81dce5a302d9311098e6244d5d38d7c",
+   "label": "The Green Book (October 2026), para 7.23"
+  },
+  {
+   "key": "green-book:7.24",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:256",
+   "hash": "bc01a643868ff987",
+   "sha256": "bc01a643868ff987f7b26dece6c1ec4451cb5974b6f3b682d2ca7e20fa36f652",
+   "label": "The Green Book (October 2026), para 7.24"
+  },
+  {
+   "key": "green-book:8.1",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:257",
+   "hash": "acdbf5c891bc8ff9",
+   "sha256": "acdbf5c891bc8ff9670810803ba7ab074b79a6371147220f08965debf38684a4",
+   "label": "The Green Book (October 2026), para 8.1"
+  },
+  {
+   "key": "green-book:8.2",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:258",
+   "hash": "52ecee43e6b77534",
+   "sha256": "52ecee43e6b77534c8c01036cd3f6eee80efa978a8d0c084449722f216f53b6a",
+   "label": "The Green Book (October 2026), para 8.2"
+  },
+  {
+   "key": "green-book:8.3",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:259",
+   "hash": "92286d3ca2b3aac4",
+   "sha256": "92286d3ca2b3aac4c49ae9ef0f7408a81e9bb82ef6a2ac8bd7dc5a2d43751a12",
+   "label": "The Green Book (October 2026), para 8.3"
+  },
+  {
+   "key": "green-book:8.4",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:260",
+   "hash": "73ec3c74fe3cc7f4",
+   "sha256": "73ec3c74fe3cc7f41e3d393bb451c0db99fdfacb8632f73c48c1e5bbb8389e16",
+   "label": "The Green Book (October 2026), para 8.4"
+  },
+  {
+   "key": "green-book:8.5",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:261",
+   "hash": "192bad84ffd63bf0",
+   "sha256": "192bad84ffd63bf08f22e1e99af68a32fdf11fc979574ca33dc5d8bfd087da71",
+   "label": "The Green Book (October 2026), para 8.5"
+  },
+  {
+   "key": "green-book:8.6",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:262",
+   "hash": "e984372673938769",
+   "sha256": "e9843726739387695d9aa0d30f57a3a2b29359176fef282a5ef15b93206e7f65",
+   "label": "The Green Book (October 2026), para 8.6"
+  },
+  {
+   "key": "green-book:8.7",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:263",
+   "hash": "11e854d4814d5c74",
+   "sha256": "11e854d4814d5c746cb50de3dee2a5e41d5329e30c46733d5364e5c7282b8992",
+   "label": "The Green Book (October 2026), para 8.7"
+  },
+  {
+   "key": "green-book:8.8",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:264",
+   "hash": "a265ed633aa73711",
+   "sha256": "a265ed633aa73711b22cf7b95e4c0e64fc2409a1c18595318fef5eadbd4682e8",
+   "label": "The Green Book (October 2026), para 8.8"
+  },
+  {
+   "key": "green-book:8.9",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:265",
+   "hash": "cae48867b0faf38e",
+   "sha256": "cae48867b0faf38ea620d86b444058ae326d46412438f075fa6e5eecc26e096a",
+   "label": "The Green Book (October 2026), para 8.9"
+  },
+  {
+   "key": "green-book:8.10",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:266",
+   "hash": "a722bef31de49fc6",
+   "sha256": "a722bef31de49fc696b84b185a3b16366b0d801e7d065e6b3f3e4c96f5344672",
+   "label": "The Green Book (October 2026), para 8.10"
+  },
+  {
+   "key": "green-book:8.11",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:267",
+   "hash": "d3009ac685ef74d7",
+   "sha256": "d3009ac685ef74d72400515fea12f84c3e944025597559d6a585f0a76ed946e2",
+   "label": "The Green Book (October 2026), para 8.11"
+  },
+  {
+   "key": "green-book:8.12",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:268",
+   "hash": "40f45bff00517594",
+   "sha256": "40f45bff0051759428ec9ba8ea3b4aa1b26ff7e90bec0778f05ac29277bcecf8",
+   "label": "The Green Book (October 2026), para 8.12"
+  },
+  {
+   "key": "green-book:8.13",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:269",
+   "hash": "889392b77fe0d007",
+   "sha256": "889392b77fe0d007bcb410e87e56fd02678954426ab59d43f060d6505a132b0d",
+   "label": "The Green Book (October 2026), para 8.13"
+  },
+  {
+   "key": "green-book:8.14",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:270",
+   "hash": "3f3aaa99e0bdfa5b",
+   "sha256": "3f3aaa99e0bdfa5b572f320afae282d98890f0f6eabdb171dd742e6547ed164e",
+   "label": "The Green Book (October 2026), para 8.14"
+  },
+  {
+   "key": "green-book:8.15",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:271",
+   "hash": "4be282a51c75b288",
+   "sha256": "4be282a51c75b28894c6e63b3bb017918696d2b756b5de1a74c9bcb83368b365",
+   "label": "The Green Book (October 2026), para 8.15"
+  },
+  {
+   "key": "green-book:8.16",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:272",
+   "hash": "4db176657b51cc07",
+   "sha256": "4db176657b51cc07bec05d427153ff54f0fde8e95848c9eb1d1597bb6ce32294",
+   "label": "The Green Book (October 2026), para 8.16"
+  },
+  {
+   "key": "green-book:8.17",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:273",
+   "hash": "4a59bc80f29c90c7",
+   "sha256": "4a59bc80f29c90c7d767702ecf4b500f491cf08569455d8c2ee8afc1e578b7b0",
+   "label": "The Green Book (October 2026), para 8.17"
+  },
+  {
+   "key": "green-book:8.18",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:274",
+   "hash": "fd243e8e8263c251",
+   "sha256": "fd243e8e8263c251aed93342ad826ad3d8eec71a13272ff8e965afb9ab250f4e",
+   "label": "The Green Book (October 2026), para 8.18"
+  },
+  {
+   "key": "green-book:8.19",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:275",
+   "hash": "c3e24cbc9805eca5",
+   "sha256": "c3e24cbc9805eca56b5ed5a76ade5d5e43412b14b7a3cb3e1be676821a90fbc4",
+   "label": "The Green Book (October 2026), para 8.19"
+  },
+  {
+   "key": "green-book:8.20",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:276",
+   "hash": "b2e848f44517a977",
+   "sha256": "b2e848f44517a9776305d04d0ca813082a45246c3bf2543284e715116b2178e6",
+   "label": "The Green Book (October 2026), para 8.20"
+  },
+  {
+   "key": "green-book:8.21",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:277",
+   "hash": "c37f8ecc85c0c2b9",
+   "sha256": "c37f8ecc85c0c2b9bbe3882c711625c3b613bc911b9f1e87636679cfa761182e",
+   "label": "The Green Book (October 2026), para 8.21"
+  },
+  {
+   "key": "green-book:8.22",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:278",
+   "hash": "4d9b64513eac6d4a",
+   "sha256": "4d9b64513eac6d4a9fc745aaf2ea2f366e16c3caba8c97072f9dac6ce3db9611",
+   "label": "The Green Book (October 2026), para 8.22"
+  },
+  {
+   "key": "green-book:8.23",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:279",
+   "hash": "9b439a71635a2171",
+   "sha256": "9b439a71635a21719611469d6c2c25a3a40a6b408538ff2845f2cb64f48f92e6",
+   "label": "The Green Book (October 2026), para 8.23"
+  },
+  {
+   "key": "green-book:8.24",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:280",
+   "hash": "cfdaa858bd586de0",
+   "sha256": "cfdaa858bd586de0ea548d03faa34d4d9f11a78f6be45a42f7e202d8b6c4cc8e",
+   "label": "The Green Book (October 2026), para 8.24"
+  },
+  {
+   "key": "green-book:8.25",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:281",
+   "hash": "e402ffc29d01ea38",
+   "sha256": "e402ffc29d01ea388a6898732c2dd9e3385332304de42c03bde2596a26350edc",
+   "label": "The Green Book (October 2026), para 8.25"
+  },
+  {
+   "key": "green-book:8.26",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:282",
+   "hash": "e3f25962586940a4",
+   "sha256": "e3f25962586940a4da2361ba6cca3b3b28b9f60a158dd419c2de505d418ee3e2",
+   "label": "The Green Book (October 2026), para 8.26"
+  },
+  {
+   "key": "green-book:8.27",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:283",
+   "hash": "148d1df8aba2895a",
+   "sha256": "148d1df8aba2895a0eded8ed43d765c65eaa2fb1d9f35090d4229b8476dc3595",
+   "label": "The Green Book (October 2026), para 8.27"
+  },
+  {
+   "key": "green-book:8.28",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:284",
+   "hash": "c14c0d82bac55194",
+   "sha256": "c14c0d82bac5519483f6c10b227fc4af0bada3c73a66b3ddc80938f6aad7ba54",
+   "label": "The Green Book (October 2026), para 8.28"
+  },
+  {
+   "key": "green-book:8.29",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:285",
+   "hash": "dddebcb3304c5d9a",
+   "sha256": "dddebcb3304c5d9aaef402d144e9dfaabe538e679d762afd5a28075fc48a4bff",
+   "label": "The Green Book (October 2026), para 8.29"
+  },
+  {
+   "key": "green-book:8.30",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:286",
+   "hash": "bde59932f999a6db",
+   "sha256": "bde59932f999a6dbf73788c83e30d8d3d4e4a7d0dbac7271cd5ab4d4ece779a4",
+   "label": "The Green Book (October 2026), para 8.30"
+  },
+  {
+   "key": "green-book:8.31",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:287",
+   "hash": "5fe9bb15ddcaeb90",
+   "sha256": "5fe9bb15ddcaeb90326dae12a49fd72a965d0523de92e67f0ee6caa92105d485",
+   "label": "The Green Book (October 2026), para 8.31"
+  },
+  {
+   "key": "green-book:8.32",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:288",
+   "hash": "8fce4b737ce647bd",
+   "sha256": "8fce4b737ce647bd24aad94d2a78df62383f79e1b4319bcd52c53edf89be4ecb",
+   "label": "The Green Book (October 2026), para 8.32"
+  },
+  {
+   "key": "green-book:8.33",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:289",
+   "hash": "1dc6b67ba6dd21b8",
+   "sha256": "1dc6b67ba6dd21b889289eff3e4896ead7620dea16892f9d52bc3533fe9110ab",
+   "label": "The Green Book (October 2026), para 8.33"
+  },
+  {
+   "key": "green-book:8.34",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:290",
+   "hash": "7026ccc5a5f1e833",
+   "sha256": "7026ccc5a5f1e8335356be300195e15ecd0becdcf9be63c3093c281f3544f683",
+   "label": "The Green Book (October 2026), para 8.34"
+  },
+  {
+   "key": "green-book:8.35",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:291",
+   "hash": "ee5189554e73402f",
+   "sha256": "ee5189554e73402f725002c18b6d536c4fa380466e10b5dd3de27e5dd551be8c",
+   "label": "The Green Book (October 2026), para 8.35"
+  },
+  {
+   "key": "green-book:8.36",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:292",
+   "hash": "46f03f51ccd126bf",
+   "sha256": "46f03f51ccd126bff8651f935891e2b4fc6aeca9770365e3589d2e82107512f2",
+   "label": "The Green Book (October 2026), para 8.36"
+  },
+  {
+   "key": "green-book:8.37",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:293",
+   "hash": "965e4d182cd714be",
+   "sha256": "965e4d182cd714be690db31631c7074a0dcec0938786276f4de2d5eebf4d942a",
+   "label": "The Green Book (October 2026), para 8.37"
+  },
+  {
+   "key": "green-book:8.38",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:294",
+   "hash": "2ed1e512eb455126",
+   "sha256": "2ed1e512eb455126e1da72fe27253a12ae08d761385e010e501c34315a4ef7fa",
+   "label": "The Green Book (October 2026), para 8.38"
+  },
+  {
+   "key": "green-book:8.39",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:295",
+   "hash": "d5907391631962d0",
+   "sha256": "d5907391631962d02840711c786b6f21a30cebaaccb89130850ad54d1e5ab42d",
+   "label": "The Green Book (October 2026), para 8.39"
+  },
+  {
+   "key": "green-book:8.40",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:296",
+   "hash": "07b51420dde28bc4",
+   "sha256": "07b51420dde28bc44e1ca1737b24d936a21f68613aec4280d7f5725a01ab6180",
+   "label": "The Green Book (October 2026), para 8.40"
+  },
+  {
+   "key": "green-book:8.41",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:297",
+   "hash": "d5e0dcf433824e53",
+   "sha256": "d5e0dcf433824e5327261e3604ae4011cd13b276a69d2d60bfb1e685ca47f452",
+   "label": "The Green Book (October 2026), para 8.41"
+  },
+  {
+   "key": "green-book:8.42",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:298",
+   "hash": "ef8770124c4fc55b",
+   "sha256": "ef8770124c4fc55b8e65c55da406adba6df7cc51fd55abf415d89f805d5364bb",
+   "label": "The Green Book (October 2026), para 8.42"
+  },
+  {
+   "key": "green-book:8.43",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:299",
+   "hash": "39ff49f2988cab27",
+   "sha256": "39ff49f2988cab270ff3b76f92902c926734242cae0b358a98915c94c2115fc2",
+   "label": "The Green Book (October 2026), para 8.43"
+  },
+  {
+   "key": "green-book:8.44",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:300",
+   "hash": "04bd43dbecf7b9b4",
+   "sha256": "04bd43dbecf7b9b43ee89c7c080179593b2d8f6f950208494a6c58492a755f0c",
+   "label": "The Green Book (October 2026), para 8.44"
+  },
+  {
+   "key": "green-book:8.45",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:301",
+   "hash": "e252d825912c38d0",
+   "sha256": "e252d825912c38d08b6e85a3346e9e59c459b16c86922bbe1fc6447b30dce59d",
+   "label": "The Green Book (October 2026), para 8.45"
+  },
+  {
+   "key": "green-book:8.46",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:302",
+   "hash": "70274e59acbf43f0",
+   "sha256": "70274e59acbf43f066521234bca3a68e1c0319ebd27d2bf728f331096532628c",
+   "label": "The Green Book (October 2026), para 8.46"
+  },
+  {
+   "key": "green-book:8.47",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:303",
+   "hash": "2445a4eb3d192458",
+   "sha256": "2445a4eb3d1924588309ffbf92d8c1586ae707d3079f08a02d84628c6cb0eea6",
+   "label": "The Green Book (October 2026), para 8.47"
+  },
+  {
+   "key": "green-book:8.48",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:304",
+   "hash": "865fbb92fe22be3a",
+   "sha256": "865fbb92fe22be3a53e4c3666151f6b87e18644fea0c8d04a5b6086641f938a2",
+   "label": "The Green Book (October 2026), para 8.48"
+  },
+  {
+   "key": "green-book:8.49",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:305",
+   "hash": "5ebeb04ac4769cf2",
+   "sha256": "5ebeb04ac4769cf2cc75cf67be4576025e2ec2ee16caf10ff80abacdce347a42",
+   "label": "The Green Book (October 2026), para 8.49"
+  },
+  {
+   "key": "green-book:8.50",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:306",
+   "hash": "0dfe601a376a71a0",
+   "sha256": "0dfe601a376a71a08018a499b3a55ee3bf8dda3d7a408db67571327d1ae5b1c0",
+   "label": "The Green Book (October 2026), para 8.50"
+  },
+  {
+   "key": "green-book:8.51",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:307",
+   "hash": "d8754293008e9f65",
+   "sha256": "d8754293008e9f65201d7730944c6ecc6dc8428098621b7352d8ff4a3432999c",
+   "label": "The Green Book (October 2026), para 8.51"
+  },
+  {
+   "key": "green-book:8.52",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:308",
+   "hash": "e1e8e9d0a2c2f5ec",
+   "sha256": "e1e8e9d0a2c2f5ec15f5297aca7929e86865e3696938ac6961154c2ebf806d0f",
+   "label": "The Green Book (October 2026), para 8.52"
+  },
+  {
+   "key": "green-book:8.53",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:309",
+   "hash": "998dc0ae7e6d480e",
+   "sha256": "998dc0ae7e6d480eab406677bfbf8b4c466e37a303a03ee7047c0ada5d570387",
+   "label": "The Green Book (October 2026), para 8.53"
+  },
+  {
+   "key": "green-book:8.54",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:310",
+   "hash": "8250785110fe5a41",
+   "sha256": "8250785110fe5a412579cf4128271962e97540a0c485040fd6f62d0f005a503b",
+   "label": "The Green Book (October 2026), para 8.54"
+  },
+  {
+   "key": "green-book:8.55",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:311",
+   "hash": "63852ade0b40f413",
+   "sha256": "63852ade0b40f4137173efbaf6db4dbb0f4be6add0549adccc13ab24e759fdd7",
+   "label": "The Green Book (October 2026), para 8.55"
+  },
+  {
+   "key": "green-book:8.56",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:312",
+   "hash": "d50e689d71349da4",
+   "sha256": "d50e689d71349da4896961c8264cd2b37c50b5498928a101e7090dcad70eaa4e",
+   "label": "The Green Book (October 2026), para 8.56"
+  },
+  {
+   "key": "green-book:8.57",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:313",
+   "hash": "6e5a8d9f03593523",
+   "sha256": "6e5a8d9f03593523769f55b5fc0f10dffcc9e4b23f32e59af37060cc29bae76d",
+   "label": "The Green Book (October 2026), para 8.57"
+  },
+  {
+   "key": "green-book:8.58",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:314",
+   "hash": "c64c7d331250a9a6",
+   "sha256": "c64c7d331250a9a677522bcbc041b05d9a41b915c6979072bb6886d94899a2f6",
+   "label": "The Green Book (October 2026), para 8.58"
+  },
+  {
+   "key": "green-book:8.59",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:315",
+   "hash": "f757aa22d9098c19",
+   "sha256": "f757aa22d9098c19b0fcf8b55630052bbd8bb1c752d55367cc014c9154a61830",
+   "label": "The Green Book (October 2026), para 8.59"
+  },
+  {
+   "key": "green-book:8.60",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:316",
+   "hash": "7cc66be5429a22e7",
+   "sha256": "7cc66be5429a22e7bdf0e51719ef1889d68d3bea40c8de4fd21280aeaa94c784",
+   "label": "The Green Book (October 2026), para 8.60"
+  },
+  {
+   "key": "green-book:8.61",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:317",
+   "hash": "8ab51514b4b35534",
+   "sha256": "8ab51514b4b35534b2b87bd688bc9efbf996a728f02c10a360c568fc8e906321",
+   "label": "The Green Book (October 2026), para 8.61"
+  },
+  {
+   "key": "green-book:8.62",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:318",
+   "hash": "4af9573395b117fd",
+   "sha256": "4af9573395b117fd82dc9aa8ff019cb97961d73dc1d102620e3699417ebc9088",
+   "label": "The Green Book (October 2026), para 8.62"
+  },
+  {
+   "key": "green-book:8.63",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:319",
+   "hash": "3e7208e1d44288e9",
+   "sha256": "3e7208e1d44288e996ace97bdd11be44e2689b2eea2b88592473d03a010d99e1",
+   "label": "The Green Book (October 2026), para 8.63"
+  },
+  {
+   "key": "green-book:8.64",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:320",
+   "hash": "902e4e7eb6d1cd63",
+   "sha256": "902e4e7eb6d1cd63a1f608ff61a128f81c5f1223b0a9886fa9a0d68003bca829",
+   "label": "The Green Book (October 2026), para 8.64"
+  },
+  {
+   "key": "green-book:8.65",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:321",
+   "hash": "bbfd4616d6571e25",
+   "sha256": "bbfd4616d6571e2549ec4eda863625dd1aa618c5b0ae938046817ccbf0733343",
+   "label": "The Green Book (October 2026), para 8.65"
+  },
+  {
+   "key": "green-book:8.66",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:322",
+   "hash": "94db16ad9a30885f",
+   "sha256": "94db16ad9a30885f7110d091e180108f681a468278ca934438e009c72c852e7f",
+   "label": "The Green Book (October 2026), para 8.66"
+  },
+  {
+   "key": "green-book:8.67",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:323",
+   "hash": "2ee7ae4bf86d9fc7",
+   "sha256": "2ee7ae4bf86d9fc7245fb62a172a57cdff82ac64be154d5c5db5ef14d8c00bcf",
+   "label": "The Green Book (October 2026), para 8.67"
+  },
+  {
+   "key": "green-book:8.68",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:324",
+   "hash": "9d9c4ca9023e7709",
+   "sha256": "9d9c4ca9023e7709c6d68cc807de02c26f064b3e8ab1556d3999853f7e526b2c",
+   "label": "The Green Book (October 2026), para 8.68"
+  },
+  {
+   "key": "green-book:8.69",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:325",
+   "hash": "92fbb180a88432e4",
+   "sha256": "92fbb180a88432e4e6d3fdaccd781a9306b5939bf89a3f7d2c3072831bbc7443",
+   "label": "The Green Book (October 2026), para 8.69"
+  },
+  {
+   "key": "green-book:8.70",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:326",
+   "hash": "1b1bee3bd11d5639",
+   "sha256": "1b1bee3bd11d563918a789df0c66ff2c4e642dc3231fe2b4ba561067bfa6590a",
+   "label": "The Green Book (October 2026), para 8.70"
+  },
+  {
+   "key": "green-book:8.71",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:327",
+   "hash": "504e169ab3332074",
+   "sha256": "504e169ab33320748a8ec9f75b86fa1bae42dcf0b4d713e891b670e417d9cc04",
+   "label": "The Green Book (October 2026), para 8.71"
+  },
+  {
+   "key": "green-book:8.72",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:328",
+   "hash": "bdc16e8f655be51f",
+   "sha256": "bdc16e8f655be51fad15d102e86a1524b7ccf4f7082fdc23a8ca5514b22694a1",
+   "label": "The Green Book (October 2026), para 8.72"
+  },
+  {
+   "key": "green-book:8.73",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:329",
+   "hash": "b8d372f8d06154a8",
+   "sha256": "b8d372f8d06154a8a7eef9ca7546984afadc77e9254fe898825af99dc56c93b9",
+   "label": "The Green Book (October 2026), para 8.73"
+  },
+  {
+   "key": "green-book:8.74",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:330",
+   "hash": "33eff30d286fc5de",
+   "sha256": "33eff30d286fc5de226f7f68ceddcb07c1dc3c1b5deeb156b8a72ebf8bccbc92",
+   "label": "The Green Book (October 2026), para 8.74"
+  },
+  {
+   "key": "green-book:8.75",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:331",
+   "hash": "0270038a400fa198",
+   "sha256": "0270038a400fa19882aa1a792c79975193ed574e9a8cc4a711c7cd864215545c",
+   "label": "The Green Book (October 2026), para 8.75"
+  },
+  {
+   "key": "green-book:8.76",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:332",
+   "hash": "fde55af27cac4647",
+   "sha256": "fde55af27cac4647f709d139aa7b875cf9b521efd5932ac0e937782bc2bb78fa",
+   "label": "The Green Book (October 2026), para 8.76"
+  },
+  {
+   "key": "green-book:8.77",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:333",
+   "hash": "aa281723aee46f27",
+   "sha256": "aa281723aee46f27a6b1e4f0903bc1aa53707ce9b6193966405604aae518b6e8",
+   "label": "The Green Book (October 2026), para 8.77"
+  },
+  {
+   "key": "green-book:8.78",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:334",
+   "hash": "4f0a5672d63565cf",
+   "sha256": "4f0a5672d63565cf3592ff4c567ce2055fe66b4702f57981d70b37f828636157",
+   "label": "The Green Book (October 2026), para 8.78"
+  },
+  {
+   "key": "green-book:8.79",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:335",
+   "hash": "c1329edb25279630",
+   "sha256": "c1329edb252796303d677475da0ce7f99ea1605e38018e6032fd43bcd278f65b",
+   "label": "The Green Book (October 2026), para 8.79"
+  },
+  {
+   "key": "green-book:8.80",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:336",
+   "hash": "e618880b96563b88",
+   "sha256": "e618880b96563b8812964f775770c72bbedb91ae93a168ad0fd503d3920183c8",
+   "label": "The Green Book (October 2026), para 8.80"
+  },
+  {
+   "key": "green-book:8.81",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:337",
+   "hash": "02806acf4456016a",
+   "sha256": "02806acf4456016af1af1b972411906573715b348e87373395886e1586c75a9d",
+   "label": "The Green Book (October 2026), para 8.81"
+  },
+  {
+   "key": "green-book:8.82",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:338",
+   "hash": "8f8035dbe10e9c0f",
+   "sha256": "8f8035dbe10e9c0feb39c5ef3926be709c27d05cc7dcdfae7f9a0cd76ddb9950",
+   "label": "The Green Book (October 2026), para 8.82"
+  },
+  {
+   "key": "green-book:8.83",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:339",
+   "hash": "0b437ea5df563965",
+   "sha256": "0b437ea5df563965a5508adf0e489e61b66bf78f0f3bd2099db411d85c9f5257",
+   "label": "The Green Book (October 2026), para 8.83"
+  },
+  {
+   "key": "green-book:8.84",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:340",
+   "hash": "0c095ae7902cd98f",
+   "sha256": "0c095ae7902cd98f83cfb36a77771fc7da78d52c407246f15e7881516eb8768f",
+   "label": "The Green Book (October 2026), para 8.84"
+  },
+  {
+   "key": "green-book:8.85",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:341",
+   "hash": "d131fc36adf5ba17",
+   "sha256": "d131fc36adf5ba179f2834348c2afcb86e8c187872c9478e0ccfb04d20a8b2d8",
+   "label": "The Green Book (October 2026), para 8.85"
+  },
+  {
+   "key": "green-book:8.86",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:342",
+   "hash": "c09654130fe8b04d",
+   "sha256": "c09654130fe8b04d1a8a11447964ccb0a99226140ae2c487f37e9733e84be911",
+   "label": "The Green Book (October 2026), para 8.86"
+  },
+  {
+   "key": "green-book:8.87",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:343",
+   "hash": "2f72ee415c5a0d29",
+   "sha256": "2f72ee415c5a0d2923afc5e8ef9d2bf59a2f0e37d0c2543935040d404453767f",
+   "label": "The Green Book (October 2026), para 8.87"
+  },
+  {
+   "key": "green-book:8.88",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:344",
+   "hash": "228c4c1057785ca5",
+   "sha256": "228c4c1057785ca5f25e8d0f7fe93695f2684e2418da63f75e278568a7a0bde7",
+   "label": "The Green Book (October 2026), para 8.88"
+  },
+  {
+   "key": "green-book:8.89",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:345",
+   "hash": "788cb03f1d8a8a12",
+   "sha256": "788cb03f1d8a8a123d0fc5f78e7f0a71dec5e92fc2d6a46778454f90ae68c666",
+   "label": "The Green Book (October 2026), para 8.89"
+  },
+  {
+   "key": "green-book:8.90",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:346",
+   "hash": "0c06a159dbcd229b",
+   "sha256": "0c06a159dbcd229bdb5af0424216ed4ac656bdb1c46ee925c739969260e3c02b",
+   "label": "The Green Book (October 2026), para 8.90"
+  },
+  {
+   "key": "green-book:8.91",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:347",
+   "hash": "e6fbeb70547262ac",
+   "sha256": "e6fbeb70547262ac2a2ed55e59243d7004505b3d99321d71108f5ed98ca34d03",
+   "label": "The Green Book (October 2026), para 8.91"
+  },
+  {
+   "key": "green-book:8.92",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:348",
+   "hash": "679e7c323c224250",
+   "sha256": "679e7c323c22425042748851d533c050b5e3e08ff7e6a7034abc95cbc3f38791",
+   "label": "The Green Book (October 2026), para 8.92"
+  },
+  {
+   "key": "green-book:8.93",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:349",
+   "hash": "dbe28652e8d54392",
+   "sha256": "dbe28652e8d543926a023a58bbe581613ded79a8fdbf9a6f9abd67ab37f80153",
+   "label": "The Green Book (October 2026), para 8.93"
+  },
+  {
+   "key": "green-book:8.94",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:350",
+   "hash": "e7289e92877ff82a",
+   "sha256": "e7289e92877ff82a85963c51b81af272b9512f79a2cb3ea3cb5b3879fff5e0ba",
+   "label": "The Green Book (October 2026), para 8.94"
+  },
+  {
+   "key": "green-book:8.95",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:351",
+   "hash": "683be29b46944013",
+   "sha256": "683be29b4694401338a39f7660d59db9104ac2943253a0d6b708e77f9cc1f573",
+   "label": "The Green Book (October 2026), para 8.95"
+  },
+  {
+   "key": "green-book:8.96",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:352",
+   "hash": "0aa8168ce6e4805b",
+   "sha256": "0aa8168ce6e4805b41383dcb79dd21b87448c11dd4277d4471b1e48f0d9ba3df",
+   "label": "The Green Book (October 2026), para 8.96"
+  },
+  {
+   "key": "green-book:8.97",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:353",
+   "hash": "98e1ff1a083a5075",
+   "sha256": "98e1ff1a083a50758d10211a16c98e81e9dcbf8f1f88e07e7ef0bcd227c02929",
+   "label": "The Green Book (October 2026), para 8.97"
+  },
+  {
+   "key": "green-book:8.98",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:354",
+   "hash": "8f2348ebf26d566b",
+   "sha256": "8f2348ebf26d566b72d1c51cb642ba3584a08aaaa56e48dbd4e79ace79bf1180",
+   "label": "The Green Book (October 2026), para 8.98"
+  },
+  {
+   "key": "green-book:8.99",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:355",
+   "hash": "f6e64b611d85c212",
+   "sha256": "f6e64b611d85c2125137e5fcb2f7951c21767e807e837c57eb2b75829b5fc2bd",
+   "label": "The Green Book (October 2026), para 8.99"
+  },
+  {
+   "key": "green-book:9.1",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:356",
+   "hash": "8810f33e2cb39e96",
+   "sha256": "8810f33e2cb39e96dc80d037dbec1b29288e3d474354bbe62e8b332efbda5f27",
+   "label": "The Green Book (October 2026), para 9.1"
+  },
+  {
+   "key": "green-book:9.2",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:357",
+   "hash": "c9faec43f069ee7b",
+   "sha256": "c9faec43f069ee7bfc72fc6331a5148769c9d22452b362b2fc63de30f7cf9409",
+   "label": "The Green Book (October 2026), para 9.2"
+  },
+  {
+   "key": "green-book:9.3",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:358",
+   "hash": "1c1c20b207a0c52c",
+   "sha256": "1c1c20b207a0c52c926ff172dac99f7413d81f07a3f5963a9dbff7722faa0bab",
+   "label": "The Green Book (October 2026), para 9.3"
+  },
+  {
+   "key": "green-book:9.4",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:359",
+   "hash": "a85d629cf6707fdf",
+   "sha256": "a85d629cf6707fdfae8ddb2d0d5e43a0c2328112dc8a6419e60c2622cf5041e0",
+   "label": "The Green Book (October 2026), para 9.4"
+  },
+  {
+   "key": "green-book:9.5",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:360",
+   "hash": "ec6b93c6fcfe226a",
+   "sha256": "ec6b93c6fcfe226acb7a423c40d1974adb76ee7e1b09fbbc4155d4f1478f9397",
+   "label": "The Green Book (October 2026), para 9.5"
+  },
+  {
+   "key": "green-book:9.6",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:361",
+   "hash": "3e869244d294e8be",
+   "sha256": "3e869244d294e8becd45510656eb83948ee08d121fac9ee99ffab1f51f91f632",
+   "label": "The Green Book (October 2026), para 9.6"
+  },
+  {
+   "key": "green-book:10.1",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:362",
+   "hash": "739121db97806339",
+   "sha256": "739121db97806339a9e22a271776f31e7e8a1648b47849dfdcc3bc0cf59b523c",
+   "label": "The Green Book (October 2026), para 10.1"
+  },
+  {
+   "key": "green-book:10.2",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:363",
+   "hash": "e48fb09108d9b971",
+   "sha256": "e48fb09108d9b971a63680219cb9d0496868e9b9816323e7abe8d237ee853793",
+   "label": "The Green Book (October 2026), para 10.2"
+  },
+  {
+   "key": "green-book:10.3",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:364",
+   "hash": "14dc09466dfafa60",
+   "sha256": "14dc09466dfafa60534b71d9f9c2f563c408a06f2f8c71b3c90b92a1ef5ef95e",
+   "label": "The Green Book (October 2026), para 10.3"
+  },
+  {
+   "key": "green-book:10.4",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:365",
+   "hash": "7ad525ddeec59012",
+   "sha256": "7ad525ddeec590124c13d6d32b53f473203fa492f11c1af8e85cd072664bfe3c",
+   "label": "The Green Book (October 2026), para 10.4"
+  },
+  {
+   "key": "green-book:10.5",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:366",
+   "hash": "7e38d14b6f28c000",
+   "sha256": "7e38d14b6f28c000a2acc994014a6f0d0d7b4111098ec450bb0234e55310b80b",
+   "label": "The Green Book (October 2026), para 10.5"
+  },
+  {
+   "key": "green-book:10.6",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:367",
+   "hash": "441189f532f82ae2",
+   "sha256": "441189f532f82ae2f2e903aa6a24909eda84b23012706c47fc145d75921d178a",
+   "label": "The Green Book (October 2026), para 10.6"
+  },
+  {
+   "key": "green-book:10.7",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:368",
+   "hash": "d92fd28437f5a010",
+   "sha256": "d92fd28437f5a01057226a3c8f72de39484ffaaf6b6fa7d3dae05212bb0d8613",
+   "label": "The Green Book (October 2026), para 10.7"
+  },
+  {
+   "key": "green-book:10.8",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:369",
+   "hash": "fe0739a87ef6b66c",
+   "sha256": "fe0739a87ef6b66ca102aeda1cc2194ba162e4130c6390033e29dc6998880341",
+   "label": "The Green Book (October 2026), para 10.8"
+  },
+  {
+   "key": "green-book:10.9",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:370",
+   "hash": "8f499adf3d8d7eb8",
+   "sha256": "8f499adf3d8d7eb8e298e088c523908dcab67c3b58f2c6910749a4c92d5c6f27",
+   "label": "The Green Book (October 2026), para 10.9"
+  },
+  {
+   "key": "green-book:10.10",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:371",
+   "hash": "70fb9db6835e0f1a",
+   "sha256": "70fb9db6835e0f1a1f9f3b9f7eaee3693febc621c68685f00fd2e7e1beec6c4e",
+   "label": "The Green Book (October 2026), para 10.10"
+  },
+  {
+   "key": "green-book:10.11",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:372",
+   "hash": "b5ab949c4e7e56f5",
+   "sha256": "b5ab949c4e7e56f53bfbfc383c9d8b0648104b039963783eeaf0f3db2d1791e8",
+   "label": "The Green Book (October 2026), para 10.11"
+  },
+  {
+   "key": "green-book:10.12",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:373",
+   "hash": "a0b643f0063f5dc0",
+   "sha256": "a0b643f0063f5dc08fef27eda52115b77b01ecf89019ac540fcd8946e1d2fd80",
+   "label": "The Green Book (October 2026), para 10.12"
+  },
+  {
+   "key": "green-book:A.1",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:374",
+   "hash": "ab4aefae6d4e1078",
+   "sha256": "ab4aefae6d4e10789b9f90296f11bb43d5aaf7aaa64f7930749c077c2fbd18cb",
+   "label": "The Green Book (October 2026), para A.1"
+  },
+  {
+   "key": "green-book:A.2",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:375",
+   "hash": "b6aeafa1238498fc",
+   "sha256": "b6aeafa1238498fcb1b6def73b9e9481b390e70b6a0ed349515e8924f3908292",
+   "label": "The Green Book (October 2026), para A.2"
+  },
+  {
+   "key": "green-book:A.3",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:376",
+   "hash": "4d058d875bd1d6b2",
+   "sha256": "4d058d875bd1d6b2c0e8500ca6bd856238e1d92a5cb54f5296dc0c1a8993f675",
+   "label": "The Green Book (October 2026), para A.3"
+  },
+  {
+   "key": "green-book:A.4",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:377",
+   "hash": "694b16d4fd8ba64d",
+   "sha256": "694b16d4fd8ba64da194e24be9dab924e81bd7a299af20cdf859d149fdecb1c8",
+   "label": "The Green Book (October 2026), para A.4"
+  },
+  {
+   "key": "green-book:A.5",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:378",
+   "hash": "6c65f54f21686b1a",
+   "sha256": "6c65f54f21686b1a8d2b3e8add2fabd06e7025fe85c841625e93dc2b748f6d9a",
+   "label": "The Green Book (October 2026), para A.5"
+  },
+  {
+   "key": "green-book:A.6",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:379",
+   "hash": "c55b73584a0d521b",
+   "sha256": "c55b73584a0d521b93f4a866e5ca723221860775d0b2333033dbd50c2c73411a",
+   "label": "The Green Book (October 2026), para A.6"
+  },
+  {
+   "key": "green-book:A.7",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:380",
+   "hash": "137790a3b98bd47c",
+   "sha256": "137790a3b98bd47c05e82973c294ff130af3876ec744c050358214db041302a0",
+   "label": "The Green Book (October 2026), para A.7"
+  },
+  {
+   "key": "green-book:A.8",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:381",
+   "hash": "7c6ab3877d2d483d",
+   "sha256": "7c6ab3877d2d483d601937f9af3d7155c9f71f2f7be455cebfbc979f6551ae0b",
+   "label": "The Green Book (October 2026), para A.8"
+  },
+  {
+   "key": "green-book:A.9",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:382",
+   "hash": "c3b47851d41356ae",
+   "sha256": "c3b47851d41356ae87dc4dd687e80caf9eac7819875b73c34b21d19bc696aaf5",
+   "label": "The Green Book (October 2026), para A.9"
+  },
+  {
+   "key": "green-book:A.10",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:383",
+   "hash": "a9afc54e90b2643b",
+   "sha256": "a9afc54e90b2643b75bdf29c6332ee9b6c61431ef0c649d791b17789403c3fc1",
+   "label": "The Green Book (October 2026), para A.10"
+  },
+  {
+   "key": "green-book:A.11",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:384",
+   "hash": "584ec9d76455165d",
+   "sha256": "584ec9d76455165db0a63f488ed767dcaed8549514b3d2e5e6488beaac6ba856",
+   "label": "The Green Book (October 2026), para A.11"
+  },
+  {
+   "key": "green-book:A.12",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:385",
+   "hash": "90fd195686c76e2e",
+   "sha256": "90fd195686c76e2e5fcb5fc87dc9871a380e9c21d47bf062014b54dedd437a99",
+   "label": "The Green Book (October 2026), para A.12"
+  },
+  {
+   "key": "green-book:A.13",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:386",
+   "hash": "bb68e2775103eb40",
+   "sha256": "bb68e2775103eb40d3b727fa96b6d8ce13d52eb68b7fea5631026da9e36856bb",
+   "label": "The Green Book (October 2026), para A.13"
+  },
+  {
+   "key": "green-book:A.14",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:387",
+   "hash": "ba2fc6e019674fc4",
+   "sha256": "ba2fc6e019674fc489729fee4e29366f09283a4e374dfcce5945050ddd48cc1a",
+   "label": "The Green Book (October 2026), para A.14"
+  },
+  {
+   "key": "green-book:A.15",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:388",
+   "hash": "9924517e87bb9a89",
+   "sha256": "9924517e87bb9a8958dd4ffa961aa648441ab8623e074aafe129271ae2a577d4",
+   "label": "The Green Book (October 2026), para A.15"
+  },
+  {
+   "key": "green-book:A.16",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:389",
+   "hash": "59490f8127efe866",
+   "sha256": "59490f8127efe866eb6d3dfdc9078e99506094f94edaf2d0813f3b935b178ae5",
+   "label": "The Green Book (October 2026), para A.16"
+  },
+  {
+   "key": "green-book:A.17",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:390",
+   "hash": "c3b1451e101b455d",
+   "sha256": "c3b1451e101b455d9b33a3697e3680c6d84c8d3d07fafe1e611544ed85f75732",
+   "label": "The Green Book (October 2026), para A.17"
+  },
+  {
+   "key": "green-book:A.18",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:391",
+   "hash": "b045d3f17b624162",
+   "sha256": "b045d3f17b624162dcd43afc5c225cb44379fe7388cd175b150a816dfbf50493",
+   "label": "The Green Book (October 2026), para A.18"
+  },
+  {
+   "key": "green-book:table-1",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:392",
+   "hash": "1e7ae0c307bb450b",
+   "sha256": "1e7ae0c307bb450b9a722138d222f4b721c8d2033ece3169eb8fe646a7fbbb87",
+   "label": "The Green Book (October 2026), Table 1"
+  },
+  {
+   "key": "green-book:table-2",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:393",
+   "hash": "66bf00108acfaa99",
+   "sha256": "66bf00108acfaa99a56fa9140d6ab6cca022fe3b7e675e5a7f2a36d88f0c118e",
+   "label": "The Green Book (October 2026), Table 2"
+  },
+  {
+   "key": "green-book:table-3",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:394",
+   "hash": "46b4709351d1bbcb",
+   "sha256": "46b4709351d1bbcb38f8d2578383d539c34825e1d40782797877f3efea9cdca8",
+   "label": "The Green Book (October 2026), Table 3"
+  },
+  {
+   "key": "green-book:table-4",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:395",
+   "hash": "61e36d6b756a6ae0",
+   "sha256": "61e36d6b756a6ae0196a39507b71e3b23ee102e3379fe601e5565890df0b87d2",
+   "label": "The Green Book (October 2026), Table 4"
+  },
+  {
+   "key": "green-book:table-5",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:396",
+   "hash": "bee7101c11a028aa",
+   "sha256": "bee7101c11a028aa20d971699a0dc668b6011a750eda62c3db9f993936ab21b6",
+   "label": "The Green Book (October 2026), Table 5"
+  },
+  {
+   "key": "green-book:table-6",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:397",
+   "hash": "1fb132f90b63c03b",
+   "sha256": "1fb132f90b63c03bbbd2aedd5158ad448971c36bea81ef89f8998c67e727e2da",
+   "label": "The Green Book (October 2026), Table 6"
+  },
+  {
+   "key": "green-book:table-7",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:398",
+   "hash": "17287e94ea5639ef",
+   "sha256": "17287e94ea5639ef2327ad5765a969634af63052af788d5a376c7c7752b6a514",
+   "label": "The Green Book (October 2026), Table 7"
+  },
+  {
+   "key": "green-book:table-8",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:399",
+   "hash": "fecb50bd346d4186",
+   "sha256": "fecb50bd346d4186d3b3296c864c8dec22602fc77028729a7b564b69f0a15990",
+   "label": "The Green Book (October 2026), Table 8"
+  },
+  {
+   "key": "green-book:table-9",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:400",
+   "hash": "5700428ee9f6cdc8",
+   "sha256": "5700428ee9f6cdc816bfacf498824990037699a20679fe864fc1f550c88d81ce",
+   "label": "The Green Book (October 2026), Table 9"
+  },
+  {
+   "key": "green-book:table-10",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:401",
+   "hash": "f7cd75101cd68b40",
+   "sha256": "f7cd75101cd68b40be4c73586637511edfd06ab1e052230c49293be5b04faf3b",
+   "label": "The Green Book (October 2026), Table 10"
+  },
+  {
+   "key": "green-book:table-11",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:402",
+   "hash": "59cef04cd2781f03",
+   "sha256": "59cef04cd2781f03f044049fe977f59f53b732d7d7370bfa5718d371b5469384",
+   "label": "The Green Book (October 2026), Table 11"
+  },
+  {
+   "key": "green-book:table-12",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:403",
+   "hash": "3f55853e0aaafec3",
+   "sha256": "3f55853e0aaafec32bf2d881d9dca7ab7e3e8f522f4950570e85736c97b57d87",
+   "label": "The Green Book (October 2026), Table 12"
+  },
+  {
+   "key": "green-book:table-A.1",
+   "id": "govuk-core-docs:government/publications/the-green-book-2026-paragraphs:404",
+   "hash": "e5bf2d645f855fbb",
+   "sha256": "e5bf2d645f855fbbede87e0d6f329c8ff20feedfc04e864863f725286bf724a2",
+   "label": "The Green Book (October 2026), Table A.1"
+  },
+  {
+   "key": "gb-discounting:1.1",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:2",
+   "hash": "84cdd105390462ad",
+   "sha256": "84cdd105390462ad141a417e8f7b5e00c055b2372de3fbff4e2805fb771644f1",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 1.1"
+  },
+  {
+   "key": "gb-discounting:1.2",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:3",
+   "hash": "2c4547033da774f7",
+   "sha256": "2c4547033da774f7679ddcdb9224f62bc31c8ebbb0fe9f78bef3d9d507efd36e",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 1.2"
+  },
+  {
+   "key": "gb-discounting:1.3",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:4",
+   "hash": "ab7e304733d5c8bd",
+   "sha256": "ab7e304733d5c8bdd95f2343077972d6567cf78db1afb69399e6eeccfbd8922b",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 1.3"
+  },
+  {
+   "key": "gb-discounting:2.1",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:5",
+   "hash": "aa8b9ab688b41878",
+   "sha256": "aa8b9ab688b4187888cef1027607343189c190ff256cb44dbe3f310af2812a16",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 2.1"
+  },
+  {
+   "key": "gb-discounting:2.2",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:6",
+   "hash": "60f5283fc4bd0ba2",
+   "sha256": "60f5283fc4bd0ba2d9654a4d51c5aa939045e559698bd5140760fdfdb08d94f1",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 2.2"
+  },
+  {
+   "key": "gb-discounting:2.3",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:7",
+   "hash": "8b4214d685e7c2e2",
+   "sha256": "8b4214d685e7c2e2c31839e9e57c8a651aa094f9e9ad61da189f850cb04acdfd",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 2.3"
+  },
+  {
+   "key": "gb-discounting:2.4",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:8",
+   "hash": "ad32d326cd518d47",
+   "sha256": "ad32d326cd518d47e63c16ab295b3ed705c0dfde735520cef47a9d4343433e3f",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 2.4"
+  },
+  {
+   "key": "gb-discounting:2.5",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:9",
+   "hash": "cee7e1095137b9d9",
+   "sha256": "cee7e1095137b9d95f39f320629712f95b5f2a9b730f0a8f050a27c39cffb9c3",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 2.5"
+  },
+  {
+   "key": "gb-discounting:2.6",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:10",
+   "hash": "fa41d46380f275f9",
+   "sha256": "fa41d46380f275f95806297241e38869ab0cf17687aa0cee3d939677265a43f9",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 2.6"
+  },
+  {
+   "key": "gb-discounting:2.7",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:11",
+   "hash": "86b4611cc741a7f9",
+   "sha256": "86b4611cc741a7f96b4bbe6c8a8783b640741f8b3ad58e402cbaaac402135e73",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 2.7"
+  },
+  {
+   "key": "gb-discounting:2.8",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:12",
+   "hash": "a0bf002131f20584",
+   "sha256": "a0bf002131f205843d3c955107027871d921012ba77e795c1ee16bc8c87865d1",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 2.8"
+  },
+  {
+   "key": "gb-discounting:2.9",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:13",
+   "hash": "d37434145bb27a98",
+   "sha256": "d37434145bb27a98c06239ea5081e9ad29877f59802f0ef1425fac89d5df44aa",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 2.9"
+  },
+  {
+   "key": "gb-discounting:2.10",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:14",
+   "hash": "ddcddbfe65fb29fd",
+   "sha256": "ddcddbfe65fb29fd79836cb52bcd96101447dc04cdfb70cb36a95be58c39de0e",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 2.10"
+  },
+  {
+   "key": "gb-discounting:2.11",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:15",
+   "hash": "4c268a1392542127",
+   "sha256": "4c268a1392542127da581dfc75e8b34f91bffbe4d5aa409859321142b28e386e",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 2.11"
+  },
+  {
+   "key": "gb-discounting:2.12",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:16",
+   "hash": "1278cc60b329fde0",
+   "sha256": "1278cc60b329fde00e5b7c2737f51be53a87c302b149b2303e076cc0e88ae363",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 2.12"
+  },
+  {
+   "key": "gb-discounting:2.13",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:17",
+   "hash": "2f5a150e77876fc0",
+   "sha256": "2f5a150e77876fc0504c41412e4409674a8bed146d5e75f49fc040625701db75",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 2.13"
+  },
+  {
+   "key": "gb-discounting:2.14",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:18",
+   "hash": "edfcda375a3d367a",
+   "sha256": "edfcda375a3d367acb5d2d79ef23f5db9c70142dea4de9a05908584579a80723",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 2.14"
+  },
+  {
+   "key": "gb-discounting:2.15",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:19",
+   "hash": "a80482af877f9245",
+   "sha256": "a80482af877f9245087b8893328c96a76a7a507081ff7ef16a03f6cb119ea513",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 2.15"
+  },
+  {
+   "key": "gb-discounting:2.16",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:20",
+   "hash": "c6d5239dca7da28d",
+   "sha256": "c6d5239dca7da28dcf79dc2ac9a4f64035a940036ce98b22cbbf411f4d40f1c4",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 2.16"
+  },
+  {
+   "key": "gb-discounting:3.1",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:21",
+   "hash": "a1fe9f0ec30101e6",
+   "sha256": "a1fe9f0ec30101e68f467c193f82301ee64a515ea3c54451076e332b0a49c782",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 3.1"
+  },
+  {
+   "key": "gb-discounting:3.2",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:22",
+   "hash": "b6264009521bf657",
+   "sha256": "b6264009521bf6579288539f67ad1de18351acbc79e627f848fd1bb735384901",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 3.2"
+  },
+  {
+   "key": "gb-discounting:3.3",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:23",
+   "hash": "f87767764f0594e4",
+   "sha256": "f87767764f0594e40d0b14f8cbac2d65c23a8154a811709a7a1e6573c96741d4",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 3.3"
+  },
+  {
+   "key": "gb-discounting:3.4",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:24",
+   "hash": "70c8392bc1171889",
+   "sha256": "70c8392bc1171889be1af59282ff2641afb015cb3df028dca01959838785feb2",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 3.4"
+  },
+  {
+   "key": "gb-discounting:3.5",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:25",
+   "hash": "ccbf64863498394d",
+   "sha256": "ccbf64863498394de63f85feb58b36cd8cecfed436e6a44ed28954b4cdfda41c",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 3.5"
+  },
+  {
+   "key": "gb-discounting:3.6",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:26",
+   "hash": "7e36b1f2176ab618",
+   "sha256": "7e36b1f2176ab618905afd042447399036f0e63a874098129a3391367ab14da5",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 3.6"
+  },
+  {
+   "key": "gb-discounting:3.7",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:27",
+   "hash": "c1367c1a7c010347",
+   "sha256": "c1367c1a7c010347db907eba3c2948a4fd1828854939827ef6523301b3a62cc5",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 3.7"
+  },
+  {
+   "key": "gb-discounting:3.8",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:28",
+   "hash": "716ad25cfb40979b",
+   "sha256": "716ad25cfb40979bb18f2a8a9ff82630f4f4fd6f954208e48ff1f9ca510e2197",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 3.8"
+  },
+  {
+   "key": "gb-discounting:3.9",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:29",
+   "hash": "688c26d00cf1f1cc",
+   "sha256": "688c26d00cf1f1ccee0421117f479435cf99debb3de6cdbabdaa534fc9af297c",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 3.9"
+  },
+  {
+   "key": "gb-discounting:3.10",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:30",
+   "hash": "d31f038da267ef98",
+   "sha256": "d31f038da267ef98b5786a7e154989be7955a75502b96805e4b9ef2508d886b2",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 3.10"
+  },
+  {
+   "key": "gb-discounting:3.11",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:31",
+   "hash": "8031d51f69d1b0fc",
+   "sha256": "8031d51f69d1b0fc55a028566d95c6b067f0b2450559cbfec6143684d94e9a49",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 3.11"
+  },
+  {
+   "key": "gb-discounting:3.12",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:32",
+   "hash": "3974488f152ac514",
+   "sha256": "3974488f152ac5148b83a3782d09ebab03605d65743b9ba524c21c254dc8076a",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 3.12"
+  },
+  {
+   "key": "gb-discounting:3.13",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-discounting-paragraphs:33",
+   "hash": "85d5149122efddc5",
+   "sha256": "85d5149122efddc55709ee1236958155fe30b866c06fb89f7d91103675dcb406",
+   "label": "Green Book supplementary guidance: discounting (October 2026), para 3.13"
+  },
+  {
+   "key": "gb-optimism-bias:1.1",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:1",
+   "hash": "271c80580e9a211a",
+   "sha256": "271c80580e9a211ae9626219c001e5a351fcf587c8017ab7d41a44091c8a9350",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 1.1"
+  },
+  {
+   "key": "gb-optimism-bias:1.2",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:2",
+   "hash": "31f0835ed730ebc1",
+   "sha256": "31f0835ed730ebc149ecd7b833cc5cb64ccfa97991bf290bd689506b95ad47ea",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 1.2"
+  },
+  {
+   "key": "gb-optimism-bias:2.1",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:3",
+   "hash": "c2a328a56c6d5ee5",
+   "sha256": "c2a328a56c6d5ee5f08e352c2d9c331ab419c03247b4979abbce11698c579f5e",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 2.1"
+  },
+  {
+   "key": "gb-optimism-bias:2.2",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:4",
+   "hash": "2b6de2967236eb1b",
+   "sha256": "2b6de2967236eb1b9f05cce9a93fd6a802f0825777458afe9157d5b3fb3ce90a",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 2.2"
+  },
+  {
+   "key": "gb-optimism-bias:3.1",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:5",
+   "hash": "d98c0c8414dd4f38",
+   "sha256": "d98c0c8414dd4f38c18802e2fdecb3a8fdb79d13f9742aafd491a20f22d9c63d",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.1"
+  },
+  {
+   "key": "gb-optimism-bias:3.2",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:6",
+   "hash": "8cb644fbe18d6f2b",
+   "sha256": "8cb644fbe18d6f2b8f5f24508ec9daf87a094be07a998fb51d33b6f60566b864",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.2"
+  },
+  {
+   "key": "gb-optimism-bias:3.3",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:7",
+   "hash": "41592cabbf65c57a",
+   "sha256": "41592cabbf65c57a8019d536c2f44dc1b61e3282c4c68809f9a4b18fddda8e7d",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.3"
+  },
+  {
+   "key": "gb-optimism-bias:3.4",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:8",
+   "hash": "be27a06b56baea53",
+   "sha256": "be27a06b56baea53de3988d27bf14d9332c644a8dedd9c7ac476de5994876dd0",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.4"
+  },
+  {
+   "key": "gb-optimism-bias:3.5",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:9",
+   "hash": "701eb412b104ac06",
+   "sha256": "701eb412b104ac0650d5190e53f002b76e95bcfb444b35b5f61027cbbb55253f",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.5"
+  },
+  {
+   "key": "gb-optimism-bias:3.6",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:10",
+   "hash": "dc1c2a0faa20f018",
+   "sha256": "dc1c2a0faa20f018777c8a495b489ba024c927215a20142091672e4fd274f5f9",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.6"
+  },
+  {
+   "key": "gb-optimism-bias:3.7",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:11",
+   "hash": "aa2d2eb413d0cd7e",
+   "sha256": "aa2d2eb413d0cd7e97aab7ea4a18493024b65438c110532199102d9be6a74a2f",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.7"
+  },
+  {
+   "key": "gb-optimism-bias:3.8",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:12",
+   "hash": "3e3cd5ab3ba421e9",
+   "sha256": "3e3cd5ab3ba421e984c696d4c53625bedfe19bfb2f70c1e98148439ec9117ed0",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.8"
+  },
+  {
+   "key": "gb-optimism-bias:3.9",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:13",
+   "hash": "902f12bced49116f",
+   "sha256": "902f12bced49116f26f4d37e4bb414be3591baad4bef06f1221b9ff3b96713bb",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.9"
+  },
+  {
+   "key": "gb-optimism-bias:3.10",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:14",
+   "hash": "4ee8cb95abf643ea",
+   "sha256": "4ee8cb95abf643ea667f5837f2d6654bec6dba51dc5eb5447a482d4a04305b6c",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.10"
+  },
+  {
+   "key": "gb-optimism-bias:3.11",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:15",
+   "hash": "de99cac7420f332e",
+   "sha256": "de99cac7420f332ed5da8db870e24321c938a07a484cb768a811dfc2669cc359",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.11"
+  },
+  {
+   "key": "gb-optimism-bias:3.12",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:16",
+   "hash": "0f946542813bcf29",
+   "sha256": "0f946542813bcf294322ecf6dd209b32402b0fce32599cb143d1d65efb1695f3",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.12"
+  },
+  {
+   "key": "gb-optimism-bias:3.13",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:17",
+   "hash": "592fe066a5e7e2fe",
+   "sha256": "592fe066a5e7e2fe166ffa1ca3f2fe7583f3ab528170aceddd937c40713fa7fa",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.13"
+  },
+  {
+   "key": "gb-optimism-bias:3.14",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:18",
+   "hash": "0afcdb0a5711579d",
+   "sha256": "0afcdb0a5711579d24b51bd5908ef01355632243bb8cc766c0ac291da68e2fb3",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.14"
+  },
+  {
+   "key": "gb-optimism-bias:3.15",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:19",
+   "hash": "82a2e8e4f9a2ddeb",
+   "sha256": "82a2e8e4f9a2ddebe551b1e6984d51dfb452a260d23cf4ddf49e5e40e4390fb1",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.15"
+  },
+  {
+   "key": "gb-optimism-bias:3.16",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:20",
+   "hash": "bed653b6f31c19e2",
+   "sha256": "bed653b6f31c19e2d84abf93f8917d517f8cd73f3d279d408aafe8718da9f405",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.16"
+  },
+  {
+   "key": "gb-optimism-bias:3.17",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:21",
+   "hash": "feff66313dcfb967",
+   "sha256": "feff66313dcfb967d06119a9c74401fa493a915cb6529937aec52f6e2b32bcd2",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.17"
+  },
+  {
+   "key": "gb-optimism-bias:3.18",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:22",
+   "hash": "9c474de8ff1db91e",
+   "sha256": "9c474de8ff1db91e03dfb820a51951a69c7eaa790581785aeab1ce6e9d3b7e13",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.18"
+  },
+  {
+   "key": "gb-optimism-bias:3.19",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:23",
+   "hash": "d5759bd59b0f62da",
+   "sha256": "d5759bd59b0f62dacde96b5454937c10bac7f9fb70a10f120de5cc6d73270288",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.19"
+  },
+  {
+   "key": "gb-optimism-bias:3.20",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:24",
+   "hash": "11186d5973e4942b",
+   "sha256": "11186d5973e4942bd0f3311b59be13d1e76d6195693123c91eb37b4b66b6eec9",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.20"
+  },
+  {
+   "key": "gb-optimism-bias:3.21",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:25",
+   "hash": "af8571f14a69de0e",
+   "sha256": "af8571f14a69de0ebb921b6d29fa59303618b832dc85a43f4cc81fe3454a3031",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.21"
+  },
+  {
+   "key": "gb-optimism-bias:3.22",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:26",
+   "hash": "204e9b190b625b48",
+   "sha256": "204e9b190b625b4800cffa4aca7922a5dbc3f2dac5de07dd6e3153363172ce17",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.22"
+  },
+  {
+   "key": "gb-optimism-bias:3.23",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:27",
+   "hash": "6da28dbc7514eae1",
+   "sha256": "6da28dbc7514eae134d69ce641beaf5c1f6f1609676cd57eaf3b81b9b868167c",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.23"
+  },
+  {
+   "key": "gb-optimism-bias:3.24",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:28",
+   "hash": "a19b112176dcfc79",
+   "sha256": "a19b112176dcfc7906ff03005e2d7c6b336e3988e46be0e47e5091a0faac390a",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 3.24"
+  },
+  {
+   "key": "gb-optimism-bias:4.1",
+   "id": "govuk-core-docs:government/publications/green-book-supplementary-guidance-optimism-bias-paragraphs:29",
+   "hash": "352e63db9c832940",
+   "sha256": "352e63db9c83294013426d785eb3819258098b076c0b5063a511bb81631952d3",
+   "label": "Green Book supplementary guidance: optimism bias (2013), para 4.1"
+  }
+ ]
+}

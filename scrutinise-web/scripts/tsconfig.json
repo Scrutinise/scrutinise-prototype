@@ -53,6 +53,12 @@
     "measure-s4-fusion-decision.ts",
     "measure-s8-framing.ts",
     "measure-s8-router-v2.ts",
-    "verify-goldv2-keys.ts"
+    "verify-goldv2-keys.ts",
+    // ⚠ CC-Ingest, 20 Nov 2026 (BRIEF_26AA item 6): a DYNAMIC `await import()` of
+    // `../../scripts/ingest/graph/{inbound,coverage}` crosses the boundary just as a static import
+    // does — tsc follows it — and drags in `shared/neon-pool` (pg) and `shared/r2-client` (aws-sdk,
+    // smithy). Those resolve only where `scripts/ingest/node_modules` is installed, so this check
+    // passed in the main checkout and failed with three TS2307s in every worktree without it.
+    "verify-statutory-graph-parity.ts"
   ]
 }

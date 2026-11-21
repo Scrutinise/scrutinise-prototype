@@ -869,9 +869,26 @@ benefits"* carries a £ figure **65.5%** of the time and 25.9% carry labels with
 
 ---
 
-## INGEST THREAD — last updated 2026-11-18 23:44 UTC (CBA-1 EXECUTE, STOPPED)
+## INGEST THREAD — last updated 2026-11-20 17:31 UTC (CBA-1 EXECUTE, COMPLETE)
 
-▼▼ **CBA-1 EXECUTE is half done on production and waiting on Charlie's option 1/2/3.** Report: **`docs/INGEST_CBA_1_EXECUTE_REPORT.md`**.
+▼▼ **CBA-1 EXECUTE is DONE (decision 350 = option 3, 20 Nov).** Report: **`docs/INGEST_CBA_1_EXECUTE_REPORT.md`**.
+- **Stats DB:**
+  - migration `20261120160000`: per-row `releaseDate` and `priceBasis`, plus `stat_suppressed_cell`;
+  - datasets: `css-2026`, `hmt-gdp-deflators`, `gb-optimism-bias-table-1`, and `pesa-ch5-function` (now dated);
+  - check: `scripts/stats/check-cba-stats.ts` (10/10).
+- **Manifest:** `docs/manifests/cba-citation-manifest.json`, 464 keys (`scripts/ingest/cba/build-manifest.ts`).
+- **Three-layer and live serves:** `scripts/ingest/cba/readback-layers.ts` (16/16).
+- **Register:** four rows added, the GMCA attribution marked unsatisfied.
+- **Scripts typecheck:** fixed.
+- **Open, not Ingest's:**
+  - Q1 327 waits on CC-Search's default filter;
+  - Q2 the NAO reading (330) is for Charlie;
+  - Q3–Q5 are Lex's: render the GMCA attribution, accept `table-A.1`, read the new stats columns and the suppressed table;
+  - Q6 PSSRU terms are for Charlie.
+- ⚠ Seen in the census, not mine: six `pwdata-*` FTS-SHORT.
+
+*Previous state (18 Nov), kept for history:*
+▼▼ **CBA-1 EXECUTE is half done on production and waiting on Charlie's option 1/2/3.**
 - The 14 Nov writes were made by an unpushed session, inferred to be the laptop, and were verified 468/468:
   - Pilot A, 468 rows, indexed, with both serves restarted;
   - GMCA, 30 CostBenchmark rows.

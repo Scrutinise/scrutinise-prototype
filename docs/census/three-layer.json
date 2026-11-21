@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-19T00:06:11.217Z",
+ "generatedAt": "2026-11-20T17:24:15.317Z",
  "complete": true,
  "scans": {
   "fts": "corpus_fts",
@@ -15,8 +15,11 @@
   "lda-lordsdivisions",
   "lda-lordswrittenquestions",
   "oecd",
+  "pwdata-lords",
+  "pwdata-lordswms",
   "pwdata-lordswrans",
   "pwdata-westminster",
+  "pwdata-wms",
   "pwdata-wrans",
   "written-answers",
   "written-statements"
@@ -132,15 +135,15 @@
   },
   {
    "collection": "departmental-accounts",
-   "sections": 349,
-   "compiled": 349,
+   "sections": 551,
+   "compiled": 551,
    "fts": 0,
    "chunks": 0,
    "vec": 0,
    "chunksPerSection": 0,
    "tolerance": 5,
    "verdict": "NOT-IN-FTS",
-   "why": "349 compiled rows, 0 in corpus_fts"
+   "why": "551 compiled rows, 0 in corpus_fts"
   },
   {
    "collection": "early-day-motions",
@@ -187,8 +190,8 @@
    "vec": 504686,
    "chunksPerSection": 3.12,
    "tolerance": 809,
-   "verdict": "FTS-EXCESS",
-   "why": "fts 293399 > compiled 161749 by 131650 (tolerance 809)"
+   "verdict": "PURGE-INCOMPLETE",
+   "why": "ledger: fts, vector pending (run 2026-08-24T00-34-43-701Z)"
   },
   {
    "collection": "eur-lex",
@@ -240,13 +243,13 @@
   },
   {
    "collection": "govuk-core-docs",
-   "sections": 179,
-   "compiled": 178,
-   "fts": 175,
-   "chunks": 978,
-   "vec": 978,
-   "chunksPerSection": 5.49,
-   "tolerance": 5,
+   "sections": 3332,
+   "compiled": 3327,
+   "fts": 3327,
+   "chunks": 5179,
+   "vec": 5179,
+   "chunksPerSection": 1.56,
+   "tolerance": 17,
    "verdict": "OK",
    "why": ""
   },
@@ -636,87 +639,87 @@
   },
   {
    "collection": "pwdata-debates",
-   "sections": 6398711,
-   "compiled": 6394628,
+   "sections": 6406686,
+   "compiled": 6402568,
    "fts": 6387314,
    "chunks": 7102074,
    "vec": 7102074,
    "chunksPerSection": 1.11,
-   "tolerance": 31974,
+   "tolerance": 32013,
    "verdict": "OK",
    "why": ""
   },
   {
    "collection": "pwdata-lords",
-   "sections": 757566,
-   "compiled": 755809,
+   "sections": 761238,
+   "compiled": 759463,
    "fts": 752809,
    "chunks": 940041,
    "vec": 940041,
    "chunksPerSection": 1.24,
-   "tolerance": 3780,
-   "verdict": "OK",
-   "why": ""
+   "tolerance": 3798,
+   "verdict": "FTS-SHORT",
+   "why": "fts 752809 < compiled 759463 by 6654 (tolerance 3798)"
   },
   {
    "collection": "pwdata-lordswms",
-   "sections": 21556,
-   "compiled": 21025,
+   "sections": 21663,
+   "compiled": 21132,
    "fts": 20932,
    "chunks": 28160,
    "vec": 28160,
-   "chunksPerSection": 1.34,
+   "chunksPerSection": 1.33,
    "tolerance": 106,
-   "verdict": "OK",
-   "why": ""
+   "verdict": "FTS-SHORT",
+   "why": "fts 20932 < compiled 21132 by 200 (tolerance 106)"
   },
   {
    "collection": "pwdata-lordswrans",
-   "sections": 177304,
-   "compiled": 176765,
+   "sections": 178525,
+   "compiled": 177986,
    "fts": 175576,
    "chunks": 177224,
    "vec": 177224,
    "chunksPerSection": 1,
-   "tolerance": 884,
+   "tolerance": 890,
    "verdict": "FTS-SHORT",
-   "why": "fts 175576 < compiled 176765 by 1189 (tolerance 884)"
+   "why": "fts 175576 < compiled 177986 by 2410 (tolerance 890)"
   },
   {
    "collection": "pwdata-westminster",
-   "sections": 242076,
-   "compiled": 240748,
+   "sections": 244221,
+   "compiled": 242886,
    "fts": 239263,
    "chunks": 316710,
    "vec": 316710,
-   "chunksPerSection": 1.32,
-   "tolerance": 1204,
+   "chunksPerSection": 1.3,
+   "tolerance": 1215,
    "verdict": "FTS-SHORT",
-   "why": "fts 239263 < compiled 240748 by 1485 (tolerance 1204)"
+   "why": "fts 239263 < compiled 242886 by 3623 (tolerance 1215)"
   },
   {
    "collection": "pwdata-wms",
-   "sections": 25058,
-   "compiled": 23959,
+   "sections": 25161,
+   "compiled": 24062,
    "fts": 23863,
    "chunks": 31508,
    "vec": 31508,
-   "chunksPerSection": 1.32,
-   "tolerance": 120,
-   "verdict": "OK",
-   "why": ""
+   "chunksPerSection": 1.31,
+   "tolerance": 121,
+   "verdict": "FTS-SHORT",
+   "why": "fts 23863 < compiled 24062 by 199 (tolerance 121)"
   },
   {
    "collection": "pwdata-wrans",
-   "sections": 1246684,
-   "compiled": 1244419,
+   "sections": 1258278,
+   "compiled": 1256013,
    "fts": 1232942,
    "chunks": 1247605,
    "vec": 1247605,
-   "chunksPerSection": 1,
-   "tolerance": 6223,
+   "chunksPerSection": 0.99,
+   "tolerance": 6281,
    "verdict": "FTS-SHORT",
-   "why": "fts 1232942 < compiled 1244419 by 11477 (tolerance 6223)"
+   "why": "fts 1232942 < compiled 1256013 by 23071 (tolerance 6281)"
   },
   {
    "collection": "quangos-govuk",
