@@ -1,5 +1,59 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-21 02:26 UTC - LEX Z2 (BRIEF_26Z §6.3; decisions 361-363): offline reading, the queue (sent first on reconnection), conflicts shown both ways, one tap before queued Lex messages spend
+
+CCh's GO of 21 Nov 01:40, point 4, with Charlie's decisions 361-363. §6.4 (installable: the manifest and icons) waits on 364's art
+(QUESTION 0200Z: the named source is a watermarked VectorStock preview).
+- **The worker** (`public/lex-sw.js`) is registered by Lex's page with scope /ideas/, so it never controls Central's pages.
+  - Pages under /ideas/ are NETWORK FIRST, so a deploy is never hidden behind an old copy. The last good copy is kept, stamped with
+    when it was fetched, and served only when the network does not answer; it then carries a meta tag the page reads.
+  - Lex's JSON reads (GET /api/ideas/…) are network first, with the last answer kept. Streams and downloads are never kept.
+  - The built files (/_next/static) are cache first.
+  - Writes are never handled by the worker.
+  - A page that answers 401/403, or redirects to sign-in, clears everything at once.
+- **What the page does** (`lib/lex/offline.ts`, `components/lex/OfflineStrip.tsx`, under the site header on /ideas/create):
+  - shows "Offline — last updated 14:02";
+  - **361:** when a different user, or none, is signed in on this device, it clears the kept copies and the queue BEFORE anything is
+    sent. The check found this race: as first written, a queue kept by user A could be sent as user B on B's first load;
+  - answers every other Lex write made offline in words ("You're offline: this needs the connection, so nothing was changed"),
+    never as "Failed to fetch".
+- **The queue** (`lib/lex/offline-queue.ts`):
+  - **What queues.** Edits to an action's statement or details (through the page's `post`, now `postOrQueue`) and comments (append
+    only) are kept in order. Each action edit carries `expect`, the value it was made on. Queued edits are laid over every state the
+    page applies, so a fresh read never shows over them, and they survive a reload.
+  - **363: the queue goes first.** On reconnection, and on a load once back online, the waiting edits are sent in order through their
+    routes, and only then is the page refreshed.
+  - **Conflicts.** The route (`/api/ideas/[id]/actions`, `lib/lex/offline-conflict.ts`) answers 409 with both versions when a field
+    changed since its base, and writes nothing. The strip shows the server's version and yours until the owner chooses "Use mine"
+    (sent again without the base) or "Keep the server's". Online edits are unchanged: they carry no base.
+  - **Refusals.** A refused edit (for example 422) is kept on screen in its own words until dismissed.
+- **362, Lex messages.** A message written offline is kept and marked "Waiting: will ask before sending to Lex". Back online it is
+  NOT sent: "Send 1 message to Lex that you wrote offline? (about Np each, this conversation's average so far)". One tap sends it.
+- **Words.** OFFLINE_UI (screen-labels) has a field-guide entry for every label.
+- **check:lex-z2 (new): 45/45, 1 control, 0 dead.**
+  - A: the pure rules (conflicts, the overlay, the base, the worker's page key from its own source).
+  - B: the real actions route on a scratch copy of 452c5ade. 409 with both versions and nothing written; an unchanged base applies;
+    online edits are as before; a queued edit still meets the route's own refusals.
+  - C: the real worker in Chromium, on the check's own HTTP server:
+    - offline reload shows the kept page with its time;
+    - an offline edit is queued with its base, shown, and survives a reload;
+    - a non-queueable write is refused in words and nothing reaches the server;
+    - back online, the queued POST is the first request, before any fresh read;
+    - a server change made meanwhile is a conflict with both versions, nothing overwritten, and "Use mine" then saves;
+    - a clean edit sends on reconnection;
+    - a Lex message is not sent until one tap;
+    - a "deploy" is served fresh;
+    - a page never opened says so;
+    - a different user's first load clears u1's queue (never sent as u2) and kept pages;
+    - a 401 clears everything.
+- **Mutants:** 13 of 13 went RED. The user-check gate, queue-first, the overlay, the base, the conflict rule and the route's check, network-first, the signed-out clear, the user clear, the Lex ask, the offline answer, the page key, and a conflicted edit overlaid. Two first stayed GREEN, and both were findings: the harness knew its user from the first render (Clerk does not, so it now waits as Clerk does), and Z2-11 removed only the fast path of two (it now removes the answer). check:lex-26w-b 60/60, check:lex-26z 214/214, clean-build --fast PASS, tsc clean for the app and the scripts.
+- **⚠ Only Charlie can confirm** (§8): the real site offline on his phone ("leaving the browser and coming back, on a plane"). Clerk's
+  own script is not kept by the worker (it is another origin), so the first real-device test is whether the signed-in page renders
+  from the kept copy at all.
+- **⚠ For Central:** a sign-out from a page outside /ideas/ clears Lex's kept data only at the next visit to Lex. A one-line call to
+  `clearLexOffline()` (exported from lib/lex/offline.ts) in the site's sign-out would close that. CCh to pass on; nothing of theirs
+  is edited.
+
 ## 2026-11-21 02:03 UTC - LEX Z1c: the bottom bar on an iPhone - viewport-fit=cover on Lex's route, so the safe-area padding is live; a ?where-debug=1 readout
 
 CCh's GO of 21 Nov 01:40, point 3. Charlie's screenshot (iPhone, Edge, 07:53): the "Where am I?" bar sat about a fifth of the screen

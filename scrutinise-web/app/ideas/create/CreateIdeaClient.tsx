@@ -9,12 +9,15 @@
 // canonical state, which replaces what we render. See docs/LEX_REBUILD_DESIGN.md.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { DRAFTS_UI, WHERE_UI } from '@/lib/lex/screen-labels'
+import { DRAFTS_UI, WHERE_UI, OFFLINE_UI } from '@/lib/lex/screen-labels'
 import { useState, useEffect, useCallback, useRef, useLayoutEffect, useMemo } from 'react'
 import FocusShell, { ChaptersPanel, restoreOnArrival, useArriveAtWorkspace, useSiteHeader, workspaceY } from '@/components/lex/FocusShell'
 import type { MenuChapter, MenuStage } from '@/components/lex/WhereAmIMenu'
 import { STORE_KEY, chapterHref, parseUrlState, chapterOf, recordHref, safeStore, type ChapterKey } from '@/lib/lex/where-am-i'
 import PublicNav from '@/components/PublicNav'
+import OfflineStrip from '@/components/lex/OfflineStrip'
+import { useAuth } from '@clerk/nextjs'
+import { readQueue, overlayActions, postOrQueue, enqueueLex } from '@/lib/lex/offline-queue'
 import ChatPanel, { type ChatMessage } from '@/components/lex/ChatPanel'
 import FieldsPanel from '@/components/lex/FieldsPanel'
 import BackgroundPanel from '@/components/lex/BackgroundPanel'
@@ -385,10 +388,12 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
    * seconds would spend a request per user per tick to notice a change only this page can
    * make. Every mutation lands here, so this is the one place that knows.
    */
+  // Z2 (363) — edits made offline and not yet sent are laid over every state the page applies, so a fresh read never shows over them
   const applyState = useCallback((s: CanonicalState) => {
-    setState(s)
+    const q = ideaId ? readQueue(ideaId) : []
+    setState(q.length ? { ...s, actions: overlayActions(s.actions, q) } : s)
     setWorklistNonce((n) => n + 1)
-  }, [])
+  }, [ideaId])
 
   const appendLex = useCallback((msgs: unknown, stage?: string) => {
     if (Array.isArray(msgs) && msgs.length) {
@@ -471,18 +476,27 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
       // captured, and it is cleared on the next message either way.
       setFeedbackOffer(CRITIQUE_INTENT.test(text))
       setMessages((prev) => [...prev, { role: 'user', content: text, stage }])
-      setBusy(true)
       setError(null)
 
       // ⚠ 26-P — ONE ID PER SEND, reused by the retry below. The tool-calling Lex can write, so a retried
       // POST must be recognised server-side as the same turn, not acted on twice.
       const clientTurnId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `t${Date.now()}${Math.random().toString(36).slice(2)}`
+      // Z2 (362) — offline, a message to Lex is kept on this device and NOT sent by itself: back online, the owner is asked once, with the
+      // estimate, because a Lex message spends
+      const keepOffline = () => {
+        enqueueLex(ideaId, text, clientTurnId)
+        setMessages((prev) => [...prev, { role: 'lex', content: OFFLINE_UI.lexWaiting, stage }])
+      }
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) { keepOffline(); return }
+      setBusy(true)
+      const OFFLINE = 'lex-offline'
       const postOnce = async () => {
         const res = await fetch(`/api/ideas/${ideaId}/lex`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: text, clientTurnId, ui: { stage: lexStage } }),
         })
+        if (res.status === 503 && ((await res.clone().json().catch(() => ({}))) as { offline?: boolean }).offline) throw new Error(OFFLINE)
         if (!res.ok) throw new Error(`lex ${res.status}`)
         return res.json()
       }
@@ -492,6 +506,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
         try {
           data = await postOnce()
         } catch (err1) {
+          if (err1 instanceof Error && err1.message === OFFLINE) { keepOffline(); return }
           // The failure self-recovered on resend, so it's likely transient. Retry
           // once before surfacing the fallback. The underlying cause (Gemini
           // status/body or schema validation) is logged server-side.
@@ -622,11 +637,12 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
       setBusy(true)
       setError(null)
       try {
-        const res = await fetch(`/api/ideas/${ideaId}${path}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        })
+        // Z2 (362/363) — an action's statement or details edited offline is kept on this device, with the value it was made on, and
+        // sent in order on reconnection; anything else offline is refused in words (OfflineStrip's answer), never "please try again"
+        const out = await postOrQueue(ideaId, path, body as Record<string, unknown>, state?.actions ?? [])
+        if (out.queued) { if (state) applyState(state); setError(OFFLINE_UI.queued); return }
+        if (out.refused) { setError(out.refused); return }
+        const res = out.res!
         if (!res.ok) throw new Error(`${path} failed`)
         const data = await res.json()
         appendLex(data.messages, data.state?.stage)
@@ -637,7 +653,7 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
         setBusy(false)
       }
     },
-    [ideaId, applyState, appendLex],
+    [ideaId, applyState, appendLex, state],
   )
 
   const transition = useCallback(
@@ -1094,6 +1110,11 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
     return stageCtx.checklist.map((l) => ({ n: l.n, label: l.label, state: l.state, mark: l.mark, href: l.href ? chapterHref(l.href, 6) : null, current: l.key === stageCtx.checklistHere }))
   }, [stageCtx])
   const chapterHere: ChapterKey | null = typeof window === 'undefined' ? null : chapterOf(parseUrlState(window.location.pathname, window.location.search, window.location.hash))
+  // Z2 (361) — who is signed in, once Clerk knows (undefined until then: nothing is cleared on a guess)
+  const { isLoaded: clerkLoaded, userId: clerkUserId } = useAuth()
+  // Z2 (362) — the estimate before queued Lex messages spend: this conversation's average reply so far, or none
+  const lexReplies = messages.filter((m) => m.role === 'lex' && typeof (m as { replyNo?: number }).replyNo === 'number').length
+  const lexAverage = conversationPence != null && conversationPence > 0 && lexReplies > 0 ? Math.max(1, Math.round(conversationPence / lexReplies)) : null
   const chapterActions = ideaId && state && (chapterHere === 'organising' || chapterHere === 'drafting')
     ? state.actions.filter((a) => a.number != null).map((a) => ({ number: a.number, title: a.title ?? null, statement: a.practicalStep, href: recordHref(ideaId, a.number as number) }))
     : null
@@ -1103,6 +1124,9 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
       // Z1c: viewport-fit=cover (lib/lex/viewport.ts) lets the page run under an iPhone's notch in landscape; these keep it clear (0 elsewhere)
       style={{ paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}>
       <PublicNav />
+      {/* Z2 — offline: the strip, the queue (sent first on reconnection), conflicts, and the one tap before queued Lex messages spend */}
+      <OfflineStrip ideaId={ideaId ?? null} userId={clerkLoaded ? clerkUserId ?? null : undefined} onRefresh={() => { void refreshState() }}
+        lexEstimate={OFFLINE_UI.estimate(lexAverage)} sendLex={(text) => sendMessage(text)} />
 
       {/* ══ 25-K §1 — THE PERSISTENT STAGE INDICATOR ══════════════════════════
           On every screen of this surface (all three panels, all four pages, both stages

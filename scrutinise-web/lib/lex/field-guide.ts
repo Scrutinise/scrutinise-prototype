@@ -18,7 +18,7 @@ import {
   LIFECYCLE_STAGE_WORD, LIFECYCLE_UI, PROGRESS_WORD, CHECKLIST_WORD, PAGE_UI, DRAFTING_FILTER_WORD, DEEPENING_LOCK_UI,
   ORGANISING_TOOLBAR_UI, ADD_ACTION_UI, BRIEF_UI, BRIEF_FIELD_WORD, TONE_WORD, DEEPENING_UI, DRAFTS_UI, CBA_UI,
   PANEL_WORD, PANEL_PLACE_WORD, WHERE_SENTENCES, WHERE_UI, DRAFT_RESTORE_UI, STAGEBAR_ROW_WORD, CAUSE_UI, SOURCES_UI, ADD_RESEARCH_UI,
-  INFO_UI,
+  INFO_UI, OFFLINE_UI,
 } from './screen-labels'
 import { BRIEF_FIELD_INFO, BRIEF_HEADING_INFO, type InfoText } from './brief-info'
 import { FACET_LABEL, SORT_LABEL } from './source-list'
@@ -437,6 +437,27 @@ const STAGEBAR_ROW_G: Record<keyof typeof STAGEBAR_ROW_WORD, GuideText> = {
   stages: { purpose: 'Labels the row of the seven stages, from Creation to In Force, on the bar above the workspace.', fits: 'On a desktop, at the left of the row. The seven stages always sit in one row there.', tool: none('a label') },
   chapters: { purpose: 'Labels the row of Development’s seven elements, each with its state, under the stages.', fits: 'On a desktop, at the left of the row. Each element opens its page.', tool: none('a label') },
 }
+const OFFLINE_G: Record<keyof typeof OFFLINE_UI, GuideText> = {
+  lastUpdated: { purpose: 'Says you are offline and this page is the copy kept on this device, and when it was last fetched.', fits: 'Shown at the top of an idea’s page when there is no connection. Kept only for idea pages you have opened while signed in; cleared on sign-out.', tool: none('kept on the device, not on the server') },
+  offlineNow: { purpose: 'Says there is no connection right now.', fits: 'The page you see was loaded while online; changes are kept on this device until you are back.', tool: none('a screen state') },
+  needsConnection: { purpose: 'Says this control needs the connection, so it did nothing.', fits: 'Only edits to an action’s statement and details, comments and Lex messages can wait offline; everything else asks you to try again online.', tool: none('a screen message') },
+  waiting: { purpose: 'How many changes you made offline are waiting to be sent.', fits: 'They are sent in order, before the page refreshes, as soon as the connection is back.', tool: none('kept on the device, not on the server') },
+  queued: { purpose: 'Says the change was kept on this device and will be sent when you are back online.', fits: 'Shown at once when you save offline; the page shows your change meanwhile.', tool: none('kept on the device, not on the server') },
+  sending: { purpose: 'Says the connection is back and your offline changes are being sent first.', fits: 'Nothing fresh replaces the page until they have gone.', tool: none('a screen state') },
+  sent: { purpose: 'Says how many offline changes were saved.', fits: 'Each went through the same checks as a change made online.', tool: none('a screen message') },
+  conflictHead: { purpose: 'Says something you changed offline was also changed elsewhere meanwhile, on another device or by Lex.', fits: 'Neither version has been overwritten; you choose which to keep.', tool: none('a screen message') },
+  server: { purpose: 'The version the server holds now.', fits: 'Shown beside yours in a conflict.', tool: none('a screen label') },
+  mine: { purpose: 'The version you wrote offline.', fits: 'Shown beside the server’s in a conflict.', tool: none('a screen label') },
+  useMine: { purpose: 'Saves your offline version over the server’s.', fits: 'Only after you have seen both.', tool: none('a screen control') },
+  keepServer: { purpose: 'Keeps the server’s version and drops yours.', fits: 'Your text is shown until you choose; copy it first if you want it.', tool: none('a screen control') },
+  refusedHead: { purpose: 'Says a change made offline was refused when it was sent, with the reason.', fits: 'It is kept on screen until you dismiss it, so nothing is lost silently.', tool: none('a screen message') },
+  dismiss: { purpose: 'Removes a refused change from the list.', fits: 'Nothing on the server changes.', tool: none('a screen control') },
+  lexAsk: { purpose: 'Asks before sending the messages you wrote to Lex offline, with what they will roughly cost.', fits: 'A Lex message spends; nothing that spends goes without your tap.', tool: none('a screen control') },
+  estimate: { purpose: 'What each waiting Lex message is likely to cost: this conversation’s average reply so far.', fits: 'An estimate; the actual cost of each reply shows after it, as always.', tool: none('a screen label') },
+  lexSend: { purpose: 'Sends the waiting messages to Lex, in order.', fits: 'Each is an ordinary Lex message.', tool: none('a screen control') },
+  lexKeep: { purpose: 'Leaves the waiting messages unsent for now.', fits: 'They stay on this device; you are asked again next time.', tool: none('a screen control') },
+  lexWaiting: { purpose: 'Marks a message you wrote to Lex while offline.', fits: 'It is not sent until you are back online and say so.', tool: none('a screen label') },
+}
 const DRAFT_RESTORE_G: Record<keyof typeof DRAFT_RESTORE_UI, GuideText> = {
   offer: { purpose: 'Says this box held text you had not sent or saved when the page was closed or reloaded.', fits: 'Kept on this device only, for Lex’s message, Edit the action, Edit the action details, the Brief, comments and Add research. Never sent by itself.', tool: none('kept on the device, not on the server') },
   restore: { purpose: 'Puts the unsent text back in the box.', fits: 'You still press Send or Save yourself.', tool: none('a screen control') },
@@ -695,6 +716,7 @@ export function guideEntries(): GuideEntry[] {
     ...fromTable('workspace', 'where', WHERE_UI, WHERE_UI_G),
     ...fromTable('workspace', 'stageBarRow', STAGEBAR_ROW_WORD, STAGEBAR_ROW_G),
     ...fromTable('common', 'draftRestore', DRAFT_RESTORE_UI, DRAFT_RESTORE_G),
+    ...fromTable('common', 'offline', OFFLINE_UI, OFFLINE_G),
     // 26-Y
     ...fromTable('record', 'cba', CBA_UI, CBA_G),
     // 26-AA

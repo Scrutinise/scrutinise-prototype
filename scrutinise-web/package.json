@@ -154,6 +154,7 @@
     "check:lex-26y": "tsx --tsconfig tsconfig.json --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-26y.ts",
     "check:lex-26aa9": "tsx --tsconfig tsconfig.json --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-26aa-item9.ts",
     "check:lex-26ab": "tsx --tsconfig tsconfig.json --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-26ab.ts",
+    "check:lex-z2": "tsx --tsconfig tsconfig.json --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-z2.ts",
     "check:lex-26aa": "tsx --tsconfig tsconfig.json --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-26aa.ts",
     "check:lex-26z": "tsx --tsconfig tsconfig.json --env-file=.env scripts/check-lex-26z.ts",
     "check:lex-292":"tsx --tsconfig tsconfig.json --env-file=.env scripts/check-lex-292.ts",

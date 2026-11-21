@@ -14,6 +14,8 @@ import {
 import { orchestrateAfterWrite } from '@/lib/lex/orchestrator'
 import { assertWritableField } from '@/lib/lex/stage'
 import { LIMITS } from '@/lib/lex/input-limits'
+import { prisma } from '@/lib/prisma'
+import { conflictsOf, conflictWords } from '@/lib/lex/offline-conflict'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -57,6 +59,8 @@ const BodySchema = z.discriminatedUnion('action', [
     actionId: z.string().min(1),
     ...ActionFields,
     practicalStep: z.string().trim().min(1).max(LIMITS.actionStatement).optional(),
+    /** Z2 (363) — an edit made offline: each field's value when it was made. A field changed elsewhere since → 409, both kept. */
+    expect: z.object({ practicalStep: z.string().nullable().optional(), commentary: z.string().nullable().optional() }).optional(),
   }),
   z.object({ action: z.literal('confirm') }),
   z.object({ action: z.literal('skip') }),
@@ -92,8 +96,13 @@ export async function POST(req: Request, { params }: Params) {
         await addAction(id, body)
         break
       case 'update': {
-        const { action, actionId, ...patch } = body
+        const { action, actionId, expect, ...patch } = body
         void action
+        if (expect) {
+          const cur = await prisma.lexCoherentAction.findFirst({ where: { id: actionId, ideaId: id }, select: { practicalStep: true, commentary: true } })
+          const conflicts = cur ? conflictsOf(expect, cur, patch) : []
+          if (conflicts.length) return NextResponse.json({ error: conflictWords(conflicts), conflict: conflicts }, { status: 409 })
+        }
         await updateAction(id, actionId, patch)
         break
       }

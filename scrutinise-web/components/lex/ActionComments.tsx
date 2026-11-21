@@ -15,7 +15,8 @@ import { useDeviceDraft, DraftOffer } from './DeviceDraft'
 import { explainFailure } from '@/lib/api-rejection'
 import { LIMITS } from '@/lib/lex/input-limits'
 import BoundedInput from './BoundedInput'
-import { COMMON_UI, RECORD_UI } from '@/lib/lex/screen-labels'
+import { COMMON_UI, RECORD_UI, OFFLINE_UI } from '@/lib/lex/screen-labels'
+import { enqueueEdit } from '@/lib/lex/offline-queue'
 import type { NoteView } from '@/lib/lex/research-notes'
 
 const when = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
@@ -42,10 +43,11 @@ export default function ActionComments({ ideaId, actionId, number }: { ideaId: s
     } catch (e) { setError(`Could not read the comments: ${e instanceof Error ? e.message : 'network error'}.`) }
   }, [ideaId, actionId])
 
-  const post = async (url: string, body: Record<string, unknown>, control: string): Promise<{ ok: boolean; result?: unknown }> => {
+  const post = async (url: string, body: Record<string, unknown>, control: string): Promise<{ ok: boolean; result?: unknown; offline?: boolean }> => {
     try {
       const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      const j = (await res.json().catch(() => ({}))) as { ok?: boolean; result?: unknown; error?: unknown }
+      const j = (await res.json().catch(() => ({}))) as { ok?: boolean; result?: unknown; error?: unknown; offline?: boolean }
+      if (res.status === 503 && j.offline) { setError(OFFLINE_UI.needsConnection); return { ok: false, offline: true } }
       if (j.error || !res.ok) { setError(`Not saved: ${explainFailure(j, res.status, control)}`); return { ok: false } }
       return { ok: true, result: j.result }
     } catch (e) { setError(`Not saved: ${control} could not reach the server (${e instanceof Error ? e.message : 'network error'}). Nothing was changed.`); return { ok: false } }
@@ -55,11 +57,15 @@ export default function ActionComments({ ideaId, actionId, number }: { ideaId: s
     const text = draft.trim()
     if (!text) return
     setBusy('add'); setError(null)
-    const r = await post(`/api/ideas/${ideaId}/research-notebook`, {
+    const url = `/api/ideas/${ideaId}/research-notebook`
+    const body = {
       op: 'addNote', ownObservation: true, comment: text, stance: 'CONTEXT', tags: ['comment'],
       bearsOn: [{ kind: 'action', id: actionId, label: `Action ${number ?? '?'}` }],
-    }, '“Add comment”')
+    }
+    const r = await post(url, body, '“Add comment”')
     if (r.ok) { setDraft(''); kept.clear(); await load() }
+    // Z2 (362) — offline, a comment (it only adds; nothing to conflict with) is kept on this device and sent in order on reconnection
+    else if (r.offline) { enqueueEdit(ideaId, url, body, `a comment on #${number ?? '?'}`); setDraft(''); kept.clear(); setError(OFFLINE_UI.queued) }
     setBusy(null)
   }
   const sendReply = async (noteId: string) => {

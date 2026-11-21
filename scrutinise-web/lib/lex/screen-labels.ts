@@ -428,6 +428,29 @@ export const STAGEBAR_ROW_WORD = {
   chapters: 'Elements',
 } as const
 /** §6.2 — the offer to restore unsent text. Never sent by itself. */
+/** Z2 (BRIEF_26Z §6.3; 361–363) — offline: the strip, the queue, conflicts, and the one tap before queued Lex messages spend. */
+export const OFFLINE_UI = {
+  lastUpdated: (time: string) => `Offline — last updated ${time}`,
+  offlineNow: 'Offline',
+  needsConnection: 'You’re offline: this needs the connection, so nothing was changed. Try again when you’re back online.',
+  waiting: (n: number | string) => `${n} change${n === 1 ? '' : 's'} waiting — will send when you’re back online`,
+  queued: 'Saved on this device — will send when you’re back online.',
+  sending: 'Back online: sending what you did offline first…',
+  sent: (n: number | string) => `Sent ${n} change${n === 1 ? '' : 's'} made offline.`,
+  conflictHead: 'Changed elsewhere while you were offline',
+  server: 'On the server now',
+  mine: 'Yours, made offline',
+  useMine: 'Use mine',
+  keepServer: 'Keep the server’s',
+  refusedHead: 'Not saved when sent',
+  dismiss: 'Dismiss',
+  lexAsk: (n: number | string, estimate = 'the estimate') => `Send ${n} message${n === 1 ? '' : 's'} to Lex that you wrote offline? (${estimate})`,
+  estimate: (avgPence: number | string | null) => (typeof avgPence === 'number' ? `about ${avgPence}p each, this conversation’s average so far` : 'each costs what a Lex reply costs; the cost is shown after each reply'),
+  lexSend: 'Send to Lex',
+  lexKeep: 'Not now',
+  lexWaiting: 'Waiting: will ask before sending to Lex when you’re back online',
+} as const
+
 export const DRAFT_RESTORE_UI = {
   offer: 'You had unsent text here — restore it?',
   restore: 'Restore it',
