@@ -1,5 +1,40 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-21 02:03 UTC - LEX Z1c: the bottom bar on an iPhone - viewport-fit=cover on Lex's route, so the safe-area padding is live; a ?where-debug=1 readout
+
+CCh's GO of 21 Nov 01:40, point 3. Charlie's screenshot (iPhone, Edge, 07:53): the "Where am I?" bar sat about a fifth of the screen
+above the bottom edge, with page content below it.
+- **The hypothesis was already fixed.** CCh's hypothesis (the bar placed from a height captured at load) and its prescribed fix
+  (`position: fixed; bottom: 0` plus safe-area padding, dvh) were already in place:
+  - Z1b (163ade97, live since 19 Nov 21:17) made that change;
+  - check:lex-26z already tested the toolbar sliding away after load.
+- **The layer below.** Every iPhone browser is WebKit. The app sets no viewport-fit, so on iOS:
+  - `env(safe-area-inset-bottom)` is always 0, so the bar's safe-area padding has never done anything on an iPhone;
+  - the page is kept out of the bottom inset.
+- **The fix:**
+  - `lib/lex/viewport.ts` defines LEX_VIEWPORT: width=device-width, initial-scale=1, viewport-fit=cover.
+  - /ideas/create exports it as its route `viewport`. It applies to Lex's route only; Central's root layout is untouched.
+  - The page wrapper pads the left and right safe-area insets, so landscape keeps clear of the notch.
+- **`?where-debug=1`** prints on screen:
+  - the layout and visual viewport heights;
+  - the bar's top and foot, its padding and its `bottom`;
+  - the scroll position.
+
+  If the bar still floats on Charlie's phone, one screenshot of that readout gives the next layer.
+- **⚠ Not provable here.** Chromium applies an emulated inset whether or not viewport-fit is set, so no check here can show that iOS
+  honours the fix. Charlie's iPhone is the test (§8).
+- **check:lex-26z 214/214, 9 controls, 0 dead, 2 not run** (both pre-existing). New assertions:
+  - the viewport object and meta, the route export, and that the root layout sets no viewport;
+  - at 390 × 844 with a 34 px inset (CDP safe-area override): the bar pads by the inset; its foot is the screen's foot; the last pixel
+    row is the bar; Where am I? sits above the inset; and the page leaves 106 px for the bar plus the inset;
+  - the toolbar appearing after load (844 → 700) and going again (700 → 844): the bar follows the edge each time;
+  - the readout appears with the parameter and not without it.
+
+  A planted copy of the old rule (the bar placed from the height at load) fires its control.
+- **Mutants:** 7 of 7 went RED (no cover; no route export; no bar padding; no main padding; the bar placed from the load height; no
+  readout; no notch padding).
+- tsc is clean for the app and for the scripts.
+
 ## 2026-11-21 01:51 UTC - LEX 360 (C, part A): a staffing line is set against the Civil Service salary floor for the grade assumed from junior/mid/senior
 
 CCh's GO of 21 Nov 01:40, point 2; Charlie's decision 360 (C) at 01:39. Part B (the owner's grade choice, a nullable CostLine column)

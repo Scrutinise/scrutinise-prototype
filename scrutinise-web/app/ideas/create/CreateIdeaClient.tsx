@@ -1099,7 +1099,9 @@ export default function CreateIdeaClient({ openingBubbles, initialIdeaId, initia
     : null
 
   return (
-    <div ref={pageRef} className={`flex flex-col bg-white ${focus ? 'min-h-screen' : ''}`} data-layout={focus ? 'focus' : 'full'}>
+    <div ref={pageRef} className={`flex flex-col bg-white ${focus ? 'min-h-screen' : ''}`} data-layout={focus ? 'focus' : 'full'}
+      // Z1c: viewport-fit=cover (lib/lex/viewport.ts) lets the page run under an iPhone's notch in landscape; these keep it clear (0 elsewhere)
+      style={{ paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}>
       <PublicNav />
 
       {/* ══ 25-K §1 — THE PERSISTENT STAGE INDICATOR ══════════════════════════

@@ -12,6 +12,8 @@
 // ⚠ THE BAR HUGS THE SCREEN'S BOTTOM EDGE (Z1b): `position: fixed; bottom: 0` on the LAYOUT viewport, plus the safe-area inset. The visual
 //   viewport is read ONLY for the on-screen keyboard (`keyboardLift`), never for browser chrome — in Edge on Android the toolbar sliding away
 //   left the bar floating with page content showing beneath it.
+// ⚠ Z1c — ON AN iPHONE THE SAFE-AREA PADDING WAS INERT: no viewport-fit=cover, so env(safe-area-inset-bottom) was always 0 and iOS kept the
+//   page out of the bottom inset. Lex's route now sets it (lib/lex/viewport.ts). `?where-debug=1` prints the bar's numbers for a screenshot.
 // ⚠ EVERY PANEL STAYS MOUNTED (hidden when not shown), so a half-typed message, an open record or a scroll inside a table survives a switch.
 // ⚠ STORAGE MAY BE MISSING OR MAY THROW: every read and write goes through `safeStore`; with storage blocked the page works and simply does not
 //   restore.
@@ -19,6 +21,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react'
 import WhereAmIMenu, { type MenuChapter, type MenuStage } from './WhereAmIMenu'
+import { WHERE_DEBUG_PARAM } from '@/lib/lex/viewport'
 import { PANEL_WORD, WHERE_UI } from '@/lib/lex/screen-labels'
 import {
   PANEL_NUMBERS, STORE_KEY, address, addressLines, addressSpelled, back as histBack, classifySwipe, forward as histForward, isBareUrl, isPanel,
@@ -206,6 +209,29 @@ export default function FocusShell({ ideaId, stages, chapters, slots, onPanel, t
     }
   }, [])
 
+  // ── Z1c: `?where-debug=1` prints the bar's numbers on the screen, for a screenshot from an iPhone (no check here runs WebKit on iOS) ──
+  const [diag, setDiag] = useState<string | null>(null)
+  useEffect(() => {
+    let on = false
+    try { on = new URLSearchParams(window.location.search).get(WHERE_DEBUG_PARAM) === '1' } catch { on = false }
+    if (!on) return
+    const read = () => {
+      const v = window.visualViewport, bar = document.querySelector('[data-bottom-bar]') as HTMLElement | null
+      const r = bar?.getBoundingClientRect()
+      const n = (x: number | undefined) => (x == null ? '—' : String(Math.round(x * 10) / 10))
+      setDiag([
+        `inner ${n(window.innerHeight)} · client ${n(document.documentElement.clientHeight)} · screen ${n(window.screen.height)}`,
+        `vv h ${n(v?.height)} · top ${n(v?.offsetTop)} · scale ${n(v?.scale)}`,
+        `bar ${n(r?.top)}–${n(r?.bottom)} · pad ${bar ? getComputedStyle(bar).paddingBottom : '—'} · bottom ${bar?.style.bottom || '0'}`,
+        `scrollY ${n(window.scrollY)} · ${new Date().toISOString().slice(11, 19)}Z`,
+      ].join('\n'))
+    }
+    read()
+    const v = window.visualViewport
+    v?.addEventListener('resize', read); v?.addEventListener('scroll', read); window.addEventListener('resize', read); window.addEventListener('scroll', read, { passive: true })
+    return () => { v?.removeEventListener('resize', read); v?.removeEventListener('scroll', read); window.removeEventListener('resize', read); window.removeEventListener('scroll', read) }
+  }, [])
+
   // ── moving ──
   /** Show panel n on this page. `record`: a number opens that record (by `hashchange`, which the Drafting list listens for); null clears the
    *  hash; undefined leaves it. */
@@ -357,6 +383,7 @@ export default function FocusShell({ ideaId, stages, chapters, slots, onPanel, t
         </section>
       )}
 
+      {diag && <pre data-where-debug aria-hidden className="fixed left-1 top-1 z-50 pointer-events-none rounded border border-zinc-900 bg-white/90 p-1 text-[10px] leading-tight text-zinc-900">{diag}</pre>}
       {/* ── the bottom bar: Where am I? on the left, the address on the right. Fixed to the LAYOUT viewport's foot; only a keyboard lifts it. ── */}
       <div data-bottom-bar className="fixed inset-x-0 z-40 bg-white border-t-2 border-zinc-900"
         style={{ bottom: lift, paddingBottom: 'env(safe-area-inset-bottom)' }}>

@@ -21,6 +21,7 @@ import { build } from 'esbuild'
 import * as W from '../lib/lex/where-am-i'
 import { PANEL_WORD, PANEL_PLACE_WORD, WHERE_SENTENCES, WHERE_UI, DRAFT_RESTORE_UI, STAGEBAR_ROW_WORD } from '../lib/lex/screen-labels'
 import { guideEntries } from '../lib/lex/field-guide'
+import { LEX_VIEWPORT, LEX_VIEWPORT_META, WHERE_DEBUG_PARAM } from '../lib/lex/viewport'
 
 let pass = 0, fail = 0, ran = 0, controls = 0, dead = 0, notRun = 0
 function ok(name: string, cond: boolean, detail = '') { ran++; if (cond) { pass++; console.log(`  ✓ ${name}`) } else { fail++; console.log(`  ✗ ${name}${detail ? `\n      ${detail}` : ''}`) } }
@@ -84,6 +85,13 @@ function partA() {
   ok('…not even while typing (56 px is chrome, not a keyboard)', W.keyboardLift(740, 684, 0, true) === 0)
   ok('…a keyboard while typing does (300 px: 300)', W.keyboardLift(740, 440, 0, true) === 300)
   ok('…and a keyboard-sized gap while NOT typing does not (no keyboard is up)', W.keyboardLift(740, 440, 0, false) === 0)
+
+  // Z1c — Charlie's iPhone (Edge): the bar sat about a fifth of the screen above the edge. On iOS the safe-area padding was inert: no viewport-fit
+  ok('Z1c — Lex\'s viewport is width=device-width, initial-scale=1, viewport-fit=cover (one object; the meta is derived from it)', LEX_VIEWPORT.viewportFit === 'cover' && LEX_VIEWPORT_META === 'width=device-width, initial-scale=1, viewport-fit=cover', LEX_VIEWPORT_META)
+  const pageSrc = stripComments(read('app/ideas/create/page.tsx'))
+  ok('Z1c — /ideas/create exports it as its route viewport (export const viewport = LEX_VIEWPORT)', /export const viewport = LEX_VIEWPORT\b/.test(pageSrc) && /from '@\/lib\/lex\/viewport'/.test(pageSrc))
+  ok('Z1c — …on Lex\'s route only: the site-wide root layout (Central\'s) sets no viewport', !/\bviewport\b/i.test(stripComments(read('app/layout.tsx'))))
+  ok('Z1c — the page wrapper keeps clear of a notch in landscape (safe-area left and right)', /paddingLeft: 'env\(safe-area-inset-left\)', paddingRight: 'env\(safe-area-inset-right\)'/.test(stripComments(read('app/ideas/create/CreateIdeaClient.tsx'))))
   control('the old rule — the whole visual-viewport gap — giving 0 for the toolbar (must be FALSE)', Math.max(0, Math.round(740 - 684 - 0)) === 0)
 }
 
@@ -147,7 +155,7 @@ async function partC() {
     const src = ['FocusShell', 'WhereAmIMenu', 'StageBar', 'ChatPanel', 'DeviceDraft'].map((c) => `@source "../components/lex/${c}.tsx";`).join(' ') + ' @source "./fixtures/where-harness-entry.tsx";'
     css = (await postcss([tw()]).process(`@import 'tailwindcss'; ${src}`, { from: join(ROOT, 'scripts/_tw.css') })).css
   } catch (e) { fail++; ran++; console.log(`  ✗ Tailwind did not compile, so no layout can be measured: ${(e as Error).message.slice(0, 200)}`); return }
-  const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>${css}</style></head><body><div id="root"></div><script>${bundle.replace(/<\/script/gi, '<\\/script')}</script></body></html>`
+  const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="${LEX_VIEWPORT_META}"><style>${css}</style></head><body><div id="root"></div><script>${bundle.replace(/<\/script/gi, '<\\/script')}</script></body></html>`
   let browser
   try { browser = await chromium.launch() } catch (e) { skip('the browser section', `Chromium would not launch: ${(e as Error).message.slice(0, 120)}`); return }
   const errors: string[] = []
@@ -315,6 +323,44 @@ async function partC() {
       await page.evaluate(() => (window as unknown as { __vv: { set(h: number): void } }).__vv.set(window.innerHeight)); await sleep(200)
       ok('the keyboard down: the bar is back on the edge', Math.abs(await barFoot(page) - 740) <= 1 && (await footIsBar(page)).every(Boolean))
       await context.close()
+    }
+
+    // ── 2b · Z1c — an iPhone-sized screen with a 34 px home-indicator inset (CDP's safe-area override), the toolbar coming and going after
+    //    load. ⚠ Chromium applies the inset whether or not viewport-fit=cover is set, so this proves the bar's GEOMETRY with an inset, not
+    //    that iOS honours it — Charlie's iPhone is that test, and `?where-debug=1` prints the numbers if it still floats. ──
+    {
+      const { context, page, cdp } = await open(390, 844, IDEA_URL, { fakeVv: true })
+      await cdp.send('Emulation.setSafeAreaInsetsOverride' as never, { insets: { top: 0, bottom: 34, left: 0, right: 0 } } as never); await sleep(200)
+      const pad = () => page.evaluate(() => getComputedStyle(document.querySelector('[data-bottom-bar]')!).paddingBottom)
+      const rowFoot = async () => { const b = await box(page, '[data-bottom-bar] > div'); return b.y + b.height }
+      ok('390 × 844, 34 px inset: the bar pads itself by the inset (env(safe-area-inset-bottom) is live in it)', await pad() === '34px', await pad())
+      ok('…its foot is the screen\'s foot, and the last row of pixels is the bar at both edges and the middle', Math.abs(await barFoot(page) - 844) <= 1 && (await footIsBar(page)).every(Boolean), `${await barFoot(page)}; ${JSON.stringify(await footIsBar(page))}`)
+      const wb = await box(page, '[data-where-button="bottom"]')
+      ok('…and Where am I? sits above the inset (the bar\'s row ends 34 px above the edge; the button inside it)', Math.abs(await rowFoot() - 810) <= 1 && wb.y + wb.height <= 810.5, `row foot ${await rowFoot()}, button foot ${wb.y + wb.height}`)
+      const mainPad = await page.evaluate(() => getComputedStyle(document.querySelector('[data-focus-shell] main') ?? document.querySelector('main')!).paddingBottom)
+      ok('…the page leaves room for the bar AND the inset, so the last content is not under the bar (56 + 16 + 34 = 106 px)', mainPad === '106px', mainPad)
+      await page.setViewportSize({ width: 390, height: 700 }); await sleep(250)
+      ok('the toolbar appearing AFTER load (844 → 700): the bar follows the edge, still padded, nothing below it', Math.abs(await barFoot(page) - 700) <= 1 && (await footIsBar(page)).every(Boolean) && await pad() === '34px', `${await barFoot(page)}; ${await pad()}`)
+      await page.setViewportSize({ width: 390, height: 844 }); await sleep(250)
+      ok('…and sliding away again (700 → 844): the bar is back on the edge', Math.abs(await barFoot(page) - 844) <= 1 && (await footIsBar(page)).every(Boolean), String(await barFoot(page)))
+      // the planted old rule: the bar placed from the height captured at load (top = load height − bar height) — must NOT follow the edge
+      const loadH = await page.evaluate(() => window.innerHeight)
+      await page.evaluate((h) => { const b = document.querySelector('[data-bottom-bar]') as HTMLElement; b.dataset.oldRule = '1'; const bh = b.getBoundingClientRect().height; b.style.bottom = 'auto'; b.style.top = `${h - bh}px` }, loadH)
+      await page.setViewportSize({ width: 390, height: 1010 }); await sleep(250)
+      control('the OLD rule (placed from the height at load) still on the edge after the screen grows by a fifth (must be FALSE: content shows below it)', Math.abs(await barFoot(page) - 1010) <= 1 && (await footIsBar(page)).every(Boolean))
+      await context.close()
+    }
+    // ── 2c · Z1c — `?where-debug=1` prints the bar's numbers; without it, nothing ──
+    {
+      const { context, page, cdp } = await open(390, 844, `${IDEA_URL}&${WHERE_DEBUG_PARAM}=1`)
+      await cdp.send('Emulation.setSafeAreaInsetsOverride' as never, { insets: { top: 0, bottom: 34, left: 0, right: 0 } } as never)
+      await page.setViewportSize({ width: 390, height: 800 }); await sleep(300)
+      const t = (await page.locator('[data-where-debug]').count()) ? await page.locator('[data-where-debug]').innerText() : ''
+      ok('?where-debug=1: the readout shows the layout and visual viewports, the bar\'s top and foot, its padding, and the scroll', /inner 800 · client 800/.test(t) && /vv h 800/.test(t) && /bar [\d.]+–800 · pad 34px/.test(t) && /scrollY \d/.test(t), t.replace(/\n/g, ' | '))
+      await context.close()
+      const plain = await open(390, 844)
+      ok('…and without the parameter there is no readout', (await plain.page.locator('[data-where-debug]').count()) === 0)
+      await plain.context.close()
     }
 
     // ── 3 · Z1b — the address panel: one line per level, a real list, until dismissed ──

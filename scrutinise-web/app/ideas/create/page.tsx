@@ -8,6 +8,10 @@ import { parseActionsPage, parseKernelSection, type LexStageKey } from '@/lib/le
 import { stageContext } from '@/lib/lex/stage-context'
 import { newIdeaDoor, doorPath } from '@/lib/lex/new-idea-door'
 import { LIVE_IDEA } from '@/lib/lex/idea-visibility'
+import { LEX_VIEWPORT } from '@/lib/lex/viewport'
+
+// Z1c — viewport-fit=cover on THIS route only, so the bottom bar reaches the iPhone's edge and its safe-area padding is live (lib/lex/viewport.ts)
+export const viewport = LEX_VIEWPORT
 
 function getTimeOfDay(utcHour: number): string {
   if (utcHour >= 5 && utcHour < 12) return 'morning'
