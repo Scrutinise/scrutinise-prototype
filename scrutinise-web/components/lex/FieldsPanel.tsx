@@ -30,6 +30,7 @@ import { COST_CATEGORIES } from '@/lib/lex/page4-config'
 import PriorVersions from './PriorVersions'
 import { collapsedByDefault as pageCollapsedByDefault } from '@/lib/lex/panel-collapse'
 import CauseMap from './CauseMap'
+import { attributionOf, attributionWords } from '@/lib/lex/cba/attribution'
 import { COMMON_UI, RECORD_UI, STATEMENT_LABEL, COMMENTARY_LABEL, CAUSE_UI, ARCHIVE_UI } from '@/lib/lex/screen-labels'
 
 // Grouped causes-loop + root-cause handlers (Page 2). Kept as one object so the panel
@@ -1434,6 +1435,8 @@ function CostRangeEditor({
           {benchmarks.map((b) => <option key={b.id} value={b.id}>{b.metric} ({b.unit})</option>)}
         </select>
       </div>
+      {/* 26-AA item 9(a): a figure from a licensed row (GMCA, CC BY 4.0) is never shown without its attribution */}
+      {(() => { const a = v.benchmarkId ? attributionWords(attributionOf(benchmarks.find((x) => x.id === v.benchmarkId)?.notes)) : null; return a ? <p className="text-[10px] text-zinc-700 mt-0.5" data-bench-attribution>{a}</p> : null })()}
       <input value={v.basis ?? ''} disabled={busy} placeholder="basis / assumption"
         onChange={(e) => set({ basis: e.target.value || null })}
         className="w-full text-[11px] p-1 mt-1 rounded border border-zinc-200 focus:outline-none focus:border-blue-400" />

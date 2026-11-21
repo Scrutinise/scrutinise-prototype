@@ -1,5 +1,50 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-21 00:29 UTC - LEX 26-AA item 9: GMCA attribution shown wherever its figures are; annex-table citations; the stats reader (release, basis, suppression); Ingest's manifest at runtime
+
+CCh's GO of 20 Nov 17:50, point 5. This follows cc-ingest's CBA-1 EXECUTE (51223b68 / 292deefe), merged into wip/26aa in de4af6bb.
+- **(a) GMCA attribution (CC BY 4.0).**
+  - The attribution is read from each row's own `notes` (`lib/lex/cba/attribution.ts`), never typed. A licence that demands
+    attribution in an unreadable form shows "see the source" rather than nothing.
+  - It is shown:
+    - under the benefit picker when a GMCA row is chosen, and on the saved line;
+    - under the cost-range benchmark picker;
+    - in Deepening section 5 ("Licences and attribution");
+    - in the Cost–benefit report (its own section);
+    - in the costing.
+  - The engine collects it from any cost or valued benefit line whose figure came from a licensed row.
+  - The benefit route sends `attribution` and no longer sends notes.
+  - **For cc-ingest:** the licence register's "NOT YET SATISFIED" can be updated once this is on Main.
+- **(b) Annex tables.** `green-book:table-A.1` is a valid key: typed, normalised from "green book table A.1", and keyed from its held row.
+  Paragraph and numbered-table keys are unchanged.
+- **(c) The statistics.**
+  - `lib/stats/cell-pure.ts` and `lib/stats/cba-cells.ts`, new. A cell is a value (with its release date and price basis), a suppressed
+    state (its marker and the publisher's words), or absent with why. It is never 0 and never blank.
+  - Dates are read `::text`: the driver had moved 30 Jun to 29 Jun 23:00Z.
+  - Decision 340's fallback is named: a body's [c] shows as suppressed, plus "the grade across all departments (Table 7 …): £95,540".
+  - The engine's `heldFlags` now reads the stats database. It used to look on Neon for a `civil_service` table that would never exist,
+    so neither gap could close.
+  - The deflator series held is matched year by year to a dated release: June 2026 QNA, 71 of 71 years. Assumptions now name it:
+    "… June 2026 (Quarterly National Accounts), released 30 Jun 2026 (index, 2025-26 = 100)".
+  - "Not yet held" is gone for all three: Civil Service Statistics, the deflator release, and the manifest file.
+  - ⚠ **Still open (QUESTION to Charlie, inbox 00:55):** a staffing line says only junior, mid or senior, and which responsibility
+    level each means is not decided. So a staffing line's floor is held and not applied, and its Gap says exactly that.
+  - Lex's `query_stats` returns and prints suppressed periods. A stats-stream finding, reported and not changed: findSeries cannot reach
+    a fully suppressed series, and all Table 25 series share one label.
+- **(d) The manifest at runtime.**
+  - Ingest's file is bundled as `lib/lex/cba/cba-citation-manifest.json`. While the two copies exist, it is byte-identical to
+    docs/manifests/.
+  - It is the authority, each key confirmed against its held row. A re-pointed or unheld key is left out, with why. Result: 464 of 464.
+  - `resolveCitations` still hashes the text as read now.
+  - **For cc-ingest:** please write the file here.
+- **check:lex-26aa9** (new): 36 ran, 36 passed, 12 controls, 0 dead. It reads 452c5ade and writes nothing; nothing spent. **17 mutants,
+  all RED.**
+- **Regression:**
+  - green: 26w-b 60, 26aa 118, 26ab 60, 26x2 75, s10-stats-licence;
+  - 26y 129/129 after restating one assertion: "the manifest is derived from the held rows" became "is Ingest's file, confirmed
+    against the held rows", which is 9(d)'s intended change.
+  - tsc app and scripts: clean.
+
 ## 2026-11-21 00:06 UTC - LEX 26-AB (decision 354): an ⓘ on every Brief field and the Brief heading; three phone layout faults fixed
 
 BRIEF_26AB (docs/BRIEF_26AB.md, from CCh's inbox note of 20 Nov 17:50).

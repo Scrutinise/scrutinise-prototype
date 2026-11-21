@@ -30,6 +30,7 @@ import { discountFactor, stprRateForYear, OPTIMISM_BIAS_TABLE_1, HEALTH_VALUE_UP
 import { type AppraisalPeriod, discountYearOf, fyWords } from './period'
 import { type LineAppraisal, type PartyKind, PARTY_WORD, partyWords, pct, OB_TYPE_WORD } from './line-appraisal'
 import { ENGINE_CITATIONS } from './citation-manifest-pure'
+import { releaseWords } from '../../stats/cell-pure'
 
 export interface Money { low: number; high: number }
 const Z = (): Money => ({ low: 0, high: 0 })
@@ -44,6 +45,8 @@ export interface EngineCostLine {
   recurrence: 'ONE_OFF' | 'PER_YEAR' | null; durationMonths: number | null
   basis: string | null; citationKey: string | null; benchmarkId: string | null
   appraisal: LineAppraisal
+  /** 26-AA item 9(a) — the licence attribution of the held unit-cost row the figure came from (GMCA's CC BY 4.0), or null. */
+  attribution?: string | null
 }
 export interface EngineBenefitLine {
   id: string; actionId: string; actionNumber: number | null; actionTitle: string; headingId: string | null
@@ -54,6 +57,8 @@ export interface EngineBenefitLine {
   /** The source in words ("[Ref: 12]", "GMCA … entry HO1.0", "green-book:8.58", "owner's estimate — …"); null = none. */
   sourceWords: string | null
   ownerEstimate: boolean
+  /** 26-AA item 9(a) — as EngineCostLine.attribution, for a benefit valued from a held unit-cost row. */
+  attribution?: string | null
 }
 export interface EngineInput {
   period: AppraisalPeriod
@@ -62,7 +67,14 @@ export interface EngineInput {
   benefits: readonly EngineBenefitLine[]
   headings: ReadonlyArray<{ id: string; name: string }>
   /** What Ingest holds — each absence is a Gap (341). */
-  held: { civilServiceStatistics: boolean; deflatorReleaseDates: boolean; manifest: 'file' | 'held-rows' | 'none' }
+  held: {
+    civilServiceStatistics: boolean; deflatorReleaseDates: boolean; manifest: 'file' | 'held-rows' | 'none'
+    /** 26-AA item 9(c) — the dated release the deflator index IS (matched year by year), or why it is none. */
+    deflatorRelease?: { vintage: string; releaseDate: string | null; priceBasis: string | null } | null
+    deflatorWhy?: string | null
+    /** 26-AA item 9(c) — Civil Service Statistics 2026 as held: its release and price basis. */
+    css?: { releaseDate: string | null; priceBasis: string | null } | null
+  }
   /** Live actions with neither a cost line nor a "no cost" answer. */
   uncostedActions: number
 }
@@ -115,6 +127,8 @@ export type CbaResult = {
   assumptions: Assumption[]
   trace: Record<string, Trace>
   citations: string[]
+  /** 26-AA item 9(a) — every licence attribution the figures here carry, once each: printed wherever they are shown or cited. */
+  attributions: string[]
 } | { ok: false; error: string }
 
 // ── words ────────────────────────────────────────────────────────────────────
@@ -411,10 +425,16 @@ export function computeCba(input: EngineInput): CbaResult {
   if (input.uncostedActions) gap('uncosted', `${plural(input.uncostedActions, 'live action has', 'live actions have')} neither a cost line nor a “no cost” answer, so ${input.uncostedActions === 1 ? 'its' : 'their'} costs are not in these totals.`)
   const notHeld = [
     ...(input.held.civilServiceStatistics ? [] : ['Civil Service Statistics (the salary floor for a staffing line is not checked against them)']),
-    ...(input.held.deflatorReleaseDates ? [] : ['the deflator series’ release date and price basis (the index is used as held, without its release named)']),
+    ...(input.held.deflatorReleaseDates ? [] : [`the deflator series’ release date and price basis (the index is used as held, without its release named${input.held.deflatorWhy ? `: ${input.held.deflatorWhy}` : ''})`]),
     ...(input.held.manifest === 'file' ? [] : [input.held.manifest === 'none' ? 'the citation manifest (no Green Book paragraph can be cited)' : 'Ingest’s citation manifest file (citations are checked against the paragraphs held instead)']),
   ]
   if (notHeld.length) gap('not-held', `Not yet held by the platform: ${notHeld.join('; ')}.`)
+  // 26-AA item 9(c): the statistics ARE held now; what is not decided is which responsibility level a staffing line's junior / mid / senior
+  // is, so the floor is held and NOT applied, and the gap says exactly that — never "not available"
+  const staffLines = input.costs.filter((l) => l.costType === 'STAFF').map((l) => l.id)
+  if (input.held.civilServiceStatistics && staffLines.length) {
+    gap('not-held', `Civil Service Statistics 2026 are held (gross median salary by responsibility level, as at 31 March 2026${input.held.css?.releaseDate ? `, ${releaseWords(input.held.css.releaseDate)}` : ''}), but a staffing line says junior, mid or senior, which is not yet matched to a responsibility level, so ${plural(staffLines.length, 'staffing line is', 'staffing lines are')} not checked against them: ${names(staffLines)}.`, staffLines)
+  }
 
   // ── Assumptions — the standing ones first, with their sources ──
   assumptions.unshift(
@@ -422,6 +442,8 @@ export function computeCba(input: EngineInput): CbaResult {
     { text: `Figures are in ${fyWords(P.priceYear)} prices, and present values are at ${fyWords(P.priceYear)} (the PV base year)${P.set.priceYear ? ' (set by the owner)' : P.priceYearFrom === 'current-year' ? ' (the default: the current financial year, as no deflator series is held)' : ' (the default: the latest deflator release held)'}.`, source: P.set.priceYear ? 'the owner' : 'CCh-Lex 18 Nov (GO, decision 335 default)', owners: P.set.priceYear },
     { text: 'Discounted at the Social Time Preference Rate: 3.00% a year to year 30, 2.50% from 31 to 75, 2.25% from 76 to 125, as forward rates; nothing is discounted beyond year 125.', source: `${ENGINE_CITATIONS.stpr}; ${ENGINE_CITATIONS.schedule}; ${ENGINE_CITATIONS.forwardRates}; ${ENGINE_CITATIONS.beyond125}`, owners: false },
     { text: 'Optimism bias never adjusts the headline figures: it is shown as a band beside them, at Table 1’s lower and upper bounds (a capital line by its project type; a running cost by the outsourcing row, the nearest analogue, not a rule). ' + OB_INDICATIVE, source: `${ENGINE_CITATIONS.obIndicative}; ${ENGINE_CITATIONS.obUpperBound}; Table 1, PDF p.2`, owners: false },
+    // 26-AA item 9(c): the deflator's release, named, once the series held is matched to it year by year
+    ...(input.held.deflatorRelease ? [{ text: `Prices are converted to ${fyWords(P.priceYear)} with HM Treasury’s GDP deflator at market prices, ${input.held.deflatorRelease.vintage}${input.held.deflatorRelease.releaseDate ? `, ${releaseWords(input.held.deflatorRelease.releaseDate)}` : ''}${input.held.deflatorRelease.priceBasis ? ` (${input.held.deflatorRelease.priceBasis})` : ''}.`, source: 'HM Treasury GDP deflators (the series held, matched to this release year by year)', owners: false }] : []),
     ...(input.benefits.some((b) => b.isHealth && b.valuation === 'VALUED') ? [{ text: `Health effects are discounted at the same rate; their real value is uprated by ${pct(HEALTH_VALUE_UPRATE.value)} a year first.`, source: ENGINE_CITATIONS.healthUprate, owners: false }] : []),
   )
 
@@ -475,6 +497,7 @@ export function computeCba(input: EngineInput): CbaResult {
     byHeading: input.headings.filter((h) => byHeading.has(h.id)).map((h) => byHeading.get(h.id)!).concat(byHeading.has('') ? [byHeading.get('')!] : []),
     byPayer: [...byPayer.values()], byBeneficiary: [...byBen.values()],
     sensitivity, lines: flows.map((f) => f.out), optimismBias: obRows, obBand: obBandOut, undated, gaps, assumptions, trace, citations,
+    attributions: [...new Set([...input.costs.map((c) => c.attribution), ...input.benefits.filter((b) => b.valuation === 'VALUED' && b.sourceWords).map((b) => b.attribution)].filter((x): x is string => !!x))],
   }
 }
 

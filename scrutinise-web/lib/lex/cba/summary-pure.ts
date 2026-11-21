@@ -18,10 +18,12 @@ export interface CbaSummary {
   gaps: Array<{ kind: string; text: string }>
   /** Trace ids Lex may hand to explain_cba_figure, with their label and value. */
   figures: Array<{ id: string; label: string; value: string }>
+  /** 26-AA item 9(a) — the attributions the figures' licences require, once each. */
+  attributions: string[]
 }
 
 export function cbaSummary(r: CbaResult): CbaSummary {
-  if (!r.ok) return { ok: false, error: (r as { error: string }).error, periodWords: '', priceYearWords: '', npv: '', bcr: '', pvCosts: '', pvBenefits: '', benefitsValued: false, obBand: null, gaps: [], figures: [] }
+  if (!r.ok) return { ok: false, error: (r as { error: string }).error, periodWords: '', priceYearWords: '', npv: '', bcr: '', pvCosts: '', pvBenefits: '', benefitsValued: false, obBand: null, gaps: [], figures: [], attributions: [] }
   const P = (r as Extract<CbaResult, { ok: true }>).period
   const keep = ['npv', 'bcr', 'pv-costs', 'pv-benefits', 'costs', 'benefits', 'undated.costs', 'ob-band']
   return {
@@ -33,6 +35,7 @@ export function cbaSummary(r: CbaResult): CbaSummary {
     pvCosts: r.trace['pv-costs'].value, pvBenefits: r.trace['pv-benefits'].value, benefitsValued: r.benefitsValued,
     obBand: r.obBand ? { words: obBandWords(r.obBand), caveat: `“${OB_INDICATIVE}” (${ENGINE_CITATIONS.obIndicative})` } : null,
     gaps: r.gaps.map((g) => ({ kind: g.kind, text: g.text })),
+    attributions: r.attributions,
     figures: [...keep.filter((k) => r.trace[k]), ...Object.keys(r.trace).filter((k) => /^(sens:|payer:|beneficiary:|heading:[^.]+\.pv-)/.test(k))].map((id) => ({ id, label: r.trace[id].label, value: r.trace[id].value })),
   }
 }

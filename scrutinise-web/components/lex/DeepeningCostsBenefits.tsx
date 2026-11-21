@@ -82,6 +82,13 @@ export default function DeepeningCostsBenefits({ ideaId, open, initial, toGo }: 
               <summary className="cursor-pointer text-xs"><span className="font-semibold">{CBA_UI.gaps}: {s.gaps.length}</span> — what this does not cover. The report prints them before its totals.</summary>
               <ol className="list-decimal pl-5 text-[11px] text-zinc-800 space-y-0.5 mt-0.5">{s.gaps.map((g, i) => <li key={i}>{g.text}</li>)}</ol>
             </details>
+            {/* 26-AA item 9(a) — a licensed figure (GMCA's unit costs, CC BY 4.0) is never shown without its attribution */}
+            {(s.attributions?.length ?? 0) > 0 && (
+              <div className="text-[10px] text-zinc-700" data-cba-attributions>
+                <p className="font-semibold">{CBA_UI.attribution}</p>
+                <ul className="list-disc pl-4">{s.attributions.map((a) => <li key={a}>{a}</li>)}</ul>
+              </div>
+            )}
             <p className="text-[10px] text-zinc-600">Deflator series held: {d.settings.deflator.firstYear != null ? `${fyWords(d.settings.deflator.firstYear)} to ${fyWords(d.settings.deflator.lastYear!)}` : 'none'}{d.settings.deflator.baseYear != null ? `, base ${fyWords(d.settings.deflator.baseYear)} = 100` : ''}.</p>
           </>)}
         </div>

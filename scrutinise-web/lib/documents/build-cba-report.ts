@@ -15,6 +15,7 @@ import { ENGINE_CITATIONS } from '@/lib/lex/cba/citation-manifest-pure'
 import { fyWords } from '@/lib/lex/cba/period'
 import { pct } from '@/lib/lex/cba/line-appraisal'
 import type { Narrative } from '@/lib/lex/cba/narrative'
+import { CBA_UI } from '@/lib/lex/screen-labels'
 
 export const CBA_REPORT_TITLE = 'Cost–benefit analysis'
 
@@ -61,6 +62,11 @@ export function buildCbaReport(r: Extract<CbaResult, { ok: true }>, narrative: N
   // ── 3 · ASSUMPTIONS ──
   blocks.push({ kind: 'section', title: 'ASSUMPTIONS' })
   blocks.push({ kind: 'table', header: [txt('Assumption'), txt('Source')], rows: r.assumptions.map((a) => [txt(a.text), txt(a.owners ? 'the owner’s' : a.source)]) })
+  // 26-AA item 9(a) — a licensed figure's attribution, in the form its licence asks for, wherever the figure is printed
+  if (r.attributions.length) {
+    blocks.push({ kind: 'section', title: CBA_UI.attribution.toUpperCase() })
+    blocks.push({ kind: 'bullets', ordered: false, items: r.attributions.map((a) => txt(a)) })
+  }
 
   // ── 4 · the tables ──
   blocks.push({ kind: 'section', title: 'COSTS AND BENEFITS BY YEAR' })

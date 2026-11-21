@@ -349,7 +349,9 @@ async function partDb() {
 
     section('4 · the manifest (database) — what Ingest wrote on 14 Nov')
     const m = await loadManifest({ fresh: true })
-    ok(`the manifest is derived from the held paragraph rows (${m.entries.size} keys)`, m.entries.size >= 400 && m.from === 'held-rows')
+    // ⚠ RESTATED BY 26-AA item 9(d) (21 Nov): Ingest's file is now the manifest, each key confirmed against its held row
+    //   (check:lex-26aa9 part d holds the detail); before 9(d) the held rows WERE the manifest.
+    ok(`the manifest is Ingest's file, every key confirmed against the held rows (${m.entries.size} keys)`, m.entries.size >= 400 && m.from === 'file')
     const missingEngine = Object.values(CM.ENGINE_CITATIONS).filter((k) => !m.entries.has(k))
     ok('every key the engine prints is held', missingEngine.length === 0, missingEngine.join(', '))
     ok('a held key passes (green-book:8.58, gb-discounting:3.8, gb-optimism-bias:3.11)', ['green-book:8.58', 'gb-discounting:3.8', 'gb-optimism-bias:3.11'].every((k) => CM.checkCitation(k, m).ok))

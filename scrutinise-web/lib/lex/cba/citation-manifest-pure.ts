@@ -34,7 +34,8 @@ export function keyOfRow(row: HeldRow): { key: string; label: string; heading: s
   const last = parts[parts.length - 1] ?? ''
   const heading = parts.slice(1, -1).join(' › ')
   if (/^(\d+|[A-Z])\.\d+$/.test(last)) return { key: `${doc.prefix}:${last}`, label: `${doc.title}, para ${last}`, heading }
-  const table = /^Table:\s*Table\s+(\d+)\b/i.exec(last)
+  // 26-AA item 9(b): an annex table ("Table A.1") is a real, citable table too — the grammar Ingest's manifest uses (table-A.1)
+  const table = /^Table:\s*Table\s+([A-Z]\.\d+|\d+)\b/.exec(last) ?? /^Table:\s*Table\s+(\d+)\b/i.exec(last)
   if (table) return { key: `${doc.prefix}:table-${table[1]}`, label: `${doc.title}, Table ${table[1]}`, heading: last.replace(/^Table:\s*/i, '') }
   return null
 }
@@ -60,16 +61,19 @@ export function manifestFromFile(json: unknown): Manifest | null {
   return { entries, from: 'file', heldAt: null }
 }
 
-const CAN = /^([a-z-]+):((?:\d+|[A-Z])\.\d+|table-\d+)$/
+// 26-AA item 9(b): table-1 and the annex tables (table-A.1), as Ingest's manifest grammar (scripts/ingest/cba/build-manifest.ts TABLE)
+const CAN = /^([a-z-]+):((?:\d+|[A-Z])\.\d+|table-(?:\d+|[A-Z]\.\d+))$/
 
-/** A typed key, tidied the way a person would mistype it ("Green Book 6.58", "gb-discounting §3.8") — never changed into a DIFFERENT key. */
+/** A typed key, tidied the way a person would mistype it ("Green Book 6.58", "gb-discounting §3.8", "green book table a.1") — never changed
+ *  into a DIFFERENT key. */
 export function normaliseKey(raw: string): string {
   const s = raw.trim().replace(/\s+/g, ' ')
-  const m = /^(.+?)[\s:]+(?:para(?:graph)?\.?\s*|§\s*)?((?:\d+|[A-Z])\.\d+|table[\s-]*\d+)$/i.exec(s)
+  const m = /^(.+?)[\s:]+(?:para(?:graph)?\.?\s*|§\s*)?((?:\d+|[A-Z])\.\d+|table[\s-]*(?:[A-Z]\.\d+|\d+))$/i.exec(s)
   if (!m) return s.toLowerCase()
   const name = m[1].toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '')
   const prefix = name === 'the-green-book' ? 'green-book' : name
-  const para = /^table/i.test(m[2]) ? `table-${m[2].replace(/\D+/g, '')}` : m[2]
+  // an annex letter is upper case in every key ("A.1"); a table's own number keeps its digits only
+  const para = /^table/i.test(m[2]) ? `table-${m[2].replace(/^table[\s-]*/i, '').toUpperCase()}` : m[2]
   return `${prefix}:${para}`
 }
 
@@ -109,6 +113,24 @@ export function compareManifests(a: Manifest, b: Manifest, keys?: readonly strin
     else if (x.textHash && y.textHash && x.textHash !== y.textHash) out.push({ key: k, why: 'the same row, but its text has changed' })
   }
   return out
+}
+
+/**
+ * 26-AA item 9(d) — the manifest the platform cites through at runtime: INGEST'S FILE is the authority (key → id → hash, built and
+ * checked by Ingest), and each key counts only where it AGREES with the held row it names (the same id). A key the file holds and the rows
+ * do not, or whose id differs (re-pointed), is left out and named, so it is refused at write time rather than cited to the wrong text.
+ * Each kept entry takes the row's r2Key, source address and heading, so its text can still be read and hashed. PURE.
+ */
+export function manifestFromFileAndRows(file: Manifest, rows: Manifest, heldAt: string | null): { manifest: Manifest; leftOut: Array<{ key: string; why: string }> } {
+  const entries = new Map<string, ManifestEntry>()
+  const leftOut: Array<{ key: string; why: string }> = []
+  for (const [k, f] of file.entries) {
+    const r = rows.entries.get(k)
+    if (!r) { leftOut.push({ key: k, why: 'in the file, but the platform holds no paragraph with that key' }); continue }
+    if (f.sectionId && r.sectionId && f.sectionId !== r.sectionId) { leftOut.push({ key: k, why: `the file names ${f.sectionId}; the held row is ${r.sectionId}` }); continue }
+    entries.set(k, { ...r, label: f.label || r.label, textHash: f.textHash ?? null })
+  }
+  return { manifest: { entries, from: 'file', heldAt }, leftOut }
 }
 
 /** The citations the ENGINE itself prints. Every one must be in the manifest (check:lex-26y part 4 asserts it). */

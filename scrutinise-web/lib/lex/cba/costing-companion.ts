@@ -13,6 +13,7 @@ import { type CbaResult, CAVEAT, rangeWords, NOT_VALUED_WORDS, OB_INDICATIVE, ob
 import { ENGINE_CITATIONS } from './citation-manifest-pure'
 import { fyWords } from './period'
 import { pct } from './line-appraisal'
+import { CBA_UI } from '../screen-labels'
 import { writeNarrative, type Narrative } from './narrative'
 import { writeTextProposal } from '../action-documents'
 import { prisma } from '@/lib/prisma'
@@ -31,6 +32,8 @@ export function costingCompanionBody(r: Ok, narrative: Narrative | null, heldOn:
   out.push('## Cost lines', costs.length ? table(['Line', 'Paid by', 'Figure', 'What was done'], costs.map((l) => [l.label, l.payer, lineFig(l.id), l.steps.join('; ') || (l.whyNot ?? 'as entered')])) : 'No cost line is recorded on this action.')
   out.push('', '## Benefit lines', bens.length ? table(['Line', 'For', 'Figure', 'How valued'], bens.map((l) => [l.label, l.payer, l.included ? lineFig(l.id) : 'not valued', l.included ? l.steps.join('; ') || 'as entered' : (l.whyNot ?? 'not valued')])) : 'No benefit line is recorded on this action.')
   out.push('', '## Assumptions', table(['Assumption', 'Source'], r.assumptions.map((a) => [a.text, a.owners ? 'the owner’s' : a.source])))
+  // 26-AA item 9(a) — a licensed figure's attribution, wherever the figure is printed
+  if (r.attributions.length) out.push('', `## ${CBA_UI.attribution}`, r.attributions.map((a) => `- ${a}`).join('\n'))
   out.push('', '## Totals', `In ${fyWords(P.priceYear)} prices over ${P.years} years from ${fyWords(P.startYear)}: costs ${r.trace.costs.value}; present value of costs ${r.trace['pv-costs'].value}; valued benefits ${r.benefitsValued ? r.trace.benefits.value : 'none'}; present value of benefits ${r.benefitsValued ? r.trace['pv-benefits'].value : NOT_VALUED_WORDS}. Net present value: ${r.npv ? rangeWords(r.npv) : `not computed — ${NOT_VALUED_WORDS}`}.`,
     '', table(['Year', 'Factor', 'Costs', 'PV costs', 'Benefits', 'PV benefits'], r.years.map((y) => [fyWords(y.fy), y.factor.toFixed(4), r.trace[`y${y.t}.costs`].value, r.trace[`y${y.t}.pv-costs`].value, r.benefitsValued ? r.trace[`y${y.t}.benefits`].value : 'not valued', r.benefitsValued ? r.trace[`y${y.t}.pv-benefits`].value : 'not valued'])))
   if (r.undated.lines) out.push('', `Not placed in any year: ${r.trace['undated.costs'].value} across ${r.undated.lines} line${r.undated.lines === 1 ? '' : 's'} that say neither one-off nor per year.`)

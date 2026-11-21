@@ -11,6 +11,9 @@ import { computeCba, type CbaResult, type EngineInput, type EngineCostLine, type
 import { resolvePeriod, type AppraisalPeriod } from './period'
 import { parseLineAppraisal, PARTY_KINDS, type PartyKind } from './line-appraisal'
 import { loadManifest } from './citation-manifest'
+import { attributionOf, attributionWords } from './attribution'
+import { statsConfigured } from '@/lib/stats/stats-db'
+import { cssHeld, deflatorRelease } from '@/lib/stats/cba-cells'
 
 export interface CbaInputs { input: EngineInput; fingerprint: Record<string, string>; heldOn: string }
 
@@ -23,24 +26,37 @@ export function benefitSourceWords(b: { sourceKind: string | null; sourceRef: nu
   return null
 }
 
-async function heldFlags() {
-  const t = await prisma.$queryRaw<Array<{ table_name: string; column_name: string }>>`
-    SELECT table_name, column_name FROM information_schema.columns
-    WHERE table_schema = 'public' AND (table_name ILIKE '%civil_service%' OR (table_name = 'DeflatorSeries' AND column_name ILIKE '%release%'))`
-  return { civilServiceStatistics: t.some((r) => /civil_service/i.test(r.table_name)), deflatorReleaseDates: t.some((r) => r.table_name === 'DeflatorSeries') }
+/**
+ * 26-AA item 9(c) — what Ingest holds, read where Ingest put it: the STATISTICS database (lib/stats). The old test looked for a
+ * `civil_service` table and a release column on Neon, which were never going to exist, so both gaps could never close.
+ *   · Civil Service Statistics: css-2026's all-levels median is a held value.
+ *   · The deflator's release: the index the engine uses (DeflatorSeries) matches one dated release year by year (deflatorRelease).
+ * A stats database that cannot be reached leaves both "not held", with why; it never stops the analysis.
+ */
+async function heldFlags(deflator: ReadonlyArray<{ year: number; index: number }>): Promise<Omit<EngineInput['held'], 'manifest'>> {
+  if (!statsConfigured()) return { civilServiceStatistics: false, deflatorReleaseDates: false, deflatorRelease: null, deflatorWhy: 'the statistics database is not configured here', css: null }
+  try {
+    const [css, rel] = await Promise.all([cssHeld(), deflatorRelease(deflator)])
+    return {
+      civilServiceStatistics: css.held, css: css.held ? { releaseDate: css.releaseDate, priceBasis: css.priceBasis } : null,
+      deflatorReleaseDates: rel.held, deflatorRelease: rel.held && rel.vintage ? { vintage: rel.vintage, releaseDate: rel.releaseDate, priceBasis: rel.priceBasis } : null, deflatorWhy: rel.why,
+    }
+  } catch (e) {
+    return { civilServiceStatistics: false, deflatorReleaseDates: false, deflatorRelease: null, deflatorWhy: `the statistics database could not be read (${e instanceof Error ? e.message.slice(0, 80) : 'error'})`, css: null }
+  }
 }
 
 /** Everything the engine reads, for one idea (or one action of it). `fingerprint` = one hash-ish string per line + the period, for "stale". */
 export async function cbaInputs(ideaId: string, opts: { actionId?: string; now?: Date } = {}): Promise<CbaInputs | null> {
   const idea = await prisma.idea.findUnique({ where: { id: ideaId }, select: { appraisalYears: true, appraisalStartYear: true, cbaPriceYear: true } })
   if (!idea) return null
-  const [actions, headings, deflator, flags, manifest] = await Promise.all([
+  const [actions, headings, deflator, manifest] = await Promise.all([
     prisma.lexCoherentAction.findMany({ where: { ideaId }, select: { id: true, number: true, title: true, practicalStep: true, status: true, headingId: true, foldedIntoId: true, noCostReason: true } }),
     prisma.actionHeading.findMany({ where: { ideaId }, orderBy: { orderIndex: 'asc' }, select: { id: true, name: true } }),
     prisma.deflatorSeries.findMany({ select: { year: true, index: true }, orderBy: { year: 'asc' } }),
-    heldFlags(),
     loadManifest(),
   ])
+  const flags = await heldFlags(deflator)
   const period: AppraisalPeriod = resolvePeriod(idea, opts.now ?? new Date(), deflator.length ? deflator[deflator.length - 1].year : null)
   const byId = new Map(actions.map((a) => [a.id, a]))
   const home = (id: string) => { const a = byId.get(id); return a?.foldedIntoId ? byId.get(a.foldedIntoId) ?? a : a }
@@ -50,8 +66,10 @@ export async function cbaInputs(ideaId: string, opts: { actionId?: string; now?:
     prisma.costLine.findMany({ where: { actionId: { in: ids } }, orderBy: [{ actionId: 'asc' }, { orderIndex: 'asc' }] }),
     prisma.benefitLine.findMany({ where: { actionId: { in: ids }, status: 'ACCEPTED' }, orderBy: [{ actionId: 'asc' }, { orderIndex: 'asc' }] }),
   ])
-  const benchIds = [...new Set(benefitRows.map((b) => b.benchmarkId).filter((x): x is string => !!x))]
-  const bench = new Map((benchIds.length ? await prisma.costBenchmark.findMany({ where: { id: { in: benchIds } }, select: { id: true, source: true, metric: true } }) : []).map((b) => [b.id, b]))
+  // 26-AA item 9(a): the rows behind cost lines too, and their notes, so a licensed figure carries its attribution wherever it is shown
+  const benchIds = [...new Set([...benefitRows, ...costRows].map((b) => b.benchmarkId).filter((x): x is string => !!x))]
+  const bench = new Map((benchIds.length ? await prisma.costBenchmark.findMany({ where: { id: { in: benchIds } }, select: { id: true, source: true, metric: true, notes: true } }) : []).map((b) => [b.id, b]))
+  const attributionFor = (benchmarkId: string | null) => (benchmarkId ? attributionWords(attributionOf(bench.get(benchmarkId)?.notes)) : null)
   const label = (a: { title: string | null; practicalStep: string }) => a.title?.trim() || a.practicalStep.slice(0, 90)
   const rec = (r: string | null) => (r === 'ONE_OFF' || r === 'PER_YEAR' ? r : null)
   const costs: EngineCostLine[] = costRows.map((l) => {
@@ -60,7 +78,7 @@ export async function cbaInputs(ideaId: string, opts: { actionId?: string; now?:
       id: l.id, actionId: l.actionId, actionNumber: h.number ?? null, actionTitle: label(h), headingId: h.headingId ?? null,
       label: l.label, costType: l.costType, category: l.category, low: l.low, high: l.high, priceYear: l.priceYear,
       recurrence: rec(l.recurrence), durationMonths: l.durationMonths, basis: l.basis, citationKey: l.citationKey, benchmarkId: l.benchmarkId,
-      appraisal: parseLineAppraisal(l.appraisal),
+      appraisal: parseLineAppraisal(l.appraisal), attribution: attributionFor(l.benchmarkId),
     }
   })
   const benefits: EngineBenefitLine[] = benefitRows.map((b) => {
@@ -71,6 +89,7 @@ export async function cbaInputs(ideaId: string, opts: { actionId?: string; now?:
       label: b.label, beneficiary: ((PARTY_KINDS as readonly string[]).includes(b.beneficiary) ? b.beneficiary : 'OTHER') as PartyKind, beneficiaryName: b.beneficiaryName,
       measure: b.measure, low: b.low, high: b.high, priceYear: b.priceYear, recurrence: rec(b.recurrence), durationMonths: b.durationMonths, isHealth: b.isHealth,
       valuation: b.valuation === 'VALUED' ? 'VALUED' : 'NOT_VALUED', notValuedWhy: b.notValuedWhy, sourceWords, ownerEstimate: b.sourceKind === 'OWNER',
+      attribution: b.sourceKind === 'BENCHMARK' ? attributionFor(b.benchmarkId) : null,
     }
   })
   const live = actions.filter((a) => a.status === 'LIVE' && (!opts.actionId || a.id === opts.actionId))

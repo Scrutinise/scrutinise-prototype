@@ -24,7 +24,7 @@ interface BenefitRowT {
   notValuedWhy: string | null; valuation: string; status: string; proposedWhy: string | null
 }
 interface CostRowT { id: string; label: string; costType: string; low: number | null; high: number | null; appraisal: LineAppraisal; citationKey: string | null }
-interface Bench { id: string; domain: string; metric: string; source: string; low: number | null; high: number | null; unit: string | null; priceYear: number | null }
+interface Bench { id: string; domain: string; metric: string; source: string; low: number | null; high: number | null; unit: string | null; priceYear: number | null; attribution?: string | null }
 
 const num = (s: string): number | null => { const t = s.replace(/[£,\s]/g, ''); if (!t) return null; const n = Number(t); return Number.isFinite(n) ? n : NaN }
 const inp = 'text-[11px] border border-zinc-300 rounded px-1.5 py-0.5'
@@ -113,7 +113,8 @@ function BenefitItem({ l, benchmarks, disabled, onSave, onRemove }: { l: Benefit
   return (
     <li className="text-[11px] text-zinc-800 flex items-start gap-2" data-benefit={l.id} data-valuation={l.valuation}>
       <span aria-hidden>{l.valuation === 'VALUED' ? '●' : '○'}</span>
-      <span className="flex-1">{benefitWords(l)}{l.isHealth ? ' · a health effect' : ''}</span>
+      <span className="flex-1">{benefitWords(l)}{l.isHealth ? ' · a health effect' : ''}
+        {l.sourceKind === 'BENCHMARK' && benchmarks.find((b) => b.id === l.benchmarkId)?.attribution && <span className="block text-[10px] text-zinc-600" data-bench-attribution>{benchmarks.find((b) => b.id === l.benchmarkId)!.attribution}</span>}</span>
       <button type="button" disabled={disabled} onClick={() => setEditing(true)} className="underline disabled:opacity-40">{CBA_UI.editBenefit}</button>
       <button type="button" disabled={disabled} onClick={onRemove} className="underline disabled:opacity-40">{CBA_UI.removeBenefit}</button>
     </li>
@@ -181,6 +182,8 @@ function BenefitForm({ initial, benchmarks, disabled, submitLabel, onSubmit, onC
             </select></label>
             {sk === 'REF' && <input value={ref} onChange={(e) => setRef(e.target.value)} placeholder="n" aria-label="Source number" className={`w-16 ${inp}`} />}
             {sk === 'BENCHMARK' && <select value={bench} onChange={(e) => setBench(e.target.value)} aria-label={CBA_UI.sourceBenchmark} className={`max-w-[22rem] ${inp}`}><option value="">choose a row…</option>{benchmarks.map((b) => <option key={b.id} value={b.id}>{b.metric} — {b.source}</option>)}</select>}
+            {/* 26-AA item 9(a): a licensed row is never shown without its attribution */}
+            {sk === 'BENCHMARK' && benchmarks.find((b) => b.id === bench)?.attribution && <p className="basis-full text-[10px] text-zinc-700" data-bench-attribution>{benchmarks.find((b) => b.id === bench)!.attribution}</p>}
             {sk === 'CITATION' && <BoundedInput value={cite} onChange={setCite} max={LIMITS.citationKey} placeholder="green-book:8.58" aria-label={CBA_UI.sourceCitation} className={`w-40 ${inp}`} />}
             {sk === 'OWNER' && <label className="flex-1 min-w-[12rem]">{CBA_UI.ownerReason}<BoundedInput value={why} onChange={setWhy} max={LIMITS.benefitReason} aria-label={CBA_UI.ownerReason} wrapperClassName="w-full" className={`w-full ${inp}`} /></label>}
           </div>

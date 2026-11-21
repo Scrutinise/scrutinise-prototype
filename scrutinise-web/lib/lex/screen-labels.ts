@@ -604,6 +604,8 @@ export const CBA_UI = {
   gaps: 'Gaps',
   generate: 'Generate the Cost–benefit report',
   generateGo: 'Generate it',
+  // 26-AA item 9(a) — the attributions a licensed figure demands, wherever it is shown or printed
+  attribution: 'Licences and attribution',
   generateFree: 'Generate without Lex’s narrative (free)',
   versions: 'Versions',
   // §6 the idea's settings (Overview)

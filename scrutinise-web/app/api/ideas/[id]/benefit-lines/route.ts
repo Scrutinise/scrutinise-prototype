@@ -9,6 +9,7 @@ import { PARTY_KINDS, parseLineAppraisal } from '@/lib/lex/cba/line-appraisal'
 import { prisma } from '@/lib/prisma'
 import { SOURCE_KINDS } from '@/lib/lex/cba/benefit-lines-pure'
 import { addBenefitLine, setBenefitLine, changeBenefitStatus, listBenefitLines } from '@/lib/lex/cba/benefit-lines'
+import { attributionOf, attributionWords } from '@/lib/lex/cba/attribution'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -52,9 +53,11 @@ export async function GET(req: Request, { params }: Params) {
   // the action's cost lines with what they carry for the appraisal (§3.1 / 339 / 340), and the unit-cost rows a benefit may cite
   const [costLines, benchmarks] = actionId ? await Promise.all([
     prisma.costLine.findMany({ where: { actionId, action: { ideaId: id } }, orderBy: { orderIndex: 'asc' }, select: { id: true, label: true, costType: true, low: true, high: true, appraisal: true, citationKey: true } }),
-    prisma.costBenchmark.findMany({ orderBy: [{ domain: 'asc' }, { metric: 'asc' }], select: { id: true, domain: true, metric: true, source: true, low: true, high: true, unit: true, priceYear: true } }),
+    prisma.costBenchmark.findMany({ orderBy: [{ domain: 'asc' }, { metric: 'asc' }], select: { id: true, domain: true, metric: true, source: true, low: true, high: true, unit: true, priceYear: true, notes: true } }),
   ]) : [[], []]
-  return NextResponse.json({ lines, costLines: costLines.map((c) => ({ ...c, appraisal: parseLineAppraisal(c.appraisal) })), benchmarks })
+  // 26-AA item 9(a): each row carries the attribution its licence requires, read from its own notes (the notes themselves are not sent)
+  const rows = benchmarks.map(({ notes, ...b }) => ({ ...b, attribution: attributionWords(attributionOf(notes)) }))
+  return NextResponse.json({ lines, costLines: costLines.map((c) => ({ ...c, appraisal: parseLineAppraisal(c.appraisal) })), benchmarks: rows })
 }
 
 export async function POST(req: Request, { params }: Params) {

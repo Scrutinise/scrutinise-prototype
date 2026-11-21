@@ -23,6 +23,7 @@ import {
   getComparative, geographiesFor,
   type CofogRollup, type Comparative, type Observation, type SeriesMatch,
 } from '@/lib/stats/stats-query'
+import { getSuppressedCells } from '@/lib/stats/cba-cells'
 import { statsConfigured } from '@/lib/stats/stats-db'
 
 /** The key that means "the COFOG spending breakdown", not a named series. */
@@ -95,7 +96,8 @@ export interface QueryStatsResult {
   note?: string
   spending?: CofogRollup
   comparative?: Comparative
-  series?: { match: SeriesMatch; observations: Observation[] }[]
+  /** 26-AA item 9(c): `suppressed` — the publisher's [c] / [n] cells, each with its own definition; never a zero, never missing. */
+  series?: { match: SeriesMatch; observations: Observation[]; suppressed?: Array<{ periodLabel: string; marker: 'c' | 'n'; markerText: string }> }[]
   /** What CAN be asked, when nothing matched — so Lex can offer a real alternative. */
   available?: string[]
 }
@@ -211,9 +213,11 @@ export async function runQueryStats(args: QueryStatsArgs): Promise<QueryStatsRes
       matches.map(async (match) => ({
         match,
         observations: await getSeriesObservations(match.seriesId, { dateFrom, dateTo, limit: 60 }),
+        // 26-AA item 9(c): a suppressed cell lives in its own table, so without this a series whose only cell is "[c]" read as empty
+        suppressed: await getSuppressedCells(match.seriesId).catch(() => []),
       })),
     )
-    return { ok: true, kind: 'time_series', series: series.filter((s) => s.observations.length) }
+    return { ok: true, kind: 'time_series', series: series.filter((s) => s.observations.length || s.suppressed.length) }
   } catch (err) {
     console.error('[query_stats] failed:', err instanceof Error ? err.message : err)
     return { ok: false, kind: 'unavailable', note: 'The statistics lookup failed.' }
@@ -352,6 +356,10 @@ export function formatStatsForPrompt(result: QueryStatsResult): string {
     }
     if (obs.length > shown.length) {
       lines.push(`  … ${obs.length} observations in total, ${obs[0].periodLabel} to ${obs[obs.length - 1].periodLabel} (middle years omitted here).`)
+    }
+    // 26-AA item 9(c) — the publisher withheld these; say so in its own words, never as 0 and never by leaving the period out
+    for (const c of s.suppressed ?? []) {
+      lines.push(`  ${c.periodLabel}: [${c.marker}] SUPPRESSED by the publisher — ${c.markerText} This is not a zero; do not estimate it.`)
     }
   }
 
