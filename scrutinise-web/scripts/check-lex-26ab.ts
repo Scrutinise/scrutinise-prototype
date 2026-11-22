@@ -21,7 +21,7 @@
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { BRIEF_FIELD_INFO, BRIEF_HEADING_INFO, type InfoText } from '../lib/lex/brief-info'
+import { BRIEF_FIELD_INFO, BRIEF_HEADING_INFO, BRIEF_HEADING, INFO_PARTS, INFO_PART_WORD, INFO_OPTIONAL_WORD, type InfoText } from '../lib/lex/brief-info'
 import { BRIEF_FIELD_WORD, BRIEF_UI, INFO_UI } from '../lib/lex/screen-labels'
 import { KIND_FIELDS, type BriefKind } from '../lib/lex/action-brief-pure'
 import { explainField, guideEntries } from '../lib/lex/field-guide'
@@ -37,6 +37,8 @@ const ok = (name: string, cond: boolean, detail?: unknown) => {
 const control = (name: string, cond: boolean, detail?: unknown) => { controls++; if (!cond) dead++; ok(`control: ${name}`, cond, detail) }
 const section = (s: string) => console.log(`\n${s}`)
 
+/** 354 amended: the fields whose emptiness has a stated meaning (reported to CCh as the reading of "optional"). */
+const OPTIONAL_FIELDS = ['modelledOn', 'tone', 'mustInclude', 'mustNot', 'laidBefore', 'revisionRule'] as const
 const COMMON_FIELDS = ['must', 'modelledOn', 'tone', 'mustInclude', 'mustNot'] as const
 const KINDS = Object.keys(KIND_FIELDS) as BriefKind[]
 /** Every field a Brief of this kind shows, in the order the form shows them. */
@@ -47,7 +49,7 @@ function infoGaps(table: Partial<Record<keyof typeof BRIEF_FIELD_WORD, InfoText>
   const out: string[] = []
   for (const k of KINDS) for (const f of fieldsOf(k)) {
     const e = table[f]
-    for (const p of ['what', 'lexDoes', 'example'] as const) if (!e?.[p]?.trim()) out.push(`${k}.${f}.${p}`)
+    for (const p of INFO_PARTS) if (!e?.[p]?.trim()) out.push(`${k}.${f}.${p}`)
   }
   return out
 }
@@ -56,12 +58,22 @@ function part1() {
   section('1 · the ⓘ text — every field of every kind, three parts, §2 verbatim, one source with the field guide and explain_field')
   const total = KINDS.reduce((n, k) => n + fieldsOf(k).length, 0)
   const gaps = infoGaps(BRIEF_FIELD_INFO)
-  ok(`every Brief field of every kind (${KINDS.length} kinds, ${total} field places) has what it is, what Lex does, and an example`, gaps.length === 0, gaps.join(', '))
+  ok(`every Brief field of every kind (${KINDS.length} kinds, ${total} field places) has what it is, what Lex does, an example, and why it's needed (354 amended)`, gaps.length === 0, gaps.join(', '))
   const planted = { ...BRIEF_FIELD_INFO, laidBefore: { ...BRIEF_FIELD_INFO.laidBefore, example: ' ' } }
   control('a field with an empty part (Laid before\'s example) is caught', infoGaps(planted).join() === 'CODE_TEXT.laidBefore.example', infoGaps(planted).join())
   const { modelledOn: _m, ...withoutOne } = BRIEF_FIELD_INFO
   control('a field with no entry at all (Modelled on) is caught, on every kind', infoGaps(withoutOne).filter((g) => g.endsWith('.modelledOn.what')).length === KINDS.length)
   ok('the Brief heading has its ⓘ text', BRIEF_HEADING_INFO.trim().length > 40)
+  const plantedWhy = { ...BRIEF_FIELD_INFO, basis: { ...BRIEF_FIELD_INFO.basis, why: '' } }
+  control('354 amended: a field with no "Why it\x27s needed" (Basis) is caught', infoGaps(plantedWhy).join() === 'COSTING.basis.why')
+  ok('…and the Brief heading has its own "Why it\x27s needed"', BRIEF_HEADING.text === BRIEF_HEADING_INFO && BRIEF_HEADING.why.trim().length > 40)
+  // Charlie's five texts (CCh 0156Z, point A), VERBATIM; Users, Records and Measures share one
+  const SUPPLIER = 'A system cannot be built or put out to tender without saying who uses it, what it holds and what it reports; these are the minimum a supplier asks for.'
+  const CHARLIE: Partial<Record<keyof typeof BRIEF_FIELD_INFO, string>> = { users: SUPPLIER, records: SUPPLIER, measures: SUPPLIER, basis: 'The Green Book requires every figure to state its source, so it can be checked.', priceYear: 'The Green Book requires a price year; without it, figures from different years cannot be compared.' }
+  const notVerbatim = (Object.keys(CHARLIE) as Array<keyof typeof CHARLIE>).filter((k) => BRIEF_FIELD_INFO[k].why !== CHARLIE[k])
+  ok('Charlie\x27s five "Why it\x27s needed" texts are in verbatim', notVerbatim.length === 0, notVerbatim.join(', '))
+  const optional = (Object.keys(BRIEF_FIELD_INFO) as Array<keyof typeof BRIEF_FIELD_INFO>).filter((k) => BRIEF_FIELD_INFO[k].optional).sort()
+  ok(`the optional fields carry "${INFO_OPTIONAL_WORD}": exactly ${OPTIONAL_FIELDS.join(', ')}`, optional.join() === [...OPTIONAL_FIELDS].sort().join(), optional.join(', '))
 
   // §2 verbatim, read from the brief's own table, so the check cannot agree with a copy of itself
   const brief = readFileSync(join(ROOT, '..', 'docs', 'BRIEF_26AB.md'), 'utf8').split('\r\n').join('\n')
@@ -85,7 +97,7 @@ function part1() {
   const entries = guideEntries()
   const notCarried = (Object.keys(BRIEF_FIELD_INFO) as Array<keyof typeof BRIEF_FIELD_INFO>).filter((k) => entries.find((e) => e.key === `briefField.${k}`)?.info !== BRIEF_FIELD_INFO[k])
   ok('every briefField entry in the field guide carries the ⓘ text itself (the same object, not a copy)', notCarried.length === 0, notCarried.join(', '))
-  ok('…and the Brief heading\'s entry (brief.section) carries its sentence', entries.find((e) => e.key === 'brief.section')?.info === BRIEF_HEADING_INFO)
+  ok('…and the Brief heading\'s entry (brief.section) carries its sentence', entries.find((e) => e.key === 'brief.section')?.info === BRIEF_HEADING)
   const ex = explainField(BRIEF_FIELD_WORD.modelledOn).exact
   ok('explain_field("Modelled on") finds the entry with its three parts', ex?.key === 'briefField.modelledOn' && typeof ex.info === 'object' && (ex.info as InfoText).example === BRIEF_FIELD_INFO.modelledOn.example)
   ok('the ⓘ and its Close have their own guide entries', entries.some((e) => e.key === 'info.open' && e.label === INFO_UI.open) && entries.some((e) => e.key === 'info.close' && e.label === INFO_UI.close))
@@ -98,9 +110,9 @@ async function part1Tool() {
   if (!t) { ok('explain_field exists', false); return }
   const r = await t.run({} as never, { name: BRIEF_FIELD_WORD.revisionRule } as never) as { ok: boolean; data?: Record<string, unknown> }
   const d = r.data ?? {}
-  ok('explain_field("Revision rule") answers with whatItIs, whatLexDoes and example, word for word', d.whatItIs === BRIEF_FIELD_INFO.revisionRule.what && d.whatLexDoes === BRIEF_FIELD_INFO.revisionRule.lexDoes && d.example === BRIEF_FIELD_INFO.revisionRule.example, JSON.stringify(d).slice(0, 300))
+  ok('explain_field("Revision rule") answers with whatItIs, whatLexDoes, example, whyItIsNeeded and the optional line, word for word', d.whatItIs === BRIEF_FIELD_INFO.revisionRule.what && d.whatLexDoes === BRIEF_FIELD_INFO.revisionRule.lexDoes && d.example === BRIEF_FIELD_INFO.revisionRule.example && d.whyItIsNeeded === BRIEF_FIELD_INFO.revisionRule.why && d.optional === INFO_OPTIONAL_WORD, JSON.stringify(d).slice(0, 300))
   const h = await t.run({} as never, { name: 'brief.section' } as never) as { ok: boolean; data?: Record<string, unknown> }
-  ok('explain_field on the Brief heading answers with its sentence', h.data?.about === BRIEF_HEADING_INFO, JSON.stringify(h.data).slice(0, 200))
+  ok('explain_field on the Brief heading answers with its sentence', h.data?.about === BRIEF_HEADING_INFO && h.data?.whyItIsNeeded === BRIEF_HEADING.why, JSON.stringify(h.data).slice(0, 200))
 }
 
 function part2() {
@@ -167,7 +179,7 @@ async function part3() {
       const btn = (field: string) => info(field).locator('[data-info-button]')
       await btn(BRIEF_FIELD_WORD.modelledOn).tap()
       const parts = await info(BRIEF_FIELD_WORD.modelledOn).locator('[data-info-part]').allInnerTexts()
-      ok(`${at} a tap opens the panel with its three parts, in the guide's words`, parts.length === 3 && parts[0].includes(BRIEF_FIELD_INFO.modelledOn.what) && parts[2].includes(BRIEF_FIELD_INFO.modelledOn.example), parts.join(' | ').slice(0, 200))
+      ok(`${at} a tap opens the panel with its four parts and, Modelled on being optional, the optional line, in the guide's words`, parts.length === 5 && parts[0].includes(BRIEF_FIELD_INFO.modelledOn.what) && parts[2].includes(BRIEF_FIELD_INFO.modelledOn.example) && parts[3].includes(INFO_PART_WORD.why) && parts[3].includes(BRIEF_FIELD_INFO.modelledOn.why) && parts[4] === INFO_OPTIONAL_WORD, parts.join(' | ').slice(0, 200))
       ok(`${at} …the ⓘ says it is open (aria-expanded), and the panel is named for its field`, await btn(BRIEF_FIELD_WORD.modelledOn).getAttribute('aria-expanded') === 'true' && await info(BRIEF_FIELD_WORD.modelledOn).locator('[data-info-panel]').getAttribute('aria-label') === INFO_UI.about(BRIEF_FIELD_WORD.modelledOn))
       await page.waitForTimeout(1500)
       await info(BRIEF_FIELD_WORD.modelledOn).locator('[data-info-part="what"]').tap()
@@ -180,9 +192,16 @@ async function part3() {
       ok(`${at} …Esc closes it, and the focus goes back to its ⓘ`, !(await panelOpen(BRIEF_FIELD_WORD.tone)) && focusAfterEsc === INFO_UI.about(BRIEF_FIELD_WORD.tone), focusAfterEsc)
       await btn(BRIEF_FIELD_WORD.issuedBy).tap()
       const opened = await panelOpen(BRIEF_FIELD_WORD.issuedBy)
+      const neededParts = await info(BRIEF_FIELD_WORD.issuedBy).locator('[data-info-part]').allInnerTexts()
+      ok(`${at} …a needed field (Issued by) shows its four parts and NO optional line`, neededParts.length === 4 && !neededParts.some((t) => t.includes(INFO_OPTIONAL_WORD)) && neededParts[3].includes(BRIEF_FIELD_INFO.issuedBy.why), neededParts.join(' | ').slice(0, 200))
       await page.touchscreen.tap(width - 8, 790)
       await page.waitForTimeout(100)
       ok(`${at} …a tap outside closes it`, opened && !(await panelOpen(BRIEF_FIELD_WORD.issuedBy)), `opened ${opened}`)
+      const head = page.locator(`[data-brief-kind="CODE_TEXT"] [data-info="${BRIEF_UI.section}"]`).first()
+      await head.locator('[data-info-button]').tap()
+      const headParts = await head.locator('[data-info-part]').allInnerTexts()
+      ok(`${at} …the Brief heading's ⓘ shows its sentence and why it's needed`, headParts.length === 2 && headParts[0] === BRIEF_HEADING.text && headParts[1].includes(BRIEF_HEADING.why), headParts.join(' | ').slice(0, 200))
+      await head.locator('[data-info-close]').tap()
       control(`${at} a panel NOT tapped outside is still open (the outside-tap test can fail)`, await (async () => { await btn(BRIEF_FIELD_WORD.issuedBy).tap(); const o = await panelOpen(BRIEF_FIELD_WORD.issuedBy); await page.keyboard.press('Escape'); return o })())
       // keyboard: from the field above it, Tab reaches the ⓘ and Enter opens it
       await page.locator('[data-brief-form="CODE_TEXT"] textarea[aria-label="What this draft must do"]').focus()

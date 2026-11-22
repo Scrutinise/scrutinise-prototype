@@ -20,7 +20,7 @@ import {
   PANEL_WORD, PANEL_PLACE_WORD, WHERE_SENTENCES, WHERE_UI, DRAFT_RESTORE_UI, STAGEBAR_ROW_WORD, CAUSE_UI, SOURCES_UI, ADD_RESEARCH_UI,
   INFO_UI, OFFLINE_UI,
 } from './screen-labels'
-import { BRIEF_FIELD_INFO, BRIEF_HEADING_INFO, type InfoText } from './brief-info'
+import { BRIEF_FIELD_INFO, BRIEF_HEADING, type InfoText, type HeadingInfo } from './brief-info'
 import { FACET_LABEL, SORT_LABEL } from './source-list'
 import { STANCE_LABEL } from './research-notebook-schema'
 import { EXTENTS } from './action-draft-pure'
@@ -42,7 +42,7 @@ export interface GuideText {
   tool: string
   /** 26-AB (354) — the ⓘ text the screen shows beside the field: its three parts, or (a heading) one sentence. The same object the screen
    *  reads (lib/lex/brief-info.ts), so explain_field and the ⓘ cannot say different things. */
-  info?: InfoText | string
+  info?: InfoText | HeadingInfo
 }
 export interface GuideEntry extends GuideText { key: string; area: GuideArea; label: string }
 
@@ -708,7 +708,7 @@ export function guideEntries(): GuideEntry[] {
     ...fromTable('workspace', 'addAction', ADD_ACTION_UI, ADD_ACTION_G),
     // 26-X X2
     // 26-AB (354): the Brief heading and every Brief field carry their ⓘ text — the SAME objects BriefSection's ⓘ panels read
-    ...fromTable('record', 'brief', BRIEF_UI, { ...BRIEF_G, section: { ...BRIEF_G.section, info: BRIEF_HEADING_INFO } }),
+    ...fromTable('record', 'brief', BRIEF_UI, { ...BRIEF_G, section: { ...BRIEF_G.section, info: BRIEF_HEADING } }),
     ...fromTable('record', 'briefField', BRIEF_FIELD_WORD, Object.fromEntries((Object.keys(BRIEF_FIELD_G) as Array<keyof typeof BRIEF_FIELD_G>).map((k) => [k, { ...BRIEF_FIELD_G[k], info: BRIEF_FIELD_INFO[k] }])) as Record<keyof typeof BRIEF_FIELD_WORD, GuideText>),
     ...fromTable('common', 'info', INFO_UI, INFO_G),
     ...fromTable('record', 'tone', TONE_WORD, TONE_G),

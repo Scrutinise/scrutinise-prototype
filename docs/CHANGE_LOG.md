@@ -1,5 +1,20 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-22 21:07 UTC - LEX 354 amended: every ⓘ gains "Why it's needed", and "Optional: Lex will propose an answer" on each optional field
+
+CCh 0156Z point A (Charlie, 21 Nov 01:54).
+- `InfoText` gains `why` and `optional`; the panel shows a fourth part, "Why it’s needed", and on an optional field ends with
+  "Optional: Lex will propose an answer" (true: "Ask Lex to write the Brief" / `propose_brief` proposes every field, beside the owner's).
+- Charlie's texts VERBATIM: Users, Records and Measures (one shared text), Basis, Price year. The other nine, and the Brief heading's
+  own "why", written to the same pattern (in the report to CCh).
+- Optional = a field whose emptiness has a stated meaning: Modelled on, Tone and form, Must include, Must not, Laid before, Revision
+  rule. Needed: What this draft must do, Issued by, Applies to, Users, Records, Measures, Basis, Price year. (Every field is optional
+  to the code; this is the reading reported for CCh to correct.)
+- One source still: the field guide carries the same objects; `explain_field` answers with `whyItIsNeeded` and the optional line.
+- check:lex-26ab 68/68 (was 60): four parts on every field of every kind (a planted missing "why" is caught); Charlie's five verbatim;
+  exactly the six optional fields; explain_field; in Chromium at 360/390 px the optional panel's five lines, a needed field's four,
+  and the heading's sentence plus its "why". Mutants 6/6 RED.
+
 ## 2026-11-22 21:07 UTC - LEX Z2 finished: 361 amended (the owner's unsent work survives sign-out) and §6.4 (installable, CCh's original scales icon, decision 366); decision 365 written into §12
 
 CCh 0156Z point B and 0750Z; 2045Z point 1. Built on 1e8fe8c6 (Z2 as first committed, never pushed).

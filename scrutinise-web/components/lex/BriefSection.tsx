@@ -15,7 +15,7 @@
 
 import { useCallback, useContext, useEffect, useId, useState, type ReactNode } from 'react'
 import InfoLabel from './InfoLabel'
-import { BRIEF_FIELD_INFO, BRIEF_HEADING_INFO } from '@/lib/lex/brief-info'
+import { BRIEF_FIELD_INFO, BRIEF_HEADING } from '@/lib/lex/brief-info'
 import { IdeaIdContext } from './RefTextarea'
 import { useDeviceDraft, DraftOffer } from './DeviceDraft'
 import type { BriefView, BriefKindView } from '@/lib/lex/action-brief'
@@ -102,7 +102,7 @@ function KindBrief({ k, view, a, busy, disabled, post }: { k: BriefKindView; vie
     <section className="rounded border border-zinc-300 bg-white p-2 space-y-1.5" data-brief-kind={k.kind}>
       {!editing && <DraftOffer offer={kept.offer} onRestore={restoreBrief} onDiscard={kept.discard} preview={(o) => { try { return briefBody(k.kind, JSON.parse(o) as Brief).split('\n').filter(Boolean)[0] ?? '' } catch { return '' } }} />}
       <p className="font-semibold">
-        <span aria-hidden>{k.current ? '●' : '○'}</span> {BRIEF_UI.section}<InfoLabel about={BRIEF_UI.section} info={BRIEF_HEADING_INFO} /> — {kindWord}{k.d ? ` (${k.d})` : ''} ·{' '}
+        <span aria-hidden>{k.current ? '●' : '○'}</span> {BRIEF_UI.section}<InfoLabel about={BRIEF_UI.section} info={BRIEF_HEADING} /> — {kindWord}{k.d ? ` (${k.d})` : ''} ·{' '}
         <span data-brief-state>{k.current ? `version ${k.current.v}, by ${AUTHOR_WORD[k.current.author] ?? k.current.author}, ${day(k.current.at)}${k.versions.length > 1 ? ` · ${k.versions.length} versions kept` : ''}` : k.kind === 'DRAFT_CLAUSE' && k.instruction ? `its drafting instruction, version ${k.instruction.v}` : BRIEF_UI.noBriefYet}</span>
       </p>
       {k.current && !editing && <pre className="whitespace-pre-wrap font-sans text-[11px] text-zinc-800 bg-zinc-50 border border-zinc-200 rounded p-1.5 max-h-72 overflow-y-auto" data-brief-body>{k.current.body}</pre>}

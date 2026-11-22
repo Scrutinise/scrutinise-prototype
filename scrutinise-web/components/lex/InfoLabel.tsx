@@ -12,10 +12,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useId, useRef, useState } from 'react'
-import { INFO_PART_WORD, type InfoText } from '@/lib/lex/brief-info'
+import { INFO_PART_WORD, INFO_PARTS, INFO_OPTIONAL_WORD, type InfoText, type HeadingInfo } from '@/lib/lex/brief-info'
 import { INFO_UI } from '@/lib/lex/screen-labels'
 
-export default function InfoLabel({ about, info }: { about: string; info: InfoText | string }) {
+export default function InfoLabel({ about, info }: { about: string; info: InfoText | HeadingInfo }) {
   const [open, setOpen] = useState(false)
   const wrap = useRef<HTMLSpanElement>(null)
   const button = useRef<HTMLButtonElement>(null)
@@ -42,11 +42,17 @@ export default function InfoLabel({ about, info }: { about: string; info: InfoTe
         <span id={id} role="region" aria-label={name} data-info-panel
           onClick={(e) => { e.preventDefault(); e.stopPropagation() }}
           className="mt-1 block basis-full w-full max-w-full rounded border-2 border-zinc-900 bg-white p-2 text-xs font-normal text-zinc-900 break-words">
-          {typeof info === 'string'
-            ? <span className="block" data-info-part="text">{info}</span>
-            : (['what', 'lexDoes', 'example'] as const).map((p) => (
-              <span key={p} className="block" data-info-part={p}><span className="font-semibold">{INFO_PART_WORD[p]}:</span> {info[p]}</span>
-            ))}
+          {'text' in info
+            ? <>
+                <span className="block" data-info-part="text">{info.text}</span>
+                <span className="block" data-info-part="why"><span className="font-semibold">{INFO_PART_WORD.why}:</span> {info.why}</span>
+              </>
+            : <>
+                {INFO_PARTS.map((p) => (
+                  <span key={p} className="block" data-info-part={p}><span className="font-semibold">{INFO_PART_WORD[p]}:</span> {info[p]}</span>
+                ))}
+                {info.optional && <span className="block font-semibold" data-info-part="optional">{INFO_OPTIONAL_WORD}</span>}
+              </>}
           <button type="button" data-info-close onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(false); button.current?.focus() }}
             className="mt-1 underline">{INFO_UI.close}</button>
         </span>

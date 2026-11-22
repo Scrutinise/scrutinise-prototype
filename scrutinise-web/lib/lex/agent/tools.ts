@@ -2067,6 +2067,7 @@ import * as HKS from '@/lib/lex/heading-kind'
 import { KIND_WORD, HEADING_KIND_WORD } from '@/lib/lex/action-documents-pure'
 import { summariseThread } from '@/lib/lex/action-thread'
 import { explainField, listFields, type GuideArea } from '@/lib/lex/field-guide'
+import { INFO_OPTIONAL_WORD } from '@/lib/lex/brief-info'
 
 const OWNER_ONLY = 'Call it ONLY when the owner has told you to; it asks first.'
 const saidByUser = (ctx: ToolCtx, text: string) => ctx.turn.userMessages.map(norm).join(' ').includes(norm(text))
@@ -2095,7 +2096,7 @@ const explainFieldTool: ToolDefinition = {
     const r = explainField(name)
     // 26-AB (354): where the screen shows an ⓘ, its words come back too, so Lex and the screen explain a Brief field alike
     const info = r.exact?.info
-    const infoData = info == null ? {} : typeof info === 'string' ? { about: info } : { whatItIs: info.what, whatLexDoes: info.lexDoes, example: info.example }
+    const infoData = info == null ? {} : 'text' in info ? { about: info.text, whyItIsNeeded: info.why } : { whatItIs: info.what, whatLexDoes: info.lexDoes, example: info.example, whyItIsNeeded: info.why, ...(info.optional ? { optional: INFO_OPTIONAL_WORD } : {}) }
     if (r.exact) return { ok: true, data: { label: r.exact.label, area: r.exact.area, purpose: r.exact.purpose, howItFits: r.exact.fits, ...(r.exact.limits ? { limits: r.exact.limits } : {}), tool: r.exact.tool, ...infoData } }
     if (r.near.length) return { ok: true, data: { noExactMatch: name, closest: r.near.map((e) => ({ label: e.label, area: e.area, purpose: e.purpose, tool: e.tool })), note: 'Say which of these the user means; if none, say the guide has no entry for it.' } }
     return fail(`the field guide has no entry for “${clip(name, 80)}”. Use list_fields to see what it covers, and say so rather than guess.`)
