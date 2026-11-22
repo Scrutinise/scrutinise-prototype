@@ -1051,6 +1051,16 @@ fail, it returns the wrong figure under the right field name. New scripts are al
 
 ## LEX THREAD
 
+**▶ 2026-11-22 21:09 UTC (laptop, cc-lex): 360A, Z1c, Z2 (finished, with 361 amended and §6.4) and 354 amended, pushed to Main BY THE
+SESSION under decision 365** (docs/CLAUDE.md §12: the session pushes when a set is green; the stop rules stay). Commits on top of
+6f3e2acc: 7204933a 360A · 8fd737d4 Z1c · 1e8fe8c6 Z2 · 8ed4cd30 Z2 finished · aec8d40a 354 amended · this note.
+- **Open:** PublicNav's sign-out (Central's file) must call `lexSignOut(() => signOut({ redirectUrl: '/' }))` from
+  `lib/lex/offline-signout.ts` for the sign-out question to show; the work is kept regardless. Passed to CCh for Central.
+- **Charlie's phone:** Z1c (the bar on the bottom edge; `&where-debug=1` if not), Z2 offline (Clerk's script is not kept), Add to Home
+  Screen (opens at My ideas, the scales icon).
+- **Parked:** 360 part B (CCh's say). **Next:** BRIEF_26AC (Private Scrutiny), in `C:\lex26ac`, sizing first; part (a) stops for
+  Charlie's phone check.
+
 **▶ 2026-11-21 00:30 UTC (laptop, cc-lex): 26-AA done. Item 1, 352, 25g A6, 26-AB and item 9 are on `wip/26aa`, local, a fast-forward of
 Main `51223b68`. The push is Charlie's:** `& "C:\Program Files\Git\cmd\git.exe" -C C:/lex26aa push origin 6ba2191c:Main`
 - **Commits:**
