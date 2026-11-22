@@ -449,6 +449,13 @@ export const OFFLINE_UI = {
   lexSend: 'Send to Lex',
   lexKeep: 'Not now',
   lexWaiting: 'Waiting: will ask before sending to Lex when you’re back online',
+  // 361 amended (21 Nov): the owner's unsent work is kept through sign-out, and another account's is never sent as this one
+  signOutAsk: (edits: number | string, lex: number | string = 0) =>
+    [Number(edits) ? `${edits} edit${Number(edits) === 1 ? '' : 's'} not yet sent` : '', Number(lex) ? `${lex} message${Number(lex) === 1 ? '' : 's'} to Lex not yet sent (kept until you choose to send)` : ''].filter(Boolean).join('; ') + '.',
+  signOutSend: 'Send now, then sign out',
+  signOutKeep: 'Keep for when you sign back in',
+  foreignHead: (n: number | string) => `${n} unsent change${Number(n) === 1 ? '' : 's'} on this device ${Number(n) === 1 ? 'was' : 'were'} made by another account. ${Number(n) === 1 ? 'It' : 'They'} will never be sent as you.`,
+  foreignRemove: 'Remove them from this device',
 } as const
 
 export const DRAFT_RESTORE_UI = {

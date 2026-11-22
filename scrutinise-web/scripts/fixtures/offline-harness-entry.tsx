@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import OfflineStrip from '../../components/lex/OfflineStrip'
 import { readQueue, overlayActions, postOrQueue, enqueueLex } from '../../lib/lex/offline-queue'
 import { OFFLINE_UI } from '../../lib/lex/screen-labels'
+import { lexSignOut } from '../../lib/lex/offline-signout'
 
 type A = { id: string; number: number; practicalStep: string; commentary: string | null }
 type S = { actions: A[]; v: string }
@@ -14,8 +15,10 @@ const ideaId = 'fx'
 function App() {
   const qs = new URLSearchParams(window.location.search)
   // as Clerk: the user is NOT KNOWN (undefined) until it has loaded — `userDelay` ms here — which is when a flush could race the user check
-  const [user, setUser] = useState<string | undefined>(qs.get('userDelay') ? undefined : qs.get('user') ?? 'u1')
-  useEffect(() => { if (qs.get('userDelay')) { const t = setTimeout(() => setUser(qs.get('user') ?? 'u1'), Number(qs.get('userDelay'))); return () => clearTimeout(t) } }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  // user=none is signed out (null), as Clerk says once it has loaded and nobody is signed in
+  const who = qs.get('user') === 'none' ? null : qs.get('user') ?? 'u1'
+  const [user, setUser] = useState<string | null | undefined>(qs.get('userDelay') ? undefined : who)
+  useEffect(() => { if (qs.get('userDelay')) { const t = setTimeout(() => setUser(who), Number(qs.get('userDelay'))); return () => clearTimeout(t) } }, []) // eslint-disable-line react-hooks/exhaustive-deps
   const [state, setState] = useState<S | null>(null)
   const [msg, setMsg] = useState('')
   // as CreateIdeaClient's applyState: queued edits are laid over every state applied
@@ -36,10 +39,12 @@ function App() {
     if (navigator.onLine === false) { enqueueLex(ideaId, text, `c-${Date.now()}`); setMsg(OFFLINE_UI.lexWaiting); return }
     void fetch(`/api/ideas/${ideaId}/lex`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text }) })
   }
-  const w = window as unknown as { __edit: (id: string, t: string) => Promise<void>; __other: () => Promise<void>; __lex: (t: string) => void }
+  const w = window as unknown as { __edit: (id: string, t: string) => Promise<void>; __other: () => Promise<void>; __lex: (t: string) => void; __signOut: () => Promise<string>; __signedOut?: boolean }
   w.__edit = (id, t) => post('/actions', { action: 'update', actionId: id, practicalStep: t })
   w.__other = () => post('/causes', { action: 'add', cause: 'x' })
   w.__lex = sayToLex
+  // as the site's sign-out is to call it (PublicNav's handleSignOut → lexSignOut(() => signOut(...)))
+  w.__signOut = () => lexSignOut(() => { w.__signedOut = true })
   return (
     <div data-workspace data-v={state?.v ?? ''}>
       <OfflineStrip ideaId={ideaId} userId={user} onRefresh={() => { void refresh() }} lexEstimate={OFFLINE_UI.estimate(4)}

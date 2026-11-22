@@ -2,8 +2,11 @@
 // LEX Z2 (BRIEF_26Z §6.3; decisions 361–363) — OFFLINE, THE PAGE'S HALF. Client only. The worker is public/lex-sw.js.
 //
 //   registerLexWorker()   the worker, scope /ideas/ (never Central's pages)
-//   keepForUser(userId)   361: a different user (or none) on this device → everything kept is cleared first
-//   clearLexOffline()     everything kept: the worker's copies, the queue. Called on sign-out, and exported for Central's sign-out.
+//   keepForUser(userId)   361 (amended 21 Nov): signed out → the cached READS are cleared and the owner's unsent work is KEPT, tied to
+//                         them; a different user → the cached reads are cleared at once, and the other account's unsent work is never
+//                         shown or sent as this one (the page warns, and removes it only when this user taps Remove)
+//   clearLexOffline()     the cached reads only (the worker's copies of pages and reads). NEVER the owner's unsent work.
+//                         Sign-out itself goes through lexSignOut() (offline-signout.ts), which asks first when anything is unsent.
 //   cachedAtOf(document)  when the page on screen was fetched, if it came from the kept copy (the worker marks it)
 //   offlineWrite(...)     a write attempted with no connection: refused in words (Z2a), or queued (Z2b, edits and Lex messages)
 //
@@ -28,23 +31,35 @@ export async function registerLexWorker(): Promise<boolean> {
   } catch { return false }
 }
 
-/** Everything Lex keeps on this device for offline: the worker's copies and the queue of writes. */
+/**
+ * The cached READS Lex keeps on this device: the worker's copies of pages and of Lex's reads. ⚠ NOT THE OWNER'S UNSENT WORK (361 amended,
+ * 21 Nov): the queue of edits and Lex messages, and the typing DeviceDraft keeps, are never discarded by this.
+ */
 export async function clearLexOffline(): Promise<void> {
-  local.set(OFFLINE_KEY.queue, null)
   try {
     if (typeof caches !== 'undefined') for (const k of await caches.keys()) if (k.startsWith('lex-')) await caches.delete(k)
   } catch { /* the Cache API is unavailable: nothing was kept */ }
   try { navigator.serviceWorker?.controller?.postMessage({ type: 'lex-clear' }) } catch { /* no worker */ }
 }
 
-/** 361 — kept data belongs to one signed-in user. Signed out (null), or a different user from last time: clear first. Returns whether it cleared. */
-export async function keepForUser(userId: string | null): Promise<boolean> {
-  const was = local.get(OFFLINE_KEY.user)
-  if (userId && was === userId) return false
+/**
+ * 361 (amended 21 Nov) — what is kept belongs to one user.
+ *   · signed out (null): the cached reads are cleared; the owner's unsent work stays, tied to them (OFFLINE_KEY.user is NOT forgotten).
+ *   · the same user as last time: nothing changes.
+ *   · a different user: the cached reads are cleared at once, and this user becomes the device's user. Each queued item carries the user
+ *     who made it (offline-queue.ts), so from then on the other account's items are never shown, overlaid or sent; the page warns, and
+ *     removes them only when this user taps Remove.
+ */
+export async function keepForUser(userId: string | null): Promise<'signed-out' | 'same' | 'changed'> {
+  if (!userId) { await clearLexOffline(); return 'signed-out' }
+  if (local.get(OFFLINE_KEY.user) === userId) return 'same'
   await clearLexOffline()
   local.set(OFFLINE_KEY.user, userId)
-  return was != null || !userId
+  return 'changed'
 }
+
+/** The user this device's Lex data belongs to now: the last one signed in here (kept through a sign-out). */
+export function deviceUser(): string | null { return local.get(OFFLINE_KEY.user) }
 
 /** When the page on screen was fetched, if the worker served it from its kept copy; null when it came from the network. */
 export function cachedAtOf(doc: Document): Date | null {

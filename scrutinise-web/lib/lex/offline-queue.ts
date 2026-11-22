@@ -6,15 +6,21 @@
 //     value it was made on (`expect`); if the server's copy changed meanwhile, the route answers 409 and the item becomes a CONFLICT,
 //     shown with both versions for the owner to choose. A refusal (422 …) is kept and shown in its own words. Nothing is dropped silently.
 //   · Lex messages (they spend): kept, and on reconnection NOT sent until the owner taps once, with the estimate (362).
-//   · Kept per user: offline.ts clears it on sign-out and when a different user signs in (361).
+//   · 361 (amended 21 Nov) — THE OWNER'S WORK IN PROGRESS IS KEPT. Every item carries the user who made it. Sign-out never discards it
+//     (offline-signout.ts asks first: send now, or keep for when you sign back in). When a DIFFERENT user signs in on this device, the
+//     other account's items are never shown, overlaid or sent as this one: readQueue() returns only the device user's own, and the page
+//     warns about the rest (foreignQueue) and removes them only when this user taps Remove (removeForeign).
+//     ⚠ So every write here starts from readAll(), never readQueue(): writing back a filtered list would delete the other account's work.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { safeStore } from './where-am-i'
-import { OFFLINE_KEY } from './offline'
+import { OFFLINE_KEY, deviceUser } from './offline'
 import { EXPECTABLE, type Conflict, type Expect, type ExpectField } from './offline-conflict'
 
 export interface QueuedEdit {
   id: string; kind: 'edit'; ideaId: string; url: string; body: Record<string, unknown>
+  /** Who made it (361): only ever sent while that user is the device's user. */
+  userId: string | null
   /** What it is, in words: "the statement of #3". */
   words: string
   at: string
@@ -22,18 +28,30 @@ export interface QueuedEdit {
   conflict?: Conflict[]
   refusal?: string
 }
-export interface QueuedLex { id: string; kind: 'lex'; ideaId: string; text: string; clientTurnId: string; at: string; status: 'waiting' }
+export interface QueuedLex { id: string; kind: 'lex'; ideaId: string; userId: string | null; text: string; clientTurnId: string; at: string; status: 'waiting' }
 export type Queued = QueuedEdit | QueuedLex
 
 const local = safeStore(() => (typeof window === 'undefined' ? null : window.localStorage))
 const EVT = 'lex-offline-queue'
 
-export function readQueue(ideaId?: string): Queued[] {
+/** Every item on the device, whoever made it. Only for writing back (and counting the other account's); never shown or sent from. */
+function readAll(): Queued[] {
   try {
     const all = JSON.parse(local.get(OFFLINE_KEY.queue) ?? '[]') as Queued[]
-    return Array.isArray(all) ? (ideaId ? all.filter((q) => q.ideaId === ideaId) : all) : []
+    return Array.isArray(all) ? all : []
   } catch { return [] }
 }
+const mine = (q: Queued, me = deviceUser()) => q.userId === me
+
+/** The device user's own queue (optionally one idea's): the only items ever shown, overlaid or sent. */
+export function readQueue(ideaId?: string): Queued[] {
+  const me = deviceUser()
+  return readAll().filter((q) => mine(q, me) && (!ideaId || q.ideaId === ideaId))
+}
+/** 361: what another account left unsent on this device. Never shown or sent as this user; counted for the warning. */
+export function foreignQueue(): Queued[] { const me = deviceUser(); return readAll().filter((q) => !mine(q, me)) }
+/** 361: removed only when the user now signed in taps Remove, after the warning. */
+export function removeForeign() { const me = deviceUser(); writeQueue(readAll().filter((q) => mine(q, me))) }
 function writeQueue(all: Queued[]) {
   local.set(OFFLINE_KEY.queue, all.length ? JSON.stringify(all) : null)
   try { window.dispatchEvent(new Event(EVT)) } catch { /* no window */ }
@@ -43,17 +61,34 @@ export const onQueueChange = (f: () => void) => { window.addEventListener(EVT, f
 const newId = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `q${Date.now()}${Math.random().toString(36).slice(2)}`)
 
 export function enqueueEdit(ideaId: string, url: string, body: Record<string, unknown>, words: string): QueuedEdit {
-  const item: QueuedEdit = { id: newId(), kind: 'edit', ideaId, url, body, words, at: new Date().toISOString(), status: 'waiting' }
-  writeQueue([...readQueue(), item])
+  const item: QueuedEdit = { id: newId(), kind: 'edit', ideaId, url, body, userId: deviceUser(), words, at: new Date().toISOString(), status: 'waiting' }
+  writeQueue([...readAll(), item])
   return item
 }
 export function enqueueLex(ideaId: string, text: string, clientTurnId: string): QueuedLex {
-  const item: QueuedLex = { id: newId(), kind: 'lex', ideaId, text, clientTurnId, at: new Date().toISOString(), status: 'waiting' }
-  writeQueue([...readQueue(), item])
+  const item: QueuedLex = { id: newId(), kind: 'lex', ideaId, userId: deviceUser(), text, clientTurnId, at: new Date().toISOString(), status: 'waiting' }
+  writeQueue([...readAll(), item])
   return item
 }
-export function removeQueued(id: string) { writeQueue(readQueue().filter((q) => q.id !== id)) }
-function patchQueued(id: string, p: Partial<QueuedEdit>) { writeQueue(readQueue().map((q) => (q.id === id && q.kind === 'edit' ? { ...q, ...p } : q))) }
+export function removeQueued(id: string) { writeQueue(readAll().filter((q) => q.id !== id)) }
+function patchQueued(id: string, p: Partial<QueuedEdit>) { writeQueue(readAll().map((q) => (q.id === id && q.kind === 'edit' ? { ...q, ...p } : q))) }
+
+/** What the device user has not yet sent, for the sign-out question: edits (waiting or in conflict) and Lex messages. */
+export function unsentLexWork(): { edits: number; lex: number } {
+  const q = readQueue()
+  return { edits: q.filter((x) => x.kind === 'edit' && x.status !== 'refused').length, lex: q.filter((x) => x.kind === 'lex').length }
+}
+
+/** Every idea's waiting edits for the device user, in order (the sign-out question's "send now"). */
+export async function flushAllEdits(send?: (url: string, body: Record<string, unknown>) => Promise<Response>): Promise<FlushResult> {
+  const total: FlushResult = { sent: 0, conflicts: 0, refused: 0, stopped: false, lastJson: null }
+  for (const ideaId of [...new Set(readQueue().map((q) => q.ideaId))]) {
+    const r = await flushEdits(ideaId, send)
+    total.sent += r.sent; total.conflicts += r.conflicts; total.refused += r.refused; total.lastJson = r.lastJson ?? total.lastJson
+    if (r.stopped) { total.stopped = true; break }
+  }
+  return total
+}
 
 /**
  * The action edit the page is about to make, as a queued edit: the patch plus `expect`, each edited field's value as the page holds it now

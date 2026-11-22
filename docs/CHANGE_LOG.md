@@ -1,5 +1,31 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-22 21:07 UTC - LEX Z2 finished: 361 amended (the owner's unsent work survives sign-out) and §6.4 (installable, CCh's original scales icon, decision 366); decision 365 written into §12
+
+CCh 0156Z point B and 0750Z; 2045Z point 1. Built on 1e8fe8c6 (Z2 as first committed, never pushed).
+- **361 amended, Charlie 21 Nov 01:54: keep the owner's work in progress.**
+  - Every queued item now carries the user who made it. Sign-out NEVER discards it: `clearLexOffline()` clears only the cached reads
+    (the worker's copies), and a signed-out page sends nothing.
+  - `lexSignOut(doSignOut)` (new, `lib/lex/offline-signout.ts`): with anything unsent it asks first, "1 edit not yet sent", with "Send
+    now, then sign out" / "Keep for when you sign back in". Lex messages are always kept (they spend; their own tap, 362). Then the
+    cached reads are cleared and the sign-out runs. Lex's page shows the question; a page that shows none gets the safe answer, Keep.
+  - A DIFFERENT user on the device: the cached reads are cleared at once, and the other account's items are never shown, overlaid or
+    sent as this one. A warning names how many; they are removed only on this user's tap ("Remove them from this device"). If the
+    owner signs back in first, their work is sent, as them.
+  - Drafts (DeviceDraft) were never touched by sign-out; now asserted.
+  - ⚠ NOT YET WIRED: the site's sign-out button is in `components/PublicNav.tsx` (shared site chrome, Central's per CCh 0750Z). Until it
+    calls `lexSignOut(() => signOut({ redirectUrl: '/' }))`, sign-out does not ask, and the work is kept regardless.
+- **§6.4, installable:** `app/manifest.ts` (start_url /ideas/mine, standalone, #12302E); icons 192, 512, maskable 512 and the SVG
+  under `public/icons/`, CCh's original mark (366). `app/icon.png` (the site's TAB ICON, every page, Central's too) is the new 64 px
+  mark; `app/apple-icon.png` added. `public/ScalesIcon.webp` (a VectorStock preview) moved to `docs/Archive/icons/`, history kept.
+  `public/Scrutinise-Logo-Negative.png` is referenced by no code; not edited.
+- **365 into docs/CLAUDE.md §12:** the session pushes to Main itself when a set is green; the stop rules stay.
+- check:lex-z2 63/63 (was 45): sign-out asks, Keep keeps, Send now sends, drafts survive, cached reads cleared; signed out sends
+  nothing; u2 neither sees nor sends u1's work, is warned, Remove removes; u1 back sends; u2's own queue grows beside u1's; a 401 keeps
+  the queue; the manifest and every icon at its declared size. Mutants 20/21 RED; Z2-21 (sign-out forgets the device user) is
+  equivalent: only an offline page with Clerk unloaded reads it, and after sign-out no kept page exists to open.
+- Regressions, one at a time: 26z 214/214, 26w-b 60/60, 26x2 75/75, 26aa 118/118, 26s-browser 90/90; clean-build --fast PASS.
+
 ## 2026-11-21 02:26 UTC - LEX Z2 (BRIEF_26Z §6.3; decisions 361-363): offline reading, the queue (sent first on reconnection), conflicts shown both ways, one tap before queued Lex messages spend
 
 CCh's GO of 21 Nov 01:40, point 4, with Charlie's decisions 361-363. §6.4 (installable: the manifest and icons) waits on 364's art

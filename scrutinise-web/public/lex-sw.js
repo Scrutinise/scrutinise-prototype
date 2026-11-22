@@ -8,8 +8,9 @@
 //   · Lex's reads (GET /api/ideas/…): network first, the last good answer kept for offline.
 //   · The app's built files (/_next/static/…, content-hashed, never change): cache first.
 //   · WRITES ARE NEVER HANDLED HERE. The page decides (queue or refuse, in words); this worker passes every non-GET straight through.
-//   · 361: what is kept is signed-in data. A page that answers with a redirect to sign-in, or 401/403, clears everything at once, and the
-//     page clears everything on sign-out and when a different user signs in (message 'lex-clear').
+//   · 361: what is kept HERE is cached reads of signed-in data. A page that answers with a redirect to sign-in, or 401/403, clears all of
+//     it at once, and the page clears it on sign-out and when a different user signs in (message 'lex-clear').
+//     ⚠ The owner's unsent work (the queue, the drafts) is not here: it is in the page's storage, and the worker never touches it.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const VERSION = 'z2-1'

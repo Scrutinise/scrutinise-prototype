@@ -7,14 +7,17 @@
 //   · on reconnection, THE QUEUE GOES FIRST (363): the waiting edits are sent in order, and only then is the page refreshed;
 //   · a conflict, with both versions, until the owner chooses; a refusal, in its words, until dismissed. Nothing is dropped silently;
 //   · queued Lex messages are not sent until the owner taps once, with the estimate (362).
-// It also registers the worker (scope /ideas/), clears what is kept when the user changes or signs out (361), and answers every other Lex
+//   · 361 amended: on sign-out with anything unsent, the question (send now / keep for when you sign back in); another account's unsent
+//     work on this device, a warning, removed only on this user's tap.
+// It also registers the worker (scope /ideas/), clears the cached reads when the user changes or signs out (361), and answers every other Lex
 // write made offline in words ("this needs the connection"), so no control fails as a bare "Failed to fetch".
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { OFFLINE_UI } from '@/lib/lex/screen-labels'
 import { registerLexWorker, keepForUser, clearLexOffline, cachedAtOf, clockWords, installOfflineWrites, refusedOffline } from '@/lib/lex/offline'
-import { readQueue, onQueueChange, flushEdits, resolveConflict, removeQueued, type Queued, type QueuedEdit, type QueuedLex } from '@/lib/lex/offline-queue'
+import { readQueue, foreignQueue, removeForeign, onQueueChange, flushEdits, resolveConflict, removeQueued, type Queued, type QueuedEdit, type QueuedLex } from '@/lib/lex/offline-queue'
+import { ASK_EVENT, type SignOutAsk, type SignOutChoice } from '@/lib/lex/offline-signout'
 
 export interface OfflineStripProps {
   ideaId: string | null
@@ -39,13 +42,34 @@ export default function OfflineStrip({ ideaId, userId, onRefresh, lexEstimate, s
   const refreshRef = useRef(onRefresh)
   refreshRef.current = onRefresh
 
-  // 361 first: a different user (or none) clears what this device kept, before anything is read from it
-  // ⚠ NOTHING IS SENT UNTIL THIS HAS RUN: a queue kept by another user on this device is cleared, never sent as this one
+  // 361 first (amended 21 Nov): who is signed in decides whose queue this is, before anything is sent from it
+  // ⚠ NOTHING IS SENT UNTIL THIS HAS RUN, AND NOTHING WHILE SIGNED OUT: another account's queue is never sent as this one (each item
+  //   carries its user; readQueue returns only the device user's), and a signed-out page sends nothing (the owner's work waits for them)
   const [ready, setReady] = useState(false)
+  const [foreign, setForeign] = useState(0)
   useEffect(() => {
-    if (userId === undefined) return
-    void keepForUser(userId).then(() => { setQueue(ideaId ? readQueue(ideaId) : []); setReady(true) })
+    // not known yet (Clerk loading; or offline, where it may never load): the device user's own work is SHOWN, never sent
+    if (userId === undefined) { setQueue(ideaId ? readQueue(ideaId) : []); return }
+    void keepForUser(userId).then((did) => {
+      setForeign(userId ? foreignQueue().length : 0)
+      setQueue(ideaId && userId ? readQueue(ideaId) : [])
+      setReady(!!userId)
+      // a different account: whatever the page laid over its state before the user was known is read again, without the other's
+      if (did === 'changed') refreshRef.current()
+    })
   }, [userId, ideaId])
+
+  // the sign-out question (lexSignOut, offline-signout.ts): this page shows it, and nothing is discarded whichever is chosen
+  const [ask, setAsk] = useState<(SignOutAsk & { resolve: (c: SignOutChoice) => void }) | null>(null)
+  useEffect(() => {
+    const on = (e: Event) => {
+      const d = (e as CustomEvent<SignOutAsk>).detail
+      if (!d || d.answer) return
+      d.answer = new Promise<SignOutChoice>((resolve) => setAsk({ ...d, resolve: (c) => { setAsk(null); resolve(c) } }))
+    }
+    window.addEventListener(ASK_EVENT, on)
+    return () => window.removeEventListener(ASK_EVENT, on)
+  }, [])
   useEffect(() => { void registerLexWorker() }, [])
   useEffect(() => installOfflineWrites(async () => refusedOffline(OFFLINE_UI.needsConnection)), [])
   useEffect(() => { setCachedAt(cachedAtOf(document)); setOnline(typeof navigator === 'undefined' ? true : navigator.onLine !== false) }, [])
@@ -91,9 +115,24 @@ export default function OfflineStrip({ ideaId, userId, onRefresh, lexEstimate, s
     setQueue(ideaId ? readQueue(ideaId) : [])
   }
 
-  if (!offline && !waiting.length && !conflicts.length && !refused.length && !(online && lex.length) && !note && !sending) return null
+  if (!offline && !waiting.length && !conflicts.length && !refused.length && !(online && lex.length) && !note && !sending && !ask && !foreign) return null
   return (
     <div data-offline-strip className="mx-auto w-full max-w-[1400px] px-3 py-2 space-y-2 text-sm text-zinc-900">
+      {ask && (
+        <div data-signout-ask role="alertdialog" aria-label={OFFLINE_UI.signOutAsk(ask.edits, ask.lex)} className="rounded-md border-2 border-zinc-900 bg-white p-2 space-y-2">
+          <p className="font-semibold"><span aria-hidden>⚠ </span>{OFFLINE_UI.signOutAsk(ask.edits, ask.lex)}</p>
+          <div className="flex flex-wrap gap-2">
+            {ask.edits > 0 && <button type="button" data-signout-send onClick={() => ask.resolve('send')} className="min-h-[36px] px-3 rounded-full bg-zinc-900 text-white font-semibold">{OFFLINE_UI.signOutSend}</button>}
+            <button type="button" data-signout-keep onClick={() => ask.resolve('keep')} className="min-h-[36px] px-3 rounded-full border-2 border-zinc-900 bg-white font-semibold">{OFFLINE_UI.signOutKeep}</button>
+          </div>
+        </div>
+      )}
+      {foreign > 0 && (
+        <div data-offline-foreign role="alert" className="rounded-md border-2 border-zinc-900 bg-white p-2 space-y-1">
+          <p className="font-semibold"><span aria-hidden>⚠ </span>{OFFLINE_UI.foreignHead(foreign)}</p>
+          <button type="button" data-offline-foreign-remove onClick={() => { removeForeign(); setForeign(0) }} className="min-h-[36px] px-3 rounded-full border-2 border-zinc-900 bg-white font-semibold">{OFFLINE_UI.foreignRemove}</button>
+        </div>
+      )}
       {offline && (
         <p role="status" data-offline-state className="rounded-md border-2 border-zinc-900 bg-amber-50 px-3 py-1.5 font-semibold">
           <span aria-hidden>⚠ </span>{OFFLINE_UI.lastUpdated(clockWords(cachedAt ?? loadedAt))}

@@ -457,6 +457,11 @@ const OFFLINE_G: Record<keyof typeof OFFLINE_UI, GuideText> = {
   lexSend: { purpose: 'Sends the waiting messages to Lex, in order.', fits: 'Each is an ordinary Lex message.', tool: none('a screen control') },
   lexKeep: { purpose: 'Leaves the waiting messages unsent for now.', fits: 'They stay on this device; you are asked again next time.', tool: none('a screen control') },
   lexWaiting: { purpose: 'Marks a message you wrote to Lex while offline.', fits: 'It is not sent until you are back online and say so.', tool: none('a screen label') },
+  signOutAsk: { purpose: 'Asks, as you sign out, about changes you made that have not been sent yet.', fits: 'Whatever you choose, nothing is discarded: unsent changes stay on this device for you until you sign back in.', tool: none('kept on the device, not on the server') },
+  signOutSend: { purpose: 'Sends your unsent edits now, then signs you out.', fits: 'Anything that cannot be sent (no connection, or a conflict) stays kept for you. Messages to Lex are not sent here; they wait for their own tap.', tool: none('a screen control') },
+  signOutKeep: { purpose: 'Signs you out and keeps your unsent changes on this device.', fits: 'They are sent when you sign back in on this device. Another account signing in here never sends them.', tool: none('a screen control') },
+  foreignHead: { purpose: 'Says this device holds unsent changes made by someone else’s account.', fits: 'They are never shown or sent as you. They stay until you remove them, so their owner can still send them by signing back in.', tool: none('kept on the device, not on the server') },
+  foreignRemove: { purpose: 'Removes the other account’s unsent changes from this device.', fits: 'Only after this warning. Nothing on the server changes.', tool: none('a screen control') },
 }
 const DRAFT_RESTORE_G: Record<keyof typeof DRAFT_RESTORE_UI, GuideText> = {
   offer: { purpose: 'Says this box held text you had not sent or saved when the page was closed or reloaded.', fits: 'Kept on this device only, for Lex’s message, Edit the action, Edit the action details, the Brief, comments and Add research. Never sent by itself.', tool: none('kept on the device, not on the server') },

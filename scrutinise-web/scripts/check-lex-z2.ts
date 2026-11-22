@@ -15,13 +15,15 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import http from 'node:http'
-import { readFileSync } from 'node:fs'
+import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import vm from 'node:vm'
 import { build } from 'esbuild'
 import { conflictsOf, conflictWords } from '../lib/lex/offline-conflict'
 import { overlayActions, actionEditBody, type Queued } from '../lib/lex/offline-queue'
 import { OFFLINE_UI } from '../lib/lex/screen-labels'
+import { STORE_KEY } from '../lib/lex/where-am-i'
+import manifest from '../app/manifest'
 import { guideEntries } from '../lib/lex/field-guide'
 
 let pass = 0, fail = 0, ran = 0, controls = 0, dead = 0, notRun = 0
@@ -64,6 +66,18 @@ function partA() {
   ok('361: the worker never handles a write (it returns before respondWith for anything but GET)', /if \(req\.method !== 'GET'\) return/.test(sw))
   const reg = readFileSync(join(ROOT, 'lib/lex/offline.ts'), 'utf8')
   ok('361: the worker is registered with scope /ideas/ — never Central\'s pages', /LEX_SW_SCOPE = '\/ideas\/'/.test(reg) && /register\(LEX_SW_URL, \{ scope: LEX_SW_SCOPE \}\)/.test(reg))
+
+  // §6.4 (364/366) — installable: the manifest opens at My ideas, and every icon it names is a real file of the size it declares
+  const m = manifest()
+  ok('§6.4: the manifest opens at /ideas/mine, standalone, on the brand background', m.start_url === '/ideas/mine' && m.display === 'standalone' && m.background_color === '#12302E' && m.theme_color === '#12302E', JSON.stringify(m).slice(0, 200))
+  const pngSize = (f: string) => { const b = readFileSync(f); return b.toString('ascii', 1, 4) === 'PNG' ? `${b.readUInt32BE(16)}x${b.readUInt32BE(20)}` : 'not a png' }
+  const iconFaults = (m.icons ?? []).flatMap((ic) => {
+    const f = join(ROOT, 'public', ic.src)
+    try { if (ic.type === 'image/png' && pngSize(f) !== ic.sizes) return [`${ic.src}: ${pngSize(f)} not ${ic.sizes}`]; readFileSync(f); return [] } catch { return [`${ic.src}: missing`] }
+  })
+  ok('…every icon it names exists, at the size it declares (192, 512, a maskable 512, and the SVG)', iconFaults.length === 0 && (m.icons ?? []).some((ic) => ic.purpose === 'maskable' && ic.sizes === '512x512'), iconFaults.join('; '))
+  control('…a planted 192 icon declared as 512 is caught', pngSize(join(ROOT, 'public/icons/scrutinise-icon-192.png')) === '512x512')
+  ok('366: the stock preview is out of public/ (archived), and the tab icon is the new 64 px mark', !existsSync(join(ROOT, 'public/ScalesIcon.webp')) && pngSize(join(ROOT, 'app/icon.png')) === '64x64')
 }
 
 async function partB() {
@@ -154,7 +168,7 @@ async function partC() {
     const text = (sel: string) => p.locator(sel).first().innerText().catch(() => '')
     const statementOf = (id: string) => text(`[data-action="${id}"]`)
     const cacheNames = () => p.evaluate(() => caches.keys())
-    const queueOf = () => p.evaluate(() => JSON.parse(localStorage.getItem('lex.offline.queue.v1') ?? '[]') as Array<{ status: string; body: { expect?: unknown } }>)
+    const queueOf = () => p.evaluate(() => JSON.parse(localStorage.getItem('lex.offline.queue.v1') ?? '[]') as Array<{ status: string; userId: string | null; body: { expect?: unknown } }>)
 
     // 1 · online first: the worker registers (scope /ideas/) and, after one reload, controls the page and has kept it
     await p.goto(IDEA); await p.waitForSelector('[data-action="a1"]')
@@ -234,28 +248,82 @@ async function partC() {
     ok('offline, a page never opened on this device says there is no copy of it (never a blank or a browser error)', (await p.content()).includes('has not been opened on this device'))
     await offline(false)
 
-    // 10 · 361: a different user on this device clears what is kept
+    // 10 · 361 AMENDED (21 Nov): THE OWNER'S WORK IN PROGRESS IS KEPT through sign-out; the cached reads are not
+    type W = { __edit: (i: string, t: string) => Promise<void>; __signOut: () => Promise<string>; __signedOut?: boolean }
+    const kept = () => p.evaluate(async () => { let n = 0; for (const k of await caches.keys()) if (k.startsWith('lex-pages') || k.startsWith('lex-reads')) n += (await (await caches.open(k)).keys()).length; return n })
+    const editOffline = async (t: string) => { await offline(true); await p.evaluate((x) => (window as unknown as W).__edit('a1', x), t); await sleep(150) }
+    const signOutWith = async (button: 'keep' | 'send') => {
+      const done = p.evaluate(() => (window as unknown as W).__signOut())
+      await p.waitForSelector('[data-signout-ask]', { timeout: 5000 })
+      const words = await text('[data-signout-ask]')
+      await p.click(`[data-signout-${button}]`)
+      return { words, choice: await done, signedOut: await p.evaluate(() => !!(window as unknown as W).__signedOut) }
+    }
+    const DRAFT = STORE_KEY.draft('fx', 'lexMessage')
     await p.goto(IDEA); await p.waitForSelector('[data-action="a1"]')
-    ok('(kept copies exist before the user changes)', (await cacheNames()).some((k) => k.startsWith('lex-pages')))
-    // u1 edits offline; the phone is then handed to u2, who opens the idea ONLINE — the moment u1's queue would otherwise be flushed
-    await offline(true)
-    await p.evaluate(() => (window as unknown as { __edit: (i: string, t: string) => Promise<void> }).__edit('a1', 'u1 offline text'))
-    ok('(u1\'s edit is waiting on the device)', (await queueOf()).length === 1)
-    // u1's page is closed while still offline (were it open when the connection returns, u1 is still signed in and its edit rightly goes)
-    await p.goto('about:blank')
-    await context.setOffline(false); srv.down = false
+    ok('(kept copies exist before the sign-out)', (await kept()) > 0)
+    await p.evaluate((k) => localStorage.setItem(k, 'half a sentence, typed and not sent'), DRAFT)
+    await editOffline('u1 offline text')
+    ok('(u1\'s edit is waiting on the device, marked as u1\'s)', (await queueOf()).length === 1 && (await queueOf())[0].userId === 'u1', JSON.stringify(await queueOf()))
+    const so = await signOutWith('keep')
+    ok('361a: signing out with an edit unsent ASKS FIRST, in words ("1 edit not yet sent"), with Send now / Keep for when you sign back in', so.words.includes(OFFLINE_UI.signOutAsk(1, 0)) && so.words.includes(OFFLINE_UI.signOutSend) && so.words.includes(OFFLINE_UI.signOutKeep), so.words.replace(/\n/g, ' | '))
+    ok('…"Keep" signs out and keeps the edit on the device, still u1\'s', so.choice === 'keep' && so.signedOut && (await queueOf()).length === 1 && (await queueOf())[0].userId === 'u1')
+    ok('…the text being typed is kept too (sign-out never discards a draft)', (await p.evaluate((k) => localStorage.getItem(k), DRAFT)) === 'half a sentence, typed and not sent')
+    ok('…and the cached page reads ARE cleared at sign-out', (await kept()) === 0, String(await kept()))
+    await p.goto('about:blank'); await context.setOffline(false); srv.down = false
+    // signed out, the page opens: nothing is sent (the work waits for its owner)
+    srv.log = []
+    await p.goto(`${IDEA}&user=none`); await p.waitForSelector('[data-workspace]'); await sleep(800)
+    ok('…signed out, nothing is sent and nothing is removed', !srv.log.includes('POST /api/ideas/fx/actions') && (await queueOf()).length === 1, JSON.stringify(srv.log))
+
+    // 11 · a DIFFERENT user signs in on this device: u1's work is never shown or sent as u2, a warning, removed only on u2's tap
     srv.log = []
     // Clerk takes a moment to say who is signed in (userDelay): nothing may be sent before it has
-    await p.goto(`${IDEA}&user=u2&userDelay=600`); await p.waitForSelector('[data-action="a1"]'); await sleep(1200)
-    ok('361: when a different user opens Lex on this device, u1\'s queue is cleared first — never sent as u2', (await queueOf()).length === 0 && srv.actions[0].practicalStep !== 'u1 offline text' && !srv.log.includes('POST /api/ideas/fx/actions'), `${srv.actions[0].practicalStep}; ${JSON.stringify(srv.log)}`)
-    ok('…and the pages kept for u1 are gone (u2 starts from what u2 fetches)', await p.evaluate(async () => { for (const k of await caches.keys()) if (k.startsWith('lex-pages')) for (const r of await (await caches.open(k)).keys()) { const t = await (await (await caches.open(k)).match(r))!.headers.get('x-lex-fetched-at'); if (t && new Date(t).getTime() < Date.now() - 600) return false } return true }))
+    await p.goto(`${IDEA}&user=u2&userDelay=600`); await p.waitForSelector('[data-offline-foreign]', { timeout: 5000 }); await sleep(600)
+    ok('361b: when u2 opens Lex on this device, u1\'s edit is NOT sent as u2', srv.actions[0].practicalStep !== 'u1 offline text' && !srv.log.includes('POST /api/ideas/fx/actions'), `${srv.actions[0].practicalStep}; ${JSON.stringify(srv.log)}`)
+    ok('…nor shown to u2 (the page shows the server\'s copy)', (await statementOf('a1')) !== 'u1 offline text', await statementOf('a1'))
+    ok('…u2 is warned, in words', (await text('[data-offline-foreign]')).includes(OFFLINE_UI.foreignHead(1)), await text('[data-offline-foreign]'))
+    ok('…and it is NOT removed by the warning alone (still on the device, still u1\'s)', (await queueOf()).length === 1 && (await queueOf())[0].userId === 'u1')
+    ok('…the pages kept before are gone (u2 starts from what u2 fetches)', await p.evaluate(async () => { for (const k of await caches.keys()) if (k.startsWith('lex-pages')) for (const r of await (await caches.open(k)).keys()) { const t = await (await (await caches.open(k)).match(r))!.headers.get('x-lex-fetched-at'); if (t && new Date(t).getTime() < Date.now() - 1500) return false } return true }))
+    // u1 signs back in on this device: the kept edit goes, as u1, first
+    await p.goto('about:blank'); srv.log = []
+    await p.goto(`${IDEA}&user=u1`); await p.waitForFunction(() => document.querySelector('[data-offline-note]')?.textContent?.includes('Sent 1'), null, { timeout: 8000 })
+    ok('361c: when u1 signs back in, the edit kept through sign-out is sent, as u1', srv.actions[0].practicalStep === 'u1 offline text' && (await queueOf()).length === 0, `${srv.actions[0].practicalStep}; ${JSON.stringify(srv.log)}`)
+    // and the Remove: u1 leaves another edit, u2 signs in and taps Remove
+    await editOffline('u1 second text'); await signOutWith('keep')
+    await p.goto('about:blank'); await context.setOffline(false); srv.down = false; srv.log = []
+    await p.goto(`${IDEA}&user=u2`); await p.waitForSelector('[data-offline-foreign-remove]', { timeout: 5000 })
+    // before removing, u2 works offline too: u2's own queue grows without touching u1's, and only u2's goes when the connection returns
+    await editOffline('u2 offline text')
+    const both = await queueOf()
+    ok('…u2\'s own offline edit is kept beside u1\'s, never in place of it', both.length === 2 && both.some((q) => q.userId === 'u1') && both.some((q) => q.userId === 'u2'), JSON.stringify(both.map((q) => q.userId)))
+    srv.log = []
+    await offline(false)
+    await p.waitForFunction(() => document.querySelector('[data-offline-note]')?.textContent?.includes('Sent 1'), null, { timeout: 8000 })
+    ok('…back online, only u2\'s goes (as u2); u1\'s stays, unsent', srv.actions[0].practicalStep === 'u2 offline text' && (await queueOf()).length === 1 && (await queueOf())[0].userId === 'u1', `${srv.actions[0].practicalStep}; ${JSON.stringify(await queueOf())}`)
+    srv.log = []
+    await p.click('[data-offline-foreign-remove]'); await sleep(200)
+    ok('361d: u2\'s tap on Remove removes u1\'s unsent work from the device, after the warning; nothing was sent', (await queueOf()).length === 0 && (await p.locator('[data-offline-foreign]').count()) === 0 && srv.actions[0].practicalStep === 'u2 offline text' && !srv.log.includes('POST /api/ideas/fx/actions'))
 
-    // 11 · 361: a signed-out answer clears everything at once
-    await p.goto(IDEA); await p.waitForSelector('[data-action="a1"]'); await sleep(300)
+    // 12 · "Send now" at sign-out: u2 makes an edit the server could not take (it stopped answering), then signs out and chooses Send now
+    await p.reload(); await p.waitForSelector('[data-action="a1"]')
+    srv.down = true
+    await p.evaluate(() => (window as unknown as W).__edit('a2', 'u2 edit, sent at sign-out')); await sleep(200)
+    ok('(u2\'s edit is waiting: the server did not answer)', (await queueOf()).length === 1 && (await queueOf())[0].userId === 'u2')
+    srv.down = false; srv.log = []
+    const so2 = await signOutWith('send')
+    ok('361e: "Send now, then sign out" sends the edit through the route before signing out', so2.choice === 'send' && so2.signedOut && srv.actions[1].practicalStep === 'u2 edit, sent at sign-out' && (await queueOf()).length === 0, `${srv.actions[1].practicalStep}; ${JSON.stringify(srv.log)}`)
+
+    // 13 · 361: a signed-out answer clears the cached reads at once — and keeps the owner's unsent work
+    await p.goto(`${IDEA}&user=u2`); await p.waitForSelector('[data-action="a1"]'); await sleep(300)
+    srv.down = true
+    await p.evaluate(() => (window as unknown as W).__edit('a2', 'u2 kept through a 401')); await sleep(200)
+    srv.down = false
     srv.signedOut = true
     await p.goto(IDEA).catch(() => {}); await sleep(400)
-    const left = await p.evaluate(async () => { let n = 0; for (const k of await caches.keys()) if (k.startsWith('lex-')) n += (await (await caches.open(k)).keys()).length; return n })
-    ok('361: a page that answers "signed out" (401) clears everything kept, at once', left === 0, String(left))
+    const left = await p.evaluate(async () => { let n = 0; for (const k of await caches.keys()) if (k.startsWith('lex-pages') || k.startsWith('lex-reads')) n += (await (await caches.open(k)).keys()).length; return n })
+    ok('361: a page that answers "signed out" (401) clears the cached reads, at once', left === 0, String(left))
+    ok('…and keeps the owner\'s unsent edit', (await queueOf()).length === 1 && (await queueOf())[0].userId === 'u2', JSON.stringify(await queueOf()))
     srv.signedOut = false
     await context.close()
   } finally {

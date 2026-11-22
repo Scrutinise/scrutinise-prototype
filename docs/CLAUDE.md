@@ -340,6 +340,13 @@ One logical unit of work per commit. Descriptive commit messages matching sprint
 
 **Exception — build-breaking fixes ship immediately.** A fix for a broken build/deploy (e.g. a type error failing the Vercel build) is NOT batched into the next `commit-all.sh`: commit it on its own and push to `Main` at once (still with the `Date:` trailer). This is the one sanctioned mid-sprint git action.
 
+**Decision 365 (Charlie, 21 Nov 2026: "I just want everything automatically pushed") — the session pushes to `Main` itself.** This
+replaces "the push is Charlie's" wherever a brief, handoff or inbox rule says it. When a set is complete (checks green, run one at a
+time; clean build, `--fast` at least; committed by explicit path), the session pushes it, then runs the §20 read-back and reports the
+commit pushed. **It still stops and asks before:** any production schema or data change it has not been GO'd for, any delete, anything
+touching another stream's files. ⚠ A Vercel rollback undoes code, not the database, so a push that ships with a migration is never
+"undone" by rolling back. If the auto-mode check refuses the push, say so in the report and wait (Charlie adds the allow rule).
+
 **IMPORTANT — DO NOT call git during a sprint build.** Claude Code's security layer prompts for approval on every compound `cd + git` command, which interrupts runs. Instead, follow this pattern at the end of every sprint:
 
 1.  Write all code changes to disk during the sprint — no git calls.
