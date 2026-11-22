@@ -671,6 +671,9 @@ model User {
   graphDonationJudgements   GraphDonationJudgement[]
   proposalVersions          ProposalVersion[]   @relation("ProposalVersionCreator")
 
+  /// 26-AC — scrutiny editions this user created / published
+  scrutinyEditionsCreated   ScrutinyEdition[] @relation("ScrutinyEditionCreator")
+  scrutinyEditionsPublished ScrutinyEdition[] @relation("ScrutinyEditionPublisher")
   @@index([clerkId])
   @@index([email])
   @@index([username])
@@ -1049,6 +1052,8 @@ model Idea {
   graphJudgements           GraphClaimJudgement[]
   graphDonationJudgements   GraphDonationJudgement[]
 
+  /// 26-AC (368) — its scrutiny editions, numbered 1, 2, 3
+  scrutinyEditions ScrutinyEdition[]
   @@index([creatorId])
   @@index([stage])
   @@index([visibility])
@@ -2745,6 +2750,8 @@ model ProposalVersion {
   publishedOn   Idea[]     @relation("IdeaPublishedVersion")
   documents     Document[]
 
+  /// 26-AC — the scrutiny editions that froze the idea into this version
+  scrutinyEditions ScrutinyEdition[]
   @@unique([ideaId, versionNumber])
   @@index([ideaId, createdAt(sort: Desc)])
   @@index([contentHash])
@@ -5748,6 +5755,8 @@ model IdeaSource {
   updatedAt   DateTime  @default(now()) @updatedAt
   notes       ResearchNote[]
 
+  /// 26-AC (370) — scrutiny source links pointing at this source
+  scrutinyLinks ScrutinySourceLink[]
   @@unique([ideaId, number])
   @@unique([ideaId, corpusKey])
   @@unique([ideaId, materialId])
@@ -5920,4 +5929,81 @@ model DocumentDraftJob {
   @@index([status, createdAt, seq], map: "document_draft_job_queue_idx")
   @@index([ideaId, runId], map: "document_draft_job_run_idx")
   @@map("document_draft_job")
+}
+
+/// 26-AC (BRIEF_26AC §3; decision 368) — a SCRUTINY EDITION: the idea frozen (a ProposalVersion) for invited reviewers, numbered per
+/// idea. DRAFT (the owner edits notes and what is included) → PUBLISHED (never changes again: the database refuses it, trigger
+/// scrutiny_edition_frozen in prisma/lex_26ac_a.sql).
+model ScrutinyEdition {
+  id                String            @id
+  ideaId            String            @map("idea_id")
+  idea              Idea              @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  number            Int
+  proposalVersionId String            @map("proposal_version_id")
+  proposalVersion   ProposalVersion   @relation(fields: [proposalVersionId], references: [id], onDelete: Restrict)
+  /// DRAFT | PUBLISHED
+  status            String            @default("DRAFT")
+  /// which sections the owner included
+  include           Json              @default("{}")
+  /// 369 — each reviewer sees only their own until the round closes
+  blind             Boolean           @default(false)
+  roundClosedAt     DateTime?         @map("round_closed_at") @db.Timestamptz()
+  /// at publish: what the checklist found, each item published anyway
+  checklist         Json?
+  publishedAt       DateTime?         @map("published_at") @db.Timestamptz()
+  publishedBy       String?           @map("published_by")
+  publisher         User?             @relation("ScrutinyEditionPublisher", fields: [publishedBy], references: [id], onDelete: SetNull)
+  createdBy         String            @map("created_by")
+  creator           User              @relation("ScrutinyEditionCreator", fields: [createdBy], references: [id], onDelete: Restrict)
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt         DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+  notes             ScrutinyAuthorNote[]
+  sourceLinks       ScrutinySourceLink[]
+
+  @@unique([ideaId, number], map: "scrutiny_edition_idea_number_key")
+  @@index([ideaId, createdAt(sort: Desc)], map: "scrutiny_edition_idea_idx")
+  @@map("scrutiny_edition")
+}
+
+/// 26-AC (374) — an author's note: owner-written, at the top (TOP) or against a heading or an action. Set aside, never deleted.
+model ScrutinyAuthorNote {
+  id          String          @id
+  editionId   String          @map("edition_id")
+  edition     ScrutinyEdition @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  /// TOP | HEADING | ACTION
+  targetKind  String          @default("TOP") @map("target_kind")
+  targetId    String?         @map("target_id")
+  body        String
+  orderIndex  Int             @default(0) @map("order_index")
+  archivedAt  DateTime?       @map("archived_at") @db.Timestamptz()
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@index([editionId, orderIndex], map: "scrutiny_author_note_edition_idx")
+  @@map("scrutiny_author_note")
+}
+
+/// 26-AC (370) — the source-linking exercise: Lex PROPOSES a link from a section or claim to a filed source; the owner accepts or
+/// rejects it (beside, never over). On a DRAFT edition only.
+model ScrutinySourceLink {
+  id          String          @id
+  editionId   String          @map("edition_id")
+  edition     ScrutinyEdition @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  /// SUMMARY | HEADING | ACTION | DRAFT | NOTE
+  targetKind  String          @map("target_kind")
+  targetId    String?         @map("target_id")
+  claim       String?
+  sourceId    String          @map("source_id")
+  source      IdeaSource      @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  /// PROPOSED | ACCEPTED | REJECTED
+  status      String          @default("PROPOSED")
+  /// LEX | OWNER
+  proposedBy  String          @default("LEX") @map("proposed_by")
+  reason      String?
+  pence       Float?
+  answeredAt  DateTime?       @map("answered_at") @db.Timestamptz()
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([editionId, status], map: "scrutiny_source_link_edition_idx")
+  @@map("scrutiny_source_link")
 }

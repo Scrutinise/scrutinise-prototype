@@ -1,6 +1,6 @@
 -- ─────────────────────────────────────────────────────────────────────────────
 -- LEX 26-AC part (a) (BRIEF_26AC §3; decisions 368, 370, 374) — scrutiny editions, author's notes, source links.
--- ⚠ DRAFT FOR CCh's GO — NOT APPLIED. ADDITIVE ONLY: three new tables; nothing existing is altered, renamed or dropped.
+-- APPLIED 2026-11-22 22:40 UTC to Neon ep-old-dust-aboxi69a under CCh GO 1 (2145Z), read back from information_schema. ADDITIVE ONLY: three new tables; nothing existing is altered, renamed or dropped.
 -- Every statement is IF NOT EXISTS, so applying it twice changes nothing.
 --
 -- An edition FREEZES the idea into a ProposalVersion (the existing append-only snapshot, minted at "Create scrutiny edition") and adds
