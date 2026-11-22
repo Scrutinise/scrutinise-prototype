@@ -1,5 +1,20 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-22 22:35 UTC - LEX 366 settled: the Scrutinise mark (scales whose post is an S) on the tab, the iPhone home screen and the installed app; the C2PA stamp stripped
+
+CCh 2212Z: Charlie chose option C, and the hold is lifted. CCh 2145Z point 6: strip the C2PA stamp.
+- Where the mark now shows:
+  - public/icons: scrutinise-icon-192/512/maskable-512.png (same file names, so a more ornate S is a file swap) and
+    scrutinise-mark.svg, which the manifest now names;
+  - ⚠ app/icon.png, the site's TAB ICON on every page, Central's too: Central is told by CCh;
+  - app/apple-icon.png (180).
+- The placeholder scales SVG is moved to docs/Archive/icons/scrutinise-scales-placeholder.svg, with its stamp stripped.
+- ⚠ The files as sent STILL carried the C2PA stamp: the SVG a <metadata> block (about 7.8 KB), and every PNG a 5,758-byte caBX chunk.
+  Both are stripped. Only the stamp chunk is dropped, and each PNG decodes to identical pixels (checked with sharp).
+- check:lex-z2 64/64:
+  - the tab icon is 64 px and the iPhone icon 180 px;
+  - no shipped icon carries a stamp (a planted caBX is seen; a stamped icon put back by hand turns it RED).
+
 ## 2026-11-22 22:27 UTC - LEX SECURITY: a VIEWER collaborator could change an idea; now a VIEWER reads only, and every write needs the owner or an EDITOR
 
 CCh 2145Z point 3. `authorizeIdea()` (`lib/lex/authz.ts`) admitted the owner and ANY collaborator and never read the role, so a VIEWER

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Original scales-of-justice mark for Scrutinise. Drawn from scratch: no stock art. -->
+  <rect width="512" height="512" fill="#12302E"/>
+  <g fill="none" stroke="#F3ECDD" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <!-- post and base -->
+    <line x1="256" y1="118" x2="256" y2="392"/>
+    <path d="M176 400 H336"/>
+    <path d="M206 400 Q256 368 306 400"/>
+    <!-- beam -->
+    <line x1="130" y1="150" x2="382" y2="150"/>
+    <!-- hangers -->
+    <line x1="130" y1="150" x2="96"  y2="262"/>
+    <line x1="130" y1="150" x2="164" y2="262"/>
+    <line x1="382" y1="150" x2="348" y2="262"/>
+    <line x1="382" y1="150" x2="416" y2="262"/>
+    <!-- pans -->
+    <path d="M84 262 H176 Q130 318 84 262 Z" fill="#F3ECDD"/>
+    <path d="M336 262 H428 Q382 318 336 262 Z" fill="#F3ECDD"/>
+  </g>
+  <circle cx="256" cy="112" r="16" fill="#F3ECDD"/>
+</svg>
