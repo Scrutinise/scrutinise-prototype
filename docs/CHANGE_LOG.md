@@ -1,5 +1,12 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-22 21:14 UTC - LEX 366 held: the site's tab icon (app/icon.png) put back as it was, per CCh 2100Z
+
+CCh 2100Z (Charlie is choosing a revised mark: the scales' post becomes a letter S) asked to hold the icon files and the favicon swap.
+It arrived at 20:44:58 UTC, after the inbox was last read, and 8ed4cd30 / 3daab39d shipped the swap at 21:12. This puts the tab icon
+back to 6f3e2acc's file (2,288 bytes). The manifest and its icons stay as the plain scales, AS A PLACEHOLDER (2100Z allows it), until
+the chosen set arrives. check:lex-z2 63/63 (the 366 assertion restated for the hold).
+
 ## 2026-11-22 21:07 UTC - LEX 354 amended: every ⓘ gains "Why it's needed", and "Optional: Lex will propose an answer" on each optional field
 
 CCh 0156Z point A (Charlie, 21 Nov 01:54).

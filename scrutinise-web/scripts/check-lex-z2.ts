@@ -77,7 +77,10 @@ function partA() {
   })
   ok('…every icon it names exists, at the size it declares (192, 512, a maskable 512, and the SVG)', iconFaults.length === 0 && (m.icons ?? []).some((ic) => ic.purpose === 'maskable' && ic.sizes === '512x512'), iconFaults.join('; '))
   control('…a planted 192 icon declared as 512 is caught', pngSize(join(ROOT, 'public/icons/scrutinise-icon-192.png')) === '512x512')
-  ok('366: the stock preview is out of public/ (archived), and the tab icon is the new 64 px mark', !existsSync(join(ROOT, 'public/ScalesIcon.webp')) && pngSize(join(ROOT, 'app/icon.png')) === '64x64')
+  // ⚠ CCh 2100Z: Charlie is choosing a revised mark; the TAB ICON (app/icon.png, every page, Central's too) is HELD as it was until the
+  //   chosen set arrives. The manifest's icons are the plain scales, as a placeholder (2100Z allows it).
+  const iconBefore = readFileSync(join(ROOT, 'public/icons/scrutinise-icon-192.png'))
+  ok('366: the stock preview is out of public/ (archived); the tab icon is held as it was (64 px, not the placeholder mark) until CCh sends the chosen set', !existsSync(join(ROOT, 'public/ScalesIcon.webp')) && pngSize(join(ROOT, 'app/icon.png')) === '64x64' && readFileSync(join(ROOT, 'app/icon.png')).length === 2288 && !readFileSync(join(ROOT, 'app/icon.png')).equals(iconBefore))
 }
 
 async function partB() {
