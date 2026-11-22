@@ -77,10 +77,20 @@ function partA() {
   })
   ok('…every icon it names exists, at the size it declares (192, 512, a maskable 512, and the SVG)', iconFaults.length === 0 && (m.icons ?? []).some((ic) => ic.purpose === 'maskable' && ic.sizes === '512x512'), iconFaults.join('; '))
   control('…a planted 192 icon declared as 512 is caught', pngSize(join(ROOT, 'public/icons/scrutinise-icon-192.png')) === '512x512')
-  // ⚠ CCh 2100Z: Charlie is choosing a revised mark; the TAB ICON (app/icon.png, every page, Central's too) is HELD as it was until the
-  //   chosen set arrives. The manifest's icons are the plain scales, as a placeholder (2100Z allows it).
-  const iconBefore = readFileSync(join(ROOT, 'public/icons/scrutinise-icon-192.png'))
-  ok('366: the stock preview is out of public/ (archived); the tab icon is held as it was (64 px, not the placeholder mark) until CCh sends the chosen set', !existsSync(join(ROOT, 'public/ScalesIcon.webp')) && pngSize(join(ROOT, 'app/icon.png')) === '64x64' && readFileSync(join(ROOT, 'app/icon.png')).length === 2288 && !readFileSync(join(ROOT, 'app/icon.png')).equals(iconBefore))
+  // 366 settled (CCh 2212Z, option C): the chosen mark everywhere: the manifest's icons, the tab icon (app/icon.png, every page,
+  //   Central's too) and the iPhone icon (app/apple-icon.png, 180). The stock preview and the placeholder scales are archived.
+  ok('366: the tab icon is 64 px and the iPhone icon 180 px; the stock preview and the placeholder scales are out of public/', pngSize(join(ROOT, 'app/icon.png')) === '64x64' && pngSize(join(ROOT, 'app/apple-icon.png')) === '180x180' && !existsSync(join(ROOT, 'public/ScalesIcon.webp')) && !existsSync(join(ROOT, 'public/icons/scrutinise-scales.svg')))
+  // 2145Z point 6: no C2PA stamp ships (it misdescribes CCh's own drawing): no caBX chunk in a PNG, no <metadata> / c2pa in an SVG
+  const chunksOf = (b: Buffer) => { const out: string[] = []; let o = 8; while (o < b.length) { const len = b.readUInt32BE(o); out.push(b.toString('ascii', o + 4, o + 8)); o += 12 + len } return out }
+  const chunks = (f: string) => chunksOf(readFileSync(f))
+  const shipped = [...(m.icons ?? []).map((ic) => join(ROOT, 'public', ic.src)), join(ROOT, 'app/icon.png'), join(ROOT, 'app/apple-icon.png')]
+  const stamped = shipped.filter((f) => (f.endsWith('.png') ? chunks(f).includes('caBX') : /<metadata|c2pa/i.test(readFileSync(f, 'utf8'))))
+  ok('2145Z §6: no shipped icon carries a C2PA stamp (PNG caBX chunk, SVG <metadata>)', stamped.length === 0, stamped.join(', '))
+  control('…a caBX chunk planted after IHDR goes unseen (must be FALSE)', !(() => {
+    const b = readFileSync(join(ROOT, 'app/icon.png')); const ihdrEnd = 8 + 12 + b.readUInt32BE(8)
+    const body = Buffer.from('planted'); const head = Buffer.alloc(8); head.writeUInt32BE(body.length, 0); head.write('caBX', 4, 'ascii')
+    return chunksOf(Buffer.concat([b.subarray(0, ihdrEnd), head, body, Buffer.alloc(4), b.subarray(ihdrEnd)])).includes('caBX')
+  })())
 }
 
 async function partB() {

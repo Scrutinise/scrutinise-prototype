@@ -14,7 +14,7 @@ type Params = { params: Promise<{ id: string }> }
 
 export async function GET(req: Request, { params }: Params) {
   const { id } = await params
-  const authz = await authorizeIdea(id)
+  const authz = await authorizeIdea(id, 'read')
   if (authz.error) return authz.error
   const actionId = new URL(req.url).searchParams.get('actionId')
   if (!actionId) return NextResponse.json({ error: 'Which action? “actionId” was missing, so no thread was read.' }, { status: 422 })

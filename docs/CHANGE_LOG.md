@@ -1,5 +1,41 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-22 22:35 UTC - LEX 366 settled: the Scrutinise mark (scales whose post is an S) on the tab, the iPhone home screen and the installed app; the C2PA stamp stripped
+
+CCh 2212Z: Charlie chose option C, and the hold is lifted. CCh 2145Z point 6: strip the C2PA stamp.
+- Where the mark now shows:
+  - public/icons: scrutinise-icon-192/512/maskable-512.png (same file names, so a more ornate S is a file swap) and
+    scrutinise-mark.svg, which the manifest now names;
+  - ⚠ app/icon.png, the site's TAB ICON on every page, Central's too: Central is told by CCh;
+  - app/apple-icon.png (180).
+- The placeholder scales SVG is moved to docs/Archive/icons/scrutinise-scales-placeholder.svg, with its stamp stripped.
+- ⚠ The files as sent STILL carried the C2PA stamp: the SVG a <metadata> block (about 7.8 KB), and every PNG a 5,758-byte caBX chunk.
+  Both are stripped. Only the stamp chunk is dropped, and each PNG decodes to identical pixels (checked with sharp).
+- check:lex-z2 64/64:
+  - the tab icon is 64 px and the iPhone icon 180 px;
+  - no shipped icon carries a stamp (a planted caBX is seen; a stamped icon put back by hand turns it RED).
+
+## 2026-11-22 22:27 UTC - LEX SECURITY: a VIEWER collaborator could change an idea; now a VIEWER reads only, and every write needs the owner or an EDITOR
+
+CCh 2145Z point 3. `authorizeIdea()` (`lib/lex/authz.ts`) admitted the owner and ANY collaborator and never read the role, so a VIEWER
+had an EDITOR's access to every Lex route, writes included.
+- `authorizeIdea(ideaId, need)`: `need` defaults to 'write', so a route that does not say is closed to viewers. A VIEWER's write is
+  refused 403: "You can read this idea, but only its owner or an editor can change it. Nothing was changed." The rule is one pure
+  function (`ideaAccessOf` / `accessAllows`); an unknown role reads only.
+- The 37 GET handlers that call it pass 'read'; the 61 write handlers (POST 42, PATCH 15, PUT 1, DELETE 3) keep 'write'.
+- Six routes that checked "any collaborator" inline now use the same rule: `api/ai/[ideaId]` POST, and under `api/ideas/[id]/`:
+  `coherent-actions`, `diagnosis`, `evidence` and `field-approval` POST, plus `root-causes` (GET read, POST write).
+  `api/ideas/[id]` was already right: its GET lets any collaborator read, PATCH needs an EDITOR, and DELETE is owner-only.
+- ⚠ A VIEWER now loses any POST that was only a read in effect (e.g. asking for a document export). That is deliberate: a POST is a
+  write unless it is shown otherwise.
+- check:lex-viewer (new) 13/13, 3 controls:
+  - the rule;
+  - a source scan: every GET says 'read', no write handler does, and no write handler admits a collaborator without the role;
+  - the REAL routes on a scratch copy of 452c5ade as a VIEWER, an EDITOR and the owner. The VIEWER's write is refused and nothing is
+    written; the VIEWER still reads; the EDITOR and the owner write. Planted control: the same user made an EDITOR is let through.
+- Mutants 5/5 RED. Regressions, one at a time: 26aa 118/118, 26w-b 60/60, 26x2 75/75, z2 63/63, 26ab 68/68, 26y 129/129;
+  clean-build --fast PASS.
+
 ## 2026-11-22 21:14 UTC - LEX 366 held: the site's tab icon (app/icon.png) put back as it was, per CCh 2100Z
 
 CCh 2100Z (Charlie is choosing a revised mark: the scales' post becomes a letter S) asked to hold the icon files and the favicon swap.

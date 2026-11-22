@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { ideaAccessOf, accessAllows, VIEWER_WRITE_REFUSED } from '@/lib/lex/authz'
 import { z } from 'zod'
 import * as Sentry from '@sentry/nextjs'
 import { prisma } from '@/lib/prisma'
@@ -660,7 +661,7 @@ export async function POST(req: Request, { params }: Params) {
     include: {
       coherentActions: { select: { id: true } },
       research: { select: { id: true } },
-      collaborators: { select: { userId: true } },
+      collaborators: { select: { userId: true, role: true } },
       legislationLinks: { select: { id: true } },
     },
   })
@@ -671,9 +672,10 @@ export async function POST(req: Request, { params }: Params) {
   }
 
   const isOwner = idea.creatorId === user.id
-  const isCollaborator = idea.collaborators.some(c => c.userId === user.id)
-  if (!isOwner && !isCollaborator) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  // a VIEWER reads only (authz.ts, 22 Nov security fix): this POST changes the idea, so it needs the owner or an EDITOR
+  const access = ideaAccessOf(user.id, idea.creatorId, idea.collaborators)
+  if (!accessAllows(access, 'write')) {
+    return NextResponse.json({ error: access ? VIEWER_WRITE_REFUSED : 'Forbidden' }, { status: 403 })
   }
   enterSpendFor(user, idea) // cost dashboard: attribute this request's spend
 

@@ -11,7 +11,7 @@ export const maxDuration = 60
 
 export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
-  const authz = await authorizeIdea(id)
+  const authz = await authorizeIdea(id, 'read')
   if (authz.error) return authz.error
   try {
     return NextResponse.json(await deepeningOverview(id))

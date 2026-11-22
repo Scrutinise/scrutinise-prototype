@@ -46,7 +46,7 @@ const WORDS: Record<string, string> = {
 
 export async function GET(req: Request, { params }: Params) {
   const { id } = await params
-  const authz = await authorizeIdea(id)
+  const authz = await authorizeIdea(id, 'read')
   if (authz.error) return authz.error
   const actionId = new URL(req.url).searchParams.get('actionId')
   const lines = (await listBenefitLines(id)).filter((l) => !actionId || l.actionId === actionId)

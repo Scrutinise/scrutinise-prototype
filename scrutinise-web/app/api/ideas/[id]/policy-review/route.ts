@@ -15,7 +15,7 @@ type Params = { params: Promise<{ id: string }> }
 
 export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
-  const authz = await authorizeIdea(id)
+  const authz = await authorizeIdea(id, 'read')
   if (authz.error) return authz.error
   const viewer: RN.Viewer = { id: authz.user.id, isOwner: authz.idea.creatorId === authz.user.id }
   const review = await P.readPolicyReview(id, viewer)

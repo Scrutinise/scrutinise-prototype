@@ -17,7 +17,7 @@ type Params = { params: Promise<{ id: string }> }
 
 export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
-  const authz = await authorizeIdea(id)
+  const authz = await authorizeIdea(id, 'read')
   if (authz.error) return authz.error
   enterSpendFor(authz.user, authz.idea)
   const askLex = agentEnabledFor({ id: authz.user.id, email: authz.user.email })

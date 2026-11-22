@@ -81,7 +81,7 @@ async function bothStates(ideaId: string, userId: string) {
 
 export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
-  const authz = await authorizeIdea(id)
+  const authz = await authorizeIdea(id, 'read')
   if (authz.error) return authz.error
   enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
   return NextResponse.json(await elicitationState(id, authz.idea.creatorId))

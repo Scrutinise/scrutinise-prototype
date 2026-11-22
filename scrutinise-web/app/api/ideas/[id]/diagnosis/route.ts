@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { ideaAccessOf, accessAllows, VIEWER_WRITE_REFUSED } from '@/lib/lex/authz'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
@@ -26,16 +27,17 @@ export async function POST(req: Request, { params }: Params) {
 
   const idea = await prisma.idea.findUnique({
     where: { id: ideaId },
-    include: { collaborators: { select: { userId: true } } },
+    include: { collaborators: { select: { userId: true, role: true } } },
   })
 
   if (!idea) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const isOwner = idea.creatorId === user.id
-  const isCollaborator = idea.collaborators.some(c => c.userId === user.id)
+  // a VIEWER reads only (authz.ts, 22 Nov security fix): this POST changes the idea, so it needs the owner or an EDITOR
+  const access = ideaAccessOf(user.id, idea.creatorId, idea.collaborators)
 
-  if (!isOwner && !isCollaborator) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!accessAllows(access, 'write')) {
+    return NextResponse.json({ error: access ? VIEWER_WRITE_REFUSED : 'Forbidden' }, { status: 403 })
   }
 
   let body: unknown

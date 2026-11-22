@@ -23,7 +23,7 @@ const INPUT_WORDS = { reason: 'the reason' }
 
 export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
-  const authz = await authorizeIdea(id)
+  const authz = await authorizeIdea(id, 'read')
   if (authz.error) return authz.error
   const s = await developmentState(id)
   return NextResponse.json({ ...s, overrideLine: overrideLine(s) })
