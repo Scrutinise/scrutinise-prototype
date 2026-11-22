@@ -96,7 +96,7 @@ const INPUT_WORDS = {
 
 export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
-  const authz = await authorizeIdea(id)
+  const authz = await authorizeIdea(id, 'read')
   if (authz.error) return authz.error
   // 251: reading the tree also records which generated documents have gone out of date (and clears the mark when they have not).
   return NextResponse.json(await D.documentTree(id, { recordStale: true }))

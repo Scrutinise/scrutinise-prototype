@@ -17,7 +17,7 @@ type Params = { params: Promise<{ id: string }> }
 
 export async function GET(req: Request, { params }: Params) {
   const { id } = await params
-  const authz = await authorizeIdea(id)
+  const authz = await authorizeIdea(id, 'read')
   if (authz.error) return authz.error
   const sp = new URL(req.url).searchParams
   // 299 — ?q= searches titles and held text (no sync: it searches what is already numbered).

@@ -8,7 +8,7 @@ type Params = { params: Promise<{ id: string }> }
 // LEX 26-Y — one version of the Cost–benefit report, as Word or PDF. A version's file never changes, so this redirects to a signed URL.
 export async function GET(req: Request, { params }: Params) {
   const { id } = await params
-  const authz = await authorizeIdea(id)
+  const authz = await authorizeIdea(id, 'read')
   if (authz.error) return authz.error
   const u = new URL(req.url)
   const v = Number(u.searchParams.get('v'))

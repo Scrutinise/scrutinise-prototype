@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { ideaAccessOf, accessAllows, type IdeaNeed } from '@/lib/lex/authz'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedUser } from '@/lib/auth'
@@ -14,13 +15,14 @@ const RootCauseSchema = z.object({
   structureDrivers: z.string().optional(),
 })
 
-async function getIdeaWithAuth(ideaId: string, userId: string) {
+/** A VIEWER reads only (authz.ts, 22 Nov security fix): GET needs read, POST needs the owner or an EDITOR. */
+async function getIdeaWithAuth(ideaId: string, userId: string, need: IdeaNeed) {
   const idea = await prisma.idea.findUnique({
     where: { id: ideaId },
-    include: { collaborators: { select: { userId: true } } },
+    include: { collaborators: { select: { userId: true, role: true } } },
   })
   if (!idea) return { idea: null, authorized: false }
-  const authorized = idea.creatorId === userId || idea.collaborators.some(c => c.userId === userId)
+  const authorized = accessAllows(ideaAccessOf(userId, idea.creatorId, idea.collaborators), need)
   return { idea, authorized }
 }
 
@@ -30,7 +32,7 @@ export async function GET(req: Request, { params }: Params) {
   if (error) return error
 
   const { id: ideaId } = await params
-  const { idea, authorized } = await getIdeaWithAuth(ideaId, user.id)
+  const { idea, authorized } = await getIdeaWithAuth(ideaId, user.id, 'read')
 
   if (!idea) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   if (!authorized) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -49,7 +51,7 @@ export async function POST(req: Request, { params }: Params) {
   if (error) return error
 
   const { id: ideaId } = await params
-  const { idea, authorized } = await getIdeaWithAuth(ideaId, user.id)
+  const { idea, authorized } = await getIdeaWithAuth(ideaId, user.id, 'write')
 
   if (!idea) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   if (!authorized) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

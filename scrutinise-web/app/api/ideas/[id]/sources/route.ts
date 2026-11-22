@@ -22,7 +22,7 @@ type Params = { params: Promise<{ id: string }> }
 
 export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
-  const authz = await authorizeIdea(id)
+  const authz = await authorizeIdea(id, 'read')
   if (authz.error) return authz.error
   enterSpendFor(authz.user, authz.idea) // cost dashboard: attribute this request's spend
   return NextResponse.json({ decisions: await readSourceDecisions(id) })

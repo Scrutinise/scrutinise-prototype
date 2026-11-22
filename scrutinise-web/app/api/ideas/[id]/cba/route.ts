@@ -17,7 +17,7 @@ export const maxDuration = 120
 
 export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
-  const authz = await authorizeIdea(id)
+  const authz = await authorizeIdea(id, 'read')
   if (authz.error) return authz.error
   const [run, status, rollup, settings] = await Promise.all([runCba(id), cbaReportStatus(id), costSection(id), readAppraisalSettings(id)])
   if (!run) return NextResponse.json({ error: 'Not found' }, { status: 404 })

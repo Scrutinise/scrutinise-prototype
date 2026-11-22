@@ -255,7 +255,8 @@
     "check:graph-name-lookup": "tsx --env-file=.env --tsconfig tsconfig.json scripts/check-graph-name-lookup.ts",
     "measure:orientation-v2": "tsx --env-file=.env --tsconfig tsconfig.json scripts/measure-orientation-v2.ts",
     "verify:lex-26q-ui": "tsx scripts/verify-lex-26q-ui.tsx",
-    "check:lex-26h": "tsx --env-file=.env scripts/check-lex-26h.ts"
+    "check:lex-26h": "tsx --env-file=.env scripts/check-lex-26h.ts",
+    "check:lex-viewer": "tsx --tsconfig tsconfig.json --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-viewer.ts"
   },
   "prisma": {
     "seed": "npm run db:seed"

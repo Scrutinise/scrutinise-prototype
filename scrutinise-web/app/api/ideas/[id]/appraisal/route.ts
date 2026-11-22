@@ -16,7 +16,7 @@ const Body = z.object({
 
 export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
-  const authz = await authorizeIdea(id)
+  const authz = await authorizeIdea(id, 'read')
   if (authz.error) return authz.error
   return NextResponse.json({ ...(await readAppraisalSettings(id)), canEdit: authz.idea.creatorId === authz.user.id })
 }

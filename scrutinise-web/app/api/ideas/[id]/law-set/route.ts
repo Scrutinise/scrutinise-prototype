@@ -9,7 +9,7 @@ type Params = { params: Promise<{ id: string }> }
 
 export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
-  const authz = await authorizeIdea(id)
+  const authz = await authorizeIdea(id, 'read')
   if (authz.error) return authz.error
   try { return NextResponse.json({ set: await ideaLawSet(id), error: null }) }
   catch (e) { return NextResponse.json({ set: null, error: e instanceof Error ? e.message : String(e) }) }
