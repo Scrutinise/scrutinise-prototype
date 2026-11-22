@@ -173,13 +173,25 @@ function actionBlocks(L: string, n: number, a: PackAction, sa: SnapshotAction | 
   else {
     blocks.push(numbered(N(14), [{ text: `${PACK_SECTIONS[13]}:`, bold: true }]))
     for (const doc of docs) {
-      blocks.push({ kind: 'heading', level: 3, runs: [{ text: `${dNumberWords({ action: a.number, number: doc.number, status: doc.status, stale: !!doc.stale })} — ${doc.title} (${KIND_WORD[doc.kind]}${doc.v ? `, version ${doc.v}` : ''})` }] })
+      blocks.push({ kind: 'heading', level: 3, runs: [{ text: `${dNumberWords({ action: a.number, number: doc.number, status: doc.status, stale: !!doc.stale })} — ${doc.title} (${KIND_WORD[doc.kind]}${doc.v ? `, ${printedVersionWords(doc)}` : ''})` }] })
       if (doc.stale) blocks.push({ kind: 'note', text: `Out of date: ${doc.stale}` })
+      if (doc.accepted && doc.newerV) blocks.push({ kind: 'note', text: `Version ${doc.newerV} is later and not yet accepted; this is the accepted version.` })
       if (doc.body.trim()) blocks.push(...markdownToBlocks(doc.body))
       else blocks.push({ kind: 'paragraph', runs: [{ text: 'No version yet — only a draft from Lex, not yet used.', italic: true }] })
     }
   }
   return blocks
+}
+
+/**
+ * CCh 2145Z point 5 — the version words beside a printed document: "accepted version 2", "version 3, not yet accepted", or (a snapshot
+ * stored before this, with no `accepted`) "version 3" as before.
+ */
+export function printedVersionWords(doc: { v: number | null; accepted?: boolean }): string {
+  if (doc.v == null) return ''
+  if (doc.accepted === true) return `accepted version ${doc.v}`
+  if (doc.accepted === false) return `version ${doc.v}, not yet accepted`
+  return `version ${doc.v}`
 }
 
 /** What an action must come after. A snapshot stored before 26-V1b has no afterLines: read them back from the others' beforeNumbers. */

@@ -471,21 +471,41 @@ export async function documentTree(ideaId: string, opts: { recordStale?: boolean
   }
 }
 
-/** §6 — what the Actions Pack prints after each action's record: its documents in number order, current version, with status words. */
-export interface PackDocument { d: string; number: number; kind: DocumentKind; title: string; status: DocumentStatus; stale: string | null; v: number | null; author: string | null; at: string | null; body: string; sources: unknown[] }
+/**
+ * §6 — what the Actions Pack prints after each action's record: its documents in number order, with status words.
+ * ⚠ CCh 2145Z point 5 (22 Nov; decision 311's rule): the version printed is the ACCEPTED one where the owner accepted one (`acceptedV`),
+ *   else the latest, marked `accepted: false` ("not yet accepted"). A document accepted at v2 and edited since prints v2, and `newerV`
+ *   says a later version exists that is not accepted. Until this, the latest was printed whatever was accepted.
+ *   `accepted` / `newerV` are OPTIONAL: a snapshot stored before this has neither, and prints as it always did.
+ */
+export interface PackDocument {
+  d: string; number: number; kind: DocumentKind; title: string; status: DocumentStatus; stale: string | null; v: number | null; author: string | null; at: string | null; body: string; sources: unknown[]
+  /** true = `v` is the version the owner accepted; false = no version is accepted, `v` is the latest. Absent on an older snapshot. */
+  accepted?: boolean
+  /** A later version that is NOT accepted (only when `accepted`); null when the accepted version is the latest. */
+  newerV?: number | null
+}
+/** PURE — which stored version a document prints: the accepted one, else the latest. */
+export function printedVersion<V extends { v: number }>(versions: readonly V[], acceptedV: number | null): { version: V | undefined; accepted: boolean; newerV: number | null } {
+  const latest = versions.reduce<V | undefined>((m, x) => (!m || x.v > m.v ? x : m), undefined)
+  const acc = acceptedV != null ? versions.find((x) => x.v === acceptedV) : undefined
+  if (!acc) return { version: latest, accepted: false, newerV: null }
+  return { version: acc, accepted: true, newerV: latest && latest.v > acc.v ? latest.v : null }
+}
 export async function packDocuments(ideaId: string): Promise<Map<string, PackDocument[]>> {
   // X2 — a BRIEFED document has no draft to print; its Brief is not a document of the action
   const docs = await prisma.actionDocument.findMany({
     where: { ideaId, status: { notIn: ['SUPERSEDED', 'BRIEFED'] } },
-    include: { versions: { where: { role: 'VERSION' }, orderBy: { v: 'desc' }, take: 1 } }, orderBy: [{ number: 'asc' }],
+    include: { versions: { where: { role: 'VERSION' }, orderBy: { v: 'desc' } } }, orderBy: [{ number: 'asc' }],
   })
   const nums = new Map((await prisma.lexCoherentAction.findMany({ where: { id: { in: [...new Set(docs.map((d) => d.actionId))] } }, select: { id: true, number: true } })).map((a) => [a.id, a.number]))
   const out = new Map<string, PackDocument[]>()
   for (const d of docs) {
-    const v = d.versions[0]
+    const { version: v, accepted, newerV } = printedVersion(d.versions, d.acceptedV)
     const row: PackDocument = {
       d: dNumber(nums.get(d.actionId) ?? null, d.number), number: d.number, kind: d.kind as DocumentKind, title: d.title, status: d.status as DocumentStatus, stale: d.staleReason,
       v: v?.v ?? null, author: v?.author ?? null, at: v?.createdAt.toISOString() ?? null, body: v?.body ?? '', sources: Array.isArray(v?.sources) ? (v!.sources as unknown[]) : [],
+      accepted, newerV,
     }
     out.set(d.actionId, [...(out.get(d.actionId) ?? []), row])
   }

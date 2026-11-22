@@ -1,5 +1,20 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-22 23:01 UTC - LEX: the Actions Pack and the version snapshot print each draft's ACCEPTED version where one exists, else the latest labelled "not yet accepted"
+
+CCh 2145Z point 5 (decision 311's rule, as reviews already read it).
+- **Before:** `packDocuments` printed each draft's LATEST version whatever the owner had accepted. So a draft accepted at v2 and edited to
+  v3 printed v3 as if settled.
+- **Now** (`printedVersion`, pure), each draft prints:
+  - the accepted version where there is one, and when a later version exists, the note "Version 3 is later and not yet accepted;
+    this is the accepted version.";
+  - otherwise the latest, headed "version 3, not yet accepted".
+- A snapshot stored before this has neither mark and prints as before.
+- Every idea's snapshot gains the `accepted` mark, so documents go stale once and regenerate.
+- check:lex-pack-accepted (new) 8/8, 2 controls. It covers the rule, the words, and the REAL packDocuments on a scratch copy of
+  452c5ade with its documents: the accepted CODE_TEXT draft, given a newer unaccepted version on the copy only, still prints its
+  accepted text. Mutants 3/3 RED. Regressions 26v1b 81/81, 26x2 75/75, 26t2 72/72 (4 not run), 26x3 62/62.
+
 ## 2026-11-22 22:35 UTC - LEX 366 settled: the Scrutinise mark (scales whose post is an S) on the tab, the iPhone home screen and the installed app; the C2PA stamp stripped
 
 CCh 2212Z: Charlie chose option C, and the hold is lifted. CCh 2145Z point 6: strip the C2PA stamp.
