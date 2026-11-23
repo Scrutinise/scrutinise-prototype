@@ -257,7 +257,8 @@
     "verify:lex-26q-ui": "tsx scripts/verify-lex-26q-ui.tsx",
     "check:lex-26h": "tsx --env-file=.env scripts/check-lex-26h.ts",
     "check:lex-pack-accepted": "tsx --tsconfig tsconfig.json --env-file=.env scripts/check-lex-pack-accepted.ts",
-    "check:lex-viewer": "tsx --tsconfig tsconfig.json --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-viewer.ts"
+    "check:lex-viewer": "tsx --tsconfig tsconfig.json --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-viewer.ts",
+    "check:lex-26ac": "tsx --tsconfig tsconfig.json --require ./scripts/lib/stub-auth.cjs --env-file=.env scripts/check-lex-26ac.ts"
   },
   "prisma": {
     "seed": "npm run db:seed"

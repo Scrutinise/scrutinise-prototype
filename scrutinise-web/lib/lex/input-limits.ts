@@ -64,6 +64,8 @@ export const LIMITS = {
   obLowerReason: 600,
   /** 26-Y: the largest amount a line may carry (£1 trillion) — a typo of extra zeros is refused, not summed */
   amountMax: 1_000_000_000_000,
+  /** 26-AC (374): an author's note on a scrutiny edition: at the top, or against a heading or an action. */
+  authorNote: 4000,
 } as const
 
 export type LimitKey = keyof typeof LIMITS

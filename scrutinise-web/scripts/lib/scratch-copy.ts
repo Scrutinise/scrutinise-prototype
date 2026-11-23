@@ -158,6 +158,12 @@ export async function deleteScratch(id: string): Promise<boolean> {
     await prisma.actionDocument.updateMany({ where: { id: { in: docIds } }, data: { supersededBy: null, status: 'DRAFTED', acceptedV: null } })
     await prisma.actionDocument.deleteMany({ where: { id: { in: docIds } } })
   }
+  // 26-AC: a scrutiny edition holds a RESTRICT key onto its ProposalVersion, and its source links onto IdeaSource; on a scratch copy the
+  // editions go first (their notes and links cascade with them), so the cascade from the idea cannot meet either key half-way.
+  await prisma.scrutinyEdition.deleteMany({ where: { ideaId: id } })
+  // IdeaCollaborator does not cascade from the idea: a check that made a collaborator on the copy and did not reach its own cleanup
+  // left the copy undeletable (c720d37f, 23 Nov). On a scratch copy only (checked above), its collaborator rows go too.
+  await prisma.ideaCollaborator.deleteMany({ where: { ideaId: id } })
   try { await prisma.idea.delete({ where: { id } }); return true } catch (err) {
     // a hard delete can be refused by a restrictive foreign key; soft-delete so it is at least out of every list
     await prisma.idea.update({ where: { id }, data: { deletedAt: new Date() } }).catch(() => {})

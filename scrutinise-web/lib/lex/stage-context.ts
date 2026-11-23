@@ -14,7 +14,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { LEX_STAGES, LIFECYCLE_KEYS, lifecycleOfScreen, stageHref, type ActionsPage, type LexStage, type LexStageKey, type LifecycleKey } from './stages'
-import { LIFECYCLE_STAGE_WORD, LIFECYCLE_UI } from './screen-labels'
+import { LIFECYCLE_STAGE_WORD, LIFECYCLE_UI, SCRUTINY_UI } from './screen-labels'
 import { developmentChecklist, developmentState, type ChecklistKey, type ChecklistLine } from './development'
 
 export interface LexStageView extends LexStage {
@@ -51,6 +51,14 @@ export interface StageContext {
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
 
+/** 26-AC (a) — Private Scrutiny's state line: the editions, counted (a state line is counted or says why it cannot be). */
+export function scrutinyStateWords(editions: ReadonlyArray<{ number: number; status: string }>): string {
+  if (!editions.length) return SCRUTINY_UI.stageNone
+  const published = editions.filter((e) => e.status === 'PUBLISHED')
+  const draft = editions.find((e) => e.status === 'DRAFT')
+  return [published.length ? SCRUTINY_UI.stagePublished(String(published[0].number)) : null, draft ? SCRUTINY_UI.stageDraft(String(draft.number)) : null].filter(Boolean).join(' · ')
+}
+
 export async function stageContext(ideaId: string | null, here: LexStageKey, page: ActionsPage | null = null): Promise<StageContext> {
   const current = lifecycleOfScreen(here)
   const screens: LexStageView[] = LEX_STAGES.map((s) => ({
@@ -68,14 +76,19 @@ export async function stageContext(ideaId: string | null, here: LexStageKey, pag
         state: k === 'creation' ? 'tell Lex the idea' : k === 'development' ? 'opens once Lex has built the idea' : idle[k], href: k === 'creation' ? stageHref('idea', null) : null })),
     }
   }
-  const [runs, dev] = await Promise.all([prisma.ideaBuild.count({ where: { ideaId } }), developmentState(ideaId)])
+  const [runs, dev, editions] = await Promise.all([
+    prisma.ideaBuild.count({ where: { ideaId } }), developmentState(ideaId),
+    // 26-AC (a): Private Scrutiny opens — its state is the editions, counted
+    prisma.scrutinyEdition.findMany({ where: { ideaId }, select: { number: true, status: true }, orderBy: { number: 'desc' } }),
+  ])
   const checklist = here === 'idea' ? null : await developmentChecklist(ideaId, dev)
   const lifecycle: LifecycleStageView[] = LIFECYCLE_KEYS.map((k, i) => ({
     key: k, n: i + 1, name: LIFECYCLE_STAGE_WORD[k],
     state: k === 'creation' ? `Lex’s first pass · ${plural(runs, 'run')}`
       : k === 'development' ? `Organising ${plural(dev.counts.total, 'action')} · ${dev.counts.drafted} drafted · ${dev.counts.accepted} accepted`
+      : k === 'privateScrutiny' ? scrutinyStateWords(editions)
       : idle[k],
-    href: k === 'creation' ? stageHref('idea', ideaId) : k === 'development' ? stageHref('strategy', ideaId) : null,
+    href: k === 'creation' ? stageHref('idea', ideaId) : k === 'development' ? stageHref('strategy', ideaId) : k === 'privateScrutiny' ? `/ideas/${ideaId}/scrutiny` : null,
   }))
   return {
     ideaId, here, current, lifecycle, checklist, stages: screens,

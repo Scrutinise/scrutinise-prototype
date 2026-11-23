@@ -55,3 +55,32 @@ Checks per part as §11, on scratch copies, mutation per behaviour; nothing writ
    any code that reads them).
 2. Whether Lex may extend `lib/invite-gate.ts` in part (b), or Central does it.
 Then (a) is built and pushed under 365, and it stops for Charlie's phone check before (b).
+
+## Part (a): built (23 Nov 2026 02:10 UTC), and stopped for Charlie's phone check
+
+Everything is in CHANGE_LOG 2026-11-23 02:10 UTC. In short:
+
+- **Editions:**
+  - create (owner only, one draft at a time), freezing a ProposalVersion;
+  - prepare the draft: sections included, blind round, author's notes, bring up to date;
+  - the checklist, then publish ("anyway" is recorded);
+  - a published edition never changes, refused by the code and by the database triggers.
+- **The reader's page**, `/scrutiny/[editionId]`:
+  - it reads only the frozen rows;
+  - on a phone it shows one section at a time with a bottom bar;
+  - the draft opens in its own view with a way back;
+  - "Preview as a reviewer" is the same page with a banner.
+- **The owner's page**, `/ideas/[id]/scrutiny`. The stage bar's Private Scrutiny tile opens it, and its state counts the editions.
+- **The source-linking exercise:** proposals only, priced first at a MEASURED 0.5p per 1,000 words (4.9p on 452c5ade, n=1).
+- **Lex parity:** `create_scrutiny_edition` (asks first) and `list_scrutiny_editions`.
+- **Checks:** check:lex-26ac 132/132, 4 controls, 0 dead. All 17 mutants turned it RED.
+
+**For the phone check:** open your idea → Private Scrutiny on the stage bar → Create scrutiny edition → Preview as a reviewer.
+Creating an edition writes new rows only; nothing in the idea changes. Nothing is published, and nobody else can see a draft. To test
+publishing, publish it; reviewers can't see anything until part (b) builds invitations.
+
+**What (a) does not do yet, by design:**
+- reviewers (invitations, access, contributions) come in (b), behind GO 2 (376), the sign-up gate;
+- the owner's answers and direct messages come in (c);
+- the printed edition comes in (d);
+- Lex for reviewers comes in (e).

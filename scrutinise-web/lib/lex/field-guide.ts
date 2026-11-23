@@ -18,9 +18,10 @@ import {
   LIFECYCLE_STAGE_WORD, LIFECYCLE_UI, PROGRESS_WORD, CHECKLIST_WORD, PAGE_UI, DRAFTING_FILTER_WORD, DEEPENING_LOCK_UI,
   ORGANISING_TOOLBAR_UI, ADD_ACTION_UI, BRIEF_UI, BRIEF_FIELD_WORD, TONE_WORD, DEEPENING_UI, DRAFTS_UI, CBA_UI,
   PANEL_WORD, PANEL_PLACE_WORD, WHERE_SENTENCES, WHERE_UI, DRAFT_RESTORE_UI, STAGEBAR_ROW_WORD, CAUSE_UI, SOURCES_UI, ADD_RESEARCH_UI,
-  INFO_UI, OFFLINE_UI,
+  INFO_UI, OFFLINE_UI, SCRUTINY_UI,
 } from './screen-labels'
-import { BRIEF_FIELD_INFO, BRIEF_HEADING, type InfoText, type HeadingInfo } from './brief-info'
+import { LIMITS } from './input-limits'
+import { BRIEF_FIELD_INFO, BRIEF_HEADING, SCRUTINY_INFO, SCRUTINY_HEADING, type InfoText, type HeadingInfo } from './brief-info'
 import { FACET_LABEL, SORT_LABEL } from './source-list'
 import { STANCE_LABEL } from './research-notebook-schema'
 import { EXTENTS } from './action-draft-pure'
@@ -361,7 +362,7 @@ const LIFECYCLE_G: Record<keyof typeof LIFECYCLE_STAGE_WORD, GuideText> = {
 }
 const LIFECYCLE_UI_G: Record<keyof typeof LIFECYCLE_UI, GuideText> = {
   youAreHere: { purpose: 'Marks the stage, page or checklist line the user is on, in words.', fits: 'Always with a filled disc and a heavier border — never colour alone.', tool: none('a screen marker') },
-  notYetOpen: { purpose: 'Says a stage has nothing built behind it yet.', fits: 'Private Scrutiny, Public Scrutiny and Promotion read so until their pages are built.', tool: none('a state in words') },
+  notYetOpen: { purpose: 'Says a stage has nothing built behind it yet.', fits: 'Public Scrutiny and Promotion read so until their pages are built.', tool: none('a state in words') },
   notYetAvailable: { purpose: 'Says something is stated but not built.', fits: 'In Force, and the Promotional plan.', tool: none('a state in words') },
   notSubmitted: { purpose: 'Says the idea has not been lodged with a decision-maker.', fits: 'Submission’s state until a submission is recorded.', tool: none('a state in words') },
 }
@@ -657,6 +658,83 @@ const INFO_G: Record<keyof typeof INFO_UI, GuideText> = {
 }
 
 // ── assembled ──────────────────────────────────────────────────────────────────────────────────────────────────
+// 26-AC (a) — Private Scrutiny: the owner's editions page and the reader's page (BRIEF_26AC §2–§3)
+const SCRUTINY_TOOL = 'create_scrutiny_edition'
+const onPage = (what: string) => none(`${what} on the reader’s page`)
+const SCRUTINY_G: Record<keyof typeof SCRUTINY_UI, GuideText> = {
+  page: { purpose: 'The stage where invited reviewers read and critique a frozen copy of the idea.', fits: 'Opened from the stage bar. The owner prepares and publishes editions here; reviewers (invited in a later part) read the published ones.', tool: SCRUTINY_TOOL },
+  intro: { purpose: 'Says what a scrutiny edition is.', fits: 'At the top of the owner’s Private Scrutiny page.', tool: none('a sentence') },
+  create: { purpose: 'Freezes the idea as it is now into the next numbered scrutiny edition, as a draft.', fits: 'Owner only. It mints a version of the proposal (the same frozen copy the documents print from) and carries the previous edition’s notes across. One draft at a time.', tool: SCRUTINY_TOOL },
+  createAsk: { purpose: 'Asks before an edition is created.', fits: 'Creating spends nothing.', tool: SCRUTINY_TOOL },
+  noEditions: { purpose: 'Says this idea has no scrutiny edition yet.', fits: 'Until the owner creates one.', tool: none('a state in words') },
+  draft: { purpose: 'Marks an edition still being prepared: only the owner sees it.', fits: 'Its notes, sections and links can still change.', tool: none('a state in words') },
+  published: { purpose: 'Marks an edition reviewers can read.', fits: 'A published edition never changes; the database refuses any change to it.', tool: none('a state in words') },
+  preview: { purpose: 'Shows the owner exactly what a reviewer will see.', fits: 'The reader’s page itself, with a banner saying it is a preview.', tool: none('a link') },
+  refresh: { purpose: 'Freezes the idea again into a draft edition, as it is now.', fits: 'A draft only. Its notes, sections and links are kept.', tool: none('the owner’s control') },
+  refreshAsk: { purpose: 'Asks before a draft edition is frozen again.', fits: 'Spends nothing.', tool: none('the owner’s control') },
+  sections: { purpose: 'Which parts of the page reviewers see.', fits: 'A part left out is not in the edition; the checklist does not count it.', tool: none('the owner’s control'), info: SCRUTINY_INFO.sections },
+  blind: { purpose: 'Whether reviewers see each other’s contributions in this round.', fits: 'Kept with the edition for when contributions open.', tool: none('the owner’s control'), info: SCRUTINY_INFO.blind },
+  notes: { purpose: 'The owner’s own words to reviewers, at the top or against a heading or an action.', fits: 'Carried into the next edition’s draft; frozen when the edition is published.', limits: `${LIMITS.authorNote.toLocaleString('en-GB')} characters each.`, tool: none('the owner’s own words'), info: SCRUTINY_INFO.authorNote },
+  addNote: { purpose: 'Adds an author’s note to a draft edition.', fits: 'Choose where it sits first.', limits: `${LIMITS.authorNote.toLocaleString('en-GB')} characters.`, tool: none('the owner’s own words') },
+  noteAt: { purpose: 'Where a note sits on the page.', fits: 'At the top, or against a heading or an action of the edition.', tool: none('the owner’s control') },
+  noteTop: { purpose: 'Places a note under the edition’s title.', fits: 'The opening note.', tool: none('the owner’s control') },
+  setAside: { purpose: 'Sets a note aside: it leaves the page and is kept.', fits: 'Nothing is deleted; restore brings it back.', tool: none('the owner’s control') },
+  restore: { purpose: 'Brings a set-aside note back onto the page.', fits: 'On a draft edition.', tool: none('the owner’s control') },
+  checklist: { purpose: 'What is still open in the edition before it is published.', fits: 'Sections with no linked source, drafts not accepted, figures without a citation. Each can be published anyway; the list is recorded.', tool: none('computed from the edition'), info: SCRUTINY_HEADING.checklist },
+  checklistClear: { purpose: 'Says the checklist has nothing on it.', fits: 'Publishing then needs no second tap.', tool: none('a state in words') },
+  unlinked: { purpose: 'Lists the headings and actions that cite no source and have no accepted link.', fits: 'The source-linking exercise proposes links for them.', tool: none('computed from the edition') },
+  unaccepted: { purpose: 'Lists the drafts reviewers would read at a version you have not accepted, and actions with no draft yet.', fits: 'The page labels each such draft “not yet accepted”. An action marked “needs no draft” is not listed.', tool: none('computed from the edition') },
+  uncited: { purpose: 'Lists the cost figures with an amount and no basis or benchmark.', fits: 'The page prints them with “no basis stated”.', tool: none('computed from the edition') },
+  publish: { purpose: 'Makes a draft edition readable by invited reviewers.', fits: 'Shows the checklist first. A published edition never changes.', tool: none('the owner’s control') },
+  publishAsk: { purpose: 'Asks before an edition is published.', fits: 'Publishing cannot be undone; a new edition replaces it for the next round.', tool: none('the owner’s control') },
+  publishAnyway: { purpose: 'Publishes with the checklist’s items still open.', fits: 'The list is recorded with the edition and shown to the owner afterwards.', tool: none('the owner’s control') },
+  publishedAnyway: { purpose: 'Shows what was still open when the edition was published.', fits: 'On the owner’s page, beside a published edition.', tool: none('recorded with the edition') },
+  linking: { purpose: 'Lex proposes which filed source supports which section of the edition.', fits: 'On a draft edition only. Priced before it runs, and it asks first.', tool: none('the owner’s control'), info: SCRUTINY_HEADING.linking },
+  linkingIntro: { purpose: 'Says what the source-linking exercise does.', fits: 'Proposals beside, never over.', tool: none('a sentence') },
+  linkPrice: { purpose: 'Shows what the exercise would cost on this edition, before anything runs.', fits: 'Measured per 1,000 words sent. Spends nothing.', tool: none('the owner’s control') },
+  linkRun: { purpose: 'Runs the exercise at the price you agreed.', fits: 'Refused if the price has risen above it. Writes proposals only.', tool: none('the owner’s control') },
+  linkProposed: { purpose: 'Marks a link Lex proposed and you have not answered.', fits: 'It is not on the page until accepted.', tool: none('a state in words') },
+  accept: { purpose: 'Accepts a proposed link: the source is cited for that section on the page.', fits: 'On a draft edition.', tool: none('the owner’s control') },
+  reject: { purpose: 'Rejects a proposed link. It is kept, marked rejected.', fits: 'On a draft edition.', tool: none('the owner’s control') },
+  undo: { purpose: 'Returns an answered link to proposed.', fits: 'On a draft edition.', tool: none('the owner’s control') },
+  unlinkedAfter: { purpose: 'Lists the sections the exercise left with no link.', fits: 'Shown after a run.', tool: none('computed from the edition') },
+  notNow: { purpose: 'Closes the question without doing anything.', fits: 'Under every ask on the Private Scrutiny page.', tool: none('the owner’s control') },
+  edit: { purpose: 'Opens an author’s note to change its words.', fits: 'On a draft edition.', tool: none('the owner’s control') },
+  save: { purpose: 'Saves the note’s new words.', fits: 'On a draft edition.', tool: none('the owner’s control') },
+  cancel: { purpose: 'Closes the note unchanged.', fits: 'On a draft edition.', tool: none('the owner’s control') },
+  linkIt: { purpose: 'Links a section to a filed source yourself, accepted at once.', fits: 'Beside the source-linking exercise; your own link needs no answer.', tool: none('the owner’s control') },
+  linkSection: { purpose: 'The section you are linking a source to.', fits: 'The idea in one page, a heading or an action.', tool: none('the owner’s control') },
+  linkSource: { purpose: 'The filed source you are linking.', fits: 'By its registry number, [Ref: n].', tool: none('the owner’s control') },
+  choose: { purpose: 'Says nothing is chosen yet.', fits: 'In a list of choices.', tool: none('a placeholder') },
+  ownerOnly: { purpose: 'Says only the owner prepares or publishes an edition.', fits: 'An editor or a viewer may read the list.', tool: none('a refusal') },
+  publishedNeverChanges: { purpose: 'Says a published edition cannot be changed.', fits: 'Create a new edition instead.', tool: none('a refusal') },
+  edition: { purpose: 'The edition’s name: “Scrutiny edition N”.', fits: 'Numbered 1, 2, 3 per idea.', tool: none('a heading') },
+  previewBanner: { purpose: 'Says the owner is looking at the reviewer’s view.', fits: 'Only in the preview.', tool: onPage('a banner') },
+  draftBanner: { purpose: 'Says this edition is a draft and reviewers cannot see it.', fits: 'Only while it is a draft.', tool: onPage('a banner') },
+  ideaInOnePage: { purpose: 'The idea in one page: the problem, the policy, each action in one line, the cost if known, and what is not yet settled.', fits: 'The Introductory Summary, built from the kernel (the owner’s words), never from a model’s general knowledge.', tool: onPage('a section') },
+  actionsOneLine: { purpose: 'Each action in one line, with its draft’s state.', fits: 'In the idea in one page.', tool: onPage('a list') },
+  proposals: { purpose: 'The actions, heading by heading.', fits: 'Each with its statement, explanatory note, costs and draft.', tool: onPage('a section') },
+  readDraft: { purpose: 'Opens the draft (the legal text) in its own view.', fits: 'With a way back to the same place. If no draft is accepted, the latest is shown and labelled so.', tool: onPage('a link') },
+  backTo: { purpose: 'Returns from the draft to the action you were reading.', fits: 'In the draft view.', tool: onPage('a link') },
+  explanatoryNote: { purpose: 'The plain-English explanatory note on the draft.', fits: 'Its accepted version, else the latest, labelled.', tool: onPage('a label') },
+  costs: { purpose: 'The action’s recorded cost figures, each with its basis.', fits: 'A figure with no basis says “no basis stated”.', tool: onPage('a label') },
+  notCosted: { purpose: 'Says the action has no recorded cost yet.', fits: 'Never shown as £0.', tool: onPage('a state in words') },
+  optionsSetAside: { purpose: 'What was considered and set aside: actions ruled out, notes, findings and options set aside, each with its reason and date.', fits: 'Collapsed by default.', tool: onPage('a section') },
+  ruledOut: { purpose: 'Actions the owner ruled out, with the reason.', fits: 'In “Options considered and set aside”.', tool: onPage('a list') },
+  setAsideItems: { purpose: 'Notes, findings and policy options set aside, with the reason.', fits: 'In “Options considered and set aside”.', tool: onPage('a list') },
+  sources: { purpose: 'Each filed source the edition cites, with the sections that cite it.', fits: 'From the actions’ own citations and the accepted links.', tool: onPage('a section') },
+  citedBy: { purpose: 'Which sections cite this source.', fits: 'Under each source.', tool: onPage('a label') },
+  noSources: { purpose: 'Says the edition cites no filed source.', fits: 'The source-linking exercise can propose links.', tool: onPage('a state in words') },
+  sectionsMenu: { purpose: 'Lists the page’s sections, to jump to one.', fits: 'In the bottom bar on a phone; the page shows one section at a time there.', tool: onPage('a control') },
+  previous: { purpose: 'The section before this one.', fits: 'In the bottom bar on a phone.', tool: onPage('a control') },
+  next: { purpose: 'The section after this one.', fits: 'In the bottom bar on a phone.', tool: onPage('a control') },
+  predates: { purpose: 'Says the frozen version is older than the page’s headings and actions.', fits: 'Only the idea in one page is shown.', tool: onPage('a state in words') },
+  notFound: { purpose: 'Says the edition cannot be read.', fits: 'The same words whether it does not exist or you may not read it.', tool: onPage('a refusal') },
+  stageNone: { purpose: 'Private Scrutiny’s state on the stage bar when the idea has no edition.', fits: 'The stage opens the Private Scrutiny page.', tool: 'list_scrutiny_editions' },
+  stagePublished: { purpose: 'Private Scrutiny’s state: the latest published edition.', fits: 'On the stage bar.', tool: 'list_scrutiny_editions' },
+  stageDraft: { purpose: 'Private Scrutiny’s state: an edition being prepared.', fits: 'On the stage bar.', tool: 'list_scrutiny_editions' },
+}
+
 const fromTable = <K extends string>(area: GuideArea, prefix: string, labels: Record<K, Lbl>, texts: Record<K, GuideText>): GuideEntry[] =>
   (Object.keys(texts) as K[]).map((k) => ({ key: `${prefix}.${k}`, area, label: shown(labels[k]), ...texts[k] }))
 
@@ -731,6 +809,8 @@ export function guideEntries(): GuideEntry[] {
     ...fromTable('research', 'sourceSort', SORT_LABEL, SORT_G),
     ...fromTable('research', 'stance', STANCE_LABEL, STANCE_G),
     ...fromTable('research', 'addResearch', ADD_RESEARCH_UI, ADD_RESEARCH_G),
+    // 26-AC (a)
+    ...fromTable('workspace', 'scrutiny', SCRUTINY_UI, SCRUTINY_G),
     // FocusDialog's own close mark: every focused dialog (Add research among them) shows it in its title bar
     { key: 'common.dialogClose', area: 'common', label: '✕', purpose: 'Closes the dialog.', fits: 'In the title bar of every focused dialog; Esc does the same. Anything typed in Add research is kept on this device.', tool: none('the dialog itself') },
   ]

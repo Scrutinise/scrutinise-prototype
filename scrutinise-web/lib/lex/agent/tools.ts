@@ -2068,6 +2068,7 @@ import { KIND_WORD, HEADING_KIND_WORD } from '@/lib/lex/action-documents-pure'
 import { summariseThread } from '@/lib/lex/action-thread'
 import { explainField, listFields, type GuideArea } from '@/lib/lex/field-guide'
 import { INFO_OPTIONAL_WORD } from '@/lib/lex/brief-info'
+import * as SCR from '@/lib/lex/scrutiny-edition'
 
 const OWNER_ONLY = 'Call it ONLY when the owner has told you to; it asks first.'
 const saidByUser = (ctx: ToolCtx, text: string) => ctx.turn.userMessages.map(norm).join(' ').includes(norm(text))
@@ -2759,6 +2760,36 @@ const setAppraisalPeriodTool: ToolDefinition = {
     return { ok: true, data: { saved: (r as { data: { words: string } }).data.words } }
   },
 }
+
+// ══ 26-AC (a) — PRIVATE SCRUTINY (decision 301, Lex parity: the owner's Lex creates an edition through the same code path, asking first) ══
+
+const listScrutinyEditionsTool: ToolDefinition = {
+  name: 'list_scrutiny_editions', category: 'see', tier: 'free',
+  description: 'The idea\'s scrutiny editions (Private Scrutiny): each one\'s number, whether it is a draft or published, the version of the proposal it was frozen from, and, for a published one, what was still open when it was published. Reviewers read a published edition, never the workspace.',
+  schema: z.object({}),
+  describe: () => 'List the scrutiny editions',
+  async run(ctx) {
+    const eds = await SCR.listEditions(ctx.ideaId)
+    return { ok: true, data: { editions: eds.map((e) => ({ number: e.number, status: e.status, frozenFromVersion: e.versionNumber, publishedAt: e.publishedAt, blind: e.blind, publishedAnyway: e.publishedAnyway, page: `/scrutiny/${e.id}` })), ownerPage: `/ideas/${ctx.ideaId}/scrutiny` } }
+  },
+}
+
+const createScrutinyEditionTool: ToolDefinition = {
+  name: 'create_scrutiny_edition', category: 'change', tier: 'ask',
+  description: `The same as "Create scrutiny edition" on the Private Scrutiny page: freezes the idea as it is now into the next numbered edition, as a DRAFT (reviewers cannot see it until the owner publishes it there). The previous edition's author's notes are carried across. One draft at a time. Spends nothing. ${OWNER_ONLY}`,
+  schema: z.object({}),
+  describe: () => 'Create the next scrutiny edition (a draft)',
+  async run(ctx) {
+    const idea = await prisma.idea.findUnique({ where: { id: ctx.ideaId }, select: { creatorId: true } })
+    if (idea?.creatorId !== ctx.userId) return fail('only the idea\'s owner creates a scrutiny edition.')
+    const r = await SCR.createEdition(ctx.ideaId, ctx.userId)
+    if (!r.ok) return fail((r as { error: string }).error)
+    const d = (r as { data: { id: string; number: number; versionNumber: number; carriedNotes: number } }).data
+    return { ok: true, data: { number: d.number, page: `/ideas/${ctx.ideaId}/scrutiny`, preview: `/scrutiny/${d.id}`, say: `Scrutiny edition ${d.number} is created as a draft, frozen from version ${d.versionNumber} of the proposal${d.carriedNotes ? `, with ${d.carriedNotes} author's note${d.carriedNotes === 1 ? '' : 's'} carried across` : ''}. Prepare and publish it on the Private Scrutiny page; "Preview as a reviewer" shows exactly what reviewers will see.` } }
+  },
+}
+export const SCRUTINY_TOOLS: ToolDefinition[] = [listScrutinyEditionsTool, createScrutinyEditionTool]
+
 export const CBA_TOOLS: ToolDefinition[] = [addBenefitLineTool, setBenefitLineTool, answerBenefitLineTool, setCostLineAppraisalTool, readCbaSummaryTool, explainCbaFigureTool, generateCbaReportTool, setAppraisalPeriodTool]
 
 export const DOCUMENT_TOOLS: ToolDefinition[] = [listDocumentsTool, readDocumentTool, proposeDocumentText, draftDocumentTool, draftHeadingNeedsTool, redraftDocumentTool, useProposalTool, acceptDocumentTool, setAsideProposalTool, reviewDocumentTool, generateDocumentTool, readBriefTool, proposeBriefTool]
@@ -2769,6 +2800,8 @@ export const MODEL_TOOLS: ToolDefinition[] = [
   ...CBA_TOOLS,
   // 26-AA — the Diagnosis's causes
   ...CAUSE_TOOLS,
+  // 26-AC (a) — Private Scrutiny
+  ...SCRUTINY_TOOLS,
   readField, listCandidates, listActionsTool, listSources, readSource, listChallenges, readReplyTool, searchConversationTool, listNotes,
   searchCorpus, searchWeb, searchMyDocuments, statuteEffects, statuteOnward, readSectionTool,
   fileUrl, fileText,

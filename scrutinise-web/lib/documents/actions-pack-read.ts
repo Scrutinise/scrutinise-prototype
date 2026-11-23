@@ -16,7 +16,7 @@ import { listRegistry } from '@/lib/lex/source-registry'
 import { plainFoldHeader } from '@/lib/lex/action-resort-pure'
 import { currentVersion } from '@/lib/lex/action-draft-pure'
 import { becauseOf } from '@/lib/lex/action-order-pure'
-import { draftsFor, packDocuments, acceptedInstructions, scheduleRows } from '@/lib/lex/action-documents'
+import { draftsFor, packDocuments, acceptedInstructions, scheduleRows, needsOverrideOf } from '@/lib/lex/action-documents'
 import { touchesFor } from '@/lib/lex/action-touches'
 import { SET_ASIDE_PREFIX, DISMISSED_PREFIX } from '@/lib/lex/update-pass'
 import { staleness, staleSentence, type StoredJudge, type StoredModelOutput } from '@/lib/lex/action-digest-pure'
@@ -115,6 +115,8 @@ export async function readActionsPackData(
       // 26-U §3/§4 — the current drafting-instruction version, and (filled below) what it touches, computed, never written.
       draft: currentVersion(drafts.get(r.id)), touches: null,
       documents: docsByAction.get(r.id) ?? [],
+      // 26-AC (313) — "needs no draft" with its reason, frozen with the version; present only when set (an action without it hashes as before)
+      ...((): { noDraftReason?: string } => { const o = needsOverrideOf(r.record); return o?.mode === 'nothing' && o.reason.trim() ? { noDraftReason: o.reason.trim() } : {} })(),
     }]
   })
 

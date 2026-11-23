@@ -1,5 +1,84 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-23 02:10 UTC - LEX 26-AC part (a): Private Scrutiny opens with scrutiny editions, the reader's page and "Preview as a reviewer"
+
+BRIEF_26AC §2–§3, §9 (a), under CCh GO 1 (2145Z). The tables were applied and pushed with their SQL in 3f982aab. This is the code that
+reads them.
+
+- **Editions** (`lib/lex/scrutiny-edition.ts`).
+  - "Create scrutiny edition" (owner only) mints a ProposalVersion: the frozen snapshot that the documents print from.
+  - Editions are numbered 1, 2, 3 per idea, one draft at a time. The previous edition's author's notes are carried in as new rows.
+  - On a draft, the owner can:
+    - choose the sections included;
+    - set a blind round (kept for (b));
+    - add, edit, set aside or restore author's notes (374) at the top or against a heading or action, up to 4,000 characters;
+    - bring the draft up to date.
+  - Publish shows the checklist first:
+    - sections with no linked source;
+    - drafts not accepted;
+    - figures without a citation.
+  - "Publish anyway" records the list with the edition. The owner's page shows it beside the published edition.
+  - A published edition never changes. The code refuses it in words, and the database triggers in lex_26ac_a.sql refuse it too.
+- **The reader's page** (`/scrutiny/[editionId]`, `components/lex/scrutiny/EditionReader.tsx`). It is built only from the frozen rows
+  (`lib/lex/scrutiny-edition-pure.ts`). Top to bottom:
+  - the author's notes, then the idea in one page: the Introductory Summary from the kernel, and each action in one line with
+    "Read the draft wording";
+  - the proposals, heading by heading: statement, explanatory note, costs (each figure with its basis, or "no basis stated"), and the
+    draft. The draft is the accepted version, else the latest labelled "not yet accepted"; "needs no draft" shows with its reason;
+  - Options considered and set aside, collapsed;
+  - Sources, each with the sections that cite it.
+  - On a phone, one section at a time with a bottom bar (Sections · Previous · Next). The draft opens in its own view; "Back to #N"
+    and the browser's Back both return to the action.
+  - In (a), the owner reads every edition and the team reads published ones. Reviewers come in (b), with their own grant.
+- **"Preview as a reviewer"** is the same page with a banner.
+- **The source-linking exercise** (`lib/lex/scrutiny-linking.ts`).
+  - Lex proposes links between sections and filed sources. The owner accepts or rejects each one, or adds their own.
+  - It runs on drafts only. It is priced before it runs at a MEASURED price per 1,000 words, and refused if the price rises above what
+    was agreed.
+  - Anything the model names that is not a section or a filed source is dropped, and the run says what was dropped.
+  - MEASURED on 23 Nov: one real run on a scratch copy of 452c5ade (69 sections, 218 filed sources) cost 4.9p for 10,300 words, about 0.5p per 1,000 words (scripts/measure-26ac-linking.ts, ledger purpose "measurement"). It proposed 7 links and dropped none in 8 s.
+- **Lex parity (301):** `create_scrutiny_edition` (asks first, owner only, the same code path) and `list_scrutiny_editions`.
+- **Stage bar:** Private Scrutiny now links to the owner's page, and its state counts the editions: "no edition yet", "edition N
+  published", "edition N in draft".
+- **The snapshot** freezes "needs no draft" with its reason (`noDraftReason` on each pack action). It is present only when set, so other
+  actions hash exactly as before.
+- ⚠ **Found on the way:**
+  - The workspace's "Hide all headings" sets `hidden` on every heading, and it is a display toggle, not a choice about the proposal: the
+    Actions Pack prints hidden headings too. The first build dropped them, which left 49 of 452c5ade's 58 actions under "Not yet under a
+    heading". The fix is that an edition ignores `hidden`; only "Sections included" leaves a heading out. This is now asserted.
+  - `deleteScratch` now removes a scratch copy's editions first. An edition holds RESTRICT keys onto its ProposalVersion and its sources.
+- **Labels:** every new label is in `SCRUTINY_UI`, with a field-guide entry. The note box, the sections, the blind round, the checklist
+  and the linking exercise each have an ⓘ with "Why it's needed".
+- **check:lex-26ac: 132/132, 4 controls, 0 dead, 0 not run.**
+  - A, pure:
+    - accepted vs latest drafts, labelled;
+    - "needs no draft";
+    - costs with basis;
+    - note placement;
+    - sections left out, and workspace-hidden headings kept;
+    - the checklist;
+    - link targets;
+    - the price is null until measured;
+    - who may read.
+  - B, the real routes on a scratch copy of 452c5ade:
+    - an editor is refused;
+    - one draft at a time;
+    - notes, with refusals in words;
+    - draft reader access;
+    - the checklist first, then "anyway" recorded;
+    - **the published edition is identical after the workspace changes**, with a control that the live idea does change;
+    - the code and the database triggers refuse changes, with a control that closing the round is allowed;
+    - edition 2 picks up the change;
+    - Lex parity.
+  - C, Chromium (the fixture and the real edition, at 360, 390 and 1024 px):
+    - one section at a time, with the bar at the bottom edge;
+    - nothing wider than the viewport;
+    - 44 px buttons;
+    - the draft view, and back to the place;
+    - set-aside collapsed.
+  - 17 mutants, every one RED: E-1 to E-14 and L-1 to L-3. Each removes one behaviour: the code refusal, a live read, owner only, one draft, checklist first, "anyway" recorded, hidden headings, accepted label, team-reads-draft, one panel, back-to-place, note target, proposal-as-citation, needs-no-draft frozen, links written ACCEPTED, the price gate, and an unknown source. E-14 was GREEN on the first round; the check now sets "needs no draft" on the scratch copy and reads it back from the edition.
+- Regressions, one at a time: 26x 111/111 (its lifecycle assertion now expects Private Scrutiny counted, not "not yet open"), 26aa 118/118, 26ab 68/68, 26z 214/214, z2 69/69, 26x2 75/75, 26x3 62/62, 26v1b 81/81, 26t2 72/72 (4 not run, as before), 26y 129/129, 26p 126/126 (live part not run, by design), viewer 13/13, pack-accepted 8/8. 26s2 is 213/215; the two failures PREDATE this work. One is a second material-table count in lib/lex/user-material.ts:470 (870d70ab, 20 Nov). The other is 6 orphan ledger rows of 20 Nov 13:31 (11.15p, actions.document.background_note, one deleted idea) with no purpose; scripts/backfill-spend-orphans.ts would label them, but that is a production data write, so it was not run. Clean build. Also found and fixed: a run of mine piped through Select-Object -First 1 killed check:lex-26ac before its cleanup, leaving scratch c720d37f with a collaborator row (IdeaCollaborator does not cascade). It is now deleted, and deleteScratch removes a copy's collaborator rows first.
+
 ## 2026-11-23 01:18 UTC - LEX 366 final: mark C2 (the S in Cinzel Decorative 700) replaces mark C on the tab, the iPhone home screen and the installed app
 
 CCh 0043Z: Charlie chose C2, which supersedes the markC- set. It is a straight swap of the same files in the same roles:

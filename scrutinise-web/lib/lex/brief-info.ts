@@ -146,3 +146,36 @@ export const BRIEF_HEADING: HeadingInfo = {
   text: BRIEF_HEADING_INFO,
   why: 'Without a Brief, Lex drafts from its own reading of the action; with one, the draft follows your instructions and says which version it followed.',
 }
+
+/** 26-AC (a) — the ⓘ on the owner's Private Scrutiny fields and headings (the same objects the field guide carries). */
+export const SCRUTINY_INFO = {
+  authorNote: {
+    what: 'Your own words to reviewers: an introduction, context, or a word about one heading or action.',
+    lexDoes: 'Nothing: a note is printed exactly as you wrote it, where you placed it, and frozen with the edition when you publish.',
+    example: '"Sections 2 and 3 are settled; it is the costs in section 4 I most want challenged."',
+    why: 'Reviewers read the edition without you beside them; a note tells them what you want from them, and where.',
+  },
+  blind: {
+    what: 'Whether reviewers in this round see each other’s contributions, or only their own until the round closes.',
+    lexDoes: 'Nothing yet: contributions open in the next part of Private Scrutiny, and this setting is kept with the edition for them.',
+    example: '"On: each reviewer gives a view before seeing anyone else’s."',
+    why: 'A first reader’s view can anchor everyone after; a blind round keeps the views independent.',
+  },
+  sections: {
+    what: 'Which parts of the page reviewers see: the idea in one page, each heading, the options set aside, and the sources.',
+    lexDoes: 'Nothing: a part left out is not in the edition at all, and the checklist does not count it.',
+    example: '"Leave out a heading still being written, and publish the rest for review now."',
+    why: 'A round can ask for review of what is ready without showing what is not.',
+  },
+} satisfies Record<string, InfoText>
+
+export const SCRUTINY_HEADING: Record<'checklist' | 'linking', HeadingInfo> = {
+  checklist: {
+    text: 'What is still open in this edition: sections with no linked source, drafts not accepted, and figures without a citation. You can publish anyway; the list is recorded with the edition.',
+    why: 'A reviewer reading an uncited figure or an unaccepted draft should know you knew; the record shows you published with them open.',
+  },
+  linking: {
+    text: 'Lex reads each section and the filed sources, and proposes which source supports which section. You accept or reject each proposal; the sections left with no link are listed.',
+    why: 'A claim a reviewer can trace to its source is one they can check; an unlinked one they can only take on trust.',
+  },
+}

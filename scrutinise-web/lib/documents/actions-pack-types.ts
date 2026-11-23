@@ -62,6 +62,8 @@ export interface PackAction {
   documents?: import('@/lib/lex/action-documents').PackDocument[]
   /** 267 — the drafted amendments of this action's ACCEPTED drafting-instruction version: the only rows the annexe prints. Absent = none accepted. */
   scheduleRows?: import('@/lib/lex/action-documents-pure').ScheduleRow[]
+  /** 26-AC (313) — "needs no draft", with the owner's reason. Present ONLY when set, so an action without it hashes exactly as before. */
+  noDraftReason?: string
 }
 
 export interface PackRuledOut {

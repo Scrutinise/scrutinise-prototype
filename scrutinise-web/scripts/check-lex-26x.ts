@@ -119,7 +119,12 @@ async function partB() {
   const devLine = ctx.lifecycle.find((s) => s.key === 'development')!.state
   ok(`Creation's state is counted: "Lex’s first pass · ${runs} runs" (a plain count of builds)`, creation === `Lex’s first pass · ${runs} run${runs === 1 ? '' : 's'}`, creation)
   ok(`Development's state counts the live, un-parked actions (${live}, a plain count)`, devLine.startsWith(`Organising ${live} action`), devLine)
-  ok('the stages with nothing built behind them say so in words', ['privateScrutiny', 'publicScrutiny', 'promotion'].every((k) => ctx.lifecycle.find((s) => s.key === k)!.state === 'not yet open') && ctx.lifecycle.find((s) => s.key === 'submission')!.state === 'not submitted' && ctx.lifecycle.find((s) => s.key === 'inForce')!.state === 'not yet available')
+  ok('the stages with nothing built behind them say so in words', ['publicScrutiny', 'promotion'].every((k) => ctx.lifecycle.find((s) => s.key === k)!.state === 'not yet open') && ctx.lifecycle.find((s) => s.key === 'submission')!.state === 'not submitted' && ctx.lifecycle.find((s) => s.key === 'inForce')!.state === 'not yet available')
+  // 26-AC (a): Private Scrutiny is built — its state counts the idea's editions, and the tile opens the owner's page
+  const { scrutinyStateWords } = await import('../lib/lex/stage-context')
+  const eds = await prisma.scrutinyEdition.findMany({ where: { ideaId: idea.id }, select: { number: true, status: true }, orderBy: { number: 'desc' } })
+  const ps = ctx.lifecycle.find((s) => s.key === 'privateScrutiny')!
+  ok(`Private Scrutiny's state counts the editions ("${ps.state}") and opens the owner's page`, ps.state === scrutinyStateWords(eds) && ps.state !== 'not yet open' && ps.href === `/ideas/${idea.id}/scrutiny`, `${ps.state} ${ps.href}`)
   const bar = renderToStaticMarkup(React.createElement(StageBar, { context: ctx }))
   ok('RENDERED: seven tiles; "You are here" once, on Development, with the filled disc', (bar.match(/data-lifecycle-stage="/g) ?? []).length === 7 && (bar.match(/data-you-are-here/g) ?? []).length === 1 && /data-lifecycle-stage="development"[\s\S]*?●[\s\S]*?You are here/.test(bar))
   control('a second "You are here" in the bar (must be FALSE)', (bar.match(/data-you-are-here/g) ?? []).length > 1)
