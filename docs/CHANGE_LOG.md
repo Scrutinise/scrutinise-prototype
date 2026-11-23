@@ -1,5 +1,18 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-23 01:18 UTC - LEX 366 final: mark C2 (the S in Cinzel Decorative 700) replaces mark C on the tab, the iPhone home screen and the installed app
+
+CCh 0043Z: Charlie chose C2, which supersedes the markC- set. It is a straight swap of the same files in the same roles:
+- public/icons/scrutinise-icon-192/512/maskable-512.png and scrutinise-mark.svg;
+- app/apple-icon.png (180);
+- app/icon.png (64), the tab icon on every page, Central's too.
+
+CCh 0047Z: CCh's source files carry no stamp. The inbox's file bridge adds C2PA in transit, so every file is stripped on receipt:
+- each PNG's caBX chunk (5,770 bytes each). Pixels are identical (sharp) and sizes are as declared;
+- the SVG's <metadata> block and its now-unused xmlns:c2pa. The result is 1,733 bytes, the size of CCh's source.
+
+check:lex-z2 69/69, including "no shipped icon carries a C2PA stamp" and its planted caBX control.
+
 ## 2026-11-23 00:14 UTC - LEX: unsent typing is kept PER USER, so another account on the same device never sees it, and nothing is lost at sign-out
 
 CCh 2145Z point 4, with 361 amended. DeviceDraft kept typing by idea and field only, so a second account on the same phone was offered

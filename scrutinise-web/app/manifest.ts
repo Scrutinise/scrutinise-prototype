@@ -1,9 +1,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // LEX Z2 §6.4 (decisions 363, 364 and 366) — THE WEB APP MANIFEST: "Add to Home Screen" opens Scrutinise at My ideas, full screen.
 // Next serves this at /manifest.webmanifest and links it from every page (Central's included: CCh tells Central, 0140Z).
-// The icons are the Scrutinise mark Charlie chose (366, option C, 22 Nov): scales whose post is a Roman capital S (Cinzel, SIL OFL,
+// The icons are the Scrutinise mark Charlie chose (366, option C2, 23 Nov): scales whose post is a capital S (Cinzel Decorative 700, SIL OFL,
 // as outlines), #F3ECDD on #12302E. The maskable one keeps the mark inside the central safe zone. ⚠ The files as sent carried a C2PA
-// stamp (an SVG <metadata> block, a PNG caBX chunk) that misdescribes CCh's own drawing; it is stripped (pixels identical). A more
+// stamp (an SVG <metadata> block, a PNG caBX chunk; added in transit by the inbox file bridge, CCh 0047Z) that misdescribes CCh's own drawing; it is stripped (pixels identical). A more
 // ornate S, if Charlie asks, is a swap of the same file names.
 // ⚠ scope is "/" (the whole site), not the worker's /ideas/: sign-in and the site's other pages stay inside the installed app rather than
 //   throwing the reader out to a browser tab. The offline worker is still scoped to /ideas/ only (361).
