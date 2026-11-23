@@ -8,6 +8,7 @@
 
 import React from 'react'
 import { createRoot } from 'react-dom/client'
+import { keepForUser } from '@/lib/lex/offline'
 import FocusShell, { ChaptersPanel, restoreOnArrival, useArriveAtWorkspace, useSiteHeader, workspaceY } from '@/components/lex/FocusShell'
 import StageBar from '@/components/lex/StageBar'
 import ChatPanel from '@/components/lex/ChatPanel'
@@ -121,4 +122,6 @@ function Page() {
   )
 }
 
+// as the page: Lex is told who is signed in once Clerk has answered (OfflineStrip), so the kept typing has its user
+void keepForUser('u-harness')
 if (!restoreOnArrival(IDEA)) createRoot(document.getElementById('root')!).render(<Page />)

@@ -38,6 +38,7 @@ import { installFaultCapture } from '@/lib/client-fault-capture'
 import type { StageContext } from '@/lib/lex/stage-context'
 import { WAIT_MESSAGE } from '@/lib/lex/search-wait'
 import AskLexPanel from '@/components/lex/AskLexPanel'
+import { useConfirmLexUser } from '@/lib/lex/use-confirm-lex-user'
 
 // ══ 25-G §3 — WHAT THE NEW DOOR LOST, RESTORED ═══════════════════════════════
 //
@@ -267,6 +268,7 @@ export default function BuildIdeaClient(
     materialCount?: number
   },
 ) {
+  useConfirmLexUser() // CCh 2145Z point 4: the kept typing is keyed by the confirmed user
   const [ideaId, setIdeaId] = useState<string | null>(initialIdeaId ?? null)
   /**
    * ⚠ 25-I §1 — THE ID, READABLE SYNCHRONOUSLY.
