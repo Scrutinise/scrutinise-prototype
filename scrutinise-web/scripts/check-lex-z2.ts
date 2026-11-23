@@ -46,9 +46,9 @@ function partA() {
   const body = actionEditBody({ action: 'update', actionId: 'a1', practicalStep: 'new' }, { practicalStep: 'old', commentary: 'd' })
   ok('an offline action edit carries the base of exactly the fields it edits', JSON.stringify(body.expect) === JSON.stringify({ practicalStep: 'old' }), JSON.stringify(body))
   const q: Queued[] = [
-    { id: '1', kind: 'edit', ideaId: 'x', url: '/api/ideas/x/actions', body: { action: 'update', actionId: 'a1', practicalStep: 'first', expect: { practicalStep: 'old' } }, words: '', at: '', status: 'waiting' },
-    { id: '2', kind: 'edit', ideaId: 'x', url: '/api/ideas/x/actions', body: { action: 'update', actionId: 'a1', practicalStep: 'second', expect: { practicalStep: 'first' } }, words: '', at: '', status: 'waiting' },
-    { id: '3', kind: 'edit', ideaId: 'x', url: '/api/ideas/x/actions', body: { action: 'update', actionId: 'a2', practicalStep: 'conflicted' }, words: '', at: '', status: 'conflict' },
+    { id: '1', kind: 'edit', ideaId: 'x', userId: null, url: '/api/ideas/x/actions', body: { action: 'update', actionId: 'a1', practicalStep: 'first', expect: { practicalStep: 'old' } }, words: '', at: '', status: 'waiting' },
+    { id: '2', kind: 'edit', ideaId: 'x', userId: null, url: '/api/ideas/x/actions', body: { action: 'update', actionId: 'a1', practicalStep: 'second', expect: { practicalStep: 'first' } }, words: '', at: '', status: 'waiting' },
+    { id: '3', kind: 'edit', ideaId: 'x', userId: null, url: '/api/ideas/x/actions', body: { action: 'update', actionId: 'a2', practicalStep: 'conflicted' }, words: '', at: '', status: 'conflict' },
   ]
   const over = overlayActions([{ id: 'a1', practicalStep: 'old' }, { id: 'a2', practicalStep: 'server' }], q)
   ok('the overlay shows waiting edits in order (the later one wins), and never a conflicted one (the server\'s copy stays until the owner chooses)', over[0].practicalStep === 'second' && over[1].practicalStep === 'server', JSON.stringify(over))
@@ -272,7 +272,7 @@ async function partC() {
       await p.click(`[data-signout-${button}]`)
       return { words, choice: await done, signedOut: await p.evaluate(() => !!(window as unknown as W).__signedOut) }
     }
-    const DRAFT = STORE_KEY.draft('fx', 'lexMessage')
+    const DRAFT = STORE_KEY.draft('u1', 'fx', 'lexMessage')
     await p.goto(IDEA); await p.waitForSelector('[data-action="a1"]')
     ok('(kept copies exist before the sign-out)', (await kept()) > 0)
     await p.evaluate((k) => localStorage.setItem(k, 'half a sentence, typed and not sent'), DRAFT)
@@ -338,6 +338,26 @@ async function partC() {
     ok('361: a page that answers "signed out" (401) clears the cached reads, at once', left === 0, String(left))
     ok('…and keeps the owner\'s unsent edit', (await queueOf()).length === 1 && (await queueOf())[0].userId === 'u2', JSON.stringify(await queueOf()))
     srv.signedOut = false
+
+    // 14 · CCh 2145Z point 4: the typing DeviceDraft keeps is PER USER — another account on the device never sees it, nothing discards it
+    const typedAs = async (u: string, words: string) => { await p.goto(`${IDEA}&user=${u}`); await p.waitForSelector('[data-note]'); await sleep(300); await p.fill('[data-note]', words); await sleep(700) }
+    const offerOn = async (u: string, delay = 0) => { await p.goto(`${IDEA}&user=${u}${delay ? `&userDelay=${delay}` : ''}`); await p.waitForSelector('[data-note]'); await sleep(delay + 600); return (await p.locator('[data-draft-offer]').count()) ? await text('[data-draft-offer]') : '' }
+    await typedAs('u1', 'u1 was typing this (device-draft check)')
+    ok('2145Z §4: u1\'s typing is kept under u1\'s own key', (await p.evaluate((k) => localStorage.getItem(k), STORE_KEY.draft('u1', 'fx', 'harnessNote'))) === 'u1 was typing this (device-draft check)')
+    // while Clerk is still saying who is signed in (the first 600 ms here), nothing may be offered on a guess: sample INSIDE that window
+    await p.goto(`${IDEA}&user=u2&userDelay=1500`); await p.waitForSelector('[data-note]'); await sleep(500)
+    const early = await p.locator('[data-draft-offer]').count()
+    const u2sees = await offerOn('u2', 600)
+    ok('…u2, on the same device, is NOT offered u1\'s typing: not while Clerk is still loading, and not after', early === 0 && u2sees === '', `early ${early}; after: ${u2sees}`)
+    ok('…and it is not removed: still on the device under u1', (await p.evaluate((k) => localStorage.getItem(k), STORE_KEY.draft('u1', 'fx', 'harnessNote'))) === 'u1 was typing this (device-draft check)')
+    const u1sees = await offerOn('u1')
+    ok('…u1, back, is offered it', u1sees.includes('u1 was typing this'), u1sees)
+    await p.click('[data-draft-discard]'); await sleep(200)
+    // a draft kept under the OLD key (no user), from before this change: offered once to the confirmed user and moved to their key
+    await p.evaluate((k) => localStorage.setItem(k, 'kept before the user key (device-draft check)'), STORE_KEY.legacyDraft('fx', 'harnessNote'))
+    const legacy = await offerOn('u1')
+    ok('…a draft kept under the old key is offered to the confirmed user and moved to their key', legacy.includes('kept before the user key') && (await p.evaluate((k) => localStorage.getItem(k), STORE_KEY.legacyDraft('fx', 'harnessNote'))) == null && (await p.evaluate((k) => localStorage.getItem(k), STORE_KEY.draft('u1', 'fx', 'harnessNote'))) === 'kept before the user key (device-draft check)', legacy)
+    control('…the OLD key shape (no user) would have shown u1\'s typing to u2 (must be FALSE)', STORE_KEY.draft('u1', 'fx', 'harnessNote') === STORE_KEY.draft('u2', 'fx', 'harnessNote'))
     await context.close()
   } finally {
     await browser.close(); server.close()

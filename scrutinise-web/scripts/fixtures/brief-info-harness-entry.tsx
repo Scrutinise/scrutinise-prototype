@@ -5,6 +5,7 @@
 
 import React from 'react'
 import { createRoot } from 'react-dom/client'
+import { keepForUser } from '@/lib/lex/offline'
 import BriefSection from '@/components/lex/BriefSection'
 import * as LABELS from '@/lib/lex/screen-labels'
 import * as INFO from '@/lib/lex/brief-info'
@@ -19,6 +20,7 @@ w.__kindFields = KIND_FIELDS
 w.__guide = { explainField, guideEntries, normLabel }
 
 w.__mount = () => {
+  void keepForUser('u-harness') // as the page: the kept typing is keyed by the confirmed user
   createRoot(document.getElementById('root')!).render(
     <div style={{ padding: 16 }}>
       <BriefSection ideaId="zz-harness" a={{ id: 'a1', number: 7, avenue: 'ORGANISATIONAL' }} disabled={false} onChanged={() => undefined} initialView={w.__bv} />

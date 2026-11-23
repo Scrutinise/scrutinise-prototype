@@ -51,15 +51,35 @@ export async function clearLexOffline(): Promise<void> {
  *     removes them only when this user taps Remove.
  */
 export async function keepForUser(userId: string | null): Promise<'signed-out' | 'same' | 'changed'> {
-  if (!userId) { await clearLexOffline(); return 'signed-out' }
-  if (local.get(OFFLINE_KEY.user) === userId) return 'same'
+  if (!userId) { await clearLexOffline(); confirmUser(null); return 'signed-out' }
+  if (local.get(OFFLINE_KEY.user) === userId) { confirmUser(userId); return 'same' }
   await clearLexOffline()
   local.set(OFFLINE_KEY.user, userId)
+  confirmUser(userId)
   return 'changed'
 }
 
 /** The user this device's Lex data belongs to now: the last one signed in here (kept through a sign-out). */
 export function deviceUser(): string | null { return local.get(OFFLINE_KEY.user) }
+
+// ── CCh 2145Z point 4 — WHO IS SIGNED IN ON THIS PAGE, ONCE CLERK HAS SAID ──────────────────────────────────────────────────────────────
+// keepForUser runs when Clerk has answered (OfflineStrip; useConfirmLexUser on the pages without it), and publishes the answer here, so
+// per-user device data (the typing DeviceDraft keeps) is keyed by a CONFIRMED user, never by a guess while Clerk is still loading.
+// undefined = not yet confirmed on this page; null = confirmed signed out.
+let confirmed: string | null | undefined
+export const USER_CONFIRMED_EVENT = 'lex-user-confirmed'
+function confirmUser(u: string | null) {
+  confirmed = u
+  try { window.dispatchEvent(new Event(USER_CONFIRMED_EVENT)) } catch { /* no window */ }
+}
+/**
+ * The user per-user device data belongs to on this page: the confirmed one; before Clerk has answered, null (wait), EXCEPT offline, where
+ * Clerk may never load: then the device's user (the last one confirmed here; nobody can sign in as anyone else without a connection).
+ */
+export function draftUserNow(): string | null {
+  if (confirmed !== undefined) return confirmed
+  return typeof navigator !== 'undefined' && navigator.onLine === false ? deviceUser() : null
+}
 
 /** When the page on screen was fetched, if the worker served it from its kept copy; null when it came from the network. */
 export function cachedAtOf(doc: Document): Date | null {

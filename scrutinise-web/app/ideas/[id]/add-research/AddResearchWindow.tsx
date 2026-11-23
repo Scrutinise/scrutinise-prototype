@@ -2,9 +2,11 @@
 
 import { useState } from 'react'
 import AddResearch from '@/components/lex/AddResearch'
+import { useConfirmLexUser } from '@/lib/lex/use-confirm-lex-user'
 
 export default function AddResearchWindow({ ideaId, ideaTitle, initial }: { ideaId: string; ideaTitle: string; initial: { url?: string; title?: string; text?: string } }) {
   const [saved, setSaved] = useState(false)
+  useConfirmLexUser() // CCh 2145Z point 4: the kept typing is keyed by the confirmed user
   return (
     <main className="mx-auto max-w-xl p-4">
       <h1 className="text-base font-semibold text-zinc-900">Add research</h1>

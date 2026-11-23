@@ -4,6 +4,7 @@
 import { createRoot } from 'react-dom/client'
 import { useEffect, useState } from 'react'
 import OfflineStrip from '../../components/lex/OfflineStrip'
+import { useDeviceDraft, DraftOffer } from '../../components/lex/DeviceDraft'
 import { readQueue, overlayActions, postOrQueue, enqueueLex } from '../../lib/lex/offline-queue'
 import { OFFLINE_UI } from '../../lib/lex/screen-labels'
 import { lexSignOut } from '../../lib/lex/offline-signout'
@@ -21,6 +22,9 @@ function App() {
   useEffect(() => { if (qs.get('userDelay')) { const t = setTimeout(() => setUser(who), Number(qs.get('userDelay'))); return () => clearTimeout(t) } }, []) // eslint-disable-line react-hooks/exhaustive-deps
   const [state, setState] = useState<S | null>(null)
   const [msg, setMsg] = useState('')
+  // CCh 2145Z point 4 — a box whose typing is kept on the device by the REAL DeviceDraft hook, per user
+  const [note, setNote] = useState('')
+  const draft = useDeviceDraft(ideaId, 'harnessNote', note)
   // as CreateIdeaClient's applyState: queued edits are laid over every state applied
   const apply = (s: S) => { const q = readQueue(ideaId); setState(q.length ? { ...s, actions: overlayActions(s.actions, q) } : s) }
   const refresh = async () => { try { const r = await fetch(`/api/ideas/${ideaId}/state`, { cache: 'no-store' }); if (r.ok) apply(await r.json()) } catch { /* offline, nothing kept */ } }
@@ -51,6 +55,8 @@ function App() {
         sendLex={async (text) => { await fetch(`/api/ideas/${ideaId}/lex`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text }) }) }} />
       {state?.actions.map((a) => <p key={a.id} data-action={a.id}>{a.practicalStep}</p>)}
       <p data-msg>{msg}</p>
+      <DraftOffer offer={draft.offer} onRestore={() => { const t = draft.take(); if (t) setNote(t) }} onDiscard={draft.discard} />
+      <textarea data-note value={note} onChange={(e) => setNote(e.target.value)} />
     </div>
   )
 }

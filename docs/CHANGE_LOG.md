@@ -1,5 +1,25 @@
 # SCRUTINISE — CHANGE LOG
 
+## 2026-11-23 00:14 UTC - LEX: unsent typing is kept PER USER, so another account on the same device never sees it, and nothing is lost at sign-out
+
+CCh 2145Z point 4, with 361 amended. DeviceDraft kept typing by idea and field only, so a second account on the same phone was offered
+the first one's unsent words.
+- The key is now `lex26z.draft.u.<user>.<idea>.<field>` (`STORE_KEY.draft(userId, ideaId, field)`).
+- The user is the CONFIRMED one: `keepForUser` publishes Clerk's answer (`draftUserNow()`, `USER_CONFIRMED_EVENT`).
+  - Until Clerk has answered, nothing is offered and nothing is kept, so a guess during the load can't show one user's text to another.
+  - Offline, where Clerk may never load, the device's last confirmed user is used.
+  - The two pages without OfflineStrip (build, add research) confirm the user through the new `useConfirmLexUser()`.
+- A draft kept under the old key (no user) is offered once to the confirmed user and moved to their key, so nothing typed before this change is lost.
+- check:lex-z2 69/69 (new section 14):
+  - u1's typing is kept under u1;
+  - u2 on the same device isn't offered it, sampled while Clerk is still loading and after;
+  - it isn't removed, and u1 is offered it on return;
+  - the legacy key is moved;
+  - a control shows the old key shape would collide.
+  - Mutants all RED: D-1 (no user in the key), D-2 (a guess before Clerk answers), D-3 (the old key never moved) and D-4 (the confirmed user never published).
+  - Also: three test queue items in the same file were missing `userId` (a type error that predates this change, in the scripts program only).
+- Regressions: 26z 214/214, 26ab 68/68, viewer 13/13. Scripts and app tsc are clean.
+
 ## 2026-11-22 23:01 UTC - LEX: the Actions Pack and the version snapshot print each draft's ACCEPTED version where one exists, else the latest labelled "not yet accepted"
 
 CCh 2145Z point 5 (decision 311's rule, as reviews already read it).

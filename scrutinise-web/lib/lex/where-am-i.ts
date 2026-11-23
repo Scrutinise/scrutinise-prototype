@@ -240,8 +240,10 @@ export const STORE_KEY = {
   position: (ideaId: string) => `lex26z.pos.${ideaId}`,
   /** §6.1 — the Organising list's own choices (list/board, the find box, the Drafting filter), per idea. */
   organising: (ideaId: string) => `lex26z.org.${ideaId}`,
-  /** §6.2 — an unsent draft, per idea and field. */
-  draft: (ideaId: string, field: string) => `lex26z.draft.${ideaId}.${field}`,
+  /** §6.2 — an unsent draft, per USER, idea and field (CCh 2145Z point 4: another account on the device never sees it). */
+  draft: (userId: string, ideaId: string, field: string) => `lex26z.draft.u.${userId}.${ideaId}.${field}`,
+  /** The key before 22 Nov (no user): read once, moved to the user's key. */
+  legacyDraft: (ideaId: string, field: string) => `lex26z.draft.${ideaId}.${field}`,
   /** One-shot: the page was put back where it was, so say so once it has drawn (sessionStorage). */
   restored: 'lex26z.restored',
 } as const
